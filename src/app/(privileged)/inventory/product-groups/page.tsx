@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -134,8 +133,9 @@ export default function ProductGroupingPage() {
   }
 
   // ── Filtering & Sorting ──
+  type GroupItem = PricingGroupItem | InventoryGroupItem | GroupingRuleItem
   const filtered = useMemo(() => {
-    let items: any[] = activeTab === 'pricing'
+    let items: GroupItem[] = activeTab === 'pricing'
       ? pricingGroups.filter(g => !search || g.name.toLowerCase().includes(search.toLowerCase()))
       : activeTab === 'rules'
         ? groupingRules.filter(g => !search || g.name.toLowerCase().includes(search.toLowerCase()))
@@ -154,14 +154,16 @@ export default function ProductGroupingPage() {
       items = (items as PricingGroupItem[]).filter(g => g.pricing_mode === modeFilter)
     }
 
-    // Sort
-    items.sort((a: any, b: any) => {
+    // Sort — all 3 group types share name/member_count; only inventory has total_stock
+    items.sort((a, b) => {
+      const A = a as InventoryGroupItem & PricingGroupItem & GroupingRuleItem
+      const B = b as InventoryGroupItem & PricingGroupItem & GroupingRuleItem
       let cmp = 0
       switch (sortField) {
-        case 'name': cmp = (a.name || '').localeCompare(b.name || ''); break
-        case 'members': cmp = (a.member_count || 0) - (b.member_count || 0); break
-        case 'stock': cmp = (a.total_stock || 0) - (b.total_stock || 0); break
-        default: cmp = (a.name || '').localeCompare(b.name || '')
+        case 'name': cmp = (A.name || '').localeCompare(B.name || ''); break
+        case 'members': cmp = (A.member_count || 0) - (B.member_count || 0); break
+        case 'stock': cmp = (A.total_stock || 0) - (B.total_stock || 0); break
+        default: cmp = (A.name || '').localeCompare(B.name || '')
       }
       return sortDir === 'asc' ? cmp : -cmp
     })
@@ -172,18 +174,18 @@ export default function ProductGroupingPage() {
   const pendingCount = useMemo(() => inventoryGroups.filter(g => g.approval_status === 'PENDING').length, [inventoryGroups])
 
   // ── KPI Computations ──
-  const kpis = useMemo(() => {
+  type Kpis = { total: number; members: number; broken: number; synced: number; stock: number; lowStock: number }
+  const kpis = useMemo<Kpis>(() => {
     if (activeTab === 'pricing') {
       const totalMembers = pricingGroups.reduce((s, g) => s + g.member_count, 0)
       const brokenGroups = pricingGroups.filter(g => g.broken_count > 0).length
       const syncedGroups = pricingGroups.filter(g => g.broken_count === 0 && g.member_count > 0).length
-      return { total: pricingGroups.length, members: totalMembers, broken: brokenGroups, synced: syncedGroups }
-    } else {
-      const totalMembers = inventoryGroups.reduce((s, g) => s + g.member_count, 0)
-      const totalStock = inventoryGroups.reduce((s, g) => s + (g.total_stock || 0), 0)
-      const lowStockGroups = inventoryGroups.filter(g => g.low_stock_variants > 0).length
-      return { total: inventoryGroups.length, members: totalMembers, stock: Math.round(totalStock), lowStock: lowStockGroups }
+      return { total: pricingGroups.length, members: totalMembers, broken: brokenGroups, synced: syncedGroups, stock: 0, lowStock: 0 }
     }
+    const totalMembers = inventoryGroups.reduce((s, g) => s + g.member_count, 0)
+    const totalStock = inventoryGroups.reduce((s, g) => s + (g.total_stock || 0), 0)
+    const lowStockGroups = inventoryGroups.filter(g => g.low_stock_variants > 0).length
+    return { total: inventoryGroups.length, members: totalMembers, broken: 0, synced: 0, stock: Math.round(totalStock), lowStock: lowStockGroups }
   }, [activeTab, pricingGroups, inventoryGroups])
 
   function toggleSort(field: SortField) {
@@ -484,10 +486,37 @@ function TabButton({ active, onClick, icon, label, count }: {
 // ═══════════════════════════════════════════════════════════════════
 // PRICING GROUPS TAB
 // ═══════════════════════════════════════════════════════════════════
+type GroupMember = {
+  id?: number
+  name?: string
+  sku?: string
+  product?: string
+  product_id?: number
+  cost?: number
+  current_price?: number
+  expected_price?: number
+  selling_price_ttc?: number
+  selling_price_ht?: number
+  group_price_ttc?: number
+  status?: string
+  reason?: string
+}
+type ExpandedGroupData = {
+  synced?: GroupMember[]
+  broken?: GroupMember[]
+  overridden?: GroupMember[]
+  synced_count?: number
+  broken_count?: number
+  overridden_count?: number
+  expected_price?: number | null
+}
+type SyncWarning = { product?: string; margin_pct?: number; floor?: number }
+type SyncResultData = { synced?: number; warnings?: SyncWarning[] }
+
 function PricingGroupsList({ groups, onReload }: { groups: PricingGroupItem[]; onReload: () => void }) {
   const router = useRouter()
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [expandedData, setExpandedData] = useState<any>(null)
+  const [expandedData, setExpandedData] = useState<ExpandedGroupData | null>(null)
   const [syncing, setSyncing] = useState<number | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
 
@@ -495,16 +524,17 @@ function PricingGroupsList({ groups, onReload }: { groups: PricingGroupItem[]; o
     if (expandedId === id) { setExpandedId(null); setExpandedData(null); return }
     setExpandedId(id)
     const res = await checkBrokenGroup(id)
-    if (res.success) setExpandedData(res.data)
+    if (res.success) setExpandedData(res.data as ExpandedGroupData)
   }, [expandedId])
 
   const handleSync = useCallback(async (id: number) => {
     setSyncing(id)
     const res = await syncPricingGroupPrices(id)
     if (res.success) {
-      toast.success(`Synced ${res.data.synced} products`)
-      if (res.data.warnings?.length) {
-        res.data.warnings.forEach((w: any) =>
+      const data = res.data as SyncResultData
+      toast.success(`Synced ${data.synced ?? 0} products`)
+      if (data.warnings?.length) {
+        data.warnings.forEach((w) =>
           toast.warning(`${w.product}: margin ${w.margin_pct}% (floor: ${w.floor}%)`)
         )
       }
@@ -599,9 +629,9 @@ function PricingGroupsList({ groups, onReload }: { groups: PricingGroupItem[]; o
           {expandedId === g.id && expandedData && (
             <div className="px-5 pb-5 pt-1" style={{ borderTop: '1px solid var(--app-border)' }}>
               <div className="flex gap-4 mb-4 text-xs">
-                <MiniStat value={expandedData.synced_count} label="Synced" color="var(--app-success)" />
-                <MiniStat value={expandedData.broken_count} label="Broken" color="var(--app-danger, #ef4444)" />
-                <MiniStat value={expandedData.overridden_count} label="Overridden" color="var(--app-warning)" />
+                <MiniStat value={expandedData.synced_count ?? 0} label="Synced" color="var(--app-success)" />
+                <MiniStat value={expandedData.broken_count ?? 0} label="Broken" color="var(--app-danger, #ef4444)" />
+                <MiniStat value={expandedData.overridden_count ?? 0} label="Overridden" color="var(--app-warning)" />
               </div>
 
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
@@ -617,10 +647,11 @@ function PricingGroupsList({ groups, onReload }: { groups: PricingGroupItem[]; o
                     </tr>
                   </thead>
                   <tbody>
-                    {[...expandedData.synced, ...expandedData.broken, ...expandedData.overridden].map((m: any) => {
-                      const badge = SYNC_STATUS_BADGES[m.status] || SYNC_STATUS_BADGES['N/A']
-                      const margin = m.current_price > 0
-                        ? (((m.current_price - (m.cost || 0)) / m.current_price) * 100).toFixed(1)
+                    {[...(expandedData.synced ?? []), ...(expandedData.broken ?? []), ...(expandedData.overridden ?? [])].map((m) => {
+                      const badge = (m.status ? SYNC_STATUS_BADGES[m.status] : undefined) ?? SYNC_STATUS_BADGES['N/A']
+                      const cur = m.current_price ?? 0
+                      const margin = cur > 0
+                        ? (((cur - (m.cost || 0)) / cur) * 100).toFixed(1)
                         : '—'
                       return (
                         <tr key={m.id} style={{ borderTop: '1px solid var(--app-border)' }}>
@@ -668,17 +699,44 @@ function PricingGroupsList({ groups, onReload }: { groups: PricingGroupItem[]; o
 // ═══════════════════════════════════════════════════════════════════
 // INVENTORY GROUPS TAB
 // ═══════════════════════════════════════════════════════════════════
+type Variant = {
+  product_id: number
+  product_name?: string
+  product_sku?: string
+  country?: string
+  size?: string | number
+  size_unit?: string
+  stock?: number
+  stock_qty?: number
+  is_low_stock?: boolean
+  cost?: number
+  cost_price?: number
+  selling_price_ttc?: number
+  margin_pct?: number
+  role?: string
+  substitution_role?: string
+}
+type SummaryData = {
+  variants?: Variant[]
+  total_stock?: number
+  country_count?: number
+  countries?: string[]
+  avg_cost?: number
+  cheapest_source?: string
+  best_margin_source?: string
+}
+
 function InventoryGroupsList({ groups, onReload }: { groups: InventoryGroupItem[]; onReload: () => void }) {
   const router = useRouter()
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [summaryData, setSummaryData] = useState<any>(null)
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
 
   const handleExpand = useCallback(async (id: number) => {
     if (expandedId === id) { setExpandedId(null); setSummaryData(null); return }
     setExpandedId(id)
     const res = await getInventoryGroupSummary(id)
-    if (res.success) setSummaryData(res.data)
+    if (res.success) setSummaryData(res.data as SummaryData)
   }, [expandedId])
 
   const handleDelete = useCallback(async (id: number, name: string) => {
@@ -831,9 +889,9 @@ function InventoryGroupsList({ groups, onReload }: { groups: InventoryGroupItem[
               <div className="px-5 pb-5 pt-1" style={{ borderTop: '1px solid var(--app-border)' }}>
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-                  <SummaryCard label="Total Stock" value={Math.round(summaryData.total_stock)} icon={<BarChart3 size={14} />} />
-                  <SummaryCard label="Countries" value={summaryData.country_count} sub={summaryData.countries?.join(', ')} icon={<Globe size={14} />} />
-                  <SummaryCard label="Avg Cost" value={summaryData.avg_cost?.toFixed(2)} icon={<DollarSign size={14} />} />
+                  <SummaryCard label="Total Stock" value={Math.round(summaryData.total_stock ?? 0)} icon={<BarChart3 size={14} />} />
+                  <SummaryCard label="Countries" value={summaryData.country_count ?? 0} sub={summaryData.countries?.join(', ')} icon={<Globe size={14} />} />
+                  <SummaryCard label="Avg Cost" value={summaryData.avg_cost?.toFixed(2) ?? '—'} icon={<DollarSign size={14} />} />
                   <SummaryCard label="Cheapest" value={summaryData.cheapest_source || '—'} small icon={<TrendingDown size={14} />} />
                   <SummaryCard label="Best Margin" value={summaryData.best_margin_source || '—'} small icon={<TrendingUp size={14} />} />
                 </div>
@@ -854,7 +912,7 @@ function InventoryGroupsList({ groups, onReload }: { groups: InventoryGroupItem[
                       </tr>
                     </thead>
                     <tbody>
-                      {summaryData.variants?.map((v: any) => (
+                      {summaryData.variants?.map((v) => (
                         <tr key={v.product_id} style={{ borderTop: '1px solid var(--app-border)' }}>
                           <td className="px-3 py-2.5 font-medium" style={{ color: 'var(--app-foreground)' }}>
                             {v.product_name}
@@ -876,7 +934,7 @@ function InventoryGroupsList({ groups, onReload }: { groups: InventoryGroupItem[
                           <td className="text-right px-3 py-2.5 font-semibold" style={{
                             color: v.is_low_stock ? 'var(--app-danger, #ef4444)' : 'var(--app-foreground)',
                           }}>
-                            {Math.round(v.stock_qty)}
+                            {Math.round(v.stock_qty ?? 0)}
                             {v.is_low_stock && <AlertTriangle size={10} className="inline ml-1" />}
                           </td>
                           <td className="text-right px-3 py-2.5" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -886,12 +944,12 @@ function InventoryGroupsList({ groups, onReload }: { groups: InventoryGroupItem[
                             {v.selling_price_ttc?.toFixed(2)}
                           </td>
                           <td className="text-right px-3 py-2.5" style={{
-                            color: v.margin_pct < 0 ? 'var(--app-danger, #ef4444)' : 'var(--app-foreground)',
+                            color: (v.margin_pct ?? 0) < 0 ? 'var(--app-danger, #ef4444)' : 'var(--app-foreground)',
                           }}>
                             {v.margin_pct?.toFixed(1)}%
                           </td>
                           <td className="text-center px-3 py-2.5">
-                            <RoleBadge role={v.substitution_role} />
+                            <RoleBadge role={v.substitution_role ?? ''} />
                           </td>
                         </tr>
                       ))}
@@ -1275,7 +1333,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 function SummaryCard({ label, value, sub, small, icon }: {
-  label: string; value: any; sub?: string; small?: boolean; icon?: React.ReactNode
+  label: string; value: number | string; sub?: string; small?: boolean; icon?: React.ReactNode
 }) {
   return (
     <div className="rounded-xl p-3" style={{ background: 'var(--app-surface)' }}>

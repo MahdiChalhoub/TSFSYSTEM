@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -21,40 +20,58 @@ import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
+type CountryRef = { id?: number; name?: string; code?: string; iso2?: string }
+type CategoryRef = { id: number; name?: string }
+type BrandRow = {
+    id: number
+    name: string
+    short_name?: string
+    logo?: string
+    website?: string
+    country_of_origin?: string
+    country?: { name?: string }
+    countries?: CountryRef[]
+    categories?: CategoryRef[]
+    product_count?: number
+}
+
+type DeleteResult = { success: boolean; conflict?: unknown; message?: string }
+type DeleteConflictState = { conflict: unknown; source: BrandRow } | null
+
 interface Props {
-    brands: any[]
-    countries: any[]
-    categories: any[]
+    brands: BrandRow[]
+    countries: CountryRef[]
+    categories: CategoryRef[]
 }
 
 export function MobileBrandsClient({ brands, countries, categories }: Props) {
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const [sheetBrand, setSheetBrand] = useState<any | null>(null)
-    const [actionBrand, setActionBrand] = useState<any | null>(null)
-    const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
+    const [, startTransition] = useTransition()
+    const [sheetBrand, setSheetBrand] = useState<BrandRow | null>(null)
+    const [actionBrand, setActionBrand] = useState<BrandRow | null>(null)
+    const [deleteTarget, setDeleteTarget] = useState<BrandRow | null>(null)
     const [categoryFilter, setCategoryFilter] = useState<number | null>(null)
 
     const stats = useMemo(() => {
         const total = brands.length
         const withProducts = brands.filter(b => (b.product_count || 0) > 0).length
-        const withCountries = brands.filter(b => b.countries?.length > 0).length
-        const withCategories = brands.filter(b => b.categories?.length > 0).length
+        const withCountries = brands.filter(b => (b.countries?.length || 0) > 0).length
+        const withCategories = brands.filter(b => (b.categories?.length || 0) > 0).length
         const totalProducts = brands.reduce((s, b) => s + (b.product_count || 0), 0)
         return { total, withProducts, withCountries, withCategories, totalProducts }
     }, [brands])
 
-    const openSheet = useCallback((b: any) => setSheetBrand(b), [])
-    const openActions = useCallback((b: any) => setActionBrand(b), [])
+    const openSheet = useCallback((b: BrandRow) => setSheetBrand(b), [])
+    const openActions = useCallback((b: BrandRow) => setActionBrand(b), [])
 
-    const [deleteConflict, setDeleteConflict] = useState<any>(null)
+    const [deleteConflict, setDeleteConflict] = useState<DeleteConflictState>(null)
 
     const handleDelete = useCallback(() => {
         if (!deleteTarget) return
         const source = deleteTarget
         setDeleteTarget(null)
         startTransition(async () => {
-            const r: any = await deleteBrand(source.id)
+            const r = (await deleteBrand(source.id)) as DeleteResult
             if (r?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
             if (r?.conflict) { setDeleteConflict({ conflict: r.conflict, source }); return }
             toast.error(r?.message || 'Delete failed')
@@ -64,11 +81,11 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
     const handleBrandMigrateAndDelete = async (targetId: number) => {
         const source = deleteConflict?.source
         if (!source) return
-        const moveRes: any = await moveBrandProducts({
+        const moveRes = (await moveBrandProducts({
             source_brand_id: source.id,
             target_brand_id: targetId,
             also_delete_source: true,
-        })
+        })) as DeleteResult
         if (moveRes?.success === false) { toast.error(moveRes.message || 'Migration failed'); return }
         toast.success(`Migrated & deleted "${source.name}"`)
         setDeleteConflict(null); router.refresh()
@@ -76,15 +93,15 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
     const handleBrandForceDelete = async () => {
         const source = deleteConflict?.source
         if (!source) return
-        const res: any = await deleteBrand(source.id, { force: true })
+        const res = (await deleteBrand(source.id, { force: true })) as DeleteResult
         if (res?.success) { toast.success(`"${source.name}" force-deleted`); setDeleteConflict(null); router.refresh() }
         else toast.error(res?.message || 'Delete failed')
     }
     const brandTargets = useMemo(() => {
         const sourceId = deleteConflict?.source?.id
         return brands
-            .filter((b: any) => b.id !== sourceId)
-            .map((b: any) => ({ id: b.id, name: b.name, code: b.short_name }))
+            .filter((b) => b.id !== sourceId)
+            .map((b) => ({ id: b.id, name: b.name, code: b.short_name }))
     }, [brands, deleteConflict])
 
     const actionItems = useMemo(() => {
@@ -153,7 +170,8 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                         variant="danger"
                     />
                     <DeleteConflictDialog
-                        conflict={deleteConflict?.conflict || null}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- conflict shape is server-derived; the dialog narrows internally
+                        conflict={(deleteConflict?.conflict ?? null) as any}
                         sourceName={deleteConflict?.source?.name || ''}
                         entityName="brand"
                         targets={brandTargets}
@@ -183,7 +201,7 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
             {({ searchQuery }) => {
                 const q = searchQuery.trim().toLowerCase()
                 const filtered = brands.filter(b => {
-                    if (categoryFilter && !(b.categories || []).some((c: any) => c.id === categoryFilter)) return false
+                    if (categoryFilter && !(b.categories || []).some((c) => c.id === categoryFilter)) return false
                     if (!q) return true
                     return (b.name || '').toLowerCase().includes(q)
                         || (b.short_name || '').toLowerCase().includes(q)
@@ -208,8 +226,8 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                     }}>
                                     All ({brands.length})
                                 </button>
-                                {categories.slice(0, 40).map((c: any) => {
-                                    const count = brands.filter(b => (b.categories || []).some((bc: any) => bc.id === c.id)).length
+                                {categories.slice(0, 40).map((c) => {
+                                    const count = brands.filter(b => (b.categories || []).some((bc) => bc.id === c.id)).length
                                     if (count === 0) return null
                                     const active = categoryFilter === c.id
                                     return (
@@ -306,7 +324,7 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                                         <Package size={10} /> {pcount}
                                                     </span>
                                                 )}
-                                                {brand.countries?.slice(0, 3).map((c: any, i: number) => (
+                                                {brand.countries?.slice(0, 3).map((c, i) => (
                                                     <span key={i} className="flex items-center gap-0.5 font-mono font-black rounded px-1.5 py-0.5"
                                                         style={{
                                                             fontSize: 'var(--tp-xxs)',
@@ -316,17 +334,17 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                                         {c.code || c.iso2 || '??'}
                                                     </span>
                                                 ))}
-                                                {brand.countries?.length > 3 && (
+                                                {(brand.countries?.length ?? 0) > 3 && (
                                                     <span className="font-bold text-app-muted-foreground"
                                                         style={{ fontSize: 'var(--tp-xxs)' }}>
-                                                        +{brand.countries.length - 3}
+                                                        +{(brand.countries?.length ?? 0) - 3}
                                                     </span>
                                                 )}
                                             </div>
-                                            {brand.categories?.length > 0 && (
+                                            {(brand.categories?.length ?? 0) > 0 && (
                                                 <div className="flex items-center gap-1 mt-1 flex-wrap">
                                                     <Tag size={10} style={{ color: 'var(--app-muted-foreground)' }} />
-                                                    {brand.categories.slice(0, 2).map((c: any) => (
+                                                    {brand.categories?.slice(0, 2).map((c) => (
                                                         <span key={c.id} className="font-bold rounded px-1.5"
                                                             style={{
                                                                 fontSize: 'var(--tp-xxs)',
@@ -336,10 +354,10 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
                                                             {c.name}
                                                         </span>
                                                     ))}
-                                                    {brand.categories.length > 2 && (
+                                                    {(brand.categories?.length ?? 0) > 2 && (
                                                         <span className="font-bold text-app-muted-foreground"
                                                             style={{ fontSize: 'var(--tp-xxs)' }}>
-                                                            +{brand.categories.length - 2}
+                                                            +{(brand.categories?.length ?? 0) - 2}
                                                         </span>
                                                     )}
                                                 </div>
@@ -359,7 +377,17 @@ export function MobileBrandsClient({ brands, countries, categories }: Props) {
 }
 
 /* ─── Brand detail sheet ─── */
-function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: any) {
+interface BrandDetailProps {
+    brand: BrandRow
+    categories: CategoryRef[]
+    countries: CountryRef[]
+    onEdit: () => void
+    onOpen: () => void
+    onClose: () => void
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- categories/countries are passed for future enrichment but not yet rendered
+function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: BrandDetailProps) {
     const pcount = brand.product_count || 0
     return (
         <div className="flex flex-col h-full">
@@ -434,14 +462,14 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                 </div>
 
                 {/* Countries list */}
-                {brand.countries?.length > 0 && (
+                {(brand.countries?.length ?? 0) > 0 && (
                     <div>
                         <div className="font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 px-1"
                             style={{ fontSize: 'var(--tp-xs)' }}>
                             Countries
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                            {brand.countries.map((c: any) => (
+                            {brand.countries?.map((c) => (
                                 <span key={c.id}
                                     className="flex items-center gap-1 font-bold rounded-lg px-2 py-1"
                                     style={{
@@ -458,14 +486,14 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                 )}
 
                 {/* Categories list */}
-                {brand.categories?.length > 0 && (
+                {(brand.categories?.length ?? 0) > 0 && (
                     <div>
                         <div className="font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 px-1"
                             style={{ fontSize: 'var(--tp-xs)' }}>
-                            Categories ({brand.categories.length})
+                            Categories ({brand.categories?.length ?? 0})
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                            {brand.categories.map((c: any) => (
+                            {brand.categories?.map((c) => (
                                 <span key={c.id}
                                     className="flex items-center gap-1 font-bold rounded-lg px-2 py-1"
                                     style={{
@@ -487,7 +515,7 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                         background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
                         border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                     }}>
-                    {[
+                    {([
                         ['Name', brand.name],
                         ['Short name', brand.short_name || '—'],
                         ['Country of origin', brand.country?.name || brand.country_of_origin || '—'],
@@ -495,7 +523,7 @@ function BrandDetail({ brand, categories, countries, onEdit, onOpen, onClose }: 
                         ['Products', String(pcount)],
                         ['Countries', String(brand.countries?.length || 0)],
                         ['Categories', String(brand.categories?.length || 0)],
-                    ].map(([label, value], i) => (
+                    ] as const).map(([label, value], i) => (
                         <div key={label}
                             className="flex items-center justify-between gap-3 px-3 py-2.5"
                             style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>

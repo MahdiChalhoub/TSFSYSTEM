@@ -1,7 +1,7 @@
-// @ts-nocheck
 'use client'
 
 import { useState, useMemo, useCallback, useEffect, useTransition } from 'react'
+import type { ReactNode } from 'react'
 import {
     Tags, Plus, Pencil, Trash2, Palette, Hash, Layers, Package,
     ChevronRight, Link2, Building2, Sparkles, FolderTree, Barcode,
@@ -44,10 +44,17 @@ type AttributeGroup = {
  *  The full nested node is carried through so the row & detail
  *  panel have all the metadata without extra fetches.
  * ═══════════════════════════════════════════════════════════ */
+type CategoryRef = { id: number; name?: string }
+type BrandRef = { id: number; name?: string; logo?: string | null }
+
+type FlatNode =
+    | (AttributeGroup & { parent: null; _type: 'group'; _valueCount: number; _productsTotal: number })
+    | (AttributeChild & { parent: number; _type: 'value'; _valueCount: 0; _productsTotal: number })
+
 type Props = {
     initialTree: AttributeGroup[]
-    initialCategories: any[]
-    initialBrands: any[]
+    initialCategories: CategoryRef[]
+    initialBrands: BrandRef[]
 }
 
 export function AttributesClient({ initialTree, initialCategories, initialBrands }: Props) {
@@ -61,9 +68,9 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     const [linkingBrandFor, setLinkingBrandFor] = useState<AttributeGroup | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string; isRoot: boolean } | null>(null)
     // 409 conflict payload surfaced when products still use the attribute
-    const [deleteConflict, setDeleteConflict] = useState<{ conflict: any; source: { id: number; name: string; isRoot: boolean } } | null>(null)
-    const [allCategories] = useState<any[]>(initialCategories)
-    const [allBrands] = useState<any[]>(initialBrands)
+    const [deleteConflict, setDeleteConflict] = useState<{ conflict: unknown; source: { id: number; name: string; isRoot: boolean } } | null>(null)
+    const [allCategories] = useState<CategoryRef[]>(initialCategories)
+    const [allBrands] = useState<BrandRef[]>(initialBrands)
 
 
     // Re-sync state when the server re-renders with fresh data (router.refresh()).
@@ -78,8 +85,8 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
      * buildTree can rebuild the hierarchy using treeParentKey='parent'.
      * We keep the full group/child metadata inline so the row has
      * everything it needs without re-keying. ── */
-    const data = useMemo(() => {
-        const flat: any[] = []
+    const data = useMemo<FlatNode[]>(() => {
+        const flat: FlatNode[] = []
         for (const g of tree) {
             flat.push({
                 ...g,
@@ -97,12 +104,14 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     }, [tree])
 
     /* ── Handlers ──────────────────────────────────────────── */
+    type ActionResult = { success?: boolean; conflict?: unknown; error?: string }
+
     const handleConfirmDelete = () => {
         const t = deleteTarget
         if (!t) return
         setDeleteTarget(null)
         startTransition(async () => {
-            const res: any = await deleteAttribute(t.id)
+            const res = (await deleteAttribute(t.id)) as ActionResult
             if (res?.success) { toast.success(`"${t.name}" deleted`); fetchTree(); return }
             // Backend 409 — products still use this attribute. Open guided dialog.
             if (res?.conflict) { setDeleteConflict({ conflict: res.conflict, source: t }); return }
@@ -113,7 +122,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     const handleForceDelete = async () => {
         const t = deleteConflict?.source
         if (!t) return
-        const res: any = await deleteAttribute(t.id, { force: true })
+        const res = (await deleteAttribute(t.id, { force: true })) as ActionResult
         if (res?.success) {
             toast.success(`"${t.name}" force-deleted`)
             setDeleteConflict(null); fetchTree()
@@ -122,21 +131,25 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
         }
     }
 
-    const handleCreateGroup = async (payload: any) => {
-        const res = await createAttribute(payload)
+    const handleCreateGroup = async (payload: Record<string, unknown>) => {
+        const res = (await createAttribute(payload as Parameters<typeof createAttribute>[0])) as ActionResult
         if (res?.success) { toast.success('Created'); setShowAddGroup(false); fetchTree() }
         else { toast.error(res?.error || 'Create failed') }
     }
     const handleAddValue = async (groupId: number, payload: { name: string; code?: string; color_hex?: string | null }) => {
-        const res = await addAttributeValue(groupId, payload)
+        const res = (await addAttributeValue(groupId, { ...payload, color_hex: payload.color_hex ?? undefined })) as ActionResult
         if (res?.success) { toast.success('Value added'); setAddingValueTo(null); fetchTree() }
         else { toast.error(res?.error || 'Failed') }
     }
-    const handleEdit = async (id: number, payload: any) => {
-        const res = await updateAttribute(id, payload)
+    const handleEdit = async (id: number, payload: Record<string, unknown>) => {
+        const res = (await updateAttribute(id, payload as Parameters<typeof updateAttribute>[1])) as ActionResult
         if (res?.success) { toast.success('Saved'); setEditingItem(null); fetchTree() }
         else { toast.error(res?.error || 'Save failed') }
     }
+
+    // Cast adapter — Phase 5 pattern for TreeMasterPage `data` consumers
+    const dataAsRecords = data as unknown as Record<string, unknown>[]
+    const asNode = (item: Record<string, unknown>): FlatNode => item as unknown as FlatNode
 
     return (
         <>
@@ -144,8 +157,8 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                 config={{
                     title: 'Attributes',
                     subtitle: (_, all) => {
-                        const groups = all.filter((n: any) => n._type === 'group').length
-                        const values = all.filter((n: any) => n._type === 'value').length
+                        const groups = all.filter((n) => asNode(n)._type === 'group').length
+                        const values = all.filter((n) => asNode(n)._type === 'value').length
                         return `${groups} groups · ${values} values`
                     },
                     icon: <Tags size={20} />,
@@ -157,11 +170,11 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         exportFilename: 'attributes',
                         exportColumns: [
                             { key: 'name', label: 'Name' },
-                            { key: 'short', label: 'Short', format: (n: any) => n._type === 'group' ? (n.short_label || n.code || '') : (n.code || '') },
-                            { key: 'type', label: 'Type', format: (n: any) => n._type },
-                            { key: 'group', label: 'Group', format: (n: any) => n._type === 'value' ? (tree.find(g => g.id === n.parent)?.name || '') : '' },
-                            { key: 'values', label: 'Values', format: (n: any) => n._type === 'group' ? n._valueCount : '' },
-                            { key: 'products', label: 'Products', format: (n: any) => n._productsTotal || 0 },
+                            { key: 'short', label: 'Short', format: (n) => { const x = asNode(n); return x._type === 'group' ? (x.short_label || x.code || '') : (x.code || '') } },
+                            { key: 'type', label: 'Type', format: (n) => asNode(n)._type },
+                            { key: 'group', label: 'Group', format: (n) => { const x = asNode(n); return x._type === 'value' ? (tree.find(g => g.id === x.parent)?.name || '') : '' } },
+                            { key: 'values', label: 'Values', format: (n) => { const x = asNode(n); return x._type === 'group' ? x._valueCount : '' } },
+                            { key: 'products', label: 'Products', format: (n) => asNode(n)._productsTotal || 0 },
                         ],
                         print: {
                             title: 'Attributes',
@@ -175,14 +188,17 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                                 { key: 'values', label: 'Values', align: 'right', defaultOn: true, width: '70px' },
                                 { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
                             ],
-                            rowMapper: (n: any) => ({
-                                name: n._type === 'value' ? `  \u21B3 ${n.name}` : n.name,
-                                short: n._type === 'group' ? (n.short_label || n.code || '') : (n.code || ''),
-                                type: n._type,
-                                group: n._type === 'value' ? (tree.find(g => g.id === n.parent)?.name || '') : '',
-                                values: n._type === 'group' ? n._valueCount : '',
-                                products: n._productsTotal || 0,
-                            }),
+                            rowMapper: (n) => {
+                                const x = asNode(n)
+                                return {
+                                    name: x._type === 'value' ? `  \u21B3 ${x.name}` : x.name,
+                                    short: x._type === 'group' ? (x.short_label || x.code || '') : (x.code || ''),
+                                    type: x._type,
+                                    group: x._type === 'value' ? (tree.find(g => g.id === x.parent)?.name || '') : '',
+                                    values: x._type === 'group' ? x._valueCount : '',
+                                    products: x._productsTotal || 0,
+                                }
+                            },
                         },
                         import: {
                             entity: 'attribute',
@@ -210,7 +226,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     ],
 
                     // ── Template owns filter + tree build ──
-                    data,
+                    data: dataAsRecords,
                     searchFields: ['name', 'code', 'short_label'],
                     treeParentKey: 'parent',
                     selectable: true,
@@ -218,7 +234,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         if (!confirm(`Delete ${ids.length} attribute(s)? Products tagged with them will lose those tags.`)) return
                         let ok = 0, fail = 0
                         for (const id of ids) {
-                            const res: any = await deleteAttribute(id)
+                            const res = (await deleteAttribute(id)) as ActionResult
                             if (res?.success) ok++; else fail++
                         }
                         if (ok) toast.success(`Deleted ${ok} attribute(s)`)
@@ -235,11 +251,11 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     },
                     onRefresh: fetchTree,
                     kpiPredicates: {
-                        groups: (n) => n._type === 'group',
-                        values: (n) => n._type === 'value',
-                        variant: (n) => n._type === 'group' && n.is_variant,
-                        required: (n) => n._type === 'group' && n.is_required,
-                        hasProducts: (n) => (n._productsTotal || 0) > 0,
+                        groups: (n) => asNode(n)._type === 'group',
+                        values: (n) => asNode(n)._type === 'value',
+                        variant: (n) => { const x = asNode(n); return x._type === 'group' && !!x.is_variant },
+                        required: (n) => { const x = asNode(n); return x._type === 'group' && !!x.is_required },
+                        hasProducts: (n) => (asNode(n)._productsTotal || 0) > 0,
                     },
 
                     kpis: [
@@ -251,27 +267,27 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         {
                             label: 'Groups', icon: <Tags size={11} />, color: 'var(--app-info)',
                             filterKey: 'groups', hint: 'Show only root attribute groups',
-                            value: (_, all) => all.filter((n: any) => n._type === 'group').length,
+                            value: (_, all) => all.filter((n) => asNode(n)._type === 'group').length,
                         },
                         {
                             label: 'Values', icon: <Hash size={11} />, color: 'var(--app-info)',
                             filterKey: 'values', hint: 'Show only values (leaf nodes)',
-                            value: (_, all) => all.filter((n: any) => n._type === 'value').length,
+                            value: (_, all) => all.filter((n) => asNode(n)._type === 'value').length,
                         },
                         {
                             label: 'Variant', icon: <Palette size={11} />, color: 'var(--app-warning)',
                             filterKey: 'variant', hint: 'Groups marked as variant (size, color, …)',
-                            value: (_, all) => all.filter((n: any) => n._type === 'group' && n.is_variant).length,
+                            value: (_, all) => all.filter((n) => { const x = asNode(n); return x._type === 'group' && !!x.is_variant }).length,
                         },
                         {
                             label: 'Required', icon: <Barcode size={11} />, color: 'var(--app-error)',
                             filterKey: 'required', hint: 'Groups flagged required on product creation',
-                            value: (_, all) => all.filter((n: any) => n._type === 'group' && n.is_required).length,
+                            value: (_, all) => all.filter((n) => { const x = asNode(n); return x._type === 'group' && !!x.is_required }).length,
                         },
                         {
                             label: 'Products', icon: <Package size={11} />, color: 'var(--app-success)',
                             filterKey: 'hasProducts', hint: 'Items currently used by products',
-                            value: (filtered) => filtered.reduce((s: number, n: any) => s + (n._productsTotal || 0), 0),
+                            value: (filtered) => filtered.reduce((s: number, n) => s + (asNode(n)._productsTotal || 0), 0),
                         },
                     ],
 
@@ -284,8 +300,8 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         actionLabel: 'Create First Attribute',
                     },
                     footerLeft: (filtered, all) => {
-                        const groups = all.filter((n: any) => n._type === 'group').length
-                        const values = all.filter((n: any) => n._type === 'value').length
+                        const groups = all.filter((n) => asNode(n)._type === 'group').length
+                        const values = all.filter((n) => asNode(n)._type === 'value').length
                         return (
                             <div className="flex items-center gap-3 flex-wrap">
                                 <span>{groups} groups</span>
@@ -308,7 +324,7 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                                 style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
                                 onClick={(e) => { if (e.target === e.currentTarget) setShowAddGroup(false) }}>
                                 <div className="w-full max-w-2xl">
-                                    <AddGroupForm onSave={handleCreateGroup} onCancel={() => setShowAddGroup(false)} groups={tree as any} />
+                                    <AddGroupForm onSave={handleCreateGroup} onCancel={() => setShowAddGroup(false)} groups={tree as unknown as Parameters<typeof AddGroupForm>[0]['groups']} />
                                 </div>
                             </div>
                         )}
@@ -320,14 +336,14 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                                     <AddValueForm
                                         groupId={addingValueTo.id}
                                         groupName={addingValueTo.name}
-                                        onSave={(payload: any) => handleAddValue(addingValueTo.id, payload)}
+                                        onSave={(payload) => handleAddValue(addingValueTo.id, payload)}
                                         onCancel={() => setAddingValueTo(null)}
                                     />
                                 </div>
                             </div>
                         )}
                         {editingItem && (
-                            <EditModal item={editingItem} tree={tree as any}
+                            <EditModal item={editingItem} tree={tree as unknown as Parameters<typeof EditModal>[0]['tree']}
                                 onSave={handleEdit}
                                 onCancel={() => setEditingItem(null)} />
                         )}
@@ -335,11 +351,11 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                             <CategoryLinkModal
                                 attributeId={linkingCategoryFor.id}
                                 attributeName={linkingCategoryFor.name}
-                                currentCategoryIds={linkingCategoryFor.linked_categories?.map((c: any) => c.id) || []}
-                                allCategories={allCategories}
+                                currentCategoryIds={linkingCategoryFor.linked_categories?.map((c) => c.id) || []}
+                                allCategories={allCategories as unknown as Parameters<typeof CategoryLinkModal>[0]['allCategories']}
                                 onCancel={() => setLinkingCategoryFor(null)}
                                 onSave={async (ids: number[]) => {
-                                    const res = await linkCategories(linkingCategoryFor.id, ids)
+                                    const res = (await linkCategories(linkingCategoryFor.id, ids)) as ActionResult
                                     if (res?.success) { toast.success('Categories linked'); setLinkingCategoryFor(null); fetchTree() }
                                     else { toast.error(res?.error || 'Failed') }
                                 }}
@@ -349,11 +365,11 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                             <BrandLinkModal
                                 attributeId={linkingBrandFor.id}
                                 attributeName={linkingBrandFor.name}
-                                currentBrandIds={linkingBrandFor.linked_brands?.map((b: any) => b.id) || []}
-                                allBrands={allBrands}
+                                currentBrandIds={linkingBrandFor.linked_brands?.map((b) => b.id) || []}
+                                allBrands={allBrands as unknown as Parameters<typeof BrandLinkModal>[0]['allBrands']}
                                 onCancel={() => setLinkingBrandFor(null)}
                                 onSave={async (ids: number[]) => {
-                                    const res = await linkBrands(linkingBrandFor.id, ids)
+                                    const res = (await linkBrands(linkingBrandFor.id, ids)) as ActionResult
                                     if (res?.success) { toast.success('Brands linked'); setLinkingBrandFor(null); fetchTree() }
                                     else { toast.error(res?.error || 'Failed') }
                                 }}
@@ -374,7 +390,8 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                             then offers Force Delete or Cancel. No migration path here: the
                             product's attribute-value mapping lives at the product level. */}
                         <DeleteConflictDialog
-                            conflict={deleteConflict?.conflict || null}
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- conflict shape is server-derived; the dialog narrows internally
+                            conflict={(deleteConflict?.conflict ?? null) as any}
                             sourceName={deleteConflict?.source?.name || ''}
                             entityName="attribute"
                             targets={[]}
@@ -385,40 +402,46 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         />
                     </>
                 }
-                detailPanel={(node, { onClose, onPin }) => (
-                    <AttributeDetailPanel
-                        node={node}
-                        onEdit={() => setEditingItem({ id: node.id, parentId: node._type === 'group' ? null : node.parent })}
-                        onAddValue={node._type === 'group' ? (() => setAddingValueTo(node)) : undefined}
-                        onLinkCategories={node._type === 'group' ? (() => setLinkingCategoryFor(node)) : undefined}
-                        onLinkBrands={node._type === 'group' ? (() => setLinkingBrandFor(node)) : undefined}
-                        onDelete={() => setDeleteTarget({ id: node.id, name: node.name, isRoot: node._type === 'group' })}
-                        onClose={onClose}
-                        onPin={onPin ? () => onPin(node) : undefined}
-                    />
-                )}
+                detailPanel={(rawNode, { onClose, onPin }) => {
+                    const node = asNode(rawNode as Record<string, unknown>)
+                    return (
+                        <AttributeDetailPanel
+                            node={node}
+                            onEdit={() => setEditingItem({ id: node.id, parentId: node._type === 'group' ? null : node.parent })}
+                            onAddValue={node._type === 'group' ? (() => setAddingValueTo(node as AttributeGroup)) : undefined}
+                            onLinkCategories={node._type === 'group' ? (() => setLinkingCategoryFor(node as AttributeGroup)) : undefined}
+                            onLinkBrands={node._type === 'group' ? (() => setLinkingBrandFor(node as AttributeGroup)) : undefined}
+                            onDelete={() => setDeleteTarget({ id: node.id, name: node.name, isRoot: node._type === 'group' })}
+                            onClose={onClose}
+                            onPin={onPin ? () => onPin(rawNode) : undefined}
+                        />
+                    )
+                }}
             >
                 {({ tree: rendered, expandKey, expandAll, searchQuery, isSelected, openNode, selectedIds, toggleSelect }) => (
-                    rendered.map((node: any) => (
-                        <div key={`${node.id}-${expandKey}`}
-                            className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
-                            <AttributeRow
-                                node={node}
-                                level={0}
-                                forceExpanded={expandAll}
-                                searchQuery={searchQuery}
-                                onSelect={(n) => openNode(n, 'overview')}
-                                onEdit={(n) => setEditingItem({ id: n.id, parentId: n._type === 'group' ? null : n.parent })}
-                                onAddValue={(n) => setAddingValueTo(n)}
-                                onLinkCategories={(n) => setLinkingCategoryFor(n)}
-                                onLinkBrands={(n) => setLinkingBrandFor(n)}
-                                onDelete={(n) => setDeleteTarget({ id: n.id, name: n.name, isRoot: n._type === 'group' })}
-                                selectable
-                                isCheckedFn={(id: number) => selectedIds.has(id)}
-                                onToggleCheck={toggleSelect}
-                            />
-                        </div>
-                    ))
+                    rendered.map((rawNode) => {
+                        const node = asNode(rawNode as Record<string, unknown>)
+                        return (
+                            <div key={`${node.id}-${expandKey}`}
+                                className={`rounded-xl transition-all duration-300 ${isSelected(rawNode) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                                <AttributeRow
+                                    node={node}
+                                    level={0}
+                                    forceExpanded={expandAll}
+                                    searchQuery={searchQuery}
+                                    onSelect={(n) => openNode(n as unknown as Record<string, unknown>, 'overview')}
+                                    onEdit={(n) => setEditingItem({ id: n.id, parentId: n._type === 'group' ? null : n.parent })}
+                                    onAddValue={(n) => setAddingValueTo(n as AttributeGroup)}
+                                    onLinkCategories={(n) => setLinkingCategoryFor(n as AttributeGroup)}
+                                    onLinkBrands={(n) => setLinkingBrandFor(n as AttributeGroup)}
+                                    onDelete={(n) => setDeleteTarget({ id: n.id, name: n.name, isRoot: n._type === 'group' })}
+                                    selectable
+                                    isCheckedFn={(id: number) => selectedIds.has(id)}
+                                    onToggleCheck={toggleSelect}
+                                />
+                            </div>
+                        )
+                    })
                 )}
             </TreeMasterPage>
         </>
@@ -433,30 +456,31 @@ function AttributeRow({
     onSelect, onEdit, onAddValue, onLinkCategories, onLinkBrands, onDelete,
     selectable, isCheckedFn, onToggleCheck,
 }: {
-    node: any
+    node: FlatNode
     level: number
     forceExpanded?: boolean
     searchQuery: string
-    onSelect: (n: any) => void
-    onEdit: (n: any) => void
-    onAddValue: (n: any) => void
-    onLinkCategories: (n: any) => void
-    onLinkBrands: (n: any) => void
-    onDelete: (n: any) => void
+    onSelect: (n: FlatNode) => void
+    onEdit: (n: FlatNode) => void
+    onAddValue: (n: FlatNode) => void
+    onLinkCategories: (n: FlatNode) => void
+    onLinkBrands: (n: FlatNode) => void
+    onDelete: (n: FlatNode) => void
     selectable?: boolean
     isCheckedFn?: (id: number) => boolean
     onToggleCheck?: (id: number) => void
 }) {
     const isGroup = node._type === 'group'
-    const hasChildren = isGroup && (node.children?.length || 0) > 0
-    const [isOpen, setIsOpen] = useState(forceExpanded ?? level < 1)
+    const groupNode = isGroup ? (node as AttributeGroup & { _type: 'group' }) : null
+    const hasChildren = !!(isGroup && (groupNode?.children?.length || 0) > 0)
+    const [isOpen, setIsOpen] = useState<boolean>(forceExpanded ?? level < 1)
     const rowChecked = isCheckedFn ? isCheckedFn(node.id) : false
     useEffect(() => { if (searchQuery) setIsOpen(true) }, [searchQuery])
     useEffect(() => { if (forceExpanded !== undefined) setIsOpen(forceExpanded) }, [forceExpanded])
 
     const products = node._productsTotal || 0
     const values = node._valueCount || 0
-    const linksCount = (node.linked_categories?.length || 0) + (node.linked_brands?.length || 0)
+    const linksCount = (groupNode?.linked_categories?.length || 0) + (groupNode?.linked_brands?.length || 0)
 
     return (
         <div>
@@ -525,13 +549,13 @@ function AttributeRow({
                         <span className={`truncate text-tp-lg ${isGroup ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
                             {node.name}
                         </span>
-                        {isGroup && node.is_variant && (
+                        {groupNode && groupNode.is_variant && (
                             <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
                                 style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
                                 Variant
                             </span>
                         )}
-                        {isGroup && node.is_required && (
+                        {groupNode && groupNode.is_required && (
                             <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-[1px] rounded-full flex-shrink-0"
                                 style={{ background: 'color-mix(in srgb, var(--app-error) 12%, transparent)', color: 'var(--app-error)' }}>
                                 Required
@@ -541,9 +565,9 @@ function AttributeRow({
                     {node.code && (
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="font-mono text-tp-xxs font-medium text-app-muted-foreground">{node.code}</span>
-                            {node.short_label && (
+                            {groupNode?.short_label && (
                                 <span className="text-tp-xxs font-medium text-app-muted-foreground opacity-60">
-                                    · {node.short_label}
+                                    · {groupNode.short_label}
                                 </span>
                             )}
                         </div>
@@ -562,7 +586,7 @@ function AttributeRow({
                 <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
                     <span className="text-tp-xs font-semibold tabular-nums"
                         style={{ color: linksCount > 0 ? 'var(--app-warning)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}
-                        title={`${node.linked_categories?.length || 0} categories, ${node.linked_brands?.length || 0} brands`}>
+                        title={`${groupNode?.linked_categories?.length || 0} categories, ${groupNode?.linked_brands?.length || 0} brands`}>
                         {linksCount || '–'}
                     </span>
                 </div>
@@ -605,12 +629,12 @@ function AttributeRow({
             </div>
 
             {/* Children */}
-            {hasChildren && isOpen && (
+            {hasChildren && isOpen && groupNode && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    {node.children!.map((child: any) => (
+                    {(groupNode.children ?? []).map((child) => (
                         <AttributeRow
                             key={child.id}
-                            node={{ ...child, _type: 'value', parent: node.id, _productsTotal: child.products_count || 0, _valueCount: 0 }}
+                            node={{ ...child, _type: 'value', parent: node.id, _productsTotal: child.products_count || 0, _valueCount: 0 } as FlatNode}
                             level={level + 1}
                             forceExpanded={forceExpanded}
                             searchQuery={searchQuery}
@@ -637,7 +661,7 @@ function AttributeRow({
 function AttributeDetailPanel({
     node, onEdit, onAddValue, onLinkCategories, onLinkBrands, onDelete, onClose, onPin,
 }: {
-    node: any
+    node: FlatNode
     onEdit: () => void
     onAddValue?: () => void
     onLinkCategories?: () => void
@@ -647,6 +671,7 @@ function AttributeDetailPanel({
     onPin?: () => void
 }) {
     const isGroup = node._type === 'group'
+    const groupNode = isGroup ? (node as AttributeGroup & { _type: 'group' }) : null
 
     return (
         <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
@@ -701,21 +726,21 @@ function AttributeDetailPanel({
                 )}
 
                 {/* Flags row (groups only) */}
-                {isGroup && (
+                {groupNode && (
                     <div className="grid grid-cols-2 gap-1.5">
-                        <FlagTile label="Variant" on={node.is_variant} color="var(--app-warning)" />
-                        <FlagTile label="Required" on={node.is_required} color="var(--app-error)" />
-                        <FlagTile label="Show in name" on={node.show_in_name} color="var(--app-info)" />
-                        <FlagTile label="Barcode" on={node.requires_barcode} color="var(--app-success)" />
+                        <FlagTile label="Variant" on={groupNode.is_variant} color="var(--app-warning)" />
+                        <FlagTile label="Required" on={groupNode.is_required} color="var(--app-error)" />
+                        <FlagTile label="Show in name" on={groupNode.show_in_name} color="var(--app-info)" />
+                        <FlagTile label="Barcode" on={groupNode.requires_barcode} color="var(--app-success)" />
                     </div>
                 )}
 
                 {/* Values list (groups only) */}
-                {isGroup && (
-                    <SectionCard title="Values" icon={<Hash size={12} />} color="var(--app-info)" count={node.children?.length || 0}>
-                        {node.children?.length ? (
+                {groupNode && (
+                    <SectionCard title="Values" icon={<Hash size={12} />} color="var(--app-info)" count={groupNode.children?.length || 0}>
+                        {groupNode.children?.length ? (
                             <div className="flex flex-wrap gap-1.5">
-                                {node.children.map((c: AttributeChild) => (
+                                {groupNode.children.map((c: AttributeChild) => (
                                     <span key={c.id} className="text-tp-xxs font-bold px-2 py-1 rounded-full flex items-center gap-1"
                                         style={{
                                             background: c.color_hex || 'color-mix(in srgb, var(--app-info) 10%, transparent)',
@@ -731,11 +756,11 @@ function AttributeDetailPanel({
                 )}
 
                 {/* Linked categories (groups only) */}
-                {isGroup && (
-                    <SectionCard title="Categories" icon={<FolderTree size={12} />} color="var(--app-info)" count={node.linked_categories?.length || 0}>
-                        {node.linked_categories?.length ? (
+                {groupNode && (
+                    <SectionCard title="Categories" icon={<FolderTree size={12} />} color="var(--app-info)" count={groupNode.linked_categories?.length || 0}>
+                        {groupNode.linked_categories?.length ? (
                             <div className="flex flex-wrap gap-1.5">
-                                {node.linked_categories.map((c: any) => (
+                                {groupNode.linked_categories.map((c) => (
                                     <span key={c.id} className="text-tp-xxs font-bold px-2 py-1 rounded-full"
                                         style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
                                         {c.name}
@@ -747,11 +772,11 @@ function AttributeDetailPanel({
                 )}
 
                 {/* Linked brands (groups only) */}
-                {isGroup && (
-                    <SectionCard title="Brands" icon={<Building2 size={12} />} color="var(--app-warning)" count={node.linked_brands?.length || 0}>
-                        {node.linked_brands?.length ? (
+                {groupNode && (
+                    <SectionCard title="Brands" icon={<Building2 size={12} />} color="var(--app-warning)" count={groupNode.linked_brands?.length || 0}>
+                        {groupNode.linked_brands?.length ? (
                             <div className="flex flex-wrap gap-1.5">
-                                {node.linked_brands.map((b: any) => (
+                                {groupNode.linked_brands.map((b) => (
                                     <span key={b.id} className="text-tp-xxs font-bold px-2 py-1 rounded-full"
                                         style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
                                         {b.name}
@@ -766,7 +791,7 @@ function AttributeDetailPanel({
     )
 }
 
-function QuickAction({ onClick, icon, label, color }: any) {
+function QuickAction({ onClick, icon, label, color }: { onClick: () => void; icon: ReactNode; label: string; color: string }) {
     return (
         <button onClick={onClick}
             className="flex items-center justify-center gap-1 text-tp-xs font-bold px-2 py-2 rounded-xl transition-all hover:scale-[1.02]"
@@ -780,7 +805,7 @@ function QuickAction({ onClick, icon, label, color }: any) {
     )
 }
 
-function FlagTile({ label, on, color }: any) {
+function FlagTile({ label, on, color }: { label: string; on: boolean | undefined; color: string }) {
     return (
         <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl"
             style={{
@@ -797,7 +822,7 @@ function FlagTile({ label, on, color }: any) {
     )
 }
 
-function SectionCard({ title, icon, color, count, children }: any) {
+function SectionCard({ title, icon, color, count, children }: { title: string; icon: ReactNode; color: string; count: number; children: ReactNode }) {
     return (
         <div className="rounded-xl p-3"
             style={{ background: 'color-mix(in srgb, var(--app-border) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>

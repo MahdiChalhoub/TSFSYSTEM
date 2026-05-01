@@ -74,11 +74,14 @@ type Props = {
 }
 
 /** Tree node fed to TreeMasterPage — either a synthetic region group or a SourcingCountry leaf. */
-type TreeNode = (SourcingCountry & {
+type CountryTreeNode = SourcingCountry & {
     _type: 'country'
     _pk?: number
     parent: string | null
-}) | {
+    name: string
+    children?: TreeNode[]
+}
+type RegionTreeNode = {
     id: string
     parent: null
     _type: 'region'
@@ -88,6 +91,7 @@ type TreeNode = (SourcingCountry & {
     notes?: string
     children?: TreeNode[]
 }
+type TreeNode = CountryTreeNode | RegionTreeNode
 
 /* ═══════════════════════════════════════════════════════════
  *  CountriesClient — tenant-curated sourcing countries.
@@ -190,13 +194,19 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
         }
     }
 
+    // The TreeMasterPage data prop is typed as Record<string, unknown>[]; our `TreeNode`
+    // shape carries the same `_type` discriminator the predicates use. The adapter casts
+    // each row at the predicate boundary so we don't sprinkle ` as any` through the config.
+    const dataAsRecords = data as unknown as Record<string, unknown>[]
+    const asNode = (item: Record<string, unknown>): TreeNode => item as unknown as TreeNode
+
     return (
         <TreeMasterPage
             config={{
                 title: 'Sourcing Countries',
                 subtitle: (_, all) => {
-                    const countries = all.filter((n: any) => n._type === 'country').length
-                    const regions = all.filter((n: any) => n._type === 'region').length
+                    const countries = all.filter((n) => asNode(n)._type === 'country').length
+                    const regions = all.filter((n) => asNode(n)._type === 'region').length
                     return `${countries} active · ${regions} region${regions !== 1 ? 's' : ''}`
                 },
                 icon: <Globe size={20} />,
@@ -211,42 +221,42 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
                 ],
 
                 // ── Template-owned filtering ──
-                data,
+                data: dataAsRecords,
                 searchFields: ['name', 'country_name', 'country_iso2', 'country_iso3', 'country_region'],
                 treeParentKey: 'parent',
                 kpiPredicates: {
-                    regions: (n) => n._type === 'region',
-                    countries: (n) => n._type === 'country',
-                    active: (n) => n._type === 'country' && n.is_enabled,
-                    paused: (n) => n._type === 'country' && !n.is_enabled,
-                    withNotes: (n) => n._type === 'country' && !!n.notes,
+                    regions: (n) => asNode(n)._type === 'region',
+                    countries: (n) => asNode(n)._type === 'country',
+                    active: (n) => { const x = asNode(n); return x._type === 'country' && !!x.is_enabled },
+                    paused: (n) => { const x = asNode(n); return x._type === 'country' && !x.is_enabled },
+                    withNotes: (n) => { const x = asNode(n); return x._type === 'country' && !!x.notes },
                 },
 
                 kpis: [
                     {
                         label: 'Total', icon: <Layers size={11} />, color: 'var(--app-primary)',
                         filterKey: 'all', hint: 'Show everything (clear filters)',
-                        value: (_, all) => all.filter((n: any) => n._type === 'country').length,
+                        value: (_, all) => all.filter((n) => asNode(n)._type === 'country').length,
                     },
                     {
                         label: 'Regions', icon: <MapPin size={11} />, color: 'var(--app-info)',
                         filterKey: 'regions', hint: 'Show only region groupings',
-                        value: (_, all) => all.filter((n: any) => n._type === 'region').length,
+                        value: (_, all) => all.filter((n) => asNode(n)._type === 'region').length,
                     },
                     {
                         label: 'Active', icon: <Power size={11} />, color: 'var(--app-success)',
                         filterKey: 'active', hint: 'Currently enabled for sourcing',
-                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && n.is_enabled).length,
+                        value: (filtered) => filtered.filter((n) => { const x = asNode(n); return x._type === 'country' && !!x.is_enabled }).length,
                     },
                     {
                         label: 'Paused', icon: <X size={11} />, color: 'var(--app-warning)',
                         filterKey: 'paused', hint: 'Disabled without removing',
-                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && !n.is_enabled).length,
+                        value: (filtered) => filtered.filter((n) => { const x = asNode(n); return x._type === 'country' && !x.is_enabled }).length,
                     },
                     {
                         label: 'With Notes', icon: <Pencil size={11} />, color: 'var(--app-muted-foreground)',
                         filterKey: 'withNotes', hint: 'Countries with sourcing notes',
-                        value: (filtered) => filtered.filter((n: any) => n._type === 'country' && n.notes).length,
+                        value: (filtered) => filtered.filter((n) => { const x = asNode(n); return x._type === 'country' && !!x.notes }).length,
                     },
                 ],
 
@@ -259,8 +269,8 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
                     actionLabel: 'Add Sourcing Countries',
                 },
                 footerLeft: (filtered, all) => {
-                    const countries = all.filter((n: any) => n._type === 'country').length
-                    const active = all.filter((n: any) => n._type === 'country' && n.is_enabled).length
+                    const countries = all.filter((n) => asNode(n)._type === 'country').length
+                    const active = all.filter((n) => { const x = asNode(n); return x._type === 'country' && !!x.is_enabled }).length
                     return (
                         <div className="flex items-center gap-3 flex-wrap">
                             <span>{countries} sourcing countries</span>
@@ -306,7 +316,7 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
             }
             detailPanel={(node, { onClose, onPin }) => (
                 <CountryDetailPanel
-                    node={node}
+                    node={asNode(node as Record<string, unknown>)}
                     onToggleEnabled={handleToggleEnabled}
                     onEditNotes={(sc: SourcingCountry) => setEditingNotes(sc)}
                     onRemove={(sc: SourcingCountry) => setDeleteTarget(sc)}
@@ -316,21 +326,24 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
             )}
         >
             {({ tree, expandKey, expandAll, searchQuery, isSelected, openNode }) => (
-                tree.map((node: any) => (
-                    <div key={`${node.id}-${expandKey}`}
-                        className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
-                        <CountryRow
-                            node={node}
-                            level={0}
-                            forceExpanded={expandAll}
-                            searchQuery={searchQuery}
-                            onSelect={(n: any) => openNode(n, 'overview')}
-                            onToggleEnabled={handleToggleEnabled}
-                            onEditNotes={(sc: SourcingCountry) => setEditingNotes(sc)}
-                            onRemove={(sc: SourcingCountry) => setDeleteTarget(sc)}
-                        />
-                    </div>
-                ))
+                tree.map((rawNode) => {
+                    const node = asNode(rawNode as Record<string, unknown>)
+                    return (
+                        <div key={`${node.id}-${expandKey}`}
+                            className={`rounded-xl transition-all duration-300 ${isSelected(rawNode) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                            <CountryRow
+                                node={node}
+                                level={0}
+                                forceExpanded={expandAll}
+                                searchQuery={searchQuery}
+                                onSelect={(n) => openNode(n as unknown as Record<string, unknown>, 'overview')}
+                                onToggleEnabled={handleToggleEnabled}
+                                onEditNotes={(sc: SourcingCountry) => setEditingNotes(sc)}
+                                onRemove={(sc: SourcingCountry) => setDeleteTarget(sc)}
+                            />
+                        </div>
+                    )
+                })
             )}
         </TreeMasterPage>
     )
@@ -339,12 +352,23 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
 /* ═══════════════════════════════════════════════════════════
  *  ROW — region group or country leaf
  * ═══════════════════════════════════════════════════════════ */
+interface CountryRowProps {
+    node: TreeNode
+    level: number
+    forceExpanded?: boolean
+    searchQuery?: string
+    onSelect: (n: TreeNode) => void
+    onToggleEnabled: (sc: SourcingCountry) => void
+    onEditNotes: (sc: SourcingCountry) => void
+    onRemove: (sc: SourcingCountry) => void
+}
+
 function CountryRow({
     node, level, forceExpanded, searchQuery,
     onSelect, onToggleEnabled, onEditNotes, onRemove,
-}: any) {
+}: CountryRowProps) {
     const isRegion = node._type === 'region'
-    const [isOpen, setIsOpen] = useState(forceExpanded ?? true)
+    const [isOpen, setIsOpen] = useState<boolean>(forceExpanded ?? true)
 
     if (isRegion) {
         const count = node.children?.length || 0
@@ -386,7 +410,7 @@ function CountryRow({
                         </span>
                     </div>
                 </div>
-                {isOpen && node.children?.map((c: any) => (
+                {isOpen && node.children?.map((c) => (
                     <CountryRow
                         key={c.id} node={c} level={level + 1}
                         forceExpanded={forceExpanded} searchQuery={searchQuery}
@@ -406,8 +430,8 @@ function CountryRow({
     return (
         <div
             className="group flex items-center gap-2 py-2 hover:bg-app-surface-hover cursor-pointer relative"
-            onClick={() => onSelect(sc)}
-            onDoubleClick={() => onSelect(sc)}
+            onClick={() => onSelect(node)}
+            onDoubleClick={() => onSelect(node)}
             style={{
                 paddingLeft: `${12 + level * 20}px`, paddingRight: 12,
                 borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
@@ -630,7 +654,12 @@ function SourcingPicker({
 /* ═══════════════════════════════════════════════════════════
  *  NOTES MODAL — edit sourcing notes
  * ═══════════════════════════════════════════════════════════ */
-function NotesModal({ country, onCancel, onSave }: any) {
+interface NotesModalProps {
+    country: SourcingCountry
+    onCancel: () => void
+    onSave: (text: string) => void
+}
+function NotesModal({ country, onCancel, onSave }: NotesModalProps) {
     const [text, setText] = useState(country.notes || '')
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -668,7 +697,15 @@ function NotesModal({ country, onCancel, onSave }: any) {
 /* ═══════════════════════════════════════════════════════════
  *  DETAIL PANEL
  * ═══════════════════════════════════════════════════════════ */
-function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onClose, onPin }: any) {
+interface CountryDetailPanelProps {
+    node: TreeNode
+    onToggleEnabled: (sc: SourcingCountry) => void
+    onEditNotes: (sc: SourcingCountry) => void
+    onRemove: (sc: SourcingCountry) => void
+    onClose?: () => void
+    onPin?: () => void
+}
+function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onClose, onPin }: CountryDetailPanelProps) {
     if (node._type === 'region') {
         return (
             <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
@@ -689,7 +726,7 @@ function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onCl
                     {onClose && <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg"><X size={14} /></button>}
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
-                    {node.children?.map((c: any) => (
+                    {node.children?.filter((c): c is Extract<TreeNode, { _type: 'country' }> => c._type === 'country').map((c) => (
                         <div key={c.id} className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
                             style={{ background: 'color-mix(in srgb, var(--app-border) 12%, transparent)' }}>
                             <span className="text-base">{flagEmoji(c.country_iso2)}</span>
@@ -705,7 +742,7 @@ function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onCl
         )
     }
 
-    const sc: SourcingCountry = node
+    const sc: SourcingCountry = node as SourcingCountry
     const color = regionColor(sc.country_region)
     return (
         <div className="flex flex-col h-full" style={{ background: 'var(--app-surface)' }}>
@@ -989,7 +1026,7 @@ function groupByBrandAndVariant(products: Product[]): BrandGroup[] {
     return groups.sort((a, b) => b.total_products - a.total_products)
 }
 
-function StatTile({ label, value, color, icon, mono }: any) {
+function StatTile({ label, value, color, icon, mono }: { label: string; value: string; color: string; icon: ReactNode; mono?: boolean }) {
     return (
         <div className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
             style={{ background: `color-mix(in srgb, ${color} 5%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>

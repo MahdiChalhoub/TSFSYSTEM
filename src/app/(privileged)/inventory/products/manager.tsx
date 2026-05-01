@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -140,7 +139,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const data: any = await erpFetch('products/')
+      const data = await erpFetch('products/') as Product[] | { results?: Product[]; count?: number }
       if (Array.isArray(data)) {
         setItems(data); setServerTotal(data.length)
       } else {
@@ -434,7 +433,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
-          searchRef={searchRef}
+          searchRef={searchRef as React.RefObject<HTMLInputElement>}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
           activeFilterCount={activeFilterCount}
@@ -471,7 +470,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
             { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
           ]}
           selectedIds={selectedIds}
-          onToggleSelect={toggleSelect}
+          onToggleSelect={(id) => toggleSelect(Number(id))}
           isAllPageSelected={isAllPageSelected}
           onToggleSelectAll={toggleSelectAll}
           bulkActions={

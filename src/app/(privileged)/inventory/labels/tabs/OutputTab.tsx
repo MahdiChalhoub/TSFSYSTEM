@@ -1,44 +1,45 @@
-// @ts-nocheck
-// Phase 5 Session 7: depends on printer-config CRUD actions not yet exported from
-// `@/app/actions/labels` (listPrinterConfigs, createPrinterConfig, updatePrinterConfig,
-// deletePrinterConfig, testPrinterConnection). Defer until the actions module is
-// extended; per the strategy's Rule 6 a structural action-module gap keeps
-// `@ts-nocheck` rather than papering over with `as any` casts.
 'use client'
 
 import { useState, useTransition, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
-    Printer, Wifi, WifiOff, Plus, Pencil, Trash2, Save,
+    Printer, Plus, Pencil, Trash2, Save,
     CheckCircle2, XCircle, AlertTriangle, Loader2, Zap,
-    Settings, Radio, Bluetooth, Usb, FileText, Tag,
+    Radio, Bluetooth, Usb, FileText,
 } from 'lucide-react'
 import {
     listPrinterConfigs, createPrinterConfig, updatePrinterConfig,
     deletePrinterConfig, testPrinterConnection,
+    type PrinterConfig, type PrinterConfigInput,
 } from '@/app/actions/labels'
+import type { PrintSession } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
 const soft = (varName: string, pct = 10) => ({ backgroundColor: `color-mix(in srgb, ${v(varName)} ${pct}%, transparent)` })
 const grad = (varName: string) => ({ background: `linear-gradient(135deg, ${v(varName)}, color-mix(in srgb, ${v(varName)} 80%, black))` })
 
+type PrinterRow = PrinterConfig & {
+    test_status?: string
+    last_tested_at?: string
+}
+
 interface Props {
-    initialPrinters: any[]
-    sessions: any[]
+    initialPrinters: PrinterRow[]
+    sessions: PrintSession[]
 }
 
 export default function OutputTab({ initialPrinters, sessions }: Props) {
     const [isPending, startTransition] = useTransition()
-    const [printers, setPrinters] = useState<any[]>(initialPrinters)
+    const [printers, setPrinters] = useState<PrinterRow[]>(initialPrinters)
     const [editId, setEditId] = useState<number | null>(null)
     const [formOpen, setFormOpen] = useState(false)
-    const [form, setForm] = useState<Record<string, any>>({})
+    const [form, setForm] = useState<PrinterConfigInput>({})
 
     // Print queue monitor
-    const activeSessions = useMemo(() => sessions.filter(s => ['QUEUED', 'PRINTING'].includes(s.status)), [sessions])
+    const activeSessions = useMemo(() => sessions.filter(s => s.status && ['QUEUED', 'PRINTING'].includes(s.status)), [sessions])
     const recentCompleted = useMemo(() => sessions.filter(s => s.status === 'COMPLETED').slice(0, 5), [sessions])
 
-    const editPrinter = useCallback((printer: any) => {
+    const editPrinter = useCallback((printer: Partial<PrinterRow>) => {
         setForm({
             name: printer.name || '', device_identifier: printer.device_identifier || '',
             model_name: printer.model_name || '', location: printer.location || '',
@@ -135,7 +136,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 mt-1.5 text-[10px] text-app-muted-foreground">
-                                    <span className="flex items-center gap-1">{connIcon(p.connection_type)} {p.connection_type}</span>
+                                    <span className="flex items-center gap-1">{connIcon(p.connection_type ?? '')} {p.connection_type}</span>
                                     <span>{p.printer_type}</span>
                                     {p.model_name && <span>{p.model_name}</span>}
                                     {p.location && <span>📍 {p.location}</span>}
@@ -159,21 +160,21 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                     <div className="bg-app-surface rounded-2xl border border-app-border/50 p-4 space-y-3">
                         <h4 className="text-[12px] font-black text-app-foreground">{editId ? 'Edit Printer' : 'Add Printer'}</h4>
                         <div className="grid grid-cols-2 gap-3">
-                            {[['name', 'Printer Name'], ['model_name', 'Model'], ['location', 'Location'], ['address', 'IP / Address'], ['device_identifier', 'Device ID'], ['driver_name', 'Driver']].map(([key, label]) => (
+                            {([['name', 'Printer Name'], ['model_name', 'Model'], ['location', 'Location'], ['address', 'IP / Address'], ['device_identifier', 'Device ID'], ['driver_name', 'Driver']] as const).map(([key, label]) => (
                                 <div key={key}>
                                     <label className="text-[9px] font-bold text-app-muted-foreground uppercase">{label}</label>
-                                    <input value={form[key] || ''} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5" />
+                                    <input value={(form[key] as string | undefined) ?? ''} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5" />
                                 </div>
                             ))}
                             <div>
                                 <label className="text-[9px] font-bold text-app-muted-foreground uppercase">Type</label>
-                                <select value={form.printer_type} onChange={e => setForm(p => ({ ...p, printer_type: e.target.value }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5">
+                                <select value={form.printer_type ?? ''} onChange={e => setForm(p => ({ ...p, printer_type: e.target.value as PrinterConfig['printer_type'] }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5">
                                     <option value="THERMAL">Thermal</option><option value="INKJET">Inkjet</option><option value="LASER">Laser</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="text-[9px] font-bold text-app-muted-foreground uppercase">Connection</label>
-                                <select value={form.connection_type} onChange={e => setForm(p => ({ ...p, connection_type: e.target.value }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5">
+                                <select value={form.connection_type ?? ''} onChange={e => setForm(p => ({ ...p, connection_type: e.target.value as PrinterConfig['connection_type'] }))} className="w-full h-8 px-3 rounded-lg border border-app-border bg-app-background text-[11px] text-app-foreground outline-none mt-0.5">
                                     <option value="NETWORK">Network</option><option value="USB">USB</option><option value="BLUETOOTH">Bluetooth</option>
                                 </select>
                             </div>

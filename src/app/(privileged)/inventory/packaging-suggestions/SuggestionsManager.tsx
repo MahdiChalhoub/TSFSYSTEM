@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /**
@@ -16,6 +15,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import {
@@ -29,6 +29,16 @@ import {
 
 type Option = { id: number; name: string; code?: string }
 
+type UnitPackage = {
+    id: number
+    name?: string
+    ratio?: number | string
+    unit_code?: string
+    unit_name?: string
+}
+
+type UnitOption = { id: number; name?: string; code?: string }
+
 export default function SuggestionsManager({
     initialRules,
     categories, brands, attributes, units, unitPackages,
@@ -37,9 +47,10 @@ export default function SuggestionsManager({
     categories: Option[]
     brands: Option[]
     attributes: Option[]
-    units: any[]
-    unitPackages: any[]
+    units: UnitOption[]
+    unitPackages: UnitPackage[]
 }) {
+    void units // currently surfaced via unitPackages.unit_code; kept on the props for future enrichment
     const router = useRouter()
     const [rules, setRules] = useState<PackagingSuggestionRule[]>(initialRules)
     const [showForm, setShowForm] = useState(false)
@@ -62,12 +73,12 @@ export default function SuggestionsManager({
     const previewPriority = priority ? Number(priority) : specificity * 10
 
     const selectedPackaging = useMemo(
-        () => unitPackages.find((p: any) => String(p.id) === packagingId),
+        () => unitPackages.find((p) => String(p.id) === packagingId),
         [packagingId, unitPackages]
     )
 
     const groupedPackages = useMemo(() => {
-        const byUnit: Record<string, any[]> = {}
+        const byUnit: Record<string, UnitPackage[]> = {}
         for (const p of unitPackages) {
             const key = p.unit_code || p.unit_name || 'Unit'
             if (!byUnit[key]) byUnit[key] = []
@@ -92,12 +103,12 @@ export default function SuggestionsManager({
                 packaging: Number(packagingId),
                 priority: priority ? Number(priority) : 0,
             })
-            setRules(prev => [...prev, created].sort(byPriority))
+            setRules(prev => [...prev, created as PackagingSuggestionRule].sort(byPriority))
             toast.success('Rule created')
             resetForm(); setShowForm(false)
             router.refresh()
-        } catch (e: any) {
-            toast.error(e?.message || 'Failed to create rule')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to create rule')
         }
         setSaving(false)
     }
@@ -109,7 +120,7 @@ export default function SuggestionsManager({
             setRules(prev => prev.filter(r => r.id !== id))
             toast.success('Rule deleted')
             router.refresh()
-        } catch (e: any) { toast.error(e?.message || 'Delete failed') }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Delete failed') }
     }
 
     const sortedRules = useMemo(() => [...rules].sort(byPriority), [rules])
@@ -219,7 +230,7 @@ export default function SuggestionsManager({
                                 <option value="">— Select a package template —</option>
                                 {Object.entries(groupedPackages).map(([unitCode, pkgs]) => (
                                     <optgroup key={unitCode} label={`Unit: ${unitCode}`}>
-                                        {(pkgs as any[]).map((p: any) => (
+                                        {pkgs.map((p) => (
                                             <option key={p.id} value={p.id}>
                                                 {p.name} (×{p.ratio} {p.unit_code})
                                             </option>
@@ -312,7 +323,7 @@ export default function SuggestionsManager({
                     </div>
 
                     <div className="divide-y divide-app-border/30">
-                        {sortedRules.map((r: any) => (
+                        {sortedRules.map((r) => (
                             <div key={r.id}
                                 className="grid grid-cols-[auto_1fr_1fr_1fr_auto_auto_auto] gap-3 items-center px-4 py-2.5 hover:bg-app-background/40 transition-colors group">
                                 <div className="w-6 h-6 rounded-lg flex items-center justify-center"
@@ -345,22 +356,22 @@ export default function SuggestionsManager({
                                 <div className="w-[70px] text-center">
                                     <span className="inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-tp-xs font-bold"
                                         style={{
-                                            background: r.priority > 0
+                                            background: (r.priority ?? 0) > 0
                                                 ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)'
                                                 : 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                            color: r.priority > 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
+                                            color: (r.priority ?? 0) > 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
                                         }}
-                                        title={r.priority > 0 ? 'Manual override' : `Auto from ${r.specificity} dimension(s)`}>
+                                        title={(r.priority ?? 0) > 0 ? 'Manual override' : `Auto from ${r.specificity ?? 0} dimension(s)`}>
                                         {r.effective_priority}
                                     </span>
                                 </div>
 
                                 <div className="w-[60px] text-center text-tp-xs font-mono tabular-nums"
-                                    style={{ color: r.usage_count > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                                    style={{ color: (r.usage_count ?? 0) > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
                                     {r.usage_count || 0}
                                 </div>
 
-                                <button type="button" onClick={() => handleDelete(r.id)}
+                                <button type="button" onClick={() => r.id !== undefined && handleDelete(r.id)}
                                     className="w-8 opacity-0 group-hover:opacity-100 p-1 rounded-lg transition-all flex justify-center"
                                     style={{ color: 'var(--app-error, #ef4444)' }}>
                                     <Trash2 size={12} />
@@ -379,7 +390,7 @@ function byPriority(a: PackagingSuggestionRule, b: PackagingSuggestionRule) {
         || (b.usage_count ?? 0) - (a.usage_count ?? 0)
 }
 
-function KpiCard({ label, value, hint, icon }: { label: string; value: any; hint?: string; icon?: any }) {
+function KpiCard({ label, value, hint, icon }: { label: string; value: number | string; hint?: string; icon?: ReactNode }) {
     return (
         <div className="px-3 py-2.5 rounded-xl"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
@@ -411,7 +422,7 @@ function Chip({ children, tone = 'primary' }: { children: React.ReactNode; tone?
 }
 
 function FieldSelect({ label, icon, value, onChange, options, placeholder }: {
-    label: string; icon?: any; value: string; onChange: (v: string) => void
+    label: string; icon?: ReactNode; value: string; onChange: (v: string) => void
     options: { value: number; label: string }[]; placeholder: string
 }) {
     return (

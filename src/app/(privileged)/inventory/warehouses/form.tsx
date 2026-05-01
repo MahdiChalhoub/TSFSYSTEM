@@ -71,7 +71,7 @@ type WarehouseInput = {
 }
 
 interface WarehouseModalProps {
-    warehouse?: WarehouseInput
+    warehouse?: WarehouseInput | null
     onClose: () => void
     parentOptions?: { id: number; name: string; country?: number | null; country_name?: string }[]
     defaultParent?: number | null

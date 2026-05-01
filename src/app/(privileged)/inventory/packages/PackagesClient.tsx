@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 /* ═══════════════════════════════════════════════════════════
@@ -22,9 +21,10 @@
  * ═══════════════════════════════════════════════════════════ */
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import {
     Package, Plus, Pencil, Trash2, Ruler, ArrowRight, ArrowRightLeft, Layers,
-    Loader2, X, Check, ChevronRight, Box, Sparkles, Bookmark, Power,
+    Loader2, X, Check, ChevronRight, Box, Sparkles, Bookmark,
     GitBranch, Tag, ShieldCheck, FolderTree, ExternalLink, Zap,
     TrendingUp, Info,
 } from 'lucide-react'
@@ -59,9 +59,58 @@ type Template = {
     updated_at?: string
 }
 
+type UnitOption = {
+    id: number
+    name: string
+    code?: string
+    base_unit?: number | null
+    conversion_factor?: number
+    needs_balance?: boolean
+    type?: string
+}
+
+type UnitNode = {
+    id: string
+    _type: 'unit'
+    _unit: UnitOption
+    name: string
+    code?: string
+    children: TemplateNode[]
+}
+
+type TemplateNode = {
+    id: string
+    _type: 'template'
+    _tpl: Template
+    name: string
+    code?: string | null
+    children: TemplateNode[]
+}
+
+type RuleRow = {
+    id: number
+    category_name?: string
+    brand_name?: string
+    attribute_name?: string
+    attribute_value?: string
+    effective_priority?: number
+    usage_count?: number
+}
+
+type ProductPackagingRow = {
+    id: number
+    product?: number
+    product_name?: string
+    display_name?: string
+    barcode?: string
+    effective_selling_price?: number
+    ratio?: number | string
+    unit?: number
+}
+
 interface Props {
     initialTemplates: Template[]
-    units: any[]
+    units: UnitOption[]
     categories: Option[]
     brands: Option[]
     attributes: Option[]
@@ -90,10 +139,10 @@ export default function PackagesClient({ initialTemplates, units, categories, br
 
     const refresh = useCallback(async () => {
         try {
-            const data = await erpFetch('unit-packages/', { cache: 'no-store' } as any)
+            const data = await erpFetch('unit-packages/', { cache: 'no-store' } as RequestInit) as { results?: Template[] } | Template[]
             setTemplates(Array.isArray(data) ? data : (data?.results ?? []))
-        } catch (e: any) {
-            toast.error('Failed to refresh templates', { description: e?.message || 'network error' })
+        } catch (e: unknown) {
+            toast.error('Failed to refresh templates', { description: e instanceof Error ? e.message : 'network error' })
         }
         router.refresh()
     }, [router])
@@ -115,9 +164,9 @@ export default function PackagesClient({ initialTemplates, units, categories, br
      *  at the top of the chain for each unit. Orphans (parent set but parent
      *  deleted) get surfaced at the unit root to avoid hiding them.
      */
-    const tree = useMemo(() => {
-        const byUnit: Record<string, any> = {}
-        units.forEach((u: any) => {
+    const tree = useMemo<UnitNode[]>(() => {
+        const byUnit: Record<string, UnitNode> = {}
+        units.forEach((u) => {
             byUnit[u.id] = { id: `unit-${u.id}`, _type: 'unit', _unit: u, name: u.name, code: u.code, children: [] }
         })
         // Index templates by id for child lookup
@@ -125,7 +174,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         templates.forEach(t => tplById.set(t.id, t))
 
         // Build node for each template and link parent→children within the same unit
-        const nodesById: Record<number, any> = {}
+        const nodesById: Record<number, TemplateNode> = {}
         templates.forEach(t => {
             nodesById[t.id] = { id: `tpl-${t.id}`, _type: 'template', _tpl: t, name: t.name, code: t.code, children: [] }
         })
@@ -141,14 +190,14 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         })
 
         // Sort: each level by ratio ascending (so the chain reads pc→pack→box)
-        const sortChildren = (n: any) => {
-            n.children.sort((a: any, b: any) => Number(a._tpl?.ratio || 0) - Number(b._tpl?.ratio || 0))
+        const sortChildren = (n: { children: TemplateNode[] }) => {
+            n.children.sort((a, b) => Number(a._tpl?.ratio || 0) - Number(b._tpl?.ratio || 0))
             n.children.forEach(sortChildren)
         }
         Object.values(byUnit).forEach(sortChildren)
 
-        const populated = Object.values(byUnit).filter((u: any) => u.children.length > 0)
-        populated.sort((a: any, b: any) => {
+        const populated = Object.values(byUnit).filter((u) => u.children.length > 0)
+        populated.sort((a, b) => {
             const aBase = !a._unit?.base_unit
             const bBase = !b._unit?.base_unit
             if (aBase !== bBase) return aBase ? -1 : 1
@@ -162,7 +211,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
     const openEditForm = useCallback((t: Template) => { setEditing(t); setShowForm(true) }, [])
     const closeForm = useCallback(() => { setShowForm(false); setEditing(null) }, [])
 
-    const handleSave = async (data: any) => {
+    const handleSave = async (data: Record<string, unknown>) => {
         try {
             if (editing?.id) {
                 await erpFetch(`unit-packages/${editing.id}/`, {
@@ -179,7 +228,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
             }
             closeForm()
             refresh()
-        } catch (e: any) { toast.error(e?.message || 'Save failed') }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Save failed') }
     }
 
     const [seeding, setSeeding] = useState(false)
@@ -187,9 +236,9 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         if (seeding) return
         setSeeding(true)
         try {
-            const res: any = await erpFetch('unit-packages/seed_defaults/', {
+            const res = await erpFetch('unit-packages/seed_defaults/', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
-            })
+            }) as { created?: unknown[]; message?: string }
             const n = Array.isArray(res?.created) ? res.created.length : 0
             if (n > 0) {
                 toast.success(res?.message || `Seeded ${n} templates`)
@@ -197,8 +246,8 @@ export default function PackagesClient({ initialTemplates, units, categories, br
             } else {
                 toast.info('All units already have templates — nothing to seed.')
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Seed failed')
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Seed failed')
         } finally {
             setSeeding(false)
         }
@@ -212,7 +261,7 @@ export default function PackagesClient({ initialTemplates, units, categories, br
             await erpFetch(`unit-packages/${t.id}/`, { method: 'DELETE' })
             toast.success(`"${t.name}" deleted`)
             refresh()
-        } catch (e: any) { toast.error(e?.message || 'Delete failed') }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Delete failed') }
     }
 
     return (
@@ -256,9 +305,33 @@ export default function PackagesClient({ initialTemplates, units, categories, br
             modals={<>
                 {showForm && (
                     <TemplateFormModal
-                        tpl={editing}
-                        units={units}
-                        allTemplates={templates}
+                        tpl={editing ? {
+                            id: editing.id,
+                            unit: editing.unit,
+                            parent: editing.parent,
+                            parent_ratio: editing.parent_ratio,
+                            name: editing.name,
+                            code: editing.code ?? undefined,
+                            ratio: editing.ratio,
+                            is_default: editing.is_default,
+                            order: editing.order,
+                            notes: editing.notes ?? undefined,
+                            unit_code: editing.unit_code,
+                        } : null}
+                        units={units.map((u) => ({ id: u.id, name: u.name, code: u.code }))}
+                        allTemplates={templates.map((t) => ({
+                            id: t.id,
+                            unit: t.unit,
+                            parent: t.parent,
+                            parent_ratio: t.parent_ratio,
+                            name: t.name,
+                            code: t.code ?? undefined,
+                            ratio: t.ratio,
+                            is_default: t.is_default,
+                            order: t.order,
+                            notes: t.notes ?? undefined,
+                            unit_code: t.unit_code,
+                        }))}
                         onSave={handleSave}
                         onClose={closeForm}
                     />
@@ -272,7 +345,8 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     confirmText="Delete" variant="danger"
                 />
             </>}
-            detailPanel={(node, { onClose, onPin }) => {
+            detailPanel={(rawNode, { onClose, onPin }) => {
+                const node = rawNode as unknown as UnitNode | TemplateNode
                 if (node._type !== 'template') return null
                 return (
                     <TemplateDetailPanel
@@ -284,23 +358,23 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                         onEdit={() => openEditForm(node._tpl)}
                         onDelete={() => setDeleteTarget(node._tpl)}
                         onClose={onClose}
-                        onPin={onPin ? () => onPin(node) : undefined}
+                        onPin={onPin ? () => onPin(rawNode) : undefined}
                     />
                 )
             }}
         >
             {({ searchQuery, expandAll, expandKey, splitPanel, pinnedSidebar, selectedNode, setSelectedNode, sidebarNode, setSidebarNode, setSidebarTab }) => {
                 const q = searchQuery.trim().toLowerCase()
-                const filteredTree = q
-                    ? tree.map((u: any) => ({
+                const filteredTree: UnitNode[] = q
+                    ? tree.map((u) => ({
                         ...u,
-                        children: u.children.filter((c: any) => {
+                        children: u.children.filter((c) => {
                             const t = c._tpl
                             return (t.name || '').toLowerCase().includes(q)
                                 || (t.code || '').toLowerCase().includes(q)
                                 || (u.name || '').toLowerCase().includes(q)
                         }),
-                    })).filter((u: any) => u.children.length > 0)
+                    })).filter((u) => u.children.length > 0)
                     : tree
 
                 if (filteredTree.length === 0) {
@@ -342,10 +416,10 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     )
                 }
 
-                return filteredTree.map((unitNode: any) => (
+                return filteredTree.map((unitNode) => (
                     <UnitGroup key={`${unitNode.id}-${expandKey}`} node={unitNode} forceExpanded={expandAll}
-                        selectedId={(splitPanel || pinnedSidebar) ? selectedNode?.id : sidebarNode?.id}
-                        onOpenTemplate={(tplNode: any) => {
+                        selectedId={((splitPanel || pinnedSidebar) ? (selectedNode as { id?: string } | null)?.id : (sidebarNode as { id?: string } | null)?.id) ?? null}
+                        onOpenTemplate={(tplNode) => {
                             if (splitPanel || pinnedSidebar) setSelectedNode(tplNode)
                             else { setSidebarNode(tplNode); setSidebarTab('overview') }
                         }}
@@ -361,7 +435,15 @@ export default function PackagesClient({ initialTemplates, units, categories, br
 /* ═══════════════════════════════════════════════════════════
  *  UNIT GROUP
  * ═══════════════════════════════════════════════════════════ */
-function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, onDelete }: any) {
+interface UnitGroupProps {
+    node: UnitNode
+    forceExpanded?: boolean
+    selectedId: string | null
+    onOpenTemplate: (n: TemplateNode) => void
+    onEdit: (t: Template) => void
+    onDelete: (t: Template) => void
+}
+function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, onDelete }: UnitGroupProps) {
     const [open, setOpen] = useState(forceExpanded ?? true)
     useEffect(() => { if (forceExpanded !== undefined) setOpen(forceExpanded) }, [forceExpanded])
     const unit = node._unit
@@ -410,7 +492,7 @@ function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, on
                 </div>
             </div>
 
-            {open && kids.map((c: any) => (
+            {open && kids.map((c) => (
                 <TemplateRow key={c.id}
                     node={c}
                     depth={0}
@@ -425,7 +507,16 @@ function UnitGroup({ node, forceExpanded, selectedId, onOpenTemplate, onEdit, on
     )
 }
 
-function TemplateRow({ node, depth, forceExpanded, selectedId, onOpenTemplate, onEdit, onDelete }: any) {
+interface TemplateRowProps {
+    node: TemplateNode
+    depth: number
+    forceExpanded?: boolean
+    selectedId: string | null
+    onOpenTemplate: (n: TemplateNode) => void
+    onEdit: (t: Template) => void
+    onDelete: (t: Template) => void
+}
+function TemplateRow({ node, depth, forceExpanded, selectedId, onOpenTemplate, onEdit, onDelete }: TemplateRowProps) {
     const t: Template = node._tpl
     const ratio = Number(t.ratio ?? 1)
     const parentRatio = t.parent_ratio != null ? Number(t.parent_ratio) : null
@@ -500,7 +591,7 @@ function TemplateRow({ node, depth, forceExpanded, selectedId, onOpenTemplate, o
             </div>
 
             {/* Recursive children — chain continues (pack → box → pallet → TC) */}
-            {expanded && hasChildren && node.children.map((child: any) => (
+            {expanded && hasChildren && node.children.map((child) => (
                 <TemplateRow key={child.id}
                     node={child}
                     depth={depth + 1}
@@ -519,8 +610,8 @@ function LinksCountBadge({ tplId }: { tplId: number }) {
     const [n, setN] = useState<number | null>(null)
     useEffect(() => {
         let alive = true
-        erpFetch(`packaging-suggestions/?packaging=${tplId}`, { cache: 'no-store' } as any)
-            .then((d: any) => { if (alive) setN(Array.isArray(d) ? d.length : (d?.results?.length ?? 0)) })
+        erpFetch(`packaging-suggestions/?packaging=${tplId}`, { cache: 'no-store' } as RequestInit)
+            .then((d: { results?: unknown[] } | unknown[]) => { if (alive) setN(Array.isArray(d) ? d.length : (d?.results?.length ?? 0)) })
             .catch(() => { if (alive) setN(0) })
         return () => { alive = false }
     }, [tplId])
@@ -539,10 +630,10 @@ function UsageCountBadge({ tpl }: { tpl: Template }) {
     useEffect(() => {
         let alive = true
         // Products whose ProductPackaging matches this unit + ratio
-        erpFetch(`product-packaging/?unit=${tpl.unit}`, { cache: 'no-store' } as any)
-            .then((d: any) => {
-                const list = Array.isArray(d) ? d : (d?.results ?? [])
-                const matched = list.filter((pp: any) => Number(pp.ratio) === Number(tpl.ratio))
+        erpFetch(`product-packaging/?unit=${tpl.unit}`, { cache: 'no-store' } as RequestInit)
+            .then((d: { results?: ProductPackagingRow[] } | ProductPackagingRow[]) => {
+                const list: ProductPackagingRow[] = Array.isArray(d) ? d : (d?.results ?? [])
+                const matched = list.filter((pp) => Number(pp.ratio) === Number(tpl.ratio))
                 if (alive) setN(matched.length)
             })
             .catch(() => { if (alive) setN(0) })
@@ -563,11 +654,22 @@ function UsageCountBadge({ tpl }: { tpl: Template }) {
  * ═══════════════════════════════════════════════════════════ */
 type DetailTab = 'overview' | 'links' | 'usage'
 
-function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeValuesByParent, onEdit, onDelete, onClose, onPin }: any) {
+interface TemplateDetailPanelProps {
+    tpl: Template
+    categories: Option[]
+    brands: Option[]
+    attributes: Option[]
+    attributeValuesByParent?: Record<number, Option[]>
+    onEdit: () => void
+    onDelete: () => void
+    onClose?: () => void
+    onPin?: () => void
+}
+function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeValuesByParent, onEdit, onDelete, onClose, onPin }: TemplateDetailPanelProps) {
     const [tab, setTab] = useState<DetailTab>('overview')
-    const [rules, setRules] = useState<any[]>([])
+    const [rules, setRules] = useState<RuleRow[]>([])
     const [rulesLoaded, setRulesLoaded] = useState(false)
-    const [products, setProducts] = useState<any[]>([])
+    const [products, setProducts] = useState<ProductPackagingRow[]>([])
     const [productsLoaded, setProductsLoaded] = useState(false)
     const [adding, setAdding] = useState(false)
     const [newLink, setNewLink] = useState({ category: '', brand: '', attribute: '', attribute_value: '' })
@@ -580,7 +682,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
     const loadRules = useCallback(async () => {
         if (rulesLoaded) return
         try {
-            const d = await erpFetch(`packaging-suggestions/?packaging=${tpl.id}`, { cache: 'no-store' } as any)
+            const d = await erpFetch(`packaging-suggestions/?packaging=${tpl.id}`, { cache: 'no-store' } as RequestInit) as { results?: RuleRow[] } | RuleRow[]
             setRules(Array.isArray(d) ? d : (d?.results ?? []))
         } catch { setRules([]) }
         setRulesLoaded(true)
@@ -589,9 +691,9 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
     const loadProducts = useCallback(async () => {
         if (productsLoaded) return
         try {
-            const d = await erpFetch(`product-packaging/?unit=${tpl.unit}`, { cache: 'no-store' } as any)
-            const list = Array.isArray(d) ? d : (d?.results ?? [])
-            setProducts(list.filter((pp: any) => Number(pp.ratio) === Number(tpl.ratio)))
+            const d = await erpFetch(`product-packaging/?unit=${tpl.unit}`, { cache: 'no-store' } as RequestInit) as { results?: ProductPackagingRow[] } | ProductPackagingRow[]
+            const list: ProductPackagingRow[] = Array.isArray(d) ? d : (d?.results ?? [])
+            setProducts(list.filter((pp) => Number(pp.ratio) === Number(tpl.ratio)))
         } catch { setProducts([]) }
         setProductsLoaded(true)
     }, [tpl.unit, tpl.ratio, productsLoaded])
@@ -616,15 +718,15 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
             toast.success('Link added')
             setNewLink({ category: '', brand: '', attribute: '', attribute_value: '' })
             setAdding(false); setRulesLoaded(false); loadRules()
-        } catch (e: any) { toast.error(e?.message || 'Failed') }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed') }
     }
     const handleRemoveLink = async (id: number) => {
         if (!confirm('Remove this link?')) return
         try { await deletePackagingRule(id); toast.success('Removed'); setRulesLoaded(false); loadRules() }
-        catch (e: any) { toast.error(e?.message || 'Failed') }
+        catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed') }
     }
 
-    const tabs: { key: DetailTab; label: string; icon: any; count?: number; color: string }[] = [
+    const tabs: { key: DetailTab; label: string; icon: ReactNode; count?: number; color: string }[] = [
         { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-info)' },
         { key: 'links', label: 'Links', icon: <GitBranch size={12} />, count: rulesLoaded ? rules.length : undefined, color: 'var(--app-info)' },
         { key: 'usage', label: 'Usage', icon: <Package size={12} />, count: productsLoaded ? products.length : undefined, color: 'var(--app-success)' },
@@ -700,7 +802,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
     )
 }
 
-function OverviewTab({ tpl }: any) {
+function OverviewTab({ tpl }: { tpl: Template }) {
     return (
         <div className="p-3 space-y-2 animate-in fade-in duration-150">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
@@ -737,13 +839,31 @@ function OverviewTab({ tpl }: any) {
     )
 }
 
-function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, categories, brands, attributes, attributeValuesByParent, onAdd, onRemove }: any) {
+type LinkForm = { category: string; brand: string; attribute: string; attribute_value: string }
+interface LinksTabProps {
+    tpl: Template
+    rules: RuleRow[]
+    loaded: boolean
+    adding: boolean
+    setAdding: (v: boolean) => void
+    newLink: LinkForm
+    setNewLink: (v: LinkForm) => void
+    categories: Option[]
+    brands: Option[]
+    attributes: Option[]
+    attributeValuesByParent?: Record<number, Option[]>
+    onAdd: () => void
+    onRemove: (id: number) => void
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- tpl is wired by caller; reserved for future use
+function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, categories, brands, attributes, attributeValuesByParent, onAdd, onRemove }: LinksTabProps) {
     // Children of the attribute the user just picked — e.g. for
     // ``Size`` this is the list ``[Small, Medium, Big]``. The Value
     // field becomes a dropdown of these instead of a free-text input,
     // with a "Custom value…" fallback for one-off tags.
-    const attributeChildren: { id: number; name: string }[] = (newLink.attribute && attributeValuesByParent?.[newLink.attribute]) || []
-    const isCustomValue = newLink.attribute_value && !attributeChildren.some((c: any) => c.name === newLink.attribute_value)
+    const attributeChildren: Option[] = (newLink.attribute && attributeValuesByParent?.[Number(newLink.attribute)]) || []
+    const isCustomValue = !!newLink.attribute_value && !attributeChildren.some((c) => c.name === newLink.attribute_value)
     return (
         <div className="p-3 space-y-2 animate-in fade-in duration-150">
             <div className="flex items-center justify-between">
@@ -778,7 +898,7 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                                         className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
                                         style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                                         <option value="">Any value (attribute present)</option>
-                                        {attributeChildren.map((c: any) => (
+                                        {attributeChildren.map((c) => (
                                             <option key={c.id} value={c.name}>{c.name}</option>
                                         ))}
                                         <option value="__custom__">Custom value…</option>
@@ -819,7 +939,7 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                 </div>
             ) : (
                 <div className="space-y-1.5">
-                    {rules.map((r: any) => (
+                    {rules.map((r) => (
                         <div key={r.id} className="flex items-center gap-2 p-2 rounded-xl group"
                             style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
                             <div className="flex-1 min-w-0 flex items-center gap-1 flex-wrap">
@@ -831,7 +951,7 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
                                 style={{ color: 'var(--app-primary)' }}>
                                 <Zap size={9} />p{r.effective_priority}
                             </span>
-                            {r.usage_count > 0 && (
+                            {(r.usage_count ?? 0) > 0 && (
                                 <span className="text-tp-xxs font-bold flex items-center gap-0.5" title={`Used ${r.usage_count} times`}
                                     style={{ color: 'var(--app-warning)' }}>
                                     <TrendingUp size={9} />{r.usage_count}
@@ -848,7 +968,7 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
     )
 }
 
-function UsageTab({ products, loaded }: any) {
+function UsageTab({ products, loaded }: { products: ProductPackagingRow[]; loaded: boolean }) {
     if (!loaded) return <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-app-primary" /></div>
     if (products.length === 0) {
         return (
@@ -864,7 +984,7 @@ function UsageTab({ products, loaded }: any) {
             <p className="text-tp-xxs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
                 {products.length} product packaging{products.length !== 1 ? 's' : ''} adopt this shape
             </p>
-            {products.map((pp: any) => (
+            {products.map((pp) => (
                 <div key={pp.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-app-surface/50 transition-all group">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}><Package size={11} /></div>
@@ -875,7 +995,7 @@ function UsageTab({ products, loaded }: any) {
                         </div>
                         <div className="flex items-center gap-1.5">
                             {pp.barcode && <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
-                            {pp.effective_selling_price > 0 && (
+                            {(pp.effective_selling_price ?? 0) > 0 && (
                                 <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>
                                     {Number(pp.effective_selling_price).toLocaleString()}
                                 </span>
@@ -892,7 +1012,14 @@ function UsageTab({ products, loaded }: any) {
     )
 }
 
-function LinkSelect({ label, icon, value, onChange, options }: any) {
+interface LinkSelectProps {
+    label: string
+    icon: ReactNode
+    value: string
+    onChange: (v: string) => void
+    options: Option[]
+}
+function LinkSelect({ label, icon, value, onChange, options }: LinkSelectProps) {
     return (
         <div>
             <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}>{icon} {label}</label>
@@ -900,13 +1027,13 @@ function LinkSelect({ label, icon, value, onChange, options }: any) {
                 className="w-full px-2.5 py-1.5 rounded-lg text-tp-sm font-bold outline-none"
                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
                 <option value="">— Any {label.toLowerCase()} (wildcard) —</option>
-                {options.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
         </div>
     )
 }
 
-function Chip({ icon, color, children }: any) {
+function Chip({ icon, color, children }: { icon: ReactNode; color: string; children: ReactNode }) {
     return (
         <span className="inline-flex items-center gap-1 text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-lg"
             style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}>
@@ -915,7 +1042,7 @@ function Chip({ icon, color, children }: any) {
     )
 }
 
-function StatTile({ label, value, icon, color }: any) {
+function StatTile({ label, value, icon, color }: { label: string; value: string | number; icon: ReactNode; color: string }) {
     return (
         <div className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
             style={{ background: `color-mix(in srgb, ${color} 5%, var(--app-surface))`, border: `1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>
@@ -924,191 +1051,6 @@ function StatTile({ label, value, icon, color }: any) {
                 <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{value}</div>
                 <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
             </div>
-        </div>
-    )
-}
-
-/* Inline TemplateFormModal / FormField moved to ./_shared/TemplateFormModal.
- * Keeping the legacy symbol below dead-code'd for a release cycle in case any
- * other importer lingers — TODO remove once grep confirms no references.
- */
-function _TemplateFormModal_legacy({ tpl, units, onSave, onClose, allTemplates }: any) {
-    const [form, setForm] = useState<any>({
-        unit: tpl?.unit ?? units[0]?.id ?? 0,
-        parent: tpl?.parent ?? null,
-        parent_ratio: tpl?.parent_ratio ?? null,
-        name: tpl?.name ?? '',
-        code: tpl?.code ?? '',
-        ratio: tpl?.ratio ?? 1,
-        is_default: tpl?.is_default ?? false,
-        order: tpl?.order ?? 0,
-        notes: tpl?.notes ?? '',
-    })
-    const [saving, setSaving] = useState(false)
-
-    // Candidate parents: same-unit templates, excluding self + descendants (no loops)
-    const candidateParents = useMemo(() => {
-        const all: Template[] = allTemplates || []
-        const myId = tpl?.id
-        if (!form.unit) return []
-        const descendants = new Set<number>()
-        if (myId) {
-            const gather = (pid: number) => {
-                all.filter(t => t.parent === pid).forEach(c => { descendants.add(c.id); gather(c.id) })
-            }
-            gather(myId)
-        }
-        return all.filter(t => t.unit === form.unit && t.id !== myId && !descendants.has(t.id))
-            .sort((a, b) => Number(a.ratio) - Number(b.ratio))
-    }, [allTemplates, form.unit, tpl?.id])
-
-    // Auto-compute total ratio from parent chain
-    const parentTpl = candidateParents.find((t: Template) => t.id === form.parent)
-    const computedRatio = parentTpl && form.parent_ratio
-        ? Number(parentTpl.ratio) * Number(form.parent_ratio)
-        : null
-    useEffect(() => {
-        if (computedRatio != null && !isNaN(computedRatio) && computedRatio > 0) {
-            setForm((f: any) => ({ ...f, ratio: computedRatio }))
-        }
-    }, [computedRatio])
-
-    const submit = async () => {
-        if (!form.name?.trim()) { toast.error('Name required'); return }
-        if (!form.unit) { toast.error('Pick a unit'); return }
-        if (!form.ratio || form.ratio < 1) { toast.error('Ratio must be ≥ 1'); return }
-        if (form.parent && (!form.parent_ratio || form.parent_ratio < 1)) {
-            toast.error('Parent ratio required when parent is set'); return
-        }
-        setSaving(true)
-        try { await onSave(form) } finally { setSaving(false) }
-    }
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
-            style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-            <div className="w-full max-w-xl rounded-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200"
-                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-                <div className="px-5 py-3.5 flex items-center justify-between flex-shrink-0"
-                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-primary)' }}>
-                            <Package size={15} className="text-white" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold">{tpl ? 'Edit Template' : 'New Template'}</h3>
-                            <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
-                                Shape only — products supply their own barcode + price
-                            </p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/30"><X size={16} /></button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                    <div className="rounded-xl px-3 py-2.5 flex items-start gap-2"
-                        style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
-                        <Info size={12} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                        <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
-                            A template is a reusable shape (e.g. "Pack of 6" ×6 Piece). Each product that adopts this shape gets its own barcode and price on its product page.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <FormField label="Name *" value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} placeholder="Pack of 6" />
-                        <FormField label="Code" value={form.code} onChange={(v: string) => setForm({ ...form, code: v })} placeholder="PK6" mono />
-                        <div>
-                            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Unit *</label>
-                            <select value={form.unit}
-                                onChange={e => setForm({ ...form, unit: Number(e.target.value), parent: null, parent_ratio: null })}
-                                className="w-full px-3 py-2 rounded-xl outline-none text-tp-md font-bold"
-                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
-                                {units.map((u: any) => <option key={u.id} value={u.id}>{u.name}{u.code ? ` (${u.code})` : ''}</option>)}
-                            </select>
-                        </div>
-                        <FormField label="Order" value={String(form.order)} onChange={(v: string) => setForm({ ...form, order: Number(v) || 0 })} mono placeholder="0" />
-                    </div>
-
-                    {/* ── Chain picker: parent + parent_ratio ── */}
-                    <div className="rounded-xl p-3 space-y-2"
-                        style={{ background: 'color-mix(in srgb, #8b5cf6 5%, transparent)', border: '1px solid color-mix(in srgb, #8b5cf6 25%, transparent)' }}>
-                        <div className="flex items-center gap-1.5 text-tp-xxs font-bold uppercase tracking-wide" style={{ color: '#8b5cf6' }}>
-                            <ArrowRight size={11} /> Packaging Chain (pipeline step)
-                        </div>
-                        <p className="text-tp-sm leading-relaxed" style={{ color: 'var(--app-muted-foreground)' }}>
-                            Build a chain: <strong>pc → pack → box → pallet → TC</strong>. Pick the previous step in the chain and how many of it this level contains. Total base units will auto-compute.
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
-                            <div>
-                                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Parent step</label>
-                                <select value={form.parent ?? ''}
-                                    onChange={e => setForm({ ...form, parent: e.target.value ? Number(e.target.value) : null })}
-                                    className="w-full px-3 py-2 rounded-xl outline-none text-tp-md font-bold"
-                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
-                                    <option value="">— No parent (base-level / stand-alone) —</option>
-                                    {candidateParents.map((p: Template) => (
-                                        <option key={p.id} value={p.id}>{p.name} (×{Number(p.ratio).toLocaleString()} {p.unit_code || ''})</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <FormField
-                                label={`× Parent${parentTpl ? ` (${parentTpl.name})` : ''}`}
-                                value={form.parent_ratio != null ? String(form.parent_ratio) : ''}
-                                onChange={(v: string) => setForm({ ...form, parent_ratio: v ? Number(v) : null })}
-                                mono placeholder="6"
-                            />
-                        </div>
-                        {parentTpl && form.parent_ratio ? (
-                            <div className="text-tp-sm font-mono px-2 py-1.5 rounded-lg tabular-nums"
-                                style={{ background: 'var(--app-background)', color: 'var(--app-foreground)' }}>
-                                <span style={{ color: 'var(--app-muted-foreground)' }}>This level =</span>{' '}
-                                <span style={{ color: '#8b5cf6' }}>{form.parent_ratio}</span> ×{' '}
-                                <span>{parentTpl.name}</span>{' '}
-                                <span style={{ color: 'var(--app-muted-foreground)' }}>×</span>{' '}
-                                <span style={{ color: 'var(--app-info)' }}>{Number(parentTpl.ratio).toLocaleString()}</span>{' '}
-                                <span style={{ color: 'var(--app-muted-foreground)' }}>base/parent =</span>{' '}
-                                <span style={{ color: 'var(--app-warning)', fontWeight: 900 }}>{Number(form.ratio).toLocaleString()}</span> base units
-                            </div>
-                        ) : null}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <FormField label="Total ratio (base units) *" value={String(form.ratio)} onChange={(v: string) => setForm({ ...form, ratio: Number(v) || 1 })} mono placeholder="6" />
-                        <label className="flex items-center gap-2 text-tp-sm font-bold cursor-pointer mt-5">
-                            <input type="checkbox" checked={form.is_default} onChange={e => setForm({ ...form, is_default: e.target.checked })} />
-                            Default for this unit
-                        </label>
-                    </div>
-                    <div>
-                        <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Notes</label>
-                        <textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })}
-                            rows={2} className="w-full px-3 py-2 rounded-xl outline-none text-tp-md"
-                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
-                    </div>
-                </div>
-
-                <div className="px-5 py-3 flex items-center justify-end gap-2 flex-shrink-0"
-                    style={{ background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)', borderTop: '1px solid var(--app-border)' }}>
-                    <button onClick={onClose} disabled={saving} className="text-tp-sm font-bold px-3 py-2 rounded-xl" style={{ color: 'var(--app-muted-foreground)' }}>Cancel</button>
-                    <button onClick={submit} disabled={saving}
-                        className="flex items-center gap-1.5 text-tp-sm font-bold uppercase tracking-wider px-4 py-2 rounded-xl"
-                        style={{ background: 'var(--app-primary)', color: '#fff', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                        {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                        {tpl ? 'Save Template' : 'Create Template'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function FormField({ label, value, onChange, placeholder, mono }: any) {
-    return (
-        <div>
-            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{label}</label>
-            <input value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-                className={`w-full px-3 py-2 rounded-xl outline-none text-tp-md ${mono ? 'font-mono font-bold' : 'font-medium'}`}
-                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }} />
         </div>
     )
 }

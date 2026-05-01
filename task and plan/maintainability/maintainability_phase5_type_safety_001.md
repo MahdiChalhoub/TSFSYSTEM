@@ -745,3 +745,74 @@ Both gates green throughout. Zero `// @ts-ignore`, zero `// @ts-expect-error`. *
 - **Large feature clients (deferred — 800+ lines, deeper coupling)**: `attributes/AttributesClient.tsx`, `countries/CountriesClient.tsx`, `packages/PackagesClient.tsx`, `products/manager.tsx`, `product-groups/page.tsx`, `packaging-suggestions/SuggestionsManager.tsx`, `brands/mobile/MobileBrandsClient.tsx`.
 - **Family deep-coupling (deferred)**: `units/{components/UnitDetailPanel,mobile/MobileUnitRow,mobile/MobileUnitsClient}.tsx`, `warehouses/{form,components/WarehouseDetailPanel}.tsx`.
 - **Action-module dependency-drift (deferred until upstream actions module is rebuilt)**: `labels/{page,PrintingCenterClient,tabs/{LabelsQueue,Sessions,Layout,Output,Maintenance}Tab}.tsx` (7 files), `stock-count/SyncPanel.tsx` (1 file).
+
+---
+
+## Session 7 (2026-05-01) — final inventory `@ts-nocheck` removal
+
+### Goal
+
+Drop `@ts-nocheck` from the remaining 19 inventory files now that the labels actions module has been rebuilt with the typed exports listed in the Session-7 brief (`createPrintSession`, `listPrintSessions`, `getPrintingKPI`, `approvePrintSession`, `cancelPrintSession`, `retryPrintSession`, `reprintExact`, `reprintRegenerate`) and `populateSessionLines` is now exported on `actions/inventory/stock-count.ts`.
+
+### Result
+
+**Inventory subdir 20 → 2 `@ts-nocheck` files** (−18: 17 cleared in scope, +1 already cleared elsewhere; 2 reverted-with-reason). `tsc --noEmit` exits 0 repo-wide before/during/after. **3 eslint-disabled `as any` introduced** (all on `<DeleteConflictDialog conflict={... as any}>` boundary — the dialog narrows internally; the typed `ConflictPayload` is narrower than the server-derived `unknown` shape from the 3 different delete actions). All other previously-bare `any`s in the 17 cleared files were removed. Dead-code legacy `_TemplateFormModal_legacy` + `FormField` (188 lines) deleted from `PackagesClient.tsx` after grep-confirmed no callers.
+
+### Files cleared (17) + reverted (2)
+
+#### Cleared
+
+| # | File | Lines | Notes |
+|---|---|---|---|
+| 1 | `labels/page.tsx` | 340 | `Number(p.selling_price_ttc ?? 0)` instead of `parseFloat(number)`. |
+| 2 | `labels/PrintingCenterClient.tsx` | 124 | `LabelKPI = PrintingKPI & { printing?, failed?, cancelled? }`; narrow ProductRow/PrinterRow/TemplateRow per-tab props. |
+| 3 | `labels/tabs/LabelsQueueTab.tsx` | 255 | Imported `LabelProduct` from the rebuilt action; narrow `QueueProduct = LabelProduct & { ... }` for the per-row reads. |
+| 4 | `labels/tabs/SessionsTab.tsx` | 187 | Imported the typed action exports; **dropped 3 stale handlers** (`queuePrintSession`/`completePrintSession`/`failPrintSession`) that don't exist on the rebuilt actions module + their UI buttons. |
+| 5 | `labels/tabs/MaintenanceTab.tsx` | 198 | Defined `SessionRow`/`PrinterRow`/`TemplateRow`/`MaintenanceKPI`. |
+| 6 | `units/components/UnitDetailPanel.tsx` | 366 | Imported `UnitNode` from `components/UnitRow`; defined `LinkedPackage`/`UnitPackageTemplate`; cast `UnitCalculator.units` per-row to map `code: u.code ?? ''` because the calculator's `RawUnit.code` is non-optional. |
+| 7 | `units/mobile/MobileUnitsClient.tsx` | 401 | `DeleteUnitResult`/`DeleteConflictState` types; replaced `(u: any)` callbacks with `(u: UnitNode)`; eslint-disabled `as any` on `<DeleteConflictDialog conflict={...}>` boundary. |
+| 8 | `units/mobile/MobileUnitRow.tsx` | 248 | Imported `UnitNode`; replaced `node: any` with proper type. |
+| 9 | `warehouses/form.tsx` | 792 | Defined per-file `WarehouseInput` (allowing `null` for the WarehouseClient's edit/new branch); imported `WarehouseState` for the action return; `payload: Record<string, unknown>` instead of `Record<string, any>`. |
+| 10 | `warehouses/components/WarehouseDetailPanel.tsx` | 512 | Imported `WarehouseNode`; defined `InventoryRow`/`ProductPickerRow`. Replaced 6+ `catch (e: any)` with `instanceof Error` guards. |
+| 11 | `countries/CountriesClient.tsx` | 995 | Discriminated `TreeNode = CountryTreeNode \| RegionTreeNode`; TreeMasterPage cast pattern; typed `CountryRow`/`NotesModal`/`CountryDetailPanel`/`StatTile`. |
+| 12 | `packages/PackagesClient.tsx` | 1114 → 1031 | Removed 188-line dead-code legacy form modal + FormField. Defined `UnitOption`/`UnitNode`/`TemplateNode`/`RuleRow`/`ProductPackagingRow`. Cast `TemplateFormModal` props at boundary. 50 anys → 0. |
+| 13 | `attributes/AttributesClient.tsx` | 815 | Discriminated `FlatNode = (AttributeGroup \| AttributeChild) & { _type, _valueCount, _productsTotal }`; TreeMasterPage cast pattern; typed full row/detail-panel. `groupNode = isGroup ? (node as ...) : null` narrowing. 44 anys → 1 eslint-disabled. |
+| 14 | `products/manager.tsx` | 569 | `Product[] \| { results?, count? }` union for the erpFetch return; `searchRef as React.RefObject<HTMLInputElement>` cast; `(id) => toggleSelect(Number(id))` wrapper for `DajingoListView.onToggleSelect: (id: number \| string)`. |
+| 15 | `brands/mobile/MobileBrandsClient.tsx` | 539 | `BrandRow`/`CountryRef`/`CategoryRef`/`DeleteResult`/`DeleteConflictState`. 19 anys → 1 eslint-disabled. |
+| 16 | `packaging-suggestions/SuggestionsManager.tsx` | 433 | `UnitPackage`/`UnitOption`/`SyncWarning`. Typed `KpiCard`/`Chip`/`FieldSelect`. |
+| 17 | `product-groups/page.tsx` | 1346 | Unified `Kpis` shape across the pricing/inventory tab union; `GroupItem` for the polymorphic filter+sort; per-page `GroupMember`/`ExpandedGroupData`/`SyncResultData`/`SummaryData`/`Variant` for the server-payload shapes. 8 anys → 0. |
+
+#### Reverted-with-reason (2)
+
+- `labels/tabs/LayoutTab.tsx` — depends on label-template CRUD actions not yet exported from `@/app/actions/labels` (`listLabelTemplates`/`createLabelTemplate`/`updateLabelTemplate`/`deleteLabelTemplate`/`duplicateLabelTemplate`/`previewLabelTemplate`). Defer until the actions module is extended; per Rule 6 a structural action-module gap keeps `@ts-nocheck` rather than papering over with `as any` casts that would silently accept null at runtime.
+- `labels/tabs/OutputTab.tsx` — same family-wide issue with printer-config CRUD: `listPrinterConfigs`/`createPrinterConfig`/`updatePrinterConfig`/`deletePrinterConfig`/`testPrinterConnection`.
+
+### Patterns established Session 7
+
+- **Typed-shape sibling-import pattern**: When a feature owns a typed `XxxRow.tsx` (Brand/Unit/Warehouse), the corresponding `*DetailPanel`/`mobile/*Client` files import that typed node rather than re-defining a parallel `any` shape. Cuts duplicate-shape drift.
+- **Boundary cast for incompatible upstream prop types**: `TemplateFormModal` accepts `TemplateShape[]` (a narrower template-only shape); when the consumer holds the wider `Template[]` row, map at the call site (`templates.map((t) => ({ id: t.id, ... }))`) instead of widening the modal's prop type or stamping `as any`.
+- **Tab-union KPI shape**: When a single `kpis` object's keys vary by tab (`{ broken, synced }` vs `{ stock, lowStock }`), TS's narrow-on-discriminant inference fails on read sites that don't re-narrow. Solution: type the result as the *union of all keys* with each branch zero-filling the unused fields. Used in `product-groups/page.tsx`.
+- **Action-result `as ActionResult` pattern**: For actions that return `data: unknown` (e.g. `checkBrokenGroup`, `getInventoryGroupSummary`, `syncPricingGroupPrices`), define the per-page `ExpandedGroupData`/`SummaryData`/`SyncResultData` and cast at the consumer instead of widening the action signature. Keeps the action neutral.
+- **Dead-code deletion over re-typing**: `PackagesClient.tsx` had 188 lines of dead `_TemplateFormModal_legacy` + `FormField` artifacts kept "for a release cycle" by an earlier refactor. Verified with `grep` no remaining importers; deleted instead of typing them.
+- **Discriminated-union narrowing through `groupNode = isGroup ? (node as ...) : null`**: When a flat list mixes group and value rows under a single discriminator, holding the narrowed `groupNode` slot lets the JSX read group-only fields without repeated narrowing. Used in `AttributesClient.tsx`'s row + detail-panel.
+
+### Verification
+
+```bash
+$ npx tsc --noEmit 2>&1 | wc -l
+0
+$ grep -rln "@ts-nocheck" src --include="*.ts" --include="*.tsx" | wc -l   # was ~83 mid-session, now 67
+67
+$ grep -rln "@ts-nocheck" src/app/\(privileged\)/inventory/ | wc -l        # was 20, now 2 (the 2 reverted)
+2
+$ grep -rn ": any\b\|<any>\| any\[\]\|as any" src --include="*.ts" --include="*.tsx" | wc -l
+1932
+```
+
+Both gates green throughout. Zero `// @ts-ignore`, zero `// @ts-expect-error`. **3 eslint-disabled `as any` introduced** (all on the `<DeleteConflictDialog conflict={...}>` boundary, all documented inline). **Cumulative across all seven sessions: 2,812 → 1,932 `any` count (−880 net), 194 → 67 `@ts-nocheck` files (−127 net).**
+
+### Pre-existing latent bugs surfaced (Session 7)
+
+- `labels/page.tsx`: `parseFloat(p.selling_price_ttc || 0)` — `selling_price_ttc` is typed `number?` on `Product`; `parseFloat(number)` was a type error masked by nocheck. Fixed with `Number(p.selling_price_ttc ?? 0)` (also fixes the runtime semantics — `parseFloat(0)` returns `0` but `parseFloat(undefined)` returns `NaN`, which would have rendered as `"NaN"` in the formatted price).
+- `labels/tabs/SessionsTab.tsx`: 3 imported handlers (`queuePrintSession`/`completePrintSession`/`failPrintSession`) that don't exist on the rebuilt actions module were silently wired to UI buttons. Dropped the stale handlers + their buttons. Workflow: DRAFT → APPROVED is now the documented transition; QUEUED/PRINTING is owned by the worker layer.
+- `packages/PackagesClient.tsx`: 188 lines of dead `_TemplateFormModal_legacy` + `FormField` left from a previous refactor; deleted after grep confirmed no other importers.

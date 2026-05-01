@@ -1,21 +1,15 @@
-// @ts-nocheck
-// Phase 5 Session 7: depends on label-template CRUD actions not yet exported from
-// `@/app/actions/labels` (listLabelTemplates, createLabelTemplate, updateLabelTemplate,
-// deleteLabelTemplate, duplicateLabelTemplate, previewLabelTemplate). Defer until the
-// actions module is extended; per the strategy's Rule 6 a structural action-module gap
-// keeps `@ts-nocheck` rather than papering over with `as any` casts that would silently
-// accept null at runtime.
 'use client'
 
-import { useState, useTransition, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useState, useTransition, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import {
-    Layout, Plus, Copy, Pencil, Code2, Eye, Trash2, Save,
-    ChevronDown, ChevronUp, Loader2, Barcode, QrCode, Monitor,
+    Layout, Plus, Copy, Code2, Eye, Trash2, Save,
+    Loader2, Monitor, Barcode, QrCode,
 } from 'lucide-react'
 import {
     listLabelTemplates, createLabelTemplate, updateLabelTemplate,
     deleteLabelTemplate, duplicateLabelTemplate, previewLabelTemplate,
+    type LabelTemplate, type LabelTemplateInput,
 } from '@/app/actions/labels'
 
 const v = (name: string) => `var(${name})`
@@ -27,21 +21,28 @@ const VARIABLES = [
     'packaging_name', 'date', 'note', 'variant', 'lot', 'weight',
 ]
 
+type TemplateRow = LabelTemplate & {
+    is_system?: boolean
+    is_default?: boolean
+    version?: string | number
+}
+
 interface Props {
-    initialTemplates: any[]
+    initialTemplates: TemplateRow[]
 }
 
 export default function LayoutTab({ initialTemplates }: Props) {
     const [isPending, startTransition] = useTransition()
-    const [templates, setTemplates] = useState<any[]>(initialTemplates)
+    const [templates, setTemplates] = useState<TemplateRow[]>(initialTemplates)
     const [editId, setEditId] = useState<number | null>(null)
     const [editorOpen, setEditorOpen] = useState(false)
-    const [form, setForm] = useState<Record<string, any>>({})
+    const [form, setForm] = useState<LabelTemplateInput>({})
     const [previewHtml, setPreviewHtml] = useState('')
     const [previewCss, setPreviewCss] = useState('')
-    const previewRef = useRef<HTMLIFrameElement>(null)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _previewRef = useRef<HTMLIFrameElement>(null)
 
-    const editTemplate = useCallback((template: any) => {
+    const editTemplate = useCallback((template: Partial<TemplateRow>) => {
         setForm({
             name: template.name || '', label_type: template.label_type || 'SHELF',
             description: template.description || '',
@@ -237,31 +238,31 @@ export default function LayoutTab({ initialTemplates }: Props) {
                         <div className="px-4 py-2 border-t border-app-border/50 bg-app-background shrink-0 flex items-center gap-4 overflow-x-auto">
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] font-bold text-app-muted-foreground">Width:</span>
-                                <input type="number" value={form.label_width_mm} onChange={e => setForm(p => ({ ...p, label_width_mm: e.target.value }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
+                                <input type="number" value={form.label_width_mm ?? ''} onChange={e => setForm(p => ({ ...p, label_width_mm: Number(e.target.value) }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
                                 <span className="text-[8px] text-app-muted-foreground">mm</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] font-bold text-app-muted-foreground">Height:</span>
-                                <input type="number" value={form.label_height_mm} onChange={e => setForm(p => ({ ...p, label_height_mm: e.target.value }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
+                                <input type="number" value={form.label_height_mm ?? ''} onChange={e => setForm(p => ({ ...p, label_height_mm: Number(e.target.value) }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
                                 <span className="text-[8px] text-app-muted-foreground">mm</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] font-bold text-app-muted-foreground">Col:</span>
-                                <input type="number" value={form.columns} onChange={e => setForm(p => ({ ...p, columns: e.target.value }))} className="w-10 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
+                                <input type="number" value={form.columns ?? ''} onChange={e => setForm(p => ({ ...p, columns: Number(e.target.value) }))} className="w-10 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] font-bold text-app-muted-foreground">Row:</span>
-                                <input type="number" value={form.rows} onChange={e => setForm(p => ({ ...p, rows: e.target.value }))} className="w-10 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
+                                <input type="number" value={form.rows ?? ''} onChange={e => setForm(p => ({ ...p, rows: Number(e.target.value) }))} className="w-10 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] font-bold text-app-muted-foreground">DPI:</span>
-                                <input type="number" value={form.dpi} onChange={e => setForm(p => ({ ...p, dpi: e.target.value }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
+                                <input type="number" value={form.dpi ?? ''} onChange={e => setForm(p => ({ ...p, dpi: Number(e.target.value) }))} className="w-14 h-6 px-1.5 rounded border border-app-border bg-app-surface text-[10px] text-center text-app-foreground outline-none" />
                             </div>
-                            <select value={form.orientation} onChange={e => setForm(p => ({ ...p, orientation: e.target.value }))} className="h-6 px-1.5 rounded border border-app-border bg-app-surface text-[9px] font-bold text-app-foreground outline-none">
+                            <select value={form.orientation ?? ''} onChange={e => setForm(p => ({ ...p, orientation: e.target.value as LabelTemplate['orientation'] }))} className="h-6 px-1.5 rounded border border-app-border bg-app-surface text-[9px] font-bold text-app-foreground outline-none">
                                 <option value="LANDSCAPE">Landscape</option><option value="PORTRAIT">Portrait</option>
                             </select>
-                            <label className="flex items-center gap-1 text-[9px] font-bold text-app-muted-foreground"><input type="checkbox" checked={form.supports_barcode} onChange={e => setForm(p => ({ ...p, supports_barcode: e.target.checked }))} className="w-3 h-3" /><Barcode size={10} /> Barcode</label>
-                            <label className="flex items-center gap-1 text-[9px] font-bold text-app-muted-foreground"><input type="checkbox" checked={form.supports_qr} onChange={e => setForm(p => ({ ...p, supports_qr: e.target.checked }))} className="w-3 h-3" /><QrCode size={10} /> QR</label>
+                            <label className="flex items-center gap-1 text-[9px] font-bold text-app-muted-foreground"><input type="checkbox" checked={!!form.supports_barcode} onChange={e => setForm(p => ({ ...p, supports_barcode: e.target.checked }))} className="w-3 h-3" /><Barcode size={10} /> Barcode</label>
+                            <label className="flex items-center gap-1 text-[9px] font-bold text-app-muted-foreground"><input type="checkbox" checked={!!form.supports_qr} onChange={e => setForm(p => ({ ...p, supports_qr: e.target.checked }))} className="w-3 h-3" /><QrCode size={10} /> QR</label>
                         </div>
                     </>
                 )}

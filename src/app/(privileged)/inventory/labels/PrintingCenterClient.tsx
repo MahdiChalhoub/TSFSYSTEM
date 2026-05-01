@@ -35,8 +35,8 @@ type LabelKPI = PrintingKPI & {
 // Props typed as the union below so the page component can be parameterised by the
 // server fetcher's result types without committing to a specific row shape here.
 type ProductRow = { id: number } & Record<string, unknown>
-type PrinterRow = { id: number } & Record<string, unknown>
-type TemplateRow = { id: number } & Record<string, unknown>
+type PrinterRow = { id: number; name: string; [key: string]: unknown }
+type TemplateRow = { id: number; name: string; [key: string]: unknown }
 
 interface Props {
     products: ProductRow[]
