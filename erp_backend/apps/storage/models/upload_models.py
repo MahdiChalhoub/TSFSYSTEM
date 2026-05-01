@@ -6,17 +6,37 @@ import uuid
 import os
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 from erp.models import Organization
 
 
 class UploadSession(models.Model):
-    """
-    Tracks a chunked upload session for resume support.
-    Large files are uploaded in chunks; if interrupted, the client
-    can query the session to find out how many bytes were received
-    and resume from that point.
+    """Tracks a chunked upload session for resume support.
+
+    Two upload modes:
+    - `upload_type='file'` — tenant-scoped: organization is REQUIRED. Used for
+      org-owned attachments, linked-model files, etc. Access is filtered by
+      organization in the views.
+    - `upload_type='package'` — system-level: organization MUST be NULL. Used
+      for SaaS-platform package uploads (kernel/frontend/module). Access is
+      restricted to superusers in the views.
+
+    The type↔org invariant is enforced at three layers:
+    1. Model `clean()` — surfaces invariant violations on save() in code paths
+       that call full_clean().
+    2. DB-level CheckConstraint — last line of defense against bypassed clean.
+    3. View-layer queryset filtering — the actual tenant isolation boundary
+       (a non-superuser user never sees another tenant's file sessions, and
+       can never reach package sessions at all).
+
+    This pattern was chosen over splitting into two separate models because:
+    (a) the upload pipeline (chunked init/chunk/status/complete/abort) is
+    identical for both modes — only the finalize step branches; (b) splitting
+    would require a data backfill migration and refactoring 6 query sites to
+    dispatch by type. The hybrid approach gets the same security guarantees
+    with a single check constraint + view-layer filtering.
     """
     STATUS_CHOICES = (
         ('uploading', 'Uploading'),
@@ -73,10 +93,37 @@ class UploadSession(models.Model):
     class Meta:
         db_table = 'upload_session'
         ordering = ['-created_at']
+        constraints = [
+            # File uploads MUST have an organization; package uploads MUST NOT.
+            # See class docstring for rationale.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(upload_type='file', organization__isnull=False)
+                    | models.Q(upload_type='package', organization__isnull=True)
+                ),
+                name='upload_session_type_org_invariant',
+            ),
+        ]
 
     def __str__(self):
         pct = int((self.bytes_received / self.total_size) * 100) if self.total_size else 0
         return f"{self.filename} ({pct}% — {self.status})"
+
+    def clean(self):
+        """Enforce the type↔org invariant at the application layer.
+
+        Code paths that call full_clean() get a ValidationError before save;
+        paths that bypass clean still hit the DB CheckConstraint above.
+        """
+        super().clean()
+        if self.upload_type == 'file' and self.organization_id is None:
+            raise ValidationError(
+                {'organization': "File uploads require an organization."}
+            )
+        if self.upload_type == 'package' and self.organization_id is not None:
+            raise ValidationError(
+                {'organization': "Package uploads must not have an organization (system-level)."}
+            )
 
     def save(self, *args, **kwargs):
         if not self.expires_at:

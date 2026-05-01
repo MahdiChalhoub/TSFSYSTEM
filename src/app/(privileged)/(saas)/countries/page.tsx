@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   Globe, Search, Loader2, Plus, Pencil, Trash2, Check, X,
   Maximize2, Minimize2, MapPin, DollarSign, Phone, Shield,
-  ChevronRight, ChevronDown, Save, Filter, Hash
+  ChevronRight, ChevronDown, Save, Filter, Hash,
+  LayoutGrid, Rows3,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -100,17 +101,24 @@ function CountryEditModal({ country, currencies, onClose, onSaved }: {
   const labelClass = "text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1 block"
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl animate-in zoom-in-95 duration-200"
-        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+        style={{
+          background: 'var(--app-surface)',
+          border: '1px solid var(--app-border)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.25)',
+        }}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4"
           style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
             style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)' }}>
-            {isNew ? <Plus size={16} style={{ color: 'var(--app-primary)' }} /> : getFlagEmoji(form.iso2)}
+            {/* Show the flag as soon as iso2 has the 2 letters we need to compute it.
+                Falling back to the + icon for empty/invalid iso2 keeps the "creating
+                a new record" affordance until the user starts typing. */}
+            {form.iso2 && form.iso2.length >= 2 ? getFlagEmoji(form.iso2) : <Plus size={16} style={{ color: 'var(--app-primary)' }} />}
           </div>
           <div>
             <h3 className="text-[14px] font-black text-app-foreground">{isNew ? 'New Country' : `Edit ${form.name}`}</h3>
@@ -309,6 +317,118 @@ function CountryRow({ item, hasTaxTemplate, onEdit, onDelete }: {
 
 
 /* ═══════════════════════════════════════════════════════
+   Country Card (compact tile for grid view)
+   ═══════════════════════════════════════════════════════ */
+
+function CountryCard({ item, hasTaxTemplate, onEdit, onDelete }: {
+  item: Country
+  hasTaxTemplate: boolean
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const regionColor = REGION_COLORS[item.region] || 'var(--app-muted-foreground)'
+
+  return (
+    <div
+      className="group relative rounded-xl p-3 transition-all duration-150 cursor-pointer flex flex-col gap-2"
+      style={{
+        background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+      }}
+      onClick={onEdit}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)';
+        (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 90%, transparent)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)';
+        (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)';
+      }}
+    >
+      {/* Top: flag + name + iso */}
+      <div className="flex items-start gap-2.5">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
+          style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
+          {getFlagEmoji(item.iso2)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[13px] font-black text-app-foreground truncate">{item.name}</span>
+            {!item.is_active && (
+              <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+                style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
+                Off
+              </span>
+            )}
+          </div>
+          {item.official_name && (
+            <p className="text-[10px] text-app-muted-foreground truncate mt-0.5">{item.official_name}</p>
+          )}
+          <div className="flex items-center gap-1 mt-1">
+            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
+              {item.iso2}
+            </span>
+            <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{item.iso3}</span>
+            {item.numeric_code && (
+              <span className="font-mono text-[9px] text-app-muted-foreground">· {item.numeric_code}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Middle: chips row — region, currency, phone */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {item.region && (
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+            style={{ background: `color-mix(in srgb, ${regionColor} 10%, transparent)`, color: regionColor }}>
+            <MapPin size={9} /> {item.region}
+          </span>
+        )}
+        {item.default_currency_code && (
+          <span className="flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
+            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+            <DollarSign size={9} /> {item.default_currency_code}
+          </span>
+        )}
+        {item.phone_code && (
+          <span className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground">
+            <Phone size={9} /> {item.phone_code}
+          </span>
+        )}
+        {hasTaxTemplate && (
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ml-auto"
+            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 12%, transparent)', color: 'var(--app-success, #22c55e)' }}>
+            <Shield size={9} /> Tax
+          </span>
+        )}
+      </div>
+
+      {/* Hover actions */}
+      <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={e => { e.stopPropagation(); onEdit(); }}
+          title="Edit"
+          className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"
+          style={{ background: 'color-mix(in srgb, var(--app-background) 70%, transparent)' }}>
+          <Pencil size={11} />
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(); }}
+          title="Delete"
+          className="p-1.5 rounded-lg transition-colors"
+          style={{
+            color: 'var(--app-error, #ef4444)',
+            background: 'color-mix(in srgb, var(--app-background) 70%, transparent)',
+          }}>
+          <Trash2 size={11} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
    Main Page
    ═══════════════════════════════════════════════════════ */
 
@@ -321,6 +441,19 @@ export default function SaaSCountriesPage() {
   const [regionFilter, setRegionFilter] = useState<string>('')
   const [focusMode, setFocusMode] = useState(false)
   const [editingCountry, setEditingCountry] = useState<Country | null | 'new'>(null)
+  // View mode: persisted per user so the choice survives reloads. Defaults to
+  // list — the historical view — so existing users see no change until they
+  // opt in. Storage key namespaced with v1 in case we change shape later.
+  const [viewMode, setViewMode] = useState<'list' | 'cards'>('list')
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const saved = window.localStorage.getItem('saas_countries_view_v1')
+    if (saved === 'cards' || saved === 'list') setViewMode(saved)
+  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('saas_countries_view_v1', viewMode)
+  }, [viewMode])
   const searchRef = useRef<HTMLInputElement>(null)
 
   const fetchAll = useCallback(async () => {
@@ -509,24 +642,51 @@ export default function SaaSCountriesPage() {
               <X size={10} /> Clear
             </button>
           )}
-          <span className="text-[10px] font-bold text-app-muted-foreground ml-auto">
+          {/* View toggle — list vs card grid. Persists per user. */}
+          <div className="flex items-center rounded-lg overflow-hidden ml-auto"
+            style={{ border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+            <button
+              onClick={() => setViewMode('list')}
+              title="List view"
+              className="flex items-center justify-center px-2 py-1.5 transition-colors"
+              style={{
+                background: viewMode === 'list' ? 'var(--app-primary)' : 'transparent',
+                color: viewMode === 'list' ? '#fff' : 'var(--app-muted-foreground)',
+              }}>
+              <Rows3 size={12} />
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              title="Card view"
+              className="flex items-center justify-center px-2 py-1.5 transition-colors"
+              style={{
+                background: viewMode === 'cards' ? 'var(--app-primary)' : 'transparent',
+                color: viewMode === 'cards' ? '#fff' : 'var(--app-muted-foreground)',
+                borderLeft: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+              }}>
+              <LayoutGrid size={12} />
+            </button>
+          </div>
+          <span className="text-[10px] font-bold text-app-muted-foreground">
             {filtered.length} of {stats.total}
           </span>
         </div>
       )}
 
-      {/* ── Table ── */}
+      {/* ── Body: list or card grid ── */}
       <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-        {/* Column Headers */}
-        <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
-          <div className="w-8 flex-shrink-0" />
-          <div className="flex-1 min-w-0">Country</div>
-          <div className="hidden sm:block w-20 flex-shrink-0">Codes</div>
-          <div className="hidden md:block w-16 flex-shrink-0">Phone</div>
-          <div className="hidden sm:block w-16 flex-shrink-0">Currency</div>
-          <div className="hidden lg:block w-24 flex-shrink-0">Region</div>
-          <div className="w-16 flex-shrink-0" />
-        </div>
+        {/* Column Headers — only in list view */}
+        {viewMode === 'list' && (
+          <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+            <div className="w-8 flex-shrink-0" />
+            <div className="flex-1 min-w-0">Country</div>
+            <div className="hidden sm:block w-20 flex-shrink-0">Codes</div>
+            <div className="hidden md:block w-16 flex-shrink-0">Phone</div>
+            <div className="hidden sm:block w-16 flex-shrink-0">Currency</div>
+            <div className="hidden lg:block w-24 flex-shrink-0">Region</div>
+            <div className="w-16 flex-shrink-0" />
+          </div>
+        )}
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
@@ -535,15 +695,35 @@ export default function SaaSCountriesPage() {
               <Loader2 size={24} className="animate-spin text-app-primary" />
             </div>
           ) : filtered.length > 0 ? (
-            filtered.map(item => (
-              <CountryRow
-                key={item.id}
-                item={item}
-                hasTaxTemplate={taxTemplateCountries.has(item.iso2)}
-                onEdit={() => setEditingCountry(item)}
-                onDelete={() => handleDelete(item)}
-              />
-            ))
+            viewMode === 'list' ? (
+              filtered.map(item => (
+                <CountryRow
+                  key={item.id}
+                  item={item}
+                  hasTaxTemplate={taxTemplateCountries.has(item.iso2)}
+                  onEdit={() => setEditingCountry(item)}
+                  onDelete={() => handleDelete(item)}
+                />
+              ))
+            ) : (
+              <div
+                className="p-3"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gap: '10px',
+                }}>
+                {filtered.map(item => (
+                  <CountryCard
+                    key={item.id}
+                    item={item}
+                    hasTaxTemplate={taxTemplateCountries.has(item.iso2)}
+                    onEdit={() => setEditingCountry(item)}
+                    onDelete={() => handleDelete(item)}
+                  />
+                ))}
+              </div>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
               <Globe size={36} className="text-app-muted-foreground mb-3 opacity-40" />

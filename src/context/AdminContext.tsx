@@ -26,6 +26,12 @@ type AdminContextType = {
     replaceTab: (title: string, path: string) => void;
     closeTab: (id: string) => void;
     clearTabs: () => void;
+    /**
+     * Reorder open tabs by drag-and-drop. `position` decides whether the
+     * dragged tab lands immediately before or after the target. No edit
+     * mode, no save — order is just whatever the user last arranged.
+     */
+    reorderTabs: (draggedId: string, targetId: string, position: 'before' | 'after') => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
     /** Which access level the user was granted at login */
@@ -205,6 +211,23 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         router.push('/home');
     };
 
+    const reorderTabs = (draggedId: string, targetId: string, position: 'before' | 'after') => {
+        if (draggedId === targetId) return;
+        setOpenTabs(prev => {
+            const fromIdx = prev.findIndex(t => t.id === draggedId);
+            const targetIdx = prev.findIndex(t => t.id === targetId);
+            if (fromIdx === -1 || targetIdx === -1) return prev;
+            const next = [...prev];
+            const [moved] = next.splice(fromIdx, 1);
+            // After splice the indices shift if we removed before the target.
+            let insertAt = next.findIndex(t => t.id === targetId);
+            if (insertAt === -1) return prev;
+            if (position === 'after') insertAt += 1;
+            next.splice(insertAt, 0, moved);
+            return next;
+        });
+    };
+
     /** Replace the currently active tab with a new page (same position, no new tab) */
     const replaceTab = (title: string, path: string) => {
         const id = path;
@@ -236,6 +259,7 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             replaceTab,
             closeTab,
             clearTabs,
+            reorderTabs,
             viewScope,
             setViewScope: handleSetViewScope,
             scopeAccess,

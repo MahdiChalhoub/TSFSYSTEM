@@ -1,9 +1,17 @@
 'use server'
 
+import { cache } from "react"
 import { revalidatePath } from "next/cache"
 import { erpFetch } from "@/lib/erp-api"
 
-export async function getOrganizations() {
+/**
+ * Per-render dedup: when both the privileged layout AND a page (e.g.
+ * purchase-orders/page.tsx pulling org currency) need the org list in
+ * the same SSR pass, React.cache() collapses them into one backend call.
+ * Without this we observed two parallel hits to /api/organizations/ on
+ * every cold render — 200-300ms wasted.
+ */
+export const getOrganizations = cache(async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
     } catch (error: unknown) {
@@ -16,7 +24,7 @@ export async function getOrganizations() {
         console.error("[SaaS] Error fetching organizations:", error);
         return []
     }
-}
+})
 
 export async function createOrganization(data: {
     name: string,

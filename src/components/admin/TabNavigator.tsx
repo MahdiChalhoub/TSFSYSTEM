@@ -54,11 +54,48 @@ const TAB_W = 144;
 const BTNS_W = 112; // +, clear, switch
 
 export function TabNavigator() {
-    const { openTabs, activeTab, closeTab, openTab, clearTabs, tabLayout, setTabLayout } = useAdmin();
+    const { openTabs, activeTab, closeTab, openTab, clearTabs, reorderTabs, tabLayout, setTabLayout } = useAdmin();
     const containerRef = useRef<HTMLDivElement>(null);
     const [maxVisible, setMaxVisible] = useState(20);
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    // Browser-style drag reorder: dragging a tab paints a thin indicator on
+    // the side of the hovered target where it would land. No save, no edit
+    // mode — order persists naturally via the existing TABS_KEY localStorage.
+    // We use a ref AS WELL AS state for `draggingId` so that drop-time reads
+    // the up-to-date value (synthetic-event closures can otherwise capture a
+    // stale state value across rapid drag/drop sequences).
+    const draggingIdRef = useRef<string | null>(null);
+    const [draggingId, setDraggingId] = useState<string | null>(null);
+    const [dropTarget, setDropTarget] = useState<{ id: string; position: 'before' | 'after' } | null>(null);
+
+    const handleDragStart = useCallback((id: string) => {
+        draggingIdRef.current = id;
+        setDraggingId(id);
+    }, []);
+
+    const handleDragOver = useCallback((id: string, position: 'before' | 'after') => {
+        setDropTarget(prev => (prev?.id === id && prev.position === position ? prev : { id, position }));
+    }, []);
+
+    const handleDragEnd = useCallback(() => {
+        draggingIdRef.current = null;
+        setDraggingId(null);
+        setDropTarget(null);
+    }, []);
+
+    const handleDrop = useCallback((targetId: string, position: 'before' | 'after') => {
+        const sourceId = draggingIdRef.current;
+        if (sourceId && sourceId !== targetId) {
+            reorderTabs(sourceId, targetId, position);
+        }
+        draggingIdRef.current = null;
+        setDraggingId(null);
+        setDropTarget(null);
+        // Close the overflow menu after any successful drop so the new arrangement
+        // is fully visible without the dropdown obscuring the tab strip.
+        setMenuOpen(false);
+    }, [reorderTabs]);
 
     useEffect(() => {
         const el = containerRef.current;
@@ -120,6 +157,12 @@ export function TabNavigator() {
                             label={label}
                             onOpen={openTab}
                             onClose={closeTab}
+                            isDragging={draggingId === tab.id}
+                            dropPosition={dropTarget?.id === tab.id ? dropTarget.position : null}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDragEnd={handleDragEnd}
+                            onDrop={handleDrop}
                         />
                     );
                 })}
@@ -160,7 +203,19 @@ export function TabNavigator() {
             {/* Visible tabs */}
             <div className="flex items-stretch flex-1 overflow-hidden">
                 {visible.map((tab) => (
-                    <HTab key={tab.id} tab={tab} active={activeTab === tab.id} onOpen={openTab} onClose={closeTab} />
+                    <HTab
+                        key={tab.id}
+                        tab={tab}
+                        active={activeTab === tab.id}
+                        onOpen={openTab}
+                        onClose={closeTab}
+                        isDragging={draggingId === tab.id}
+                        dropPosition={dropTarget?.id === tab.id ? dropTarget.position : null}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDragEnd={handleDragEnd}
+                        onDrop={handleDrop}
+                    />
                 ))}
             </div>
 
@@ -186,7 +241,17 @@ export function TabNavigator() {
 
                     {menuOpen && (
                         <>
-                            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                            <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setMenuOpen(false)}
+                                style={{
+                                    // While a drag is active, let drag events pass through to the
+                                    // visible tab strip underneath so user can drop an overflow tab
+                                    // directly onto a visible position. Without this, the overlay
+                                    // swallows dragover/drop and the move silently fails.
+                                    pointerEvents: draggingId ? 'none' : 'auto',
+                                }}
+                            />
                             <div
                                 className="absolute top-full right-0 mt-1 w-56 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right"
                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}
@@ -202,16 +267,56 @@ export function TabNavigator() {
                                 <div className="py-1 max-h-60 overflow-y-auto">
                                     {hidden.map(tab => {
                                         const isActive = activeTab === tab.id;
+                                        const isOverflowDragging = draggingId === tab.id;
+                                        const overflowDropPos = dropTarget?.id === tab.id ? dropTarget.position : null;
                                         const color = tabColor(tab.path);
                                         return (
                                             <div
                                                 key={tab.id}
-                                                className="group flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                                                style={{ background: isActive ? 'var(--app-primary-light)' : 'transparent', color: isActive ? 'var(--app-primary)' : 'var(--app-text-muted)' }}
+                                                draggable
+                                                onDragStart={(e) => {
+                                                    e.dataTransfer.effectAllowed = 'move';
+                                                    e.dataTransfer.setData('text/plain', tab.id);
+                                                    handleDragStart(tab.id);
+                                                }}
+                                                onDragEnter={(e) => e.preventDefault()}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    e.dataTransfer.dropEffect = 'move';
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                                                    handleDragOver(tab.id, position);
+                                                }}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                                                    handleDrop(tab.id, position);
+                                                }}
+                                                onDragEnd={handleDragEnd}
+                                                className="group relative flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                                                style={{
+                                                    background: isActive ? 'var(--app-primary-light)' : 'transparent',
+                                                    color: isActive ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                                    opacity: isOverflowDragging ? 0.4 : 1,
+                                                }}
                                                 onClick={() => { openTab(tab.title, tab.path); setMenuOpen(false); }}
                                                 onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                                 onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                                             >
+                                                {overflowDropPos && (
+                                                    <div
+                                                        className="absolute left-2 right-2 h-0.5 z-10 pointer-events-none"
+                                                        style={{
+                                                            background: 'var(--app-primary)',
+                                                            top: overflowDropPos === 'before' ? -1 : 'auto',
+                                                            bottom: overflowDropPos === 'after' ? -1 : 'auto',
+                                                            boxShadow: '0 0 4px var(--app-primary)',
+                                                        }}
+                                                    />
+                                                )}
                                                 <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 text-[8px] font-black text-white" style={{ background: color }}>
                                                     {abbrev(tab.title)}
                                                 </div>
@@ -278,16 +383,47 @@ export function TabNavigator() {
 
 // ── Horizontal Tab ────────────────────────────────────────────────────────────
 
-const HTab = React.memo(({ tab, active, onOpen, onClose }: {
+const HTab = React.memo(({ tab, active, onOpen, onClose, isDragging, dropPosition, onDragStart, onDragOver, onDragEnd, onDrop }: {
     tab: { id: string; title: string; path: string };
     active: boolean;
     onOpen: (t: string, p: string) => void;
     onClose: (id: string) => void;
+    isDragging: boolean;
+    dropPosition: 'before' | 'after' | null;
+    onDragStart: (id: string) => void;
+    onDragOver: (id: string, position: 'before' | 'after') => void;
+    onDragEnd: () => void;
+    onDrop: (targetId: string, position: 'before' | 'after') => void;
 }) => {
     const color = useMemo(() => tabColor(tab.path), [tab.path]);
 
     return (
         <div
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', tab.id);
+                onDragStart(tab.id);
+            }}
+            onDragEnter={(e) => {
+                e.preventDefault();
+            }}
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = e.currentTarget.getBoundingClientRect();
+                const position = (e.clientX - rect.left) < rect.width / 2 ? 'before' : 'after';
+                onDragOver(tab.id, position);
+            }}
+            onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const position = (e.clientX - rect.left) < rect.width / 2 ? 'before' : 'after';
+                onDrop(tab.id, position);
+            }}
+            onDragEnd={onDragEnd}
             onClick={() => onOpen(tab.title, tab.path)}
             className="group relative flex items-center gap-1.5 px-3 cursor-pointer select-none flex-shrink-0 transition-colors"
             style={{
@@ -295,6 +431,7 @@ const HTab = React.memo(({ tab, active, onOpen, onClose }: {
                 background: active ? 'var(--app-surface)' : 'transparent',
                 borderRight: '1px solid var(--app-border)',
                 color: active ? 'var(--app-text)' : 'var(--app-text-faint)',
+                opacity: isDragging ? 0.4 : 1,
             }}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; }}
             onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -304,6 +441,18 @@ const HTab = React.memo(({ tab, active, onOpen, onClose }: {
                 className="absolute top-0 left-0 right-0 transition-all"
                 style={{ height: active ? 2 : 0, background: color }}
             />
+            {/* Drop indicator — thin vertical bar on the side the dragged tab would land */}
+            {dropPosition && (
+                <div
+                    className="absolute top-0 bottom-0 w-0.5 z-10 pointer-events-none"
+                    style={{
+                        background: 'var(--app-primary)',
+                        left: dropPosition === 'before' ? -1 : 'auto',
+                        right: dropPosition === 'after' ? -1 : 'auto',
+                        boxShadow: '0 0 4px var(--app-primary)',
+                    }}
+                />
+            )}
             {/* Color dot */}
             <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color, opacity: active ? 1 : 0.5 }} />
             <span className="flex-1 text-xs font-semibold truncate">{tab.title}</span>
@@ -323,7 +472,7 @@ HTab.displayName = 'HTab';
 
 // ── Vertical Tab Badge ────────────────────────────────────────────────────────
 
-const VerticalTab = React.memo(({ tab, active, color, icon: Icon, label, onOpen, onClose }: {
+const VerticalTab = React.memo(({ tab, active, color, icon: Icon, label, onOpen, onClose, isDragging, dropPosition, onDragStart, onDragOver, onDragEnd, onDrop }: {
     tab: { id: string; title: string; path: string };
     active: boolean;
     color: string;
@@ -331,11 +480,59 @@ const VerticalTab = React.memo(({ tab, active, color, icon: Icon, label, onOpen,
     label: string;
     onOpen: (t: string, p: string) => void;
     onClose: (id: string) => void;
+    isDragging: boolean;
+    dropPosition: 'before' | 'after' | null;
+    onDragStart: (id: string) => void;
+    onDragOver: (id: string, position: 'before' | 'after') => void;
+    onDragEnd: () => void;
+    onDrop: (targetId: string, position: 'before' | 'after') => void;
 }) => {
     const [hovered, setHovered] = useState(false);
 
     return (
-        <div className="relative group w-full px-1" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+        <div
+            className="relative group w-full px-1"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', tab.id);
+                onDragStart(tab.id);
+            }}
+            onDragEnter={(e) => {
+                e.preventDefault();
+            }}
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = e.currentTarget.getBoundingClientRect();
+                const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                onDragOver(tab.id, position);
+            }}
+            onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                onDrop(tab.id, position);
+            }}
+            onDragEnd={onDragEnd}
+            style={{ opacity: isDragging ? 0.4 : 1 }}
+        >
+            {/* Drop indicator — horizontal bar at top/bottom edge */}
+            {dropPosition && (
+                <div
+                    className="absolute left-1 right-1 h-0.5 z-10 pointer-events-none"
+                    style={{
+                        background: 'var(--app-primary)',
+                        top: dropPosition === 'before' ? -1 : 'auto',
+                        bottom: dropPosition === 'after' ? -1 : 'auto',
+                        boxShadow: '0 0 4px var(--app-primary)',
+                    }}
+                />
+            )}
             <button
                 onClick={() => onOpen(tab.title, tab.path)}
                 className="flex items-center justify-center rounded-lg transition-all duration-150"

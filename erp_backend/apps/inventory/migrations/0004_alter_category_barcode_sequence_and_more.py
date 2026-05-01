@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             name='converted_to_type',
             field=models.CharField(blank=True, max_length=30, null=True),
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='product',
             name='legacy_id',
             field=models.IntegerField(blank=True, null=True),
@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
             name='is_posted',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='warehouse',
             name='legacy_id',
             field=models.IntegerField(blank=True, null=True),

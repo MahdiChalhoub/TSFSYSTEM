@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { erpFetch } from '@/lib/erp-api'
+import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions'
 import PurchaseOrdersPage from './page-client'
 
 export const metadata: Metadata = {
@@ -20,8 +21,10 @@ async function getPurchaseOrders() {
 }
 
 async function getOrgCurrency(): Promise<string> {
+    // Reuses the layout's cached org fetch (React.cache dedup) instead of
+    // making a second parallel call to organizations/.
     try {
-        const orgs = await erpFetch('organizations/')
+        const orgs = await getOrganizations()
         if (Array.isArray(orgs) && orgs.length > 0) {
             return orgs[0]?.currency || orgs[0]?.base_currency_code || 'USD'
         }

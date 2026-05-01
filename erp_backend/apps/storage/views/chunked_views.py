@@ -19,6 +19,49 @@ from .. import backends
 logger = logging.getLogger(__name__)
 
 
+def _resolve_request_org(request):
+    """Resolve the requester's tenant from the standard sources used by the
+    upload init endpoint. Returns an Organization or None.
+    """
+    from erp.models import Organization
+    import uuid as _uuid
+    org_id = (
+        getattr(request, 'organization_id', None)
+        or request.headers.get('X-Tenant-Id')
+        or getattr(request.user, 'organization_id', None)
+    )
+    if not org_id:
+        return None
+    try:
+        _uuid.UUID(str(org_id))
+        return Organization.objects.filter(id=org_id).first()
+    except (ValueError, AttributeError):
+        return Organization.objects.filter(slug__iexact=org_id).first()
+
+
+def _scoped_session_qs(request):
+    """Tenant-aware base queryset for UploadSession lookups.
+
+    - Superusers see everything (file + package, all orgs).
+    - Regular users with an org context see only their own file uploads.
+    - Users with no org context (e.g. SaaS-root admins who aren't superuser)
+      see no upload sessions — they need to be promoted to superuser to manage
+      package uploads.
+
+    This is the single tenant-isolation boundary; the model-level invariant
+    (file → org NOT NULL, package → org NULL) is what makes filtering by
+    `organization=` correctly exclude package sessions.
+    """
+    qs = UploadSession.objects.all()
+    user = getattr(request, 'user', None)
+    if user is not None and getattr(user, 'is_superuser', False):
+        return qs
+    org = _resolve_request_org(request)
+    if org is None:
+        return qs.none()
+    return qs.filter(organization=org)
+
+
 # ── 1. INIT — Create a new upload session ─────────────────────────────────────
 
 @api_view(['POST'])
@@ -39,26 +82,32 @@ def chunked_upload_init(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    org_id = getattr(request, 'organization_id', None) or \
-             request.headers.get('X-Tenant-Id') or \
-             getattr(request.user, 'organization_id', None)
-    
-    from erp.models import Organization
-    import uuid
-    org = None
-    if org_id:
-        try:
-            uuid.UUID(str(org_id))
-            org = Organization.objects.filter(id=org_id).first()
-        except (ValueError, AttributeError):
-            org = Organization.objects.filter(slug__iexact=org_id).first()
+    upload_type = request.data.get('upload_type', 'file')
+
+    # Enforce the type↔org invariant + access rules at the entry point.
+    # The model's clean() + DB CheckConstraint will catch any bypass; this
+    # surfaces a clean 400/403 instead of a 500.
+    if upload_type == 'package':
+        if not getattr(request.user, 'is_superuser', False):
+            return Response(
+                {'error': 'Package uploads require superuser privileges.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        org = None  # package uploads must NOT have an organization
+    else:
+        org = _resolve_request_org(request)
+        if org is None:
+            return Response(
+                {'error': 'File uploads require an organization context.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     session = UploadSession(
         filename=filename,
         content_type=request.data.get('content_type', 'application/octet-stream'),
         total_size=int(total_size),
         checksum_expected=request.data.get('checksum', ''),
-        upload_type=request.data.get('upload_type', 'file'),
+        upload_type=upload_type,
         category=request.data.get('category', 'ATTACHMENT'),
         linked_model=request.data.get('linked_model', ''),
         linked_id=request.data.get('linked_id'),
@@ -87,7 +136,7 @@ def chunked_upload_chunk(request, session_id):
     Appends the chunk to the temp file, updates bytes_received.
     """
     try:
-        session = UploadSession.objects.get(id=session_id)
+        session = _scoped_session_qs(request).get(id=session_id)
     except UploadSession.DoesNotExist:
         return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -166,7 +215,7 @@ def chunked_upload_complete(request, session_id):
     Verifies checksum, moves file to storage, creates StoredFile record.
     """
     try:
-        session = UploadSession.objects.get(id=session_id)
+        session = _scoped_session_qs(request).get(id=session_id)
     except UploadSession.DoesNotExist:
         return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -378,7 +427,7 @@ def chunked_upload_status(request, session_id):
     Returns current progress, allowing client to resume.
     """
     try:
-        session = UploadSession.objects.get(id=session_id)
+        session = _scoped_session_qs(request).get(id=session_id)
     except UploadSession.DoesNotExist:
         return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -406,7 +455,7 @@ def active_uploads(request):
     GET /api/storage/upload/active/
     Returns all non-expired, non-complete upload sessions.
     """
-    sessions = UploadSession.objects.filter(
+    sessions = _scoped_session_qs(request).filter(
         status='uploading',
         expires_at__gt=timezone.now(),
     ).order_by('-created_at')
@@ -440,7 +489,7 @@ def chunked_upload_abort(request, session_id):
     Cancels the upload, deletes temp file, and removes the session record.
     """
     try:
-        session = UploadSession.objects.get(id=session_id)
+        session = _scoped_session_qs(request).get(id=session_id)
     except UploadSession.DoesNotExist:
         return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
 
