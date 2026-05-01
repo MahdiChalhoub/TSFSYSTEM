@@ -17,16 +17,17 @@ logger = logging.getLogger(__name__)
 from apps.hr.models import Employee
 from apps.hr.serializers import EmployeeSerializer
 
-# Gated cross-module imports
-try:
-    from apps.finance.models import ChartOfAccount
-except ImportError:
-    ChartOfAccount = None
+# Phase 3 — finance access goes through the connector facade rather than direct imports.
+# Resolved lazily inside methods so the registry is fully hydrated and module-state
+# (DISABLED / MISSING) drives the fallback path uniformly.
+from erp.connector_registry import connector
 
-try:
-    from apps.finance.services import LedgerService
-except ImportError:
-    LedgerService = None
+
+def _resolve_finance_classes():
+    """Return (ChartOfAccount, LedgerService) via the connector, or (None, None)."""
+    coa = connector.require('finance.accounts.get_model', org_id=0, source='hr')
+    ledger = connector.require('finance.services.get_ledger_service', org_id=0, source='hr')
+    return coa, ledger
 
 
 class EmployeeViewSet(TenantModelViewSet):
@@ -42,6 +43,9 @@ class EmployeeViewSet(TenantModelViewSet):
         data['organization'] = organization.id
 
         emp_type = data.get('employee_type', 'EMPLOYEE')
+
+        # Resolve finance via the connector — None when Finance module is unavailable.
+        ChartOfAccount, LedgerService = _resolve_finance_classes()
 
         with transaction.atomic():
             # Finance integration (gated — HR works without Finance)
@@ -134,6 +138,8 @@ class EmployeeViewSet(TenantModelViewSet):
             return Response({"error": "Employee already has a linked GL account", "linked_account_id": employee.linked_account_id},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        # Resolve finance via the connector — None when Finance module is unavailable.
+        ChartOfAccount, LedgerService = _resolve_finance_classes()
         if not ChartOfAccount or not LedgerService:
             return Response({"error": "Finance module not available"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 

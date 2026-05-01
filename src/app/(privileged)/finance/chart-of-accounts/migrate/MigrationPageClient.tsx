@@ -16,6 +16,7 @@ import {
     type MigrationPreviewAccount,
 } from '@/app/actions/finance/coa-templates'
 import { PageTour } from '@/components/ui/PageTour'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/finance-coa-migrate'
 
 interface Props {
@@ -34,6 +35,7 @@ export default function MigrationPageClient({
     hasData,
 }: Props) {
     const router = useRouter()
+    const { t } = useTranslation()
     const searchParams = useSearchParams()
     const cameFromCOA = searchParams.get('from') === 'coa'
     const [targetKey, setTargetKey] = useState('')
@@ -69,12 +71,12 @@ export default function MigrationPageClient({
             const data = await getMigrationPreview(targetKey)
             if (data) {
                 setPreview(data)
-                toast.success(`Preview loaded: ${data.summary.total_accounts} accounts analyzed`)
+                toast.success(t('finance.coa_migrate_page.toast_preview_loaded').replace('{count}', String(data.summary.total_accounts)))
             } else {
-                toast.error('Failed to load migration preview')
+                toast.error(t('finance.coa_migrate_page.toast_preview_failed'))
             }
         } catch (e: unknown) {
-            toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+            toast.error(t('finance.coa_migrate_page.error_prefix') + ': ' + (e instanceof Error ? e.message : String(e)))
         } finally {
             setLoading(false)
         }
@@ -253,7 +255,7 @@ export default function MigrationPageClient({
                                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
                                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                             >
-                                <ChevronLeft size={14} /> Back
+                                <ChevronLeft size={14} /> {t('common.back')}
                             </button>
                         )}
                         <div className="page-header-icon bg-app-primary"
@@ -262,10 +264,10 @@ export default function MigrationPageClient({
                         </div>
                         <div>
                             <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
-                                Account Migration
+                                {t('finance.coa_migrate_page.title')}
                             </h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
-                                Transform Your Chart of Accounts · No History Lost
+                                {t('finance.coa_migrate_page.subtitle')}
                             </p>
                         </div>
                     </div>
@@ -282,9 +284,9 @@ export default function MigrationPageClient({
                                     boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                                 }}>
                                 {executing ? (
-                                    <><Loader2 size={13} className="animate-spin" /> Migrating...</>
+                                    <><Loader2 size={13} className="animate-spin" /> {t('finance.coa_migrate_page.migrating')}</>
                                 ) : (
-                                    <><Zap size={13} /> Apply Migration &amp; Import</>
+                                    <><Zap size={13} /> {t('finance.coa_migrate_page.apply')}</>
                                 )}
                             </button>
                         )}

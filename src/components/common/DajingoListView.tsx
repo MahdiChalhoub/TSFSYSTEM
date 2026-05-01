@@ -33,7 +33,7 @@
  *  />
  */
 
-import React, { useState, useRef, useMemo } from 'react'
+import React, { useState, useRef, useMemo, useEffect } from 'react'
 import {
   Eye, MoreHorizontal, ChevronRight, ChevronDown,
   Loader2, Search, SlidersHorizontal, Settings2, X,
@@ -199,6 +199,21 @@ export function DajingoListView<T>({
   const handleCustomize = onToggleCustomize || (() => setShowBuiltInPanel(!showBuiltInPanel))
   const showInternalPanel = !onToggleCustomize && showBuiltInPanel
 
+  // Scroll container ref — observed for clientWidth so expanded rows can
+  // cap their width to the viewport (see CSS var `--listview-viewport-width`).
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const apply = () => {
+      el.style.setProperty('--listview-viewport-width', `${el.clientWidth}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const dragColRef = useRef<string | null>(null)
   const phc = policyHiddenColumns || new Set<string>()
   const rac = rightAlignedCols || new Set<string>()
@@ -287,8 +302,14 @@ export function DajingoListView<T>({
         {(allData || data).length} {entityLabel}{(allData || data).length !== 1 ? 's' : ''} · Tap to expand
       </div>
 
-      {/* ── Scrollable wrapper ── */}
-      <div className="flex-1 min-h-0 overflow-auto overscroll-contain custom-scrollbar">
+      {/* ── Scrollable wrapper ──
+       *  Tracks its own visible width via ResizeObserver and exposes it as
+       *  `--listview-viewport-width`. Expanded rows use that variable to cap
+       *  their width to the viewport instead of inheriting the wide-table
+       *  minWidth — that's how we avoid a horizontally-scrolling expanded
+       *  card on tables with many columns. */}
+      <div ref={scrollContainerRef}
+           className="flex-1 min-h-0 overflow-auto overscroll-contain custom-scrollbar">
         <div style={effectiveMinWidth ? { minWidth: effectiveMinWidth } : undefined}>
 
           {/* ── Sticky Column Headers ── */}
@@ -624,8 +645,22 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
         </div>
       </div>
 
-      {/* ── EXPANDED CONTENT ── */}
-      {isOpen && renderExpanded && renderExpanded(row)}
+      {/* ── EXPANDED CONTENT ──
+       *  The row container has `minWidth: <wide>` so the dynamic columns can
+       *  fit. Without this wrapper the expanded card would inherit that wide
+       *  width and require horizontal scrolling. We pin to the left edge and
+       *  cap to the listview's visible viewport width so the content reflows
+       *  to fit the screen instead. */}
+      {isOpen && renderExpanded && (
+        <div style={{
+          position: 'sticky',
+          left: 0,
+          width: 'var(--listview-viewport-width, 100%)',
+          maxWidth: 'var(--listview-viewport-width, 100%)',
+        }}>
+          {renderExpanded(row)}
+        </div>
+      )}
     </div>
   )
 }) as <T>(props: DajingoRowProps<T>) => React.ReactElement

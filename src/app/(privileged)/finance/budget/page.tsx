@@ -125,10 +125,10 @@ export default function BudgetPlanningPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-emerald-500" />
+                            <TrendingUp size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Income</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(Math.abs(totalIncome))}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(Math.abs(totalIncome))}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -136,10 +136,10 @@ export default function BudgetPlanningPage() {
                 <Card className="border-l-4 border-l-rose-500 bg-gradient-to-r from-rose-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingDown size={24} className="text-rose-500" />
+                            <TrendingDown size={24} className="text-app-error" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Expenses</p>
-                                <p className="text-xl font-bold text-rose-700">{fmt(Math.abs(totalExpense))}</p>
+                                <p className="text-xl font-bold text-app-error">{fmt(Math.abs(totalExpense))}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -147,10 +147,10 @@ export default function BudgetPlanningPage() {
                 <Card className={`border-l-4 ${netResult >= 0 ? 'border-l-green-500 bg-gradient-to-r from-green-50 to-white' : 'border-l-red-500 bg-gradient-to-r from-red-50 to-white'}`}>
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className={netResult >= 0 ? 'text-green-500' : 'text-red-500'} />
+                            <DollarSign size={24} className={netResult >= 0 ? 'text-app-success' : 'text-app-error'} />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Net Result</p>
-                                <p className={`text-xl font-bold ${netResult >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                <p className={`text-xl font-bold ${netResult >= 0 ? 'text-app-success' : 'text-app-error'}`}>
                                     {fmt(Math.abs(netResult))}
                                 </p>
                             </div>
@@ -176,7 +176,7 @@ export default function BudgetPlanningPage() {
             <Card>
                 <CardContent className="py-4">
                     <div className="flex items-center gap-3 mb-2">
-                        <span className="text-xs font-medium text-emerald-600">Income</span>
+                        <span className="text-xs font-medium text-app-success">Income</span>
                         <div className="flex-1 h-4 bg-app-surface-2 rounded-full overflow-hidden flex">
                             {Math.abs(totalIncome) + Math.abs(totalExpense) > 0 && (
                                 <>
@@ -191,21 +191,21 @@ export default function BudgetPlanningPage() {
                                 </>
                             )}
                         </div>
-                        <span className="text-xs font-medium text-rose-600">Expense</span>
+                        <span className="text-xs font-medium text-app-error">Expense</span>
                     </div>
                 </CardContent>
             </Card>
 
             {renderAccountTable(
                 incomeAccounts, 'Income Accounts',
-                <TrendingUp size={18} className="text-emerald-500" />,
-                'text-emerald-600'
+                <TrendingUp size={18} className="text-app-success" />,
+                'text-app-success'
             )}
 
             {renderAccountTable(
                 expenseAccounts, 'Expense Accounts',
-                <TrendingDown size={18} className="text-rose-500" />,
-                'text-rose-600'
+                <TrendingDown size={18} className="text-app-error" />,
+                'text-app-error'
             )}
         </div>
     )

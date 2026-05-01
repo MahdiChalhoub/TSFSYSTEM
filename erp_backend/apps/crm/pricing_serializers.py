@@ -60,7 +60,15 @@ class ClientPriceRuleSerializer(serializers.ModelSerializer):
         if not obj.product_id:
             return None
         try:
-            from apps.inventory.models import Product
+            # Phase 3 — go through the connector instead of importing inventory directly
+            from erp.connector_registry import connector
+            Product = connector.require(
+                'inventory.products.get_model',
+                org_id=getattr(obj, 'organization_id', 0) or 0,
+                source='crm',
+            )
+            if Product is None:
+                return f"Product #{obj.product_id}"
             return Product.objects.get(id=obj.product_id).name
         except Exception:
             return f"Product #{obj.product_id}"
@@ -69,7 +77,14 @@ class ClientPriceRuleSerializer(serializers.ModelSerializer):
         if not obj.category_id:
             return None
         try:
-            from apps.inventory.models import Category
+            from erp.connector_registry import connector
+            Category = connector.require(
+                'inventory.categories.get_model',
+                org_id=getattr(obj, 'organization_id', 0) or 0,
+                source='crm',
+            )
+            if Category is None:
+                return f"Category #{obj.category_id}"
             return Category.objects.get(id=obj.category_id).name
         except Exception:
             return f"Category #{obj.category_id}"

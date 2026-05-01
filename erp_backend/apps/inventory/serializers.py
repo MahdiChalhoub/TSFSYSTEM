@@ -162,6 +162,11 @@ class ProductSerializer(serializers.ModelSerializer):
     unit_short_name = serializers.CharField(source='unit.short_name', read_only=True, default=None)
     parfum_name = serializers.CharField(source='parfum.name', read_only=True, default=None)
     size_unit_name = serializers.CharField(source='size_unit.short_name', read_only=True, default=None)
+    # Flat list of every dynamic attribute value assigned to this product
+    # (e.g. ['Floral', '100ml']). Used by the products list filters so a
+    # user can filter by Parfum, Volume, etc. via the attribute tree —
+    # without the frontend needing to fetch a separate M2M endpoint.
+    attribute_value_names = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -173,6 +178,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'brand_name', 'country_name', 'country_code',
             'category_name', 'unit_name', 'unit_short_name',
             'parfum_name', 'size_unit_name',
+            'attribute_value_names',
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'max_stock_level', 'reorder_point', 'reorder_quantity',
@@ -187,6 +193,16 @@ class ProductSerializer(serializers.ModelSerializer):
             'organization',
         ]
         read_only_fields = ['organization']
+
+    def get_attribute_value_names(self, obj):
+        # `attribute_values` is the M2M to ProductAttribute leaf nodes
+        # (children in the attribute tree). Returns just the names — IDs
+        # are unstable across migrations, names are what the filter dropdown
+        # uses for matching.
+        try:
+            return list(obj.attribute_values.values_list('name', flat=True))
+        except Exception:
+            return []
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):

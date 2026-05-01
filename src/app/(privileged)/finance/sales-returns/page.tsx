@@ -22,10 +22,10 @@ type SortKey = 'return_date' | 'status' | 'reason'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
-    APPROVED: { label: 'Approved', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-    COMPLETED: { label: 'Completed', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: ShieldCheck },
-    CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
+    PENDING: { label: 'Pending', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock },
+    APPROVED: { label: 'Approved', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: CheckCircle2 },
+    COMPLETED: { label: 'Completed', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: ShieldCheck },
+    CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 }
 
 export default function SalesReturnsPage() {
@@ -77,8 +77,8 @@ export default function SalesReturnsPage() {
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+            ? <ArrowUp size={12} className="text-app-success ml-1 inline" />
+            : <ArrowDown size={12} className="text-app-success ml-1 inline" />
     }
 
     const filtered = useMemo(() => {
@@ -123,7 +123,7 @@ export default function SalesReturnsPage() {
             <Dialog open={confirmDialog !== null} onOpenChange={(open) => { if (!open) setConfirmDialog(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className={`flex items-center gap-2 ${confirmDialog?.action === 'approve' ? 'text-emerald-700' : 'text-red-700'}`}>
+                        <DialogTitle className={`flex items-center gap-2 ${confirmDialog?.action === 'approve' ? 'text-app-success' : 'text-app-error'}`}>
                             {confirmDialog?.action === 'approve' ? <><CheckCircle2 size={20} /> Approve Return</> : <><Ban size={20} /> Cancel Return</>}
                         </DialogTitle>
                         <DialogDescription>
@@ -166,7 +166,7 @@ export default function SalesReturnsPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{pending}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-amber-500" />
+                                <Clock size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -179,7 +179,7 @@ export default function SalesReturnsPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{approved}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
+                                <CheckCircle2 size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -189,10 +189,10 @@ export default function SalesReturnsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Credit Notes</p>
-                                <p className="text-3xl font-bold text-blue-900 mt-1">{creditNotes.length}</p>
+                                <p className="text-3xl font-bold text-app-info mt-1">{creditNotes.length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <CreditCard size={22} className="text-blue-500" />
+                                <CreditCard size={22} className="text-app-info" />
                             </div>
                         </div>
                     </CardContent>
@@ -257,11 +257,11 @@ export default function SalesReturnsPage() {
                                             {r.status === 'PENDING' && (
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Button size="sm" variant="outline" onClick={() => setConfirmDialog({ id: r.id, action: 'approve' })} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
+                                                        className="rounded-xl gap-1 text-app-success border-app-success hover:bg-app-success-bg h-8 text-xs font-semibold">
                                                         <CheckCircle2 size={12} /> Approve
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => setConfirmDialog({ id: r.id, action: 'cancel' })} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-red-700 border-red-200 hover:bg-red-50 h-8 text-xs font-semibold">
+                                                        className="rounded-xl gap-1 text-app-error border-app-error hover:bg-app-error-bg h-8 text-xs font-semibold">
                                                         <Ban size={12} /> Cancel
                                                     </Button>
                                                 </div>
@@ -305,7 +305,7 @@ export default function SalesReturnsPage() {
                                     <TableCell className="text-sm font-medium text-app-foreground">{cn.customer_name || `#${cn.customer}`}</TableCell>
                                     <TableCell className="text-right font-semibold text-app-foreground">{Number(cn.amount).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant="outline" className="gap-1 rounded-lg border bg-blue-50 border-blue-200 text-blue-700 font-semibold text-[11px]">
+                                        <Badge variant="outline" className="gap-1 rounded-lg border bg-app-info-bg border-app-info text-app-info font-semibold text-[11px]">
                                             <FileText size={12} /> {cn.status}
                                         </Badge>
                                     </TableCell>

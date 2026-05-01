@@ -100,8 +100,8 @@ export default function DeferredExpensesPage() {
     const totalRemaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
 
     const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-        ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+        ACTIVE: { icon: PlayCircle, color: "text-app-success", bg: "bg-app-success-bg border-app-success" },
+        COMPLETED: { icon: CheckCircle2, color: "text-app-info", bg: "bg-app-info-bg border-app-info" },
     }
 
     if (loading) {
@@ -193,7 +193,7 @@ export default function DeferredExpensesPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{totalActive}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <PlayCircle size={22} className="text-emerald-500" />
+                                <PlayCircle size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -219,7 +219,7 @@ export default function DeferredExpensesPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{totalRemaining.toLocaleString()}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Timer size={22} className="text-amber-500" />
+                                <Timer size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -305,7 +305,7 @@ export default function DeferredExpensesPage() {
                                                 variant="outline"
                                                 onClick={() => handleRecognize(exp.id)}
                                                 disabled={isPending}
-                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-app-success border-app-success hover:bg-app-success-bg"
                                             >
                                                 <Clock size={12} /> Recognize
                                             </Button>

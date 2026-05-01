@@ -27,10 +27,10 @@ type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'lifecycle_sta
 type SortDir = 'asc' | 'desc'
 
 const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
-    LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
+    OPEN: { label: 'Open', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Clock },
+    LOCKED: { label: 'Locked', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
-    CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+    CONFIRMED: { label: 'Confirmed', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: CheckCircle2 },
 }
 
 export default function VouchersPage() {
@@ -165,8 +165,8 @@ export default function VouchersPage() {
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+            ? <ArrowUp size={12} className="text-app-success ml-1 inline" />
+            : <ArrowDown size={12} className="text-app-success ml-1 inline" />
     }
 
     // ─── Filtering + Sorting ──────────────────────
@@ -200,9 +200,9 @@ export default function VouchersPage() {
     ]
 
     const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-        TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-        RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
+        TRANSFER: { icon: ArrowRightLeft, color: "text-app-info", bg: "bg-app-info-bg border-app-info" },
+        RECEIPT: { icon: ArrowDownLeft, color: "text-app-success", bg: "bg-app-success-bg border-app-success" },
+        PAYMENT: { icon: ArrowUpRight, color: "text-app-error", bg: "bg-app-error-bg border-app-error" },
     }
 
     const activeType = editVoucher ? editVoucher.voucher_type : voucherType
@@ -341,7 +341,7 @@ export default function VouchersPage() {
             <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-700"><Trash2 size={20} /> Delete Voucher</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2 text-app-error"><Trash2 size={20} /> Delete Voucher</DialogTitle>
                         <DialogDescription>This action is permanent and cannot be undone. Are you sure you want to delete this voucher?</DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 pt-3">
@@ -419,10 +419,10 @@ export default function VouchersPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Open</p>
-                                <p className="text-3xl font-bold text-blue-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
+                                <p className="text-3xl font-bold text-app-info mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-blue-500" />
+                                <Clock size={22} className="text-app-info" />
                             </div>
                         </div>
                     </CardContent>
@@ -435,7 +435,7 @@ export default function VouchersPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Lock size={22} className="text-amber-500" />
+                                <Lock size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -448,7 +448,7 @@ export default function VouchersPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{vouchers.filter(v => v.is_posted).length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
+                                <CheckCircle2 size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -535,7 +535,7 @@ export default function VouchersPage() {
                                                 <LcIcon size={12} /> {lc.label}
                                             </Badge>
                                             {v.is_posted && (
-                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold text-[11px]">
+                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-app-success-bg border-app-success text-app-success font-semibold text-[11px]">
                                                     <Send size={10} /> Posted
                                                 </Badge>
                                             )}
@@ -547,15 +547,15 @@ export default function VouchersPage() {
                                             {isOpen && !v.is_posted && (
                                                 <>
                                                     <Button size="sm" variant="ghost" onClick={() => openEdit(v)}
-                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
+                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-app-info opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
                                                         <Pencil size={14} />
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => handleLock(v.id)} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-amber-700 border-amber-200 hover:bg-amber-50 h-8 text-xs font-semibold">
+                                                        className="rounded-xl gap-1 text-app-warning border-app-warning hover:bg-app-warning-bg h-8 text-xs font-semibold">
                                                         <Lock size={12} /> Lock
                                                     </Button>
                                                     <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(v.id)}
-                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
+                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-app-error opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
                                                         <Trash2 size={14} />
                                                     </Button>
                                                 </>
@@ -583,12 +583,12 @@ export default function VouchersPage() {
                                             {/* CONFIRMED: Post */}
                                             {isConfirmed && !v.is_posted && (
                                                 <Button size="sm" variant="outline" onClick={() => handlePost(v.id)} disabled={isPending}
-                                                    className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
+                                                    className="rounded-xl gap-1 text-app-success border-app-success hover:bg-app-success-bg h-8 text-xs font-semibold">
                                                     <Send size={12} /> Post
                                                 </Button>
                                             )}
                                             {v.is_posted && (
-                                                <span className="text-xs text-emerald-600 font-medium italic">✓ Posted</span>
+                                                <span className="text-xs text-app-success font-medium italic">✓ Posted</span>
                                             )}
                                             {/* History — always visible */}
                                             <Button size="sm" variant="ghost" onClick={() => showHistory(v.id)}

@@ -2,7 +2,11 @@
  * Shared ERP Entity Types
  * =======================
  * Centralized type definitions for all ERP domain entities.
- * Used across pages and components to replace `useState<any>`.
+ * Used across pages and components in place of untyped state.
+ *
+ * Open-ended `[key: string]: unknown` index signatures allow consumers
+ * to read ad-hoc backend fields, but force them to narrow / cast at
+ * the point of use rather than silently propagating `any`.
  */
 
 // ─── Finance ────────────────────────────────────────────────────
@@ -49,7 +53,7 @@ export interface JournalEntry {
     lines: JournalLine[]
     created_at?: string
     created_by?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface JournalLine {
@@ -85,7 +89,7 @@ export interface Voucher {
     lifecycle_status?: string
     created_at?: string
     created_by?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface VoucherLine {
@@ -109,7 +113,7 @@ export interface FiscalYear {
     is_closed?: boolean
     isClosed?: boolean
     periods: FiscalPeriod[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface FiscalPeriod {
@@ -137,7 +141,7 @@ export interface Payment {
     account_name?: string
     payment_account_id?: number
     notes?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AgingBucket {
@@ -167,8 +171,8 @@ export interface FinancialEvent {
     status?: string
     reference?: string
     notes?: string
-    metadata?: Record<string, any>
-    [key: string]: any
+    metadata?: Record<string, unknown>
+    [key: string]: unknown
 }
 
 export interface Asset {
@@ -193,7 +197,7 @@ export interface Asset {
     source_account_id?: number
     status: string
     current_value?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface DepreciationScheduleItem {
@@ -221,7 +225,7 @@ export interface DeferredExpense {
     account_name?: string
     source_account_id?: number
     status: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface TaxGroup {
@@ -234,7 +238,7 @@ export interface TaxGroup {
     total_collected: number
     total_paid: number
     net: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface TaxSummary {
@@ -249,7 +253,7 @@ export interface TaxSummary {
         count?: number
         discount?: number
     }
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface ProfitDistribution {
@@ -262,9 +266,9 @@ export interface ProfitDistribution {
     net_profit?: number
     date: string
     distribution_date?: string
-    allocations?: Record<string, any>
+    allocations?: Record<string, unknown>
     notes?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface ProfitAllocation {
@@ -300,7 +304,7 @@ export interface AuditTrailEntry {
     object_id: number
     user: string
     timestamp: string
-    changes?: Record<string, any>
+    changes?: Record<string, unknown>
 }
 
 export interface AuditTrailResponse {
@@ -362,7 +366,7 @@ export interface Product {
     is_active?: boolean
     unit?: string
     siteStock?: Record<number, number>
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface Warehouse {
@@ -375,7 +379,7 @@ export interface Warehouse {
     site_name?: string
     site?: { name: string }
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface TransferOrder {
@@ -390,13 +394,13 @@ export interface TransferOrder {
     driver?: string
     status?: string
     date: string
-    lines?: TransferOrderLine[] | Record<string, any>[]
+    lines?: TransferOrderLine[] | Record<string, unknown>[]
     lifecycle_status?: string
     is_posted?: boolean
     total_qty_transferred?: number | string
     reason?: string
     notes?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface TransferOrderLine {
@@ -416,11 +420,11 @@ export interface AdjustmentOrder {
     reason?: string
     status?: string
     date: string
-    lines?: AdjustmentOrderLine[] | Record<string, any>[]
+    lines?: AdjustmentOrderLine[] | Record<string, unknown>[]
     lifecycle_status?: string
     is_posted?: boolean
     notes?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AdjustmentOrderLine {
@@ -442,8 +446,8 @@ export interface OperationalRequest {
     priority?: string
     description?: string
     notes?: string
-    lines?: OperationalRequestLine[] | Record<string, any>[]
-    [key: string]: any
+    lines?: OperationalRequestLine[] | Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface OperationalRequestLine {
@@ -524,8 +528,8 @@ export interface SalesOrder {
     total_amount?: string | number
     created_at?: string
     items?: SalesOrderLine[]
-    lines?: Record<string, any>[]
-    [key: string]: any
+    lines?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface SalesOrderLine {
@@ -552,7 +556,7 @@ export interface SalesReturn {
     reason?: string
     customer_name?: string
     lines?: SalesReturnLine[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface SalesReturnLine {
@@ -593,7 +597,7 @@ export interface DeliveryOrder {
     created_at?: string
     dispatched_at?: string
     delivered_at?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface DeliveryZone {
@@ -605,7 +609,7 @@ export interface DeliveryZone {
     estimated_time?: string
     estimated_days?: number
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface DiscountRule {
@@ -630,7 +634,7 @@ export interface DiscountRule {
     product?: number
     category?: number
     brand?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface DiscountUsageLog {
@@ -678,7 +682,7 @@ export interface PurchaseOrder {
     total_amount?: string | number
     payment_method?: string
     lines?: PurchaseOrderLine[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface PurchaseOrderLine {
@@ -690,7 +694,7 @@ export interface PurchaseOrderLine {
     unit_price: number
     total: number
     qty_received?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface PurchaseReturn {
@@ -708,7 +712,7 @@ export interface PurchaseReturn {
     reason?: string
     supplier_name?: string
     supplier?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── CRM & HR ───────────────────────────────────────────────────
@@ -723,7 +727,7 @@ export interface Contact {
     company?: string
     tax_id?: string
     balance?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface Employee {
@@ -742,7 +746,7 @@ export interface Employee {
     status?: string
     user_id?: number
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface UserApproval {
@@ -754,7 +758,7 @@ export interface UserApproval {
     requested_at?: string
     status?: string
     role?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface ContactStatement {
@@ -779,7 +783,7 @@ export interface LifecycleHistoryEntry {
     performed_by_name?: string
     performed_at: string
     comment?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface ValuationResponse {
@@ -788,8 +792,8 @@ export interface ValuationResponse {
         total_products: number
         total_quantity: number
     }
-    products?: Record<string, any>[]
-    [key: string]: any
+    products?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface LowStockResponse {
@@ -800,8 +804,8 @@ export interface LowStockResponse {
         low: number
         total_restock_value: number
     }
-    products?: Record<string, any>[]
-    [key: string]: any
+    products?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface ExpiryAlertResponse {
@@ -812,8 +816,8 @@ export interface ExpiryAlertResponse {
         total_value: number
         total_quantity: number
     }
-    alerts?: Record<string, any>[]
-    [key: string]: any
+    alerts?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 // ─── Additional Sales Types ─────────────────────────────────────
@@ -822,7 +826,7 @@ export interface ImportResult {
     success_count: number
     error_count: number
     errors: { row: number; error: string }[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface UsageLog {
@@ -831,7 +835,7 @@ export interface UsageLog {
     order?: number
     applied_at?: string
     discount_amount?: string | number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface SalesAnalyticsData {
@@ -843,12 +847,12 @@ export interface SalesAnalyticsData {
         tax: number
         discount: number
     }
-    top_products?: Record<string, any>[]
-    top_customers?: Record<string, any>[]
-    daily_trend?: Record<string, any>[]
-    payment_methods?: Record<string, any>[]
-    site_performance?: Record<string, any>[]
-    [key: string]: any
+    top_products?: Record<string, unknown>[]
+    top_customers?: Record<string, unknown>[]
+    daily_trend?: Record<string, unknown>[]
+    payment_methods?: Record<string, unknown>[]
+    site_performance?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 // ─── Additional Purchases Types ─────────────────────────────────
@@ -863,7 +867,7 @@ export interface PurchaseLine {
     sellingPriceTTC?: number
     taxRate?: number
     expiryDate?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── Catalog ────────────────────────────────────────────────────
@@ -872,20 +876,20 @@ export interface Category {
     id: number
     name: string
     parent?: number | null
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface Brand {
     id: number
     name: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface ProductAttribute {
     id: number
     name: string
     value?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── Common ─────────────────────────────────────────────────────
@@ -903,16 +907,16 @@ export interface PublicConfigTenant {
     name?: string
     slug?: string
     logo?: string
-    roles?: Array<{ id: number; name: string;[key: string]: any }>
-    sites?: Array<{ id: number; name: string;[key: string]: any }>
-    [key: string]: any
+    roles?: Array<{ id: number; name: string;[key: string]: unknown }>
+    sites?: Array<{ id: number; name: string;[key: string]: unknown }>
+    [key: string]: unknown
 }
 
 export interface PublicConfig {
     tenant?: PublicConfigTenant | null
-    business_types?: Array<{ id: number; name: string;[key: string]: any }>
-    currencies?: Array<{ id: number; name: string; code?: string;[key: string]: any }>
-    [key: string]: any
+    business_types?: Array<{ id: number; name: string;[key: string]: unknown }>
+    currencies?: Array<{ id: number; name: string; code?: string;[key: string]: unknown }>
+    [key: string]: unknown
 }
 
 // ─── CRM Contact Summary ────────────────────────────────────────
@@ -930,21 +934,21 @@ export interface ContactSummaryData {
         supplier_category?: string
         customer_tier?: string
         vat_id?: string
-        [key: string]: any
+        [key: string]: unknown
     }
     orders: {
-        recent: Array<Record<string, any>>
-        stats: { total_count: number; total_amount: number; completed: number; draft: number;[key: string]: any }
+        recent: Array<Record<string, unknown>>
+        stats: { total_count: number; total_amount: number; completed: number; draft: number;[key: string]: unknown }
     }
     payments: {
-        recent: Array<Record<string, any>>
-        stats: { payment_count: number; total_paid: number;[key: string]: any }
+        recent: Array<Record<string, unknown>>
+        stats: { payment_count: number; total_paid: number;[key: string]: unknown }
     }
-    balance: { current_balance: number; last_payment_date?: string;[key: string]: any }
-    journal_entries: Array<Record<string, any>>
-    analytics?: { avg_order_value?: number; monthly_frequency?: number; total_revenue?: number; top_products?: Array<Record<string, any>>;[key: string]: any }
-    pricing_rules?: Array<Record<string, any>>
-    [key: string]: any
+    balance: { current_balance: number; last_payment_date?: string;[key: string]: unknown }
+    journal_entries: Array<Record<string, unknown>>
+    analytics?: { avg_order_value?: number; monthly_frequency?: number; total_revenue?: number; top_products?: Array<Record<string, unknown>>;[key: string]: unknown }
+    pricing_rules?: Array<Record<string, unknown>>
+    [key: string]: unknown
 }
 
 // ─── SaaS Entities ──────────────────────────────────────────────
@@ -957,38 +961,123 @@ export interface SaasOrganization {
     is_active?: boolean
     status?: string
     plan_name?: string
+    current_plan_name?: string
+    current_plan?: number | string | null
+    current_plan_details?: SaasPlan | { name?: string;[key: string]: unknown } | null
+    plan_expiry_at?: string | null
+    data_usage_bytes?: number
+    business_type_name?: string
+    business_email?: string
+    country?: string
+    client_name?: string
+    site_count?: number
+    module_count?: number
     subscription_status?: string
     created_at?: string
     user_count?: number
-    modules?: Array<Record<string, any>>
-    sites?: Array<Record<string, any>>
-    subscription?: Record<string, any>
-    [key: string]: any
+    _count?: { users?: number; sites?: number; modules?: number;[key: string]: unknown }
+    modules?: Array<Record<string, unknown>>
+    sites?: Array<Record<string, unknown>>
+    subscription?: Record<string, unknown>
+    [key: string]: unknown
 }
 
+/**
+ * Usage metric shape returned by the SaaS usage endpoint.
+ * Different metrics expose different field names (e.g. storage uses
+ * `current_mb`/`limit_mb`, modules uses `total_available`), so we list
+ * every field consumers read as optional and let the renderer guard.
+ */
+export interface SaasUsageMetric {
+    current?: number
+    limit?: number
+    percent?: number
+    current_mb?: number
+    limit_mb?: number
+    total_available?: number
+    [key: string]: unknown
+}
+
+export interface SaasUsagePlan {
+    id?: number
+    name?: string
+    monthly_price?: string | number
+    annual_price?: string | number
+    expiry?: string | null
+    [key: string]: unknown
+}
+
+export interface SaasUsageClient {
+    id?: number | string
+    full_name?: string
+    email?: string
+    phone?: string
+    company_name?: string
+    [key: string]: unknown
+}
+
+export interface SaasUsageWarning {
+    level?: string
+    code?: string
+    message?: string
+    suggestion?: string
+    [key: string]: unknown
+}
+
+/**
+ * Backend always populates these top-level metrics when the org has a
+ * plan, so consumers access them without further narrowing. Per-metric
+ * sub-fields (current/limit/percent etc.) are optional because not
+ * every metric reports every sub-field.
+ */
 export interface SaasUsageData {
-    users?: any
-    products?: any
-    orders?: any
-    storage?: any
-    api_calls?: any
-    sites?: any
-    invoices?: any
-    modules?: any
-    [key: string]: any
+    users: SaasUsageMetric
+    sites: SaasUsageMetric
+    storage: SaasUsageMetric
+    modules: SaasUsageMetric
+    invoices: SaasUsageMetric
+    products?: SaasUsageMetric
+    orders?: SaasUsageMetric
+    api_calls?: SaasUsageMetric
+    plan?: SaasUsagePlan | null
+    available_plans?: Array<Record<string, unknown>>
+    client?: SaasUsageClient | null
+    warnings?: SaasUsageWarning[]
+    [key: string]: unknown
+}
+
+export interface SaasBillingClient {
+    id?: number | string
+    full_name?: string
+    email?: string
+    phone?: string
+    company_name?: string
+    crm_contact_id?: number | string | null
+    [key: string]: unknown
 }
 
 export interface SaasBillingData {
-    history: Array<Record<string, any>>
-    balance: { total_paid: string; total_credits: string; net_balance: string;[key: string]: any }
-    client: Record<string, any> | null
-    [key: string]: any
+    history: Array<Record<string, unknown>>
+    balance: { total_paid: string; total_credits: string; net_balance: string;[key: string]: unknown }
+    client: SaasBillingClient | null
+    [key: string]: unknown
 }
 
 export interface SaasAddonData {
-    purchased: Array<Record<string, any>>
-    available: Array<Record<string, any>>
-    [key: string]: any
+    purchased: Array<Record<string, unknown>>
+    available: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+export interface SaasPlanLimits {
+    max_users?: number
+    max_sites?: number
+    max_storage_gb?: number
+    max_products?: number
+    max_invoices_per_month?: number
+    max_customers?: number
+    custom?: boolean
+    [key: string]: unknown
 }
 
 export interface SaasPlan {
@@ -996,19 +1085,30 @@ export interface SaasPlan {
     name: string
     description?: string
     price?: string | number
+    monthly_price?: string | number
+    annual_price?: string | number
     max_users?: number
     max_products?: number
     max_sites?: number
-    features?: Record<string, any>
-    addons?: Array<Record<string, any>>
-    [key: string]: any
+    is_active?: boolean
+    is_public?: boolean
+    trial_days?: number
+    category?: { id: number; name?: string; type?: string;[key: string]: unknown } | null
+    limits?: SaasPlanLimits
+    modules?: string[]
+    features?: Record<string, unknown>
+    addons?: Array<Record<string, unknown>>
+    organizations?: Array<Record<string, unknown>>
+    [key: string]: unknown
 }
 
 export interface SaasUpdateStatus {
     current_version?: string
     latest_version?: string
     update_available?: boolean
-    [key: string]: any
+    integrity?: string
+    environment?: string
+    [key: string]: unknown
 }
 
 // ─── Inventory Serial Tracker ───────────────────────────────────
@@ -1020,7 +1120,7 @@ export interface SerialNumber {
     status: string
     warehouse_name?: string
     created_at: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface SerialHistoryLog {
@@ -1030,7 +1130,7 @@ export interface SerialHistoryLog {
     warehouse_name?: string
     user_name?: string
     created_at: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── Admin Hierarchy Data ───────────────────────────────────────
@@ -1046,7 +1146,7 @@ export interface AdminHierarchyProduct {
     unit_name?: string
     country_name?: string
     unit?: { name: string }
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AdminHierarchyGroup {
@@ -1054,13 +1154,13 @@ export interface AdminHierarchyGroup {
     name: string
     totalStock: number
     products: AdminHierarchyProduct[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AdminHierarchyBrandData {
     groups: AdminHierarchyGroup[]
     looseProducts: AdminHierarchyProduct[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AdminCountryHierarchyItem {
@@ -1068,7 +1168,7 @@ export interface AdminCountryHierarchyItem {
     name: string
     totalStock: number
     products: AdminHierarchyProduct[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AdminEntity {
@@ -1078,10 +1178,10 @@ export interface AdminEntity {
     short_name?: string
     logo?: string
     product_count?: number
-    countries?: Array<{ id: number; name: string; code: string;[key: string]: any }>
-    categories?: Array<{ id: number; name: string;[key: string]: any }>
-    products?: Array<Record<string, any>>
-    [key: string]: any
+    countries?: Array<{ id: number; name: string; code: string;[key: string]: unknown }>
+    categories?: Array<{ id: number; name: string;[key: string]: unknown }>
+    products?: Array<Record<string, unknown>>
+    [key: string]: unknown
 }
 
 // ─── Packages ───────────────────────────────────────────────────
@@ -1091,10 +1191,16 @@ export interface PackageStats {
     total_size?: number
     applied_count?: number
     pending_count?: number
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── SaaS Array Elements ────────────────────────────────────────
+
+export interface SaasModuleFeature {
+    code: string
+    name?: string
+    [key: string]: unknown
+}
 
 export interface SaasModule {
     id: number
@@ -1102,7 +1208,14 @@ export interface SaasModule {
     code: string
     is_active?: boolean
     is_core?: boolean
-    [key: string]: any
+    description?: string
+    version?: string
+    status?: string
+    total_installs?: number
+    dependencies?: string[]
+    available_features?: SaasModuleFeature[]
+    active_features?: string[]
+    [key: string]: unknown
 }
 
 export interface SaasUser {
@@ -1113,15 +1226,23 @@ export interface SaasUser {
     last_name?: string
     role?: string
     is_active?: boolean
-    [key: string]: any
+    is_superuser?: boolean
+    is_staff?: boolean
+    date_joined?: string
+    [key: string]: unknown
 }
 
 export interface SaasSite {
     id: number
     name: string
+    code?: string
     address?: string
+    city?: string
+    phone?: string
+    vat_number?: string
+    created_at?: string
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface SaasAddon {
@@ -1130,21 +1251,25 @@ export interface SaasAddon {
     code?: string
     price?: number | string
     description?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface PlanCategory {
     id: number
     name: string
-    [key: string]: any
+    type?: string
+    [key: string]: unknown
 }
 
 export interface SaasUpdateHistoryEntry {
     id: number
     version: string
     applied_at?: string
+    created_at?: string
+    is_applied?: boolean
+    changelog?: string
     status?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface SaasBackup {
@@ -1152,7 +1277,9 @@ export interface SaasBackup {
     filename?: string
     size?: number
     created_at?: string
-    [key: string]: any
+    version?: string
+    date?: string
+    [key: string]: unknown
 }
 
 // ─── Admin / UI Array Elements ──────────────────────────────────
@@ -1165,7 +1292,7 @@ export interface SidebarDynamicItem {
     module?: string
     visibility?: string
     children?: SidebarDynamicItem[]
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AppNotification {
@@ -1175,13 +1302,13 @@ export interface AppNotification {
     type?: string
     read_at?: string | null
     created_at?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface BusinessType {
     id: number
     name: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface Currency {
@@ -1189,7 +1316,7 @@ export interface Currency {
     code: string
     name: string
     symbol?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface AppUser {
@@ -1200,7 +1327,7 @@ export interface AppUser {
     first_name?: string
     last_name?: string
     role?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── Auth Action State ──────────────────────────────────────────
@@ -1212,7 +1339,7 @@ export interface AuthActionState {
         email?: string | string[]
         password?: string | string[]
         role_id?: string | string[]
-        [key: string]: any
+        [key: string]: unknown
     }
     success?: boolean
     message?: string
@@ -1220,13 +1347,13 @@ export interface AuthActionState {
     two_factor_required?: boolean
     _username?: string
     _slug?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 // ─── Standard Server Action Result ──────────────────────────────
 
 /** Standard result type for mutation server actions (create/update/delete) */
-export interface ActionResult<T = Record<string, any>> {
+export interface ActionResult<T = Record<string, unknown>> {
     success: boolean
     message?: string
     error?: string
@@ -1243,10 +1370,11 @@ export interface RefCountry {
     iso3?: string
     region?: string
     subregion?: string | null
+    phone_code?: string
     default_currency?: number | null
     default_currency_code?: string | null
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface RefCurrency {
@@ -1255,7 +1383,7 @@ export interface RefCurrency {
     name: string
     symbol?: string
     is_active?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface CountryCurrencyMap {
@@ -1265,7 +1393,7 @@ export interface CountryCurrencyMap {
     currency: number
     currency_code?: string
     is_primary?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface OrgCountry {
@@ -1273,9 +1401,10 @@ export interface OrgCountry {
     country: number
     country_name?: string
     country_code?: string
+    country_iso2?: string
     is_enabled?: boolean
     is_default?: boolean
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export interface OrgCurrency {
@@ -1292,5 +1421,5 @@ export interface OrgCurrency {
      *  Stores Country (global ref) FK ids. Base currency is always implicitly
      *  enabled everywhere regardless of this list. */
     enabled_in_country_ids?: number[]
-    [key: string]: any
+    [key: string]: unknown
 }

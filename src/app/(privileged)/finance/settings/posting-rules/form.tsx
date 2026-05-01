@@ -15,6 +15,7 @@ import {
     type PostingRuleV2, type CatalogModule,
 } from '@/app/actions/finance/posting-rules'
 import { PageTour } from '@/components/ui/PageTour'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/finance-posting-rules'
 
 // ── Account Tree Picker ────────────────────────────────────────
@@ -26,6 +27,7 @@ function AccountTreePicker({
     accounts: Record<string, any>[]
     mode?: 'posting' | 'root'  // posting = leaf only, root = parent selection for automation
 }) {
+    const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
     const [breadcrumb, setBreadcrumb] = useState<{ id: number; code: string; name: string }[]>([])
@@ -108,7 +110,7 @@ function AccountTreePicker({
                         <div className="relative">
                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                                placeholder="Search accounts..."
+                                placeholder={t('finance.posting_rules_page.search_accounts')}
                                 autoFocus
                                 className="w-full pl-7 pr-2 py-1.5 text-[11px] bg-app-bg border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground outline-none" />
                         </div>
@@ -237,6 +239,7 @@ export default function PostingRulesConsole({
     accounts: Record<string, any>[]
 }) {
     const router = useRouter()
+    const { t } = useTranslation()
     const searchParams = useSearchParams()
     const cameFromCOA = searchParams.get('from') === 'coa' || searchParams.get('from') === 'coa-import'
     const [isPending, startTransition] = useTransition()
@@ -335,7 +338,7 @@ export default function PostingRulesConsole({
     const handleAutoDetect = () => {
         startTransition(async () => {
             const result = await autoDetectAndApply(60)
-            result.applied > 0 ? toast.success(`Auto-detected ${result.applied} posting rules`) : toast.info('No new rules could be auto-detected')
+            result.applied > 0 ? toast.success(t('finance.posting_rules_page.toast_auto_detected').replace('{n}', String(result.applied))) : toast.info(t('finance.posting_rules_page.toast_no_rules_detected'))
             router.refresh()
         })
     }
@@ -351,7 +354,7 @@ export default function PostingRulesConsole({
         if (rules.length === 0) { toast.info('No changes to save'); return }
         startTransition(async () => {
             const result = await bulkSaveRules(rules)
-            result.errors.length > 0 ? toast.error(`Saved with ${result.errors.length} errors`) : toast.success(result.message)
+            result.errors.length > 0 ? toast.error(t('finance.posting_rules_page.toast_saved_with_errors').replace('{n}', String(result.errors.length))) : toast.success(result.message)
             setOverrides({}); setHasChanges(false); router.refresh()
         })
     }
@@ -394,7 +397,7 @@ export default function PostingRulesConsole({
                             <Target size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Posting Engine</h1>
+                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{t('finance.posting_rules_page.title')}</h1>
                             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                 Event-to-Account Financial Routing
                             </p>
@@ -506,7 +509,7 @@ export default function PostingRulesConsole({
                 <div className="flex-1 relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
                     <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search events, accounts..."
+                        placeholder={t('finance.posting_rules_page.search_events')}
                         className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] rounded-xl outline-none transition-all"
                         style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                         onFocus={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.background = 'var(--app-surface)' }}

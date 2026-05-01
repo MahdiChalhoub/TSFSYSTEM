@@ -20,26 +20,26 @@ function fmt(n: number) {
 }
 
 const EVENT_CONFIG: Record<string, { icon: string, color: string, bg: string, label: string }> = {
-    PARTNER_WITHDRAWAL: { icon: '🔻', color: 'text-red-700', bg: 'bg-red-50', label: 'Withdrawal' },
-    PARTNER_INJECTION: { icon: '💰', color: 'text-emerald-700', bg: 'bg-emerald-50', label: 'Injection' },
-    CAPITAL_INJECTION: { icon: '🏦', color: 'text-green-700', bg: 'bg-green-50', label: 'Capital' },
-    PARTNER_LOAN: { icon: '🤝', color: 'text-blue-700', bg: 'bg-blue-50', label: 'Partner Loan' },
+    PARTNER_WITHDRAWAL: { icon: '🔻', color: 'text-app-error', bg: 'bg-app-error-bg', label: 'Withdrawal' },
+    PARTNER_INJECTION: { icon: '💰', color: 'text-app-success', bg: 'bg-app-success-bg', label: 'Injection' },
+    CAPITAL_INJECTION: { icon: '🏦', color: 'text-app-success', bg: 'bg-app-success-bg', label: 'Capital' },
+    PARTNER_LOAN: { icon: '🤝', color: 'text-app-info', bg: 'bg-app-info-bg', label: 'Partner Loan' },
     LOAN_DISBURSEMENT: { icon: '📤', color: 'text-orange-700', bg: 'bg-orange-50', label: 'Disbursement' },
     LOAN_REPAYMENT: { icon: '📥', color: 'text-teal-700', bg: 'bg-teal-50', label: 'Repayment' },
-    EXPENSE: { icon: '💸', color: 'text-red-600', bg: 'bg-red-50', label: 'Expense' },
+    EXPENSE: { icon: '💸', color: 'text-app-error', bg: 'bg-app-error-bg', label: 'Expense' },
     SALARY_PAYMENT: { icon: '👤', color: 'text-purple-700', bg: 'bg-purple-50', label: 'Salary' },
-    DEFERRED_EXPENSE_CREATION: { icon: '📋', color: 'text-amber-700', bg: 'bg-amber-50', label: 'Deferred Create' },
-    DEFERRED_EXPENSE_RECOGNITION: { icon: '📊', color: 'text-amber-600', bg: 'bg-amber-50', label: 'Deferred Recog' },
+    DEFERRED_EXPENSE_CREATION: { icon: '📋', color: 'text-app-warning', bg: 'bg-app-warning-bg', label: 'Deferred Create' },
+    DEFERRED_EXPENSE_RECOGNITION: { icon: '📊', color: 'text-app-warning', bg: 'bg-app-warning-bg', label: 'Deferred Recog' },
     ASSET_ACQUISITION: { icon: '🏗️', color: 'text-indigo-700', bg: 'bg-indigo-50', label: 'Asset Purchase' },
     ASSET_DEPRECIATION: { icon: '📉', color: 'text-app-foreground', bg: 'bg-app-surface-2', label: 'Depreciation' },
     ASSET_DISPOSAL: { icon: '🗑️', color: 'text-app-muted-foreground', bg: 'bg-app-surface', label: 'Disposal' },
 }
 
 const STATUS_COLOR: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-700',
-    POSTED: 'bg-green-100 text-green-700',
+    PENDING: 'bg-app-warning-bg text-app-warning',
+    POSTED: 'bg-app-success-bg text-app-success',
     REVERSED: 'bg-app-surface-2 text-app-muted-foreground',
-    FAILED: 'bg-red-100 text-red-700',
+    FAILED: 'bg-app-error-bg text-app-error',
 }
 
 export default function FinancialEventsPage() {
@@ -125,10 +125,10 @@ export default function FinancialEventsPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <ArrowDownCircle size={24} className="text-emerald-500" />
+                            <ArrowDownCircle size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Inflows</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalInflows)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(totalInflows)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -136,10 +136,10 @@ export default function FinancialEventsPage() {
                 <Card className="border-l-4 border-l-red-500 bg-gradient-to-r from-red-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <ArrowUpCircle size={24} className="text-red-500" />
+                            <ArrowUpCircle size={24} className="text-app-error" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Outflows</p>
-                                <p className="text-xl font-bold text-red-700">{fmt(totalOutflows)}</p>
+                                <p className="text-xl font-bold text-app-error">{fmt(totalOutflows)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -147,10 +147,10 @@ export default function FinancialEventsPage() {
                 <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Wallet size={24} className="text-yellow-600" />
+                            <Wallet size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Pending</p>
-                                <p className="text-xl font-bold text-yellow-700">{pendingCount}</p>
+                                <p className="text-xl font-bold text-app-warning">{pendingCount}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -158,10 +158,10 @@ export default function FinancialEventsPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Briefcase size={24} className="text-green-600" />
+                            <Briefcase size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Posted</p>
-                                <p className="text-xl font-bold text-green-700">{postedCount}</p>
+                                <p className="text-xl font-bold text-app-success">{postedCount}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -223,7 +223,7 @@ export default function FinancialEventsPage() {
                                             <TableCell className="text-sm">
                                                 {e.date ? new Date(e.date).toLocaleDateString('fr-FR') : '—'}
                                             </TableCell>
-                                            <TableCell className="font-mono text-xs text-blue-600">{e.reference || '—'}</TableCell>
+                                            <TableCell className="font-mono text-xs text-app-info">{e.reference || '—'}</TableCell>
                                             <TableCell className="text-sm text-app-muted-foreground max-w-xs truncate">{e.notes || '—'}</TableCell>
                                             <TableCell>
                                                 <Badge className={STATUS_COLOR[e.status] || 'bg-app-surface-2'}>

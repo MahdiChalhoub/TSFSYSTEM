@@ -61,13 +61,13 @@ function ClaimRow({ item, onAction }: { item: Claim; onAction: (action: string) 
       <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         {item.status === 'ELIGIBLE' && (
           <button onClick={() => onAction('submit')}
-            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-blue-600 transition-colors" title="Submit Claim">
+            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-app-info transition-colors" title="Submit Claim">
             <Send size={12} />
           </button>
         )}
         {(item.status === 'CLAIMED' || item.status === 'ELIGIBLE') && (
           <button onClick={() => onAction('recover')}
-            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-success hover:text-green-600 transition-colors" title="Mark Recovered">
+            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-success hover:text-app-success transition-colors" title="Mark Recovered">
             <CheckCircle2 size={12} />
           </button>
         )}

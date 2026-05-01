@@ -66,13 +66,13 @@ export default function CreateProfitDistributionPage() {
       <div className="max-w-4xl">
         <div className="bg-app-surface rounded-[32px] shadow-lg border border-app-border p-6 md:p-8">
           {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-red-50 text-red-800 border border-red-200">
+            <div className="mb-6 p-4 rounded-2xl bg-app-error-bg text-app-error border border-app-error">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 rounded-2xl bg-green-50 text-green-800 border border-green-200">
+            <div className="mb-6 p-4 rounded-2xl bg-app-success-bg text-app-success border border-app-success">
               Item created successfully! Redirecting...
             </div>
           )}

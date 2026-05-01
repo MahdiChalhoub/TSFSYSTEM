@@ -504,7 +504,7 @@ export default function OrganizationsPage() {
                                                     ? "bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-xl px-4"
                                                     : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"
                                                 }
-                                                onClick={() => handleModuleToggle(m.code, m.status)}
+                                                onClick={() => handleModuleToggle(m.code, m.status ?? '')}
                                             >
                                                 {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
                                             </Button>
@@ -517,11 +517,11 @@ export default function OrganizationsPage() {
                                 </div>
 
                                 {/* Feature Flags UI */}
-                                {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
+                                {m.status === 'INSTALLED' && m.available_features && m.available_features.length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-app-border pl-2">
                                         <p className="text-[10px] text-app-muted-foreground font-bold uppercase mb-3">Extended Capabilities</p>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {m.available_features.map((f: Record<string, any>) => (
+                                            {m.available_features.map((f) => (
                                                 <label key={f.code} className="flex items-center gap-2 text-sm text-app-muted-foreground hover:text-app-foreground cursor-pointer select-none p-2 rounded-lg hover:bg-app-surface transition-colors">
                                                     <input
                                                         type="checkbox"

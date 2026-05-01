@@ -33,17 +33,39 @@
 - **Verification**: `manage.py check` passes; `test_close_integrity_invariants` (16/16), `test_bulk_classify` (9/9), `test_revaluation_service` (35/35), `test_scope_invariants` all pass. Other failures in finance test suite (~50) pre-existed and are unrelated (missing `BankAccount`/`DepreciationScheduleEntry` model imports, fixture date issues).
 - **Risk**: LOW (internal refactor, zero URL/API/frontend changes)
 
-### [OPEN] Maintainability Phase 2 — Split Giant Frontend Files
+### [DONE 2026-04-30] Maintainability Phase 2 — Split Giant Frontend Files
 - **Discovered**: 2026-04-30
-- **Impact**: `FxRedesigned.tsx` (3,439 lines), `FxManagementSection.tsx` (2,031 lines), `TemplatesPageClient.tsx` (1,999 lines) — all 10x+ over limit
-- **Depends On**: Phase 1 (backend first — safer)
-- **Notes**: Plan TBD after Phase 1 complete
+- **Impact**: Top 3 frontend monoliths (2,537 / 2,031 / 1,999 lines) split into 46 focused modules, all ≤300 lines.
+- **Plan**: `task and plan/maintainability/maintainability_phase2_frontend_splits_001.md`
+- **Result**:
+  - `FxRedesigned.tsx` (2,537 → 288) + 16 sibling files in `_fx/` (constants, atoms, SubTabBar, LoadErrorBanner, PairChart, PolicyCard, RateRulesView, EditRateModal, DeleteRateConfirm, RateHistoryView, PolicyDrawer, PolicyDrawerEmpty, SetBrokerModal, ManualRateModal, ManualRateForm, _useFxState hook).
+  - `FxManagementSection.tsx` (2,031 → 193) + 12 sibling files in `_fx_management/` (constants, atoms, useFxManagement hook, NewRateForm, NewPolicyForm + .parts, views/RatesView, views/PoliciesView + PoliciesTable, views/RevaluationsView, views/SetBrokerDialog + .parts).
+  - `TemplatesPageClient.tsx` (1,999 → 221) + 18 sibling files in `_components/` (icons, types, EmptyState, AccountTreeNode, PostingRulesPanel, TemplateDetail, GalleryView, CompareView, PageChrome, importHandlers, migration/helpers + MigrationConstants + buildAutoMapping + MigrationStatsStrip + MigrationMappingRows + MigrationView + MigrationExecutionSection + MigrationExecutionView).
+- **Pattern**: pure refactor — components kept their own hooks; data layer lifted into custom hooks (`useFxState`, `useFxManagement`); render leaves moved to sibling files; `'use client'` preserved everywhere; orchestrators import + compose; zero behavior, prop, hook-order, or JSX changes.
+- **Verification**: `npx tsc --noEmit` exit 0 (zero errors, matches baseline). All 49 touched files (46 new + 3 orchestrators) ≤300 lines (max: 288).
+- **Risk**: LOW (pure refactor, zero URL/route/prop changes — external callers `regional/client.tsx` and `templates/TemplatesGateway.tsx` unchanged)
 
-### [OPEN] Maintainability Phase 3 — Cross-Module Import Violations
+### [PARTIAL DONE 2026-04-30] Maintainability Phase 3 — Cross-Module Import Violations
 - **Discovered**: 2026-04-30
 - **Impact**: 127 direct cross-module imports (finance=44, pos=43, inventory=25, crm=12, hr=3). Modules can't be disabled independently.
 - **Depends On**: Phase 1
-- **Notes**: Replace with ConnectorEngine, gated imports, or emit_event. Plan TBD.
+- **Plan**: `task and plan/maintainability/maintainability_phase3_cross_module_imports_001.md`
+- **Result so far (2026-04-30)**:
+  - HR (3 → 0): `apps/hr/serializers.py` (`_resolve_account` ChartOfAccount lookup) + `apps/hr/views.py` (top-level gated `ChartOfAccount`/`LedgerService` imports) all routed through `connector.require('finance.accounts.get_model', ...)` and `connector.require('finance.services.get_ledger_service', ...)`. No new failures (20/20 tests pass).
+  - CRM (12 → 0): all 12 violations swapped to `connector.require(...)`:
+    - `apps/crm/views.py` — ChartOfAccount, LedgerService (top-level → in-method); Order, OrderLine (POS); Payment, CustomerBalance, SupplierBalance, JournalEntryLine (Finance) — each capability gated on `is not None`.
+    - `apps/crm/pricing_serializers.py` — Product, Category via `inventory.products.get_model` / `inventory.categories.get_model`.
+    - `apps/crm/services/compliance_service.py` — StoredFile via `storage.files.get_model`.
+    - `apps/crm/serializers/contact_serializers.py` — StoredFileSerializer via `storage.files.get_serializer`.
+  - **New connector_service**: `apps/storage/connector_service.py` (registers `storage.files.get_model`, `storage.files.get_serializer`, `storage.providers.get_model`).
+  - **No new POS capabilities needed** — `pos.orders.get_model` and `pos.order_lines.get_model` already existed.
+  - **Verification**: `manage.py check` passes (1 baseline warning); `manage.py test apps.hr` 20/20 pass; `manage.py test apps.crm` 24/26 pass (1 failure + 1 error are pre-existing `test_loyalty_service.py` `'on_time_pct'` and `'name'` key mismatches, unrelated to import refactor).
+- **Remaining (TODO — follow same pattern documented in plan)**:
+  - Inventory (25): mostly `apps.finance.services.{ForensicAuditService, LedgerService, BarcodeService}`, `apps.finance.models.{ChartOfAccount, TransactionSequence}`, `apps.pos.models.{Register, Order, OrderLine, ProcurementRequest, PurchaseOrderLine}`, `apps.crm.models.Contact`, `apps.reference.models.{Country, OrgCountry}`. Most capabilities exist; need to add `finance.services.get_barcode_service`, `pos.registers.get_model`, `reference.country.get_model`, `reference.org_country.get_model`, `pos.procurement_requests.get_model`, `pos.purchase_orders.get_line_model` (already added).
+  - POS (43): biggest hot-spot is `apps.finance.services.fne_service.FNEService` family used in 5+ files — needs `finance.fne.{get_service, get_config_func, get_request_class, get_line_item_class}` capabilities. Also `apps.workspace.models.{Task, TaskComment}` (3 sites in `procurement_notifications.py`), and many `apps.inventory.models` / `apps.crm.models.Contact` / `apps.finance.payment_models` lookups (capabilities exist).
+  - Finance (44): `models/__init__.py:50-52` + `serializers/tax_engine_ext_serializers.py` + `views/tax_engine_ext_views.py` import `apps.inventory.models.gift_sample_models.GiftSampleEvent` etc. AT MODULE LOAD TIME for `Meta.model = ...`. **These cannot be lazy** — they must remain as gated imports (Pattern D). All other 30+ violations follow the standard connector swap. `apps.workspace.auto_task_service.fire_auto_tasks` should become `emit_event('workspace.tasks.fire_auto_tasks', payload)` (3 call sites).
+  - Workforce (2) + client_portal (6): mop-up.
+- **Risk**: LOW per module (capability swap is behavior-preserving)
 
 ### [OPEN] Maintainability Phase 4 — Models Without Tenant Isolation
 - **Discovered**: 2026-04-30

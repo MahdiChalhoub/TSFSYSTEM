@@ -143,7 +143,7 @@ export default function SubscriptionPage() {
                                                 <CardHeader>
                                                     <CardTitle className="text-lg">{p.name}</CardTitle>
                                                     <div className="mt-2">
-                                                        <span className="text-2xl font-black">${parseFloat(p.monthly_price).toFixed(0)}</span>
+                                                        <span className="text-2xl font-black">${parseFloat(String(p.monthly_price ?? '0')).toFixed(0)}</span>
                                                         <span className="text-xs text-app-muted-foreground font-bold uppercase ml-1">/mo</span>
                                                     </div>
                                                 </CardHeader>

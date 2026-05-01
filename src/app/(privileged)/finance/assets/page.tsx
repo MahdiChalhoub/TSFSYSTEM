@@ -106,9 +106,9 @@ export default function AssetsPage() {
     const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
 
     const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-        ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        ACTIVE: { icon: CheckCircle2, color: "text-app-success", bg: "bg-app-success-bg border-app-success" },
         FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-app-muted-foreground", bg: "bg-app-surface-2 border-app-border" },
-        DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
+        DISPOSED: { icon: XCircle, color: "text-app-error", bg: "bg-app-error-bg border-app-error" },
     }
 
     if (loading) {
@@ -237,7 +237,7 @@ export default function AssetsPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{totalBook.toLocaleString()}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <TrendingDown size={22} className="text-emerald-500" />
+                                <TrendingDown size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -250,7 +250,7 @@ export default function AssetsPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{fullyDepreciated}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <AlertTriangle size={22} className="text-amber-500" />
+                                <AlertTriangle size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -384,7 +384,7 @@ export default function AssetsPage() {
                                         <TableCell className="text-sm text-app-muted-foreground">{line.period_date}</TableCell>
                                         <TableCell className="text-right text-sm font-semibold">{Number(line.amount).toLocaleString()}</TableCell>
                                         <TableCell className="text-center">
-                                            <Badge variant="outline" className={`gap-1 rounded-lg border font-semibold text-[11px] ${line.is_posted ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
+                                            <Badge variant="outline" className={`gap-1 rounded-lg border font-semibold text-[11px] ${line.is_posted ? "bg-app-success-bg border-app-success text-app-success" : "bg-app-warning-bg border-app-warning text-app-warning"}`}>
                                                 {line.is_posted ? <><CheckCircle2 size={12} /> Posted</> : <><TrendingDown size={12} /> Pending</>}
                                             </Badge>
                                         </TableCell>
@@ -395,7 +395,7 @@ export default function AssetsPage() {
                                                     variant="outline"
                                                     onClick={() => handleDepreciate(selectedAsset.id, line.id)}
                                                     disabled={isPending}
-                                                    className="rounded-xl gap-1 h-7 text-xs font-semibold text-amber-700 border-amber-200 hover:bg-amber-50"
+                                                    className="rounded-xl gap-1 h-7 text-xs font-semibold text-app-warning border-app-warning hover:bg-app-warning-bg"
                                                 >
                                                     <TrendingDown size={12} /> Post
                                                 </Button>

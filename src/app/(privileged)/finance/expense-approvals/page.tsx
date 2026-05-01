@@ -25,9 +25,9 @@ export default function ExpenseApprovalsPage() {
               Employee expense claim review and approval
             </p>
             <div className="space-y-4">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-left">
-                <p className="text-sm font-bold text-blue-900 mb-2">🚧 Coming Soon</p>
-                <p className="text-xs text-blue-700">
+              <div className="p-4 bg-app-info-bg border border-app-info rounded-xl text-left">
+                <p className="text-sm font-bold text-app-info mb-2">🚧 Coming Soon</p>
+                <p className="text-xs text-app-info">
                   Expense approval with receipt verification and policy compliance checks.
                 </p>
               </div>

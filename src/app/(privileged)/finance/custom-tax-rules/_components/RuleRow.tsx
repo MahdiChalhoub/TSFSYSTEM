@@ -48,7 +48,7 @@ export function RuleRow({ item, onEdit, onDelete }: { item: CTR; onEdit: () => v
             </div>
             <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button onClick={e => { e.stopPropagation(); onEdit() }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors"><Edit2 size={12} /></button>
-                <button onClick={e => { e.stopPropagation(); onDelete() }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                <button onClick={e => { e.stopPropagation(); onDelete() }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors"><Trash2 size={12} /></button>
             </div>
         </div>
     )

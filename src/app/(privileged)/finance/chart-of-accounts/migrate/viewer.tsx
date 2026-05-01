@@ -110,11 +110,11 @@ export default function CoaMigrationTool({
                             key={key}
                             onClick={() => handleSelectTemplate(key)}
                             className={`p-6 rounded-3xl border-2 transition-all text-left flex items-start gap-4 ${selectedTemplate === key
-                                ? 'border-amber-500 bg-amber-50 shadow-lg'
+                                ? 'border-amber-500 bg-app-warning-bg shadow-lg'
                                 : 'border-app-border bg-app-surface hover:border-app-border'
                                 }`}
                         >
-                            <Library className={selectedTemplate === key ? 'text-amber-600' : 'text-app-faint'} />
+                            <Library className={selectedTemplate === key ? 'text-app-warning' : 'text-app-faint'} />
                             <div>
                                 <h3 className={`font-bold ${selectedTemplate === key ? 'text-amber-900' : 'text-app-foreground'}`}>
                                     {key.replace('_', ' ')}
@@ -142,18 +142,18 @@ export default function CoaMigrationTool({
     return (
         <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
             {/* Header / Instructions */}
-            <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex items-start gap-4 shadow-sm border-2">
-                <AlertCircle className="text-amber-500 mt-1" size={24} />
+            <div className="bg-app-warning-bg border border-amber-100 p-6 rounded-3xl flex items-start gap-4 shadow-sm border-2">
+                <AlertCircle className="text-app-warning mt-1" size={24} />
                 <div className="flex-1">
                     <h3 className="font-bold text-amber-900">Step 2: Map Your Balances</h3>
-                    <p className="text-sm text-amber-800 opacity-80 mt-1 leading-relaxed">
+                    <p className="text-sm text-app-warning opacity-80 mt-1 leading-relaxed">
                         Your target standard <strong className="uppercase">{selectedTemplate.replace('_', ' ')}</strong> is now loaded.
                         Please match your old accounts with the new ones. Zero-balance accounts will be ignored.
                     </p>
                 </div>
                 <button
                     onClick={handleAutoMap}
-                    className="flex items-center gap-2 text-xs font-bold bg-app-surface text-amber-600 px-4 py-2 rounded-xl border border-amber-200 shadow-sm hover:bg-amber-100 transition-all self-center"
+                    className="flex items-center gap-2 text-xs font-bold bg-app-surface text-app-warning px-4 py-2 rounded-xl border border-app-warning shadow-sm hover:bg-app-warning-bg transition-all self-center"
                 >
                     <Zap size={14} /> Smart Match
                 </button>
@@ -178,7 +178,7 @@ export default function CoaMigrationTool({
                                         <div className="font-bold text-app-foreground">{acc.name}</div>
                                         <div className="mt-1 flex items-center gap-2">
                                             <span className="text-tp-xs font-bold bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded">{acc.type}</span>
-                                            <span className="text-sm font-mono text-emerald-600 font-bold">
+                                            <span className="text-sm font-mono text-app-success font-bold">
                                                 {typeof acc.balance === 'number' ? acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
                                             </span>
                                         </div>

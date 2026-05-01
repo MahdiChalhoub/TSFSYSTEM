@@ -15,6 +15,48 @@
 
 ## Session Log
 
+### Session: 2026-04-30 (Maintainability Phase 3 — HR + CRM cross-module imports)
+- **Agent**: Claude Code (Opus 4.7, 1M)
+- **Status**: PARTIAL DONE — HR (3 → 0) + CRM (12 → 0). Plan written for finance/pos/inventory/workforce/client_portal phases.
+- **Worked On**:
+  1. Read `connector_registry.py` + `connector_engine.py` and existing `connector_service.py` files for HR/CRM/finance/inventory/POS to learn the capability pattern.
+  2. Wrote `task and plan/maintainability/maintainability_phase3_cross_module_imports_001.md` mirroring the Phase 1 plan style — 127 violations enumerated by source module, conventions documented (Pattern A class lookup / B service call / C event / D unavoidable gated import).
+  3. **HR (3 → 0)**:
+     - `apps/hr/serializers.py:_resolve_account` swapped `from apps.finance.models import ChartOfAccount` for `connector.require('finance.accounts.get_model', ...)`.
+     - `apps/hr/views.py` removed top-level gated `ChartOfAccount`/`LedgerService` imports; added `_resolve_finance_classes()` helper that calls `connector.require('finance.accounts.get_model', ...)` + `connector.require('finance.services.get_ledger_service', ...)`. Both `create()` and `link_gl_account()` now call the helper.
+     - 20/20 tests pass.
+  4. **CRM (12 → 0)**:
+     - `apps/crm/views.py` — top-level `from apps.finance.models import ChartOfAccount` and `from apps.finance.services import LedgerService` removed; resolved via connector inside `create()`. Inside `detail_summary()`: Order, Payment, CustomerBalance, SupplierBalance, JournalEntryLine all swapped to `connector.require(...)` with proper `is None` guards (so contact summary degrades gracefully when POS or Finance is missing). `_build_analytics()` skips top-products when POS unavailable.
+     - `apps/crm/pricing_serializers.py` — Product / Category lookups swapped to `inventory.products.get_model` / `inventory.categories.get_model`.
+     - `apps/crm/services/compliance_service.py` — StoredFile lookup swapped to `storage.files.get_model`.
+     - `apps/crm/serializers/contact_serializers.py` — StoredFileSerializer swapped to `storage.files.get_serializer`.
+     - 24/26 tests pass — same baseline (1 pre-existing failure + 1 pre-existing error in `test_loyalty_service.py`, unrelated).
+  5. **New file**: `apps/storage/connector_service.py` (49 lines) — registers `storage.files.get_model`, `storage.files.get_serializer`, `storage.providers.get_model`. Auto-discovered by `CapabilityRegistry`.
+- **Files Modified** (5 source + 1 new + 1 plan + workmap):
+  - `erp_backend/apps/hr/serializers.py`
+  - `erp_backend/apps/hr/views.py`
+  - `erp_backend/apps/crm/views.py`
+  - `erp_backend/apps/crm/pricing_serializers.py`
+  - `erp_backend/apps/crm/services/compliance_service.py`
+  - `erp_backend/apps/crm/serializers/contact_serializers.py`
+  - `erp_backend/apps/storage/connector_service.py` (NEW)
+  - `task and plan/maintainability/maintainability_phase3_cross_module_imports_001.md` (NEW)
+  - `.agent/WORKMAP.md` (entry updated)
+- **Discoveries**:
+  - `pos.orders.get_model`, `pos.order_lines.get_model`, `finance.payments.get_*_model`, `finance.journal.get_line_model`, `inventory.products.get_model`, `inventory.categories.get_model`, `finance.accounts.get_model`, `finance.services.get_ledger_service` all already registered. The bottleneck is the **storage** module (no connector_service.py existed) and a few POS internals (FNEService family — needed by Phase 3 for finance/pos modules).
+  - Some imports are unavoidable (Pattern D in plan): `apps/finance/models/__init__.py:50-52` re-exports `apps.inventory.models.gift_sample_models.GiftSampleEvent` etc. for `Meta.model = ...` — these load at app-startup before the registry is hydrated and cannot be lazy.
+- **Verification**:
+  - `manage.py check` — pass with baseline (1 warning, 0 errors).
+  - `manage.py test apps.hr --noinput --keepdb` — 20/20 pass.
+  - `manage.py test apps.crm --noinput --keepdb` — 24/26 pass (same as baseline).
+- **Warnings for next agent**:
+  - When extending Phase 3 to inventory/POS/finance, follow Pattern A (class lookup) by default. Use Pattern D (gated import) only for `Meta.model = X` cases or top-level type re-exports that fire at app load.
+  - `apps.finance.services.fne_service.FNEService` is referenced from 5+ POS files — register it once in `apps/finance/connector_service.py` (`finance.fne.get_service`, `finance.fne.get_config_func`, etc.) before sweeping POS.
+  - `apps.workspace.auto_task_service.fire_auto_tasks` should become `emit_event(...)` not a `connector.require` (it's fire-and-forget — no return value). Plan section "TODO — Finance" lists the 3 sites.
+  - The pre-existing `test_loyalty_service.py` failure has nothing to do with import refactor — leave it for whoever owns scorecards.
+
+---
+
 ### Session: 2026-04-27 (Purchases sweep + purchase-analytics redesign)
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: ✅ DONE (code + tsc clean, 0 errors) / ⏳ browser smoke-test pending / ⏳ not committed

@@ -106,41 +106,41 @@ export function EarlyPayoffCalculator({ loanId }: { loanId: number }) {
             </div>
 
             {/* Interest Saved */}
-            <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+            <div className="p-4 rounded-xl bg-app-success-bg border border-app-success">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <TrendingDown size={20} className="text-green-700" />
+                <div className="w-10 h-10 rounded-lg bg-app-success-bg flex items-center justify-center">
+                  <TrendingDown size={20} className="text-app-success" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-green-700 uppercase tracking-wider">
+                  <p className="text-xs font-bold text-app-success uppercase tracking-wider">
                     Interest Saved
                   </p>
                 </div>
               </div>
-              <p className="text-3xl font-black text-green-700">
+              <p className="text-3xl font-black text-app-success">
                 {fmt(savings)}
               </p>
-              <p className="text-xs text-green-600 mt-2">
+              <p className="text-xs text-app-success mt-2">
                 By paying off early vs scheduled maturity
               </p>
             </div>
 
             {/* Days Saved */}
-            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+            <div className="p-4 rounded-xl bg-app-info-bg border border-app-info">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Calendar size={20} className="text-blue-700" />
+                <div className="w-10 h-10 rounded-lg bg-app-info-bg flex items-center justify-center">
+                  <Calendar size={20} className="text-app-info" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                  <p className="text-xs font-bold text-app-info uppercase tracking-wider">
                     Time Saved
                   </p>
                 </div>
               </div>
-              <p className="text-3xl font-black text-blue-700">
+              <p className="text-3xl font-black text-app-info">
                 {result.months_saved || 0}
               </p>
-              <p className="text-xs text-blue-600 mt-2">
+              <p className="text-xs text-app-info mt-2">
                 Months earlier than scheduled
               </p>
             </div>

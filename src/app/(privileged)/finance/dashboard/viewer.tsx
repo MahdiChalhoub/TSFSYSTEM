@@ -48,7 +48,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             <div className="flex items-center gap-3">
                 <div className={clsx(
                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                    viewScope === 'OFFICIAL' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-app-surface border-app-border text-app-muted-foreground"
+                    viewScope === 'OFFICIAL' ? "bg-app-success-bg border-app-success text-app-success" : "bg-app-surface border-app-border text-app-muted-foreground"
                 )}>
                     {viewScope === 'OFFICIAL' ? 'Official View (Tax)' : 'Total View (Management)'}
                 </div>
@@ -59,27 +59,27 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 <MetricCard
                     title="Cash on Hand"
                     value={stats.totalCash}
-                    icon={<Wallet className="text-emerald-500" />}
+                    icon={<Wallet className="text-app-success" />}
                     description="Total Bank + Cash"
                 />
                 <MetricCard
                     title="Net Profit (Oct)"
                     value={stats.netProfit}
-                    icon={<TrendingUp className={stats.netProfit >= 0 ? 'text-emerald-500' : 'text-rose-500'} />}
+                    icon={<TrendingUp className={stats.netProfit >= 0 ? 'text-app-success' : 'text-app-error'} />}
                     description="Monthly Performance"
                     isProfit={true}
                 />
                 <MetricCard
                     title="Receivables"
                     value={stats.totalAR}
-                    icon={<ArrowUpRight className="text-sky-500" />}
+                    icon={<ArrowUpRight className="text-app-info" />}
                     description="Due from Customers"
                     color="sky"
                 />
                 <MetricCard
                     title="Payables"
                     value={stats.totalAP}
-                    icon={<ArrowDownRight className="text-amber-500" />}
+                    icon={<ArrowDownRight className="text-app-warning" />}
                     description="Due to Suppliers"
                     color="amber"
                 />
@@ -137,7 +137,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-app-muted-foreground text-sm">Monthly Expenses</span>
-                                <span className="font-mono text-rose-400 font-bold">-{stats.monthlyExpense.toLocaleString()}</span>
+                                <span className="font-mono text-app-error font-bold">-{stats.monthlyExpense.toLocaleString()}</span>
                             </div>
                             <div className="border-t border-stone-800 pt-6 flex justify-between items-center">
                                 <span className="text-lg font-bold">Net Profit</span>
@@ -159,7 +159,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             <div className="bg-app-surface rounded-3xl shadow-sm border border-app-border overflow-hidden">
                 <div className="p-8 border-b border-app-border flex justify-between items-center">
                     <h3 className="text-lg font-bold text-app-foreground font-serif">Recent Ledger Activity</h3>
-                    <Link href="/finance/ledger" className="text-xs font-bold uppercase tracking-widest text-emerald-600 hover:text-emerald-700">All Transactions</Link>
+                    <Link href="/finance/ledger" className="text-xs font-bold uppercase tracking-widest text-app-success hover:text-app-success">All Transactions</Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -192,8 +192,8 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                         </div>
                                     </td>
                                     <td className="p-6 text-right">
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${entry.status === 'POSTED' ? 'bg-emerald-50 text-emerald-700' :
-                                            entry.status === 'REVERSED' ? 'bg-rose-50 text-rose-700' : 'bg-app-surface-2 text-app-muted-foreground'
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${entry.status === 'POSTED' ? 'bg-app-success-bg text-app-success' :
+                                            entry.status === 'REVERSED' ? 'bg-app-error-bg text-app-error' : 'bg-app-surface-2 text-app-muted-foreground'
                                             }`}>
                                             {entry.status}
                                         </span>
@@ -240,7 +240,7 @@ function MetricCard({ title, value, icon, description, isProfit, color = 'stone'
                 </div>
             </div>
             <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-[0.1em] mb-1">{title}</p>
-            <h4 className={`text-2xl font-mono font-bold ${isNeg ? 'text-rose-600' : 'text-app-foreground'}`}>
+            <h4 className={`text-2xl font-mono font-bold ${isNeg ? 'text-app-error' : 'text-app-foreground'}`}>
                 {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h4>
             <p className="text-xs text-app-muted-foreground font-medium mt-1">{description}</p>
@@ -276,13 +276,13 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
         <div className="bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm relative overflow-hidden group">
             <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-app-surface border border-app-border rounded-xl">
-                    <Package className={isOutOfSync ? 'text-amber-500' : 'text-emerald-500'} />
+                    <Package className={isOutOfSync ? 'text-app-warning' : 'text-app-success'} />
                 </div>
                 {isOutOfSync && (
                     <button
                         onClick={() => setShowSyncConfirm(true)}
                         disabled={isSyncing}
-                        className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-all disabled:opacity-50"
+                        className="p-2 bg-app-warning-bg text-app-warning rounded-lg hover:bg-app-warning-bg transition-all disabled:opacity-50"
                         title="Sync Ledger to Stock Value"
                     >
                         <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
@@ -296,7 +296,7 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
                     {status.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </h4>
                 {isOutOfSync && (
-                    <div className="flex items-center gap-1 text-[9px] font-black text-amber-500 uppercase tracking-tighter">
+                    <div className="flex items-center gap-1 text-[9px] font-black text-app-warning uppercase tracking-tighter">
                         <AlertCircle size={10} /> Sync Required
                     </div>
                 )}
@@ -309,7 +309,7 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
                 </div>
                 <div className="flex justify-between text-[10px] font-bold">
                     <span className="text-app-muted-foreground">Discrepancy:</span>
-                    <span className={isOutOfSync ? 'text-amber-600' : 'text-emerald-600 font-mono'}>
+                    <span className={isOutOfSync ? 'text-app-warning' : 'text-app-success font-mono'}>
                         {isOutOfSync ? (status.discrepancy > 0 ? '+' : '') + status.discrepancy.toLocaleString() : 'Match'}
                     </span>
                 </div>

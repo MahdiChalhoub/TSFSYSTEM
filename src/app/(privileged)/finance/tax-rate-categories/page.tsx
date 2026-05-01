@@ -382,7 +382,7 @@ export default function TaxRateCategoriesPage() {
                                             {cat.country_code || 'All Countries'} · {cat.products_count} product{cat.products_count !== 1 ? 's' : ''}
                                         </div>
                                     </div>
-                                    <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${cat.is_active ? 'text-green-500' : 'text-red-400'}`}
+                                    <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${cat.is_active ? 'text-app-success' : 'text-app-error'}`}
                                         style={{
                                             background: cat.is_active ? 'color-mix(in srgb, #22c55e 10%, transparent)' : 'color-mix(in srgb, #ef4444 10%, transparent)',
                                         }}>
@@ -402,7 +402,7 @@ export default function TaxRateCategoriesPage() {
                                         </button>
                                         <button onClick={() => handleDelete(cat.id, cat.products_count)}
                                             disabled={deleting === cat.id}
-                                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-50">
+                                            className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-red-400/10 transition-all disabled:opacity-50">
                                             {deleting === cat.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
                                         </button>
                                     </div>

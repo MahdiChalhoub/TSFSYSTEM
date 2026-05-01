@@ -46,9 +46,9 @@ export default async function LoansPage() {
                                     <TableCell className="text-right">{Number(loan.interestRate)}%</TableCell>
                                     <TableCell>{loan.termMonths} Months</TableCell>
                                     <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${loan.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                            loan.status === 'PAID' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-yellow-100 text-yellow-800'
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${loan.status === 'ACTIVE' ? 'bg-app-success-bg text-app-success' :
+                                            loan.status === 'PAID' ? 'bg-app-info-bg text-app-info' :
+                                                'bg-app-warning-bg text-app-warning'
                                             }`}>
                                             {loan.status}
                                         </span>

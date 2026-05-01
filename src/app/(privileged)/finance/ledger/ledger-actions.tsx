@@ -64,7 +64,7 @@ export function LedgerEntryActions({ entryId, status, isLocked, onDeleted }: Led
                 <button
                     onClick={() => setShowReverse(true)}
                     disabled={isPending || isLocked}
-                    className="p-1.5 hover:bg-rose-50 rounded text-rose-500 disabled:opacity-30"
+                    className="p-1.5 hover:bg-app-error-bg rounded text-app-error disabled:opacity-30"
                     title="Reverse Entry"
                 >
                     <RotateCcw size={14} />
@@ -75,7 +75,7 @@ export function LedgerEntryActions({ entryId, status, isLocked, onDeleted }: Led
                 <button
                     onClick={() => setShowDelete(true)}
                     disabled={isPending}
-                    className="p-1.5 hover:bg-rose-50 rounded text-rose-500 disabled:opacity-30"
+                    className="p-1.5 hover:bg-app-error-bg rounded text-app-error disabled:opacity-30"
                     title="Delete Entry"
                 >
                     <Trash2 size={14} />

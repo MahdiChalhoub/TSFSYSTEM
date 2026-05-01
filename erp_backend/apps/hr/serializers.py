@@ -17,7 +17,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
         if not account_id:
             return None
         try:
-            from apps.finance.models import ChartOfAccount
+            # Phase 3 — go through the connector instead of importing finance directly
+            from erp.connector_registry import connector
+            ChartOfAccount = connector.require(
+                'finance.accounts.get_model', org_id=0, source='hr'
+            )
+            if ChartOfAccount is None:
+                return {'id': account_id, 'code': '?', 'name': 'Unknown'}
             account = ChartOfAccount.objects.filter(id=account_id).first()
             if account:
                 return {'id': account.id, 'code': account.code, 'name': account.name}

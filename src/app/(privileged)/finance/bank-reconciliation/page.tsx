@@ -102,22 +102,22 @@ export default function BankReconciliationPage() {
                 <div className="grid grid-cols-4 gap-4">
                     <Card className="bg-gradient-to-br from-emerald-50 to-white border-l-4 border-l-emerald-500">
                         <CardContent className="py-4 text-center">
-                            <ArrowDownRight size={20} className="mx-auto mb-1 text-emerald-500" />
-                            <p className="text-xl font-bold text-emerald-700">{fmt(detail.summary?.total_debit || 0)}</p>
+                            <ArrowDownRight size={20} className="mx-auto mb-1 text-app-success" />
+                            <p className="text-xl font-bold text-app-success">{fmt(detail.summary?.total_debit || 0)}</p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Total Debits</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-red-50 to-white border-l-4 border-l-red-500">
                         <CardContent className="py-4 text-center">
-                            <ArrowUpRight size={20} className="mx-auto mb-1 text-red-500" />
-                            <p className="text-xl font-bold text-red-700">{fmt(detail.summary?.total_credit || 0)}</p>
+                            <ArrowUpRight size={20} className="mx-auto mb-1 text-app-error" />
+                            <p className="text-xl font-bold text-app-error">{fmt(detail.summary?.total_credit || 0)}</p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Total Credits</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
                         <CardContent className="py-4 text-center">
-                            <DollarSign size={20} className="mx-auto mb-1 text-blue-500" />
-                            <p className="text-xl font-bold text-blue-700">{fmt(detail.summary?.book_balance || 0)}</p>
+                            <DollarSign size={20} className="mx-auto mb-1 text-app-info" />
+                            <p className="text-xl font-bold text-app-info">{fmt(detail.summary?.book_balance || 0)}</p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Book Balance</p>
                         </CardContent>
                     </Card>
@@ -167,12 +167,12 @@ export default function BankReconciliationPage() {
                                 {filteredEntries.map((e: Record<string, any>) => (
                                     <TableRow key={e.id} className="hover:bg-app-surface/50">
                                         <TableCell className="text-sm">{e.date || '—'}</TableCell>
-                                        <TableCell className="font-mono text-xs text-blue-600">{e.reference || '—'}</TableCell>
+                                        <TableCell className="font-mono text-xs text-app-info">{e.reference || '—'}</TableCell>
                                         <TableCell className="text-sm text-app-muted-foreground max-w-xs truncate">{e.description}</TableCell>
-                                        <TableCell className="text-right text-sm font-medium text-emerald-700">
+                                        <TableCell className="text-right text-sm font-medium text-app-success">
                                             {e.debit > 0 ? fmt(e.debit) : ''}
                                         </TableCell>
-                                        <TableCell className="text-right text-sm font-medium text-red-700">
+                                        <TableCell className="text-right text-sm font-medium text-app-error">
                                             {e.credit > 0 ? fmt(e.credit) : ''}
                                         </TableCell>
                                         <TableCell className="text-right text-sm font-bold">
@@ -234,7 +234,7 @@ export default function BankReconciliationPage() {
                             <h3 className="font-semibold text-app-foreground mb-2">{acc.name}</h3>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-lg font-bold text-blue-700">{fmt(acc.book_balance)}</p>
+                                    <p className="text-lg font-bold text-app-info">{fmt(acc.book_balance)}</p>
                                     <p className="text-[10px] text-app-muted-foreground">Book Balance</p>
                                 </div>
                                 <div className="text-right">

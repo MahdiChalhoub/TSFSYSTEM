@@ -186,8 +186,8 @@ export default function FinancialReportsDashboardPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                    <TrendingUp size={20} className="text-green-700" />
+                  <div className="w-10 h-10 rounded-xl bg-app-success-bg flex items-center justify-center">
+                    <TrendingUp size={20} className="text-app-success" />
                   </div>
                   <CardTitle>Profit & Loss Summary</CardTitle>
                 </div>
@@ -234,8 +234,8 @@ export default function FinancialReportsDashboardPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <BarChart3 size={20} className="text-blue-700" />
+                  <div className="w-10 h-10 rounded-xl bg-app-info-bg flex items-center justify-center">
+                    <BarChart3 size={20} className="text-app-info" />
                   </div>
                   <CardTitle>Balance Sheet Summary</CardTitle>
                 </div>

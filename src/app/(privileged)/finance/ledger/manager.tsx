@@ -460,7 +460,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
             actions.push({ label: 'Edit Entry', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/finance/ledger/${entry.id}/edit` } })
           }
           if (entry.status !== 'POSTED' && !isLocked) {
-            actions.push({ label: 'Delete Entry', icon: <Trash2 size={12} className="text-rose-500" />, onClick: () => setShowSingleDelete(entry.id), variant: 'destructive' as const })
+            actions.push({ label: 'Delete Entry', icon: <Trash2 size={12} className="text-app-error" />, onClick: () => setShowSingleDelete(entry.id), variant: 'destructive' as const })
           }
           return actions
         }}

@@ -207,10 +207,10 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-2xl ${isOverBudget ? 'bg-app-error/20' : 'bg-emerald-200/60'} flex items-center justify-center`}>
-                {isOverBudget ? <TrendingDown size={22} className="text-app-error" /> : <TrendingUp size={22} className="text-emerald-700" />}
+                {isOverBudget ? <TrendingDown size={22} className="text-app-error" /> : <TrendingUp size={22} className="text-app-success" />}
               </div>
               <div>
-                <p className={`text-xs font-bold uppercase tracking-widest ${isOverBudget ? 'text-app-error' : 'text-emerald-600'}`}>
+                <p className={`text-xs font-bold uppercase tracking-widest ${isOverBudget ? 'text-app-error' : 'text-app-success'}`}>
                   Variance
                 </p>
                 <p className={`text-2xl font-bold mt-0.5 ${isOverBudget ? 'text-app-error' : 'text-emerald-900'}`}>

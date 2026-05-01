@@ -95,15 +95,15 @@ export default function StatementsPage() {
                 <div className="grid grid-cols-4 gap-4">
                     <Card className="border-l-4 border-l-blue-500">
                         <CardContent className="py-4 text-center">
-                            <ShoppingCart size={20} className="mx-auto mb-1 text-blue-500" />
+                            <ShoppingCart size={20} className="mx-auto mb-1 text-app-info" />
                             <p className="text-2xl font-bold">{detail.stats?.order_count || 0}</p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Orders</p>
                         </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-emerald-500">
                         <CardContent className="py-4 text-center">
-                            <DollarSign size={20} className="mx-auto mb-1 text-emerald-500" />
-                            <p className="text-xl font-bold text-emerald-700">{fmt(detail.stats?.total_revenue || 0)}</p>
+                            <DollarSign size={20} className="mx-auto mb-1 text-app-success" />
+                            <p className="text-xl font-bold text-app-success">{fmt(detail.stats?.total_revenue || 0)}</p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Total Revenue</p>
                         </CardContent>
                     </Card>
@@ -116,8 +116,8 @@ export default function StatementsPage() {
                     </Card>
                     <Card className={`border-l-4 ${(detail.balance?.amount || 0) > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}>
                         <CardContent className="py-4 text-center">
-                            <BookOpen size={20} className={`mx-auto mb-1 ${(detail.balance?.amount || 0) > 0 ? 'text-red-500' : 'text-green-500'}`} />
-                            <p className={`text-xl font-bold ${(detail.balance?.amount || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                            <BookOpen size={20} className={`mx-auto mb-1 ${(detail.balance?.amount || 0) > 0 ? 'text-app-error' : 'text-app-success'}`} />
+                            <p className={`text-xl font-bold ${(detail.balance?.amount || 0) > 0 ? 'text-app-error' : 'text-app-success'}`}>
                                 {fmt(detail.balance?.amount || 0)}
                             </p>
                             <p className="text-[10px] text-app-muted-foreground uppercase">Balance</p>
@@ -210,13 +210,13 @@ export default function StatementsPage() {
                                     ) : (detail.journal || []).map((j: Record<string, any>) => (
                                         <TableRow key={j.id}>
                                             <TableCell className="text-sm">{j.date || '—'}</TableCell>
-                                            <TableCell className="font-mono text-xs text-blue-600">{j.reference || '—'}</TableCell>
+                                            <TableCell className="font-mono text-xs text-app-info">{j.reference || '—'}</TableCell>
                                             <TableCell className="text-sm text-app-muted-foreground">{j.description}</TableCell>
                                             <TableCell className="text-sm">{j.account}</TableCell>
-                                            <TableCell className="text-right text-sm text-emerald-700">
+                                            <TableCell className="text-right text-sm text-app-success">
                                                 {j.debit > 0 ? fmt(j.debit) : ''}
                                             </TableCell>
-                                            <TableCell className="text-right text-sm text-red-700">
+                                            <TableCell className="text-right text-sm text-app-error">
                                                 {j.credit > 0 ? fmt(j.credit) : ''}
                                             </TableCell>
                                         </TableRow>
@@ -272,7 +272,7 @@ export default function StatementsPage() {
                                     <TableRow key={c.id} className="hover:bg-app-surface/50">
                                         <TableCell className="font-medium">{c.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={c.type === 'CUSTOMER' ? 'text-blue-600' : 'text-orange-600'}>
+                                            <Badge variant="outline" className={c.type === 'CUSTOMER' ? 'text-app-info' : 'text-orange-600'}>
                                                 {c.type}
                                             </Badge>
                                         </TableCell>

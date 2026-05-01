@@ -172,7 +172,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
           />
           {value && (
             <button type="button" onClick={() => { onChange('', ''); setSearchQuery('') }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-rose-500 transition-colors">
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-error transition-colors">
               <X size={12} />
             </button>
           )}
@@ -184,11 +184,11 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                   <button key={acc.id} type="button" onClick={() => selectFromSearch(acc)}
                     className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-emerald-500/5 transition-colors border-b border-app-border/20 last:border-0">
                     <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${isLeaf ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-                      {isLeaf ? <FileText size={9} className="text-emerald-600" /> : <FolderTree size={9} className="text-amber-600" />}
+                      {isLeaf ? <FileText size={9} className="text-app-success" /> : <FolderTree size={9} className="text-app-warning" />}
                     </div>
-                    <span className="font-mono font-bold text-emerald-600">{acc.code}</span>
+                    <span className="font-mono font-bold text-app-success">{acc.code}</span>
                     <span className="truncate text-app-foreground flex-1">{acc.name}</span>
-                    {isLeaf && <Check size={10} className="text-emerald-500 shrink-0" />}
+                    {isLeaf && <Check size={10} className="text-app-success shrink-0" />}
                   </button>
                 )
               })}
@@ -196,7 +196,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
           )}
         </div>
         <button type="button" onClick={openModal} title="Browse account tree step by step"
-          className="w-8 h-8 rounded-lg border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-emerald-600 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all shrink-0">
+          className="w-8 h-8 rounded-lg border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-app-success hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all shrink-0">
           <FolderTree size={14} />
         </button>
       </div>
@@ -209,7 +209,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
             <div className="flex items-center justify-between p-4 border-b border-app-border">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <FolderTree size={18} className="text-emerald-600" />
+                  <FolderTree size={18} className="text-app-success" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-app-foreground">Browse Chart of Accounts</h3>
@@ -235,7 +235,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                     return acc ? (
                       <span key={id} className="flex items-center gap-1">
                         {i > 0 && <ChevronRight size={8} className="text-app-muted-foreground" />}
-                        <span className="font-bold text-emerald-600">{acc.code}</span>
+                        <span className="font-bold text-app-success">{acc.code}</span>
                       </span>
                     ) : null
                   })}
@@ -260,9 +260,9 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                         <span>Step 1 — Select Account Group</span>
                       ) : (
                         <span className="flex items-center gap-1">
-                          <span className="text-emerald-600">Step {level + 1}</span>
+                          <span className="text-app-success">Step {level + 1}</span>
                           <span>— Sub-accounts of</span>
-                          <span className="text-emerald-600 font-mono">{parentAcc?.code}</span>
+                          <span className="text-app-success font-mono">{parentAcc?.code}</span>
                           <span className="normal-case font-medium truncate">{parentAcc?.name}</span>
                         </span>
                       )}
@@ -297,7 +297,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                       const isLeaf = !hasChildren(acc.id)
                       return (
                         <div className={`mt-1.5 flex items-center gap-2 px-3 py-1.5 rounded-lg text-tp-xs font-bold ${
-                          isLeaf ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/8 text-amber-700'
+                          isLeaf ? 'bg-emerald-500/10 text-app-success' : 'bg-amber-500/8 text-app-warning'
                         }`}>
                           {isLeaf ? <Check size={10} /> : <FolderTree size={10} />}
                           <span>{acc.code} — {acc.name}</span>
@@ -317,10 +317,10 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                 if (!acc || hasChildren(acc.id)) return null
                 return (
                   <div className="mt-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-in fade-in duration-300">
-                    <div className="text-tp-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">✓ Account Selected</div>
+                    <div className="text-tp-xs font-bold text-app-success uppercase tracking-wider mb-2">✓ Account Selected</div>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-                        <FileText size={18} className="text-emerald-600" />
+                        <FileText size={18} className="text-app-success" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-base font-bold text-app-foreground">{acc.code}</div>

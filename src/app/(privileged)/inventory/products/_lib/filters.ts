@@ -67,7 +67,26 @@ export function applyFilters(items: Product[], search: string, filters: Filters)
     if (!matchStr(filters.country, p.country_name)) return false
     if (!matchStr(filters.status, p.status)) return false
     if (!matchStr(filters.completeness, p.completeness_label)) return false
-    if (!matchStr(filters.parfum, p.parfum_name)) return false
+    // Parfum filter matches against either:
+    //   - the legacy `parfum_name` FK (deprecated but still populated on
+    //     pre-migration products), OR
+    //   - any name in `attribute_value_names` (the new dynamic-attribute
+    //     system: products link to a Parfum attribute value via the
+    //     `attribute_values` M2M).
+    // This keeps both pre- and post-migration products filterable while we
+    // phase out the standalone Parfum model.
+    if (filters.parfum) {
+      const isNot = filters.parfum.startsWith('!')
+      const raw = isNot ? filters.parfum.slice(1) : filters.parfum
+      const attrNames: string[] = (p as any).attribute_value_names || []
+      let matches: boolean
+      if (raw === '__NONE__') {
+        matches = !p.parfum_name && attrNames.length === 0
+      } else {
+        matches = p.parfum_name === raw || attrNames.includes(raw)
+      }
+      if (isNot ? matches : !matches) return false
+    }
     if (!matchStr(filters.lotMgmt, p.lot_management)) return false
     if (!matchStr(filters.valuation, p.cost_valuation_method)) return false
     if (!matchStr(filters.productGroup, p.product_group_name)) return false

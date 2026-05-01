@@ -222,8 +222,14 @@ class ComplianceService:
         """
         Registers a document with versioning and immutability. (§Missing 17)
         """
-        from apps.storage.models.storage_models import StoredFile
-        
+        # Phase 3 — go through the connector instead of importing storage directly
+        from erp.connector_registry import connector
+        StoredFile = connector.require(
+            'storage.files.get_model',
+            org_id=getattr(contact, 'organization_id', 0) or 0,
+            source='crm',
+        )
+
         with transaction.atomic():
             # 1. Supersede older versions
             old_versions = contact.compliance_documents.filter(type=doc_type, is_active=True)
@@ -233,10 +239,10 @@ class ComplianceService:
                 version = (latest_old.version or 1) + 1
                 # Mark old ones as superseded and LOCK them
                 old_versions.update(is_active=False, review_status='SUPERSEDED', is_immutable=True)
-            
+
             # Fetch file hash if available
             file_hash = None
-            if file_id:
+            if file_id and StoredFile is not None:
                 file_record = StoredFile.objects.filter(uuid=file_id).first()
                 if file_record:
                     file_hash = file_record.checksum

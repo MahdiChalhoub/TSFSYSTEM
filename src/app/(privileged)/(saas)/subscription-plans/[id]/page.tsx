@@ -165,7 +165,7 @@ export default function PlanDetailPage() {
         }))
     }
 
-    const isCustom = plan && parseFloat(plan.monthly_price) < 0
+    const isCustom = plan && parseFloat(String(plan.monthly_price ?? '0')) < 0
     const tabs = [
         { key: 'overview', label: 'Overview' },
         { key: 'modules', label: 'Modules & Features' },
@@ -499,9 +499,9 @@ export default function PlanDetailPage() {
                         <CardDescription>{plan.organizations?.length || 0} organization(s) currently subscribed</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {plan.organizations?.length > 0 ? (
+                        {plan.organizations && plan.organizations.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {plan.organizations.map((org: Record<string, any>) => (
+                                {(plan.organizations as Array<{ id: number | string; name?: string; slug?: string; is_active?: boolean }>).map((org) => (
                                     <div key={org.id}
                                         className="flex items-center justify-between p-4 rounded-2xl bg-app-surface border border-app-border hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
                                         onClick={() => router.push(`/organizations/${org.id}`)}

@@ -234,6 +234,65 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           { key: 'stock', label: 'On Hand Qty', format: (p: Product) => p.total_stock ?? 0 },
           { key: 'status', label: 'Status', format: (p: Product) => p.status || 'ACTIVE' },
         ],
+        // CSV import — uses the GenericCsvImportDialog. Each row → POST to
+        // products/. Foreign keys (category, brand, unit) accept either an
+        // ID or a name; the backend resolves names case-insensitively.
+        import: {
+          entity: 'product',
+          entityPlural: 'products',
+          endpoint: 'products/',
+          columns: [
+            { name: 'name', required: true, desc: 'Display name', example: 'Coca-Cola Classic 330ml' },
+            { name: 'sku', required: false, desc: 'Stock-keeping unit (auto-generated if blank)', example: 'PRD-01001' },
+            { name: 'barcode', required: false, desc: 'EAN/UPC barcode', example: '5907198403693' },
+            { name: 'product_type', required: false, desc: 'STOCKABLE | STANDARD | COMBO (default STANDARD)', example: 'STOCKABLE' },
+            { name: 'category', required: false, desc: 'Category name OR id', example: 'Soft Drinks' },
+            { name: 'brand', required: false, desc: 'Brand name OR id', example: 'Coca-Cola' },
+            { name: 'unit', required: false, desc: 'Unit name OR id', example: 'Piece' },
+            { name: 'cost_price', required: false, desc: 'Cost in default currency', example: '0.50' },
+            { name: 'selling_price_ttc', required: false, desc: 'Sell price including tax', example: '1.00' },
+            { name: 'tva_rate', required: false, desc: 'VAT rate %', example: '19' },
+            { name: 'min_stock_level', required: false, desc: 'Reorder threshold', example: '7' },
+            { name: 'max_stock_level', required: false, desc: 'Max stock cap', example: '305' },
+          ],
+          sampleCsv:
+            'name,sku,barcode,product_type,category,brand,unit,cost_price,selling_price_ttc,tva_rate,min_stock_level,max_stock_level\n' +
+            'Coca-Cola Classic 330ml,PRD-01001,5907198403693,STOCKABLE,Soft Drinks,Coca-Cola,Piece,0.50,1.00,19,7,305\n' +
+            'Pepsi 500ml,,,STOCKABLE,Soft Drinks,Pepsi,Piece,0.45,1.10,19,5,200\n',
+          previewColumns: [
+            { key: 'name', label: 'Name' },
+            { key: 'sku', label: 'SKU', mono: true },
+            { key: 'category', label: 'Category' },
+            { key: 'brand', label: 'Brand' },
+            { key: 'cost_price', label: 'Cost', mono: true },
+            { key: 'selling_price_ttc', label: 'Sell TTC', mono: true },
+          ],
+          buildPayload: row => {
+            const num = (v: string) => {
+              const n = parseFloat(v); return Number.isFinite(n) ? n : undefined
+            }
+            const idOrName = (v: string) => {
+              if (!v) return undefined
+              return /^\d+$/.test(v) ? Number(v) : v.trim()
+            }
+            const payload: Record<string, any> = {
+              name: row.name,
+            }
+            if (row.sku) payload.sku = row.sku
+            if (row.barcode) payload.barcode = row.barcode
+            if (row.product_type) payload.product_type = row.product_type.toUpperCase()
+            if (row.category) payload.category = idOrName(row.category)
+            if (row.brand) payload.brand = idOrName(row.brand)
+            if (row.unit) payload.unit = idOrName(row.unit)
+            if (row.cost_price) payload.cost_price = num(row.cost_price)
+            if (row.selling_price_ttc) payload.selling_price_ttc = num(row.selling_price_ttc)
+            if (row.tva_rate) payload.tva_rate = num(row.tva_rate)
+            if (row.min_stock_level) payload.min_stock_level = num(row.min_stock_level)
+            if (row.max_stock_level) payload.max_stock_level = num(row.max_stock_level)
+            return payload
+          },
+          tip: 'Foreign-key columns (category, brand, unit) accept either an existing ID or the exact name. Names are matched case-insensitively against your masters.',
+        },
         print: {
           title: 'Products',
           subtitle: 'Product Master Registry',

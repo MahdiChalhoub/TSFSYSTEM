@@ -75,7 +75,7 @@ export function AccountRow({ account: a, onDelete, onTogglePOS }: {
                 <button onClick={e => { e.stopPropagation(); onTogglePOS() }}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${a.is_pos_enabled ? 'bg-app-primary' : 'bg-app-border'}`}
                     title={a.is_pos_enabled ? 'POS enabled — click to disable' : 'POS disabled — click to enable'}>
-                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${a.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-app-surface transition-transform ${a.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
                 </button>
             </div>
             {/* Users */}
@@ -105,7 +105,7 @@ export function AccountRow({ account: a, onDelete, onTogglePOS }: {
                     </Link>
                 )}
                 <button onClick={onDelete}
-                    className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-rose-500 transition-colors"
+                    className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors"
                     title="Delete">
                     <Trash2 size={12} />
                 </button>

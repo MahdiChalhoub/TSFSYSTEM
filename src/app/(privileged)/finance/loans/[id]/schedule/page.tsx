@@ -111,11 +111,11 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
-                <DollarSign size={20} className="text-blue-700" />
+                <DollarSign size={20} className="text-app-info" />
               </div>
               <div>
-                <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Principal</p>
-                <p className="text-xl font-black text-blue-900 mt-0.5">{fmt(loan.principal_amount)}</p>
+                <p className="text-xs font-bold text-app-info uppercase tracking-widest">Principal</p>
+                <p className="text-xl font-black text-app-info mt-0.5">{fmt(loan.principal_amount)}</p>
               </div>
             </div>
           </CardContent>
@@ -153,10 +153,10 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-green-600/10 flex items-center justify-center">
-                <Clock size={20} className="text-green-700" />
+                <Clock size={20} className="text-app-success" />
               </div>
               <div>
-                <p className="text-xs font-bold text-green-700 uppercase tracking-widest">Installments</p>
+                <p className="text-xs font-bold text-app-success uppercase tracking-widest">Installments</p>
                 <p className="text-xl font-black text-green-900 mt-0.5">{schedule.installments?.length || 0}</p>
               </div>
             </div>

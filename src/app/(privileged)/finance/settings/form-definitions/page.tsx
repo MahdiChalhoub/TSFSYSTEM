@@ -90,7 +90,7 @@ function FieldEditor({
                         </span>
                     )}
                     {field.required && (
-                        <span className="text-[10px] font-bold text-rose-500 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-bold text-app-error bg-app-error-bg border border-rose-100 px-1.5 py-0.5 rounded">
                             required
                         </span>
                     )}
@@ -103,7 +103,7 @@ function FieldEditor({
                     <button onClick={onMoveDown} disabled={isLast} className="p-1 text-app-faint hover:text-app-muted-foreground disabled:opacity-30">
                         <ChevronDown className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={onRemove} className="p-1 text-app-faint hover:text-rose-500">
+                    <button onClick={onRemove} className="p-1 text-app-faint hover:text-app-error">
                         <X className="h-3.5 w-3.5" />
                     </button>
                     <ChevronDown className={`h-3.5 w-3.5 text-app-muted-foreground ml-1 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -528,7 +528,7 @@ export default function FormDefinitionsPage() {
                                 <button
                                     onClick={() => handleDelete(form.id)}
                                     disabled={deleting === form.id}
-                                    className="p-2 text-app-faint hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors disabled:opacity-40"
+                                    className="p-2 text-app-faint hover:text-app-error rounded-lg hover:bg-app-error-bg transition-colors disabled:opacity-40"
                                 >
                                     {deleting === form.id
                                         ? <Loader2 className="h-4 w-4 animate-spin" />

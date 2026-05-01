@@ -38,7 +38,7 @@ const INITIAL_PAGE_SIZE = 100
 export default async function ProductMasterPage(props: {
   searchParams: Promise<{ unit?: string; category?: string; brand?: string }>
 }) {
-  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, parfums]] = await Promise.all([
+  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree]] = await Promise.all([
     props.searchParams,
     Promise.all([
       safeLoadPaginated(`products/?page_size=${INITIAL_PAGE_SIZE}`),
@@ -47,7 +47,7 @@ export default async function ProductMasterPage(props: {
       safeLoad('units/'),
       safeLoad('reference/countries/'),
       safeLoad('reference/sourcing-countries/'),
-      safeLoad('parfums/'),
+      safeLoad('inventory/product-attributes/tree/'),
     ]),
   ])
   const products = productsResp.results
@@ -63,6 +63,17 @@ export default async function ProductMasterPage(props: {
       }))
     : countries.map((c: any) => ({ id: c.id, name: c.name }))
   )
+
+  // Parfum filter pulls its options from the dynamic attribute tree (V2+).
+  // Find the root attribute group whose name matches /parfum|fragrance/i and
+  // expose its leaf children as the parfum filter options. The legacy
+  // `parfums/` master is no longer the source of truth.
+  const parfumRoot = (attributeTree as any[]).find((root: any) =>
+    /parfum|fragrance/i.test(root?.name || '')
+  )
+  const parfumOptions: { id: number; name: string }[] = parfumRoot
+    ? (parfumRoot.children || []).map((c: any) => ({ id: c.id, name: c.name }))
+    : []
 
   // Build initial filter from URL entity-prefill params.
   // Sent by EntityProductsTab empty-state "Browse & Assign" CTAs.
@@ -82,7 +93,7 @@ export default async function ProductMasterPage(props: {
           brands: brands.map((b: any) => ({ id: b.id, name: b.name })),
           units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
           countries: countryLookup,
-          parfums: parfums.map((p: any) => ({ id: p.id, name: p.name })),
+          parfums: parfumOptions,
         }}
       />
     </RequestFlowProvider>

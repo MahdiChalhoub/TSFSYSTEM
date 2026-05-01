@@ -1,13 +1,21 @@
 from django.db import models
-from erp.models import Organization, User
+from erp.models import Organization, TenantModel, User
 from .register_models import POSRegister
 
-class POSAuditRule(models.Model):
+class POSAuditRule(TenantModel):
     """
     Configuration rules for how different POS events should be handled
     by the notification and task system.
+
+    Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
     """
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='pos_audit_rules')
+    # Re-declared to keep historical db_column='organization_id'
+    # (TenantModel's inherited field uses db_column='tenant_id').
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE,
+        related_name='pos_audit_rules',
+        db_column='organization_id',
+    )
     event_type = models.CharField(max_length=50) # e.g. 'PRICE_CHANGE', 'DISCOUNT', 'CLEAR_CART', 'REMOVE_ITEM'
     
     send_notification = models.BooleanField(default=False)
@@ -24,11 +32,18 @@ class POSAuditRule(models.Model):
         db_table = 'pos_audit_rule'
         unique_together = ('organization', 'event_type')
 
-class POSAuditEvent(models.Model):
+class POSAuditEvent(TenantModel):
     """
     Log of sensitive or critical events occurring in the POS system.
+
+    Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
     """
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='pos_audit_events')
+    # Re-declared to keep historical db_column='organization_id'.
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE,
+        related_name='pos_audit_events',
+        db_column='organization_id',
+    )
     register = models.ForeignKey(POSRegister, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_events')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='pos_audit_events')
     
@@ -57,7 +72,7 @@ class POSAuditEvent(models.Model):
 # GAP 8 — SALES AUDIT LOG (Structured, Order-Level Immutable Diff Log)
 # =============================================================================
 
-class SalesAuditLog(models.Model):
+class SalesAuditLog(TenantModel):
     """
     Immutable, append-only log of all workflow and field-change events
     on a sales Order.
@@ -71,6 +86,8 @@ class SalesAuditLog(models.Model):
 
     Design: Never update or delete rows. Always append.
     DB table has no update timestamp — only created_at.
+
+    Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
     """
 
     # ── Action type catalogue ─────────────────────────────────────────────────
@@ -104,9 +121,11 @@ class SalesAuditLog(models.Model):
         ('NOTE',              'Manual Note'),
     ]
 
+    # Re-declared to keep historical db_column='organization_id'.
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
-        related_name='sales_audit_logs', db_index=True
+        related_name='sales_audit_logs', db_index=True,
+        db_column='organization_id',
     )
     order = models.ForeignKey(
         'pos.Order', on_delete=models.CASCADE,

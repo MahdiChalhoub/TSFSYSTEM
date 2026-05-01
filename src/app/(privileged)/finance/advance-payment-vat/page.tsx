@@ -64,7 +64,7 @@ function RecRow({ item, onEdit, onDeclare }: { item: Rec; onEdit: () => void; on
       <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         {item.status === 'PENDING' && (
           <button onClick={e => { e.stopPropagation(); onDeclare() }}
-            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-blue-600 transition-colors" title="Declare VAT">
+            className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-info hover:text-app-info transition-colors" title="Declare VAT">
             <Send size={12} />
           </button>
         )}

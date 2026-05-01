@@ -227,7 +227,7 @@ export default function SystemUpdatesPage() {
                                         <div className="mt-4 flex flex-wrap items-center gap-4 md:gap-6 text-[9px] md:text-[10px] uppercase font-black tracking-widest text-app-muted-foreground">
                                             <div className="flex items-center gap-2">
                                                 <Clock size={10} className="md:w-3 md:h-3" />
-                                                STAGED: {format(new Date(update.created_at), 'MMM dd, yyyy HH:mm')}
+                                                STAGED: {update.created_at ? format(new Date(update.created_at), 'MMM dd, yyyy HH:mm') : '—'}
                                             </div>
                                             {update.is_applied && (
                                                 <div className="flex items-center gap-2 text-emerald-600/70">

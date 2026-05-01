@@ -194,8 +194,8 @@ export default function CashFlowReportPage() {
           <Card className="rounded-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                  <DollarSign size={20} className="text-blue-700" />
+                <div className="w-10 h-10 rounded-xl bg-app-info-bg flex items-center justify-center">
+                  <DollarSign size={20} className="text-app-info" />
                 </div>
                 <CardTitle>Operating Activities</CardTitle>
               </div>

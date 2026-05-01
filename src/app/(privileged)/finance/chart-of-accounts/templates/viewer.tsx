@@ -225,16 +225,16 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                 {item.type && (
                     <div className="flex items-center gap-1.5 mr-2">
                         {['ASSET', 'LIABILITY', 'EQUITY'].includes(item.type) ? (
-                            <span className="text-tp-xxs font-bold bg-blue-100 text-blue-700 px-1 rounded" title="Goes to Balance Sheet">[BS]</span>
+                            <span className="text-tp-xxs font-bold bg-app-info-bg text-app-info px-1 rounded" title="Goes to Balance Sheet">[BS]</span>
                         ) : (
-                            <span className="text-tp-xxs font-bold bg-amber-100 text-amber-700 px-1 rounded" title="Goes to Profit & Loss">[P&L]</span>
+                            <span className="text-tp-xxs font-bold bg-app-warning-bg text-app-warning px-1 rounded" title="Goes to Profit & Loss">[P&L]</span>
                         )}
 
-                        <span className={`text-tp-xxs font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                            item.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border border-red-100' :
+                        <span className={`text-tp-xxs font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-app-info-bg text-app-info border border-app-info' :
+                            item.type === 'LIABILITY' ? 'bg-app-error-bg text-app-error border border-red-100' :
                                 item.type === 'EQUITY' ? 'bg-app-surface-2 text-app-muted-foreground' :
-                                    item.type === 'INCOME' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                        'bg-amber-50 text-amber-600 border border-amber-100'
+                                    item.type === 'INCOME' ? 'bg-app-success-bg text-app-success border border-emerald-100' :
+                                        'bg-app-warning-bg text-app-warning border border-amber-100'
                             }`}>
                             {item.type}
                         </span>

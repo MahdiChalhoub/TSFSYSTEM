@@ -25,14 +25,14 @@ type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     DRAFT: { label: 'Draft', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Clock },
-    POSTED: { label: 'Posted', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-    CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
+    POSTED: { label: 'Posted', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: CheckCircle2 },
+    CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    SUPPLIER_PAYMENT: { label: 'Supplier Payment', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200', icon: ArrowUpRight },
-    CUSTOMER_RECEIPT: { label: 'Customer Receipt', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: ArrowDownLeft },
-    REFUND: { label: 'Refund', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: CreditCard },
+    SUPPLIER_PAYMENT: { label: 'Supplier Payment', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: ArrowUpRight },
+    CUSTOMER_RECEIPT: { label: 'Customer Receipt', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: ArrowDownLeft },
+    REFUND: { label: 'Refund', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: CreditCard },
 }
 
 const METHOD_ICONS: Record<string, any> = {
@@ -133,8 +133,8 @@ export default function PaymentsPage() {
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+            ? <ArrowUp size={12} className="text-app-success ml-1 inline" />
+            : <ArrowDown size={12} className="text-app-success ml-1 inline" />
     }
 
     const filteredPayments = useMemo(() => {
@@ -276,11 +276,11 @@ export default function PaymentsPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Paid Out</p>
+                                <p className="text-xs font-bold text-app-error uppercase tracking-wider">Paid Out</p>
                                 <p className="text-2xl font-bold text-rose-900 mt-1">{totalSupplier.toLocaleString()}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-rose-200/60 flex items-center justify-center">
-                                <ArrowUpRight size={22} className="text-rose-500" />
+                                <ArrowUpRight size={22} className="text-app-error" />
                             </div>
                         </div>
                     </CardContent>
@@ -293,7 +293,7 @@ export default function PaymentsPage() {
                                 <p className="text-2xl font-bold text-emerald-900 mt-1">{totalCustomer.toLocaleString()}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <ArrowDownLeft size={22} className="text-emerald-500" />
+                                <ArrowDownLeft size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -308,7 +308,7 @@ export default function PaymentsPage() {
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <BarChart3 size={22} className="text-blue-500" />
+                                <BarChart3 size={22} className="text-app-info" />
                             </div>
                         </div>
                     </CardContent>
@@ -422,7 +422,7 @@ export default function PaymentsPage() {
                 {/* ─── Aged Receivables ────────────────────────────── */}
                 {activeView === 'AGED_AR' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Aged Receivables</h3>
+                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Aged Receivables</h3>
                         {agedAR.length === 0 ? (
                             <p className="text-center text-app-muted-foreground py-12">No outstanding receivables</p>
                         ) : (
@@ -444,7 +444,7 @@ export default function PaymentsPage() {
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_30 || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_60 || 0).toLocaleString()}</TableCell>
-                                            <TableCell className="text-right text-red-600 font-semibold">{Number(r.days_90_plus || 0).toLocaleString()}</TableCell>
+                                            <TableCell className="text-right text-app-error font-semibold">{Number(r.days_90_plus || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right font-bold">{Number(r.total || 0).toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
@@ -457,7 +457,7 @@ export default function PaymentsPage() {
                 {/* ─── Aged Payables ───────────────────────────────── */}
                 {activeView === 'AGED_AP' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Aged Payables</h3>
+                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Aged Payables</h3>
                         {agedAP.length === 0 ? (
                             <p className="text-center text-app-muted-foreground py-12">No outstanding payables</p>
                         ) : (
@@ -479,7 +479,7 @@ export default function PaymentsPage() {
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_30 || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_60 || 0).toLocaleString()}</TableCell>
-                                            <TableCell className="text-right text-red-600 font-semibold">{Number(r.days_90_plus || 0).toLocaleString()}</TableCell>
+                                            <TableCell className="text-right text-app-error font-semibold">{Number(r.days_90_plus || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right font-bold">{Number(r.total || 0).toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
@@ -493,7 +493,7 @@ export default function PaymentsPage() {
                 {activeView === 'BALANCES' && (
                     <div className="p-6 space-y-8">
                         <div>
-                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Customer Balances (AR)</h3>
+                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Customer Balances (AR)</h3>
                             {customerBalances.length === 0 ? (
                                 <p className="text-center text-app-muted-foreground py-6">No customer balances</p>
                             ) : (
@@ -509,7 +509,7 @@ export default function PaymentsPage() {
                                         {customerBalances.map((cb: Record<string, any>) => (
                                             <TableRow key={cb.id}>
                                                 <TableCell className="font-medium text-app-foreground">{cb.contact_name || `#${cb.contact}`}</TableCell>
-                                                <TableCell className={`text-right font-semibold ${Number(cb.current_balance) > 0 ? 'text-emerald-700' : 'text-app-muted-foreground'}`}>
+                                                <TableCell className={`text-right font-semibold ${Number(cb.current_balance) > 0 ? 'text-app-success' : 'text-app-muted-foreground'}`}>
                                                     {Number(cb.current_balance).toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-right text-app-muted-foreground">{cb.credit_limit ? Number(cb.credit_limit).toLocaleString() : '—'}</TableCell>
@@ -520,7 +520,7 @@ export default function PaymentsPage() {
                             )}
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Supplier Balances (AP)</h3>
+                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Supplier Balances (AP)</h3>
                             {supplierBalances.length === 0 ? (
                                 <p className="text-center text-app-muted-foreground py-6">No supplier balances</p>
                             ) : (
@@ -535,7 +535,7 @@ export default function PaymentsPage() {
                                         {supplierBalances.map((sb: Record<string, any>) => (
                                             <TableRow key={sb.id}>
                                                 <TableCell className="font-medium text-app-foreground">{sb.contact_name || `#${sb.contact}`}</TableCell>
-                                                <TableCell className={`text-right font-semibold ${Number(sb.current_balance) > 0 ? 'text-rose-700' : 'text-app-muted-foreground'}`}>
+                                                <TableCell className={`text-right font-semibold ${Number(sb.current_balance) > 0 ? 'text-app-error' : 'text-app-muted-foreground'}`}>
                                                     {Number(sb.current_balance).toLocaleString()}
                                                 </TableCell>
                                             </TableRow>

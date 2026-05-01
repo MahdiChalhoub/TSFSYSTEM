@@ -17,10 +17,12 @@ import { PageTabs, type PageTab } from './_components/PageTabs'
 import { useFiscalYears } from './_hooks/useFiscalYears'
 import { YearsListPanel } from './_components/YearsListPanel'
 import { PageTour } from '@/components/ui/PageTour'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/finance-fiscal-years'
 
 export default function FiscalYearsViewer({ initialYears }: { initialYears: Record<string, any>[] }) {
     const fy = useFiscalYears(initialYears)
+    const { t } = useTranslation()
     const [showTaskSettings, setShowTaskSettings] = useState(false)
 
     // ── Top-level tab routing ──
@@ -117,10 +119,10 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
         const { periodId, periodName, fromTask } = pendingReopen
         const res = await reopenPeriod(periodId)
         if (res.success) {
-            toast.success(`${periodName} reopened`)
+            toast.success(t('finance.fiscal_years_page.toast_reopened').replace('{period}', periodName))
             if (fromTask) { try { await erpFetch(`tasks/${fromTask}/complete/`, { method: 'POST' }) } catch {} }
             fy.refreshData()
-        } else { toast.error(res.error || `Failed to reopen ${periodName}`) }
+        } else { toast.error(res.error || t('finance.fiscal_years_page.toast_reopen_failed').replace('{period}', periodName)) }
         setPendingReopen(null)
         try { router.replace(pathname) } catch {}
     }
@@ -135,16 +137,16 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             <Calendar size={20} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-tight">Fiscal Years</h1>
+                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-tight">{t('finance.fiscal_years_page.title')}</h1>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">Accounting Periods & Closing Cycles</p>
+                                <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">{t('finance.fiscal_years_page.subtitle')}</p>
                                 {currentContext && (
                                     <button onClick={focusCurrentPeriod}
                                         title={`Jump to ${currentContext.period.name} in ${currentContext.year.name}`}
                                         className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full transition-all hover:brightness-110"
                                         style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
                                         <Target size={9} />
-                                        {currentContext.period.name} · {currentContext.daysToEnd <= 0 ? 'ends today' : `${currentContext.daysToEnd}d left`}
+                                        {currentContext.period.name} · {currentContext.daysToEnd <= 0 ? t('finance.fiscal_years_page.ends_today') : t('finance.fiscal_years_page.days_left').replace('{n}', String(currentContext.daysToEnd))}
                                     </button>
                                 )}
                             </div>
@@ -154,12 +156,12 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                         <button data-tour="task-settings-btn" onClick={() => setShowTaskSettings(true)}
                             title="Reminders, routing & auto-task rules for Finance"
                             className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
-                            <Zap size={13} /> Task Settings
+                            <Zap size={13} /> {t('finance.fiscal_years_page.task_settings')}
                         </button>
                         <button data-tour="create-year-btn" onClick={fy.openWizard} disabled={fy.isPending}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                            <Plus size={14} /> <span className="hidden sm:inline">Create Fiscal Year</span>
+                            <Plus size={14} /> <span className="hidden sm:inline">{t('finance.fiscal_years_page.create_year')}</span>
                         </button>
                         <PageTour
                             tourId="finance-fiscal-years"
@@ -244,11 +246,13 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
             <ConfirmDialog open={pendingReopen !== null}
                 onOpenChange={o => { if (!o) setPendingReopen(null) }}
                 onConfirm={confirmReopen}
-                title={pendingReopen ? `Reopen ${pendingReopen.periodName}?` : ''}
+                title={pendingReopen ? t('finance.fiscal_years_page.reopen_period_title').replace('{period}', pendingReopen.periodName) : ''}
                 description={pendingReopen
-                    ? `You came from a task linked to this ${pendingReopen.yearName} period. Reopen it now${pendingReopen.fromTask ? ' — the linked task will be marked done' : ''}?`
+                    ? (pendingReopen.fromTask
+                        ? t('finance.fiscal_years_page.reopen_period_desc_with_task').replace('{year}', pendingReopen.yearName)
+                        : t('finance.fiscal_years_page.reopen_period_desc').replace('{year}', pendingReopen.yearName))
                     : ''}
-                confirmText="Reopen Period"
+                confirmText={t('finance.fiscal_years_page.reopen_period_confirm')}
                 variant="warning" />
         </div>
     )

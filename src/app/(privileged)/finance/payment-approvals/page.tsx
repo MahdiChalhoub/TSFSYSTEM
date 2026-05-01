@@ -24,17 +24,17 @@ export default function PaymentApprovalsPage() {
       <div className="max-w-4xl mx-auto">
         <Card className="border-app-border/30">
           <CardContent className="p-12 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-emerald-50 flex items-center justify-center">
-              <DollarSign size={40} className="text-emerald-600" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-app-success-bg flex items-center justify-center">
+              <DollarSign size={40} className="text-app-success" />
             </div>
             <h1 className="text-2xl font-black text-app-text mb-2">Payment Approval Center</h1>
             <p className="text-sm text-app-text-muted mb-8">
               Dedicated payment approval workflow with multi-level authorization
             </p>
             <div className="space-y-4">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-left">
-                <p className="text-sm font-bold text-blue-900 mb-2">🚧 Coming Soon</p>
-                <p className="text-xs text-blue-700">
+              <div className="p-4 bg-app-info-bg border border-app-info rounded-xl text-left">
+                <p className="text-sm font-bold text-app-info mb-2">🚧 Coming Soon</p>
+                <p className="text-xs text-app-info">
                   Payment-specific approval workflow with amount thresholds, budget checks, and beneficiary verification.
                 </p>
               </div>

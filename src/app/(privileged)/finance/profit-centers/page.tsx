@@ -123,10 +123,10 @@ export default function ProfitCentersPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-green-500" />
+                            <TrendingUp size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Debits</p>
-                                <p className="text-xl font-bold text-green-700">{fmt(totalIncome)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(totalIncome)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -134,10 +134,10 @@ export default function ProfitCentersPage() {
                 <Card className="border-l-4 border-l-red-500 bg-gradient-to-r from-red-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <TrendingDown size={24} className="text-red-500" />
+                            <TrendingDown size={24} className="text-app-error" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Credits</p>
-                                <p className="text-xl font-bold text-red-700">{fmt(totalExpense)}</p>
+                                <p className="text-xl font-bold text-app-error">{fmt(totalExpense)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -145,10 +145,10 @@ export default function ProfitCentersPage() {
                 <Card className={`border-l-4 ${totalNet >= 0 ? 'border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white' : 'border-l-rose-500 bg-gradient-to-r from-rose-50 to-white'}`}>
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className={totalNet >= 0 ? 'text-emerald-500' : 'text-rose-500'} />
+                            <DollarSign size={24} className={totalNet >= 0 ? 'text-app-success' : 'text-app-error'} />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Net Position</p>
-                                <p className={`text-xl font-bold ${totalNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                <p className={`text-xl font-bold ${totalNet >= 0 ? 'text-app-success' : 'text-app-error'}`}>
                                     {fmt(Math.abs(totalNet))}
                                 </p>
                             </div>
@@ -174,17 +174,17 @@ export default function ProfitCentersPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-3 gap-3 mb-3">
-                                <div className="text-center p-2 bg-green-50 rounded-lg">
+                                <div className="text-center p-2 bg-app-success-bg rounded-lg">
                                     <p className="text-[10px] text-app-muted-foreground uppercase">Debit</p>
-                                    <p className="text-sm font-bold text-green-600">{fmt(c.income)}</p>
+                                    <p className="text-sm font-bold text-app-success">{fmt(c.income)}</p>
                                 </div>
-                                <div className="text-center p-2 bg-red-50 rounded-lg">
+                                <div className="text-center p-2 bg-app-error-bg rounded-lg">
                                     <p className="text-[10px] text-app-muted-foreground uppercase">Credit</p>
-                                    <p className="text-sm font-bold text-red-600">{fmt(c.expense)}</p>
+                                    <p className="text-sm font-bold text-app-error">{fmt(c.expense)}</p>
                                 </div>
-                                <div className={`text-center p-2 rounded-lg ${c.net >= 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                                <div className={`text-center p-2 rounded-lg ${c.net >= 0 ? 'bg-app-success-bg' : 'bg-app-error-bg'}`}>
                                     <p className="text-[10px] text-app-muted-foreground uppercase">Net</p>
-                                    <p className={`text-sm font-bold ${c.net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    <p className={`text-sm font-bold ${c.net >= 0 ? 'text-app-success' : 'text-app-error'}`}>
                                         {fmt(Math.abs(c.net))}
                                     </p>
                                 </div>

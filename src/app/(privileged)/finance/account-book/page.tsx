@@ -123,7 +123,7 @@ export default function AccountBookManagerPage() {
                       </div>
                       <div className="bg-app-foreground/60 px-4 py-2 rounded-xl flex items-center gap-3">
                         <span className="text-xs font-bold text-app-warning uppercase tracking-wider">Pending OUT:</span>
-                        <span className="font-black text-rose-600">{formatMoney(summary.pendingOut)}</span>
+                        <span className="font-black text-app-error">{formatMoney(summary.pendingOut)}</span>
                       </div>
                     </div>
                   </div>
@@ -203,13 +203,13 @@ export default function AccountBookManagerPage() {
                         <td className="px-6 py-4 text-right font-black text-app-primary">
                           {formatMoney(snap.totalIn)}
                         </td>
-                        <td className="px-6 py-4 text-right font-black text-rose-600">
+                        <td className="px-6 py-4 text-right font-black text-app-error">
                           {formatMoney(snap.totalOut)}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className={clsx("font-black px-3 py-1 rounded-lg text-xs",
                             snap.balance === 0 ? 'bg-app-surface-2 text-app-muted-foreground' :
-                              snap.balance > 0 ? 'bg-app-primary-light text-app-success' : 'bg-rose-100 text-rose-700'
+                              snap.balance > 0 ? 'bg-app-primary-light text-app-success' : 'bg-app-error-bg text-app-error'
                           )}>
                             {snap.balance > 0 ? '+' : ''}{formatMoney(snap.balance)}
                           </span>
@@ -218,7 +218,7 @@ export default function AccountBookManagerPage() {
                           <div className="flex items-center justify-end gap-2 text-[10px] font-bold">
                             {snap.approvedCount > 0 && <span className="text-app-primary bg-app-primary-light px-2 py-0.5 rounded">✔ {snap.approvedCount}</span>}
                             {snap.pendingCount > 0 && <span className="text-app-warning bg-app-warning-bg px-2 py-0.5 rounded">⌛ {snap.pendingCount}</span>}
-                            {snap.rejectedCount > 0 && <span className="text-rose-500 bg-rose-50 px-2 py-0.5 rounded">✖ {snap.rejectedCount}</span>}
+                            {snap.rejectedCount > 0 && <span className="text-app-error bg-app-error-bg px-2 py-0.5 rounded">✖ {snap.rejectedCount}</span>}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">

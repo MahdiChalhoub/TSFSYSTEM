@@ -262,11 +262,11 @@ export default function BudgetAlertsPage() {
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                <AlertTriangle size={22} className="text-blue-700" />
+                <AlertTriangle size={22} className="text-app-info" />
               </div>
               <div>
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Info</p>
-                <p className="text-2xl font-bold text-blue-900 mt-0.5">{infoCount}</p>
+                <p className="text-xs font-bold text-app-info uppercase tracking-widest">Info</p>
+                <p className="text-2xl font-bold text-app-info mt-0.5">{infoCount}</p>
               </div>
             </div>
           </CardContent>

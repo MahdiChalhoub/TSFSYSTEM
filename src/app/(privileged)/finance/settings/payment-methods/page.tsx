@@ -172,7 +172,7 @@ export default function PaymentMethodsPage() {
                                 <button onClick={() => handleToggle(m)}
                                     className="flex items-center gap-1" title={m.is_active ? 'Active – click to deactivate' : 'Inactive – click to activate'}>
                                     {m.is_active
-                                        ? <ToggleRight size={18} className="text-emerald-500" />
+                                        ? <ToggleRight size={18} className="text-app-success" />
                                         : <ToggleLeft size={18} className="text-app-muted-foreground/60" />}
                                 </button>
                                 {/* Actions */}
@@ -184,7 +184,7 @@ export default function PaymentMethodsPage() {
                                     {!m.is_system && (
                                         <button onClick={() => handleDelete(m)}
                                             className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Delete">
-                                            <Trash2 size={12} className="text-red-400" />
+                                            <Trash2 size={12} className="text-app-error" />
                                         </button>
                                     )}
                                 </div>

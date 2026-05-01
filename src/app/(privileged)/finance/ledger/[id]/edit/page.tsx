@@ -14,10 +14,10 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
 
     if (entry.status === 'REVERSED') {
         return (
-            <div className="p-8 text-center bg-rose-50 border border-rose-200 rounded-lg max-w-2xl mx-auto mt-12">
-                <h1 className="text-xl font-bold text-rose-800">Cannot Edit Reversed Entry</h1>
-                <p className="text-rose-600 mt-2">Reversed transactions are immutable. To correct this, create a new manual entry.</p>
-                <a href="/finance/ledger" className="mt-4 inline-block text-rose-800 font-bold underline">Back to Ledger</a>
+            <div className="p-8 text-center bg-app-error-bg border border-app-error rounded-lg max-w-2xl mx-auto mt-12">
+                <h1 className="text-xl font-bold text-app-error">Cannot Edit Reversed Entry</h1>
+                <p className="text-app-error mt-2">Reversed transactions are immutable. To correct this, create a new manual entry.</p>
+                <a href="/finance/ledger" className="mt-4 inline-block text-app-error font-bold underline">Back to Ledger</a>
             </div>
         )
     }

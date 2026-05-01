@@ -109,12 +109,12 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                             runningBalance += (line.debit - line.credit)
 
                             return (
-                                <tr key={line.id} className="hover:bg-blue-50/30 transition-colors group">
+                                <tr key={line.id} className="hover:bg-app-info-bg/30 transition-colors group">
                                     <td className="px-6 py-3 text-app-muted-foreground">
                                         {new Date(line.journalEntry.transactionDate).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-3 text-app-muted-foreground font-mono text-xs">
-                                        <Link href={`/finance/ledger?id=${line.journalEntry.id}`} className="hover:underline hover:text-blue-600">
+                                        <Link href={`/finance/ledger?id=${line.journalEntry.id}`} className="hover:underline hover:text-app-info">
                                             #{line.journalEntry.id}
                                         </Link>
                                     </td>
@@ -132,7 +132,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                                     <td className="px-6 py-3 text-right font-mono text-app-foreground">
                                         {line.credit > 0 ? line.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                     </td>
-                                    <td className="px-6 py-3 text-right font-mono font-bold text-app-foreground group-hover:text-blue-700">
+                                    <td className="px-6 py-3 text-right font-mono font-bold text-app-foreground group-hover:text-app-info">
                                         {Math.abs(runningBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         <span className="ml-1 text-xs text-app-muted-foreground">{runningBalance >= 0 ? 'Dr' : 'Cr'}</span>
                                     </td>

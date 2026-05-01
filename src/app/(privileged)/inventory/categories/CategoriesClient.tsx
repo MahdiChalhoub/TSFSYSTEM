@@ -16,6 +16,7 @@ import { buildTree } from '@/lib/utils/tree'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
 import { getCatalogueLanguages } from '@/lib/catalogue-languages'
 import { GuidedTour } from '@/components/ui/GuidedTour'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/inventory-categories'
 
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
@@ -34,6 +35,7 @@ import { CsvImportDialog } from './components/CsvImportDialog'
  * ═══════════════════════════════════════════════════════════ */
 export function CategoriesClient({ initialCategories }: { initialCategories: any[] }) {
     const router = useRouter()
+    const { t } = useTranslation()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
@@ -80,9 +82,9 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         setDeleteTarget(null)
         startTransition(async () => {
             const result = await deleteCategory(source.id)
-            if (result?.success) { toast.success(`"${source.name}" deleted`); router.refresh(); return }
+            if (result?.success) { toast.success(t('inventory.categories_page.toast_deleted').replace('{name}', source.name)); router.refresh(); return }
             if ((result as any)?.conflict) { setDeleteConflict({ conflict: (result as any).conflict, source }); return }
-            const msg = result?.message || 'Failed to delete'
+            const msg = result?.message || t('inventory.categories_page.toast_failed_delete')
             const hint = (result as any)?.actionHint
             if (hint) toast.error(msg, { description: hint, duration: 8000 })
             else toast.error(msg, { duration: 6000 })
@@ -122,13 +124,13 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ source_category_id: source.id, target_category_id: targetId }),
             })
-            if (moveRes && moveRes.success === false) { toast.error(moveRes.message || 'Migration failed — delete aborted'); return }
+            if (moveRes && moveRes.success === false) { toast.error(moveRes.message || t('inventory.categories_page.toast_migration_failed_aborted')); return }
             const delRes = await deleteCategory(source.id, { force: true })
             if (delRes?.success) {
-                toast.success(`Products migrated and "${source.name}" deleted`)
-                setDeleteConflict(null); router.refresh()
-            } else { toast.error(delRes?.message || 'Delete failed after migration') }
-        } catch (e: any) { toast.error(e?.message || 'Migration failed') }
+                toast.success(t('inventory.categories_page.toast_migrated_and_deleted').replace('{name}', source.name))
+    setDeleteConflict(null); router.refresh()
+            } else { toast.error(delRes?.message || t('inventory.categories_page.toast_delete_failed_after_migration')) }
+        } catch (e: any) { toast.error(e?.message || t('inventory.categories_page.toast_migration_failed')) }
     }
 
 
@@ -136,8 +138,8 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
         const source = deleteConflict?.source
         if (!source) return
         const res = await deleteCategory(source.id, { force: true })
-        if (res?.success) { toast.success(`"${source.name}" force-deleted`); setDeleteConflict(null); router.refresh() }
-        else { toast.error(res?.message || 'Delete failed') }
+        if (res?.success) { toast.success(t('inventory.categories_page.toast_force_deleted').replace('{name}', source.name)); setDeleteConflict(null); router.refresh() }
+        else { toast.error(res?.message || t('inventory.categories_page.toast_delete_failed')) }
     }
 
     const migrationTargets = useMemo(() => {

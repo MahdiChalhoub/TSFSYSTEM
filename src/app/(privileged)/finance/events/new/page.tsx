@@ -210,7 +210,7 @@ export default function NewFinancialEventPage() {
                                 />
                             </div>
 
-                            <div className="bg-yellow-50 p-3 rounded-md text-sm text-yellow-800 border border-yellow-200">
+                            <div className="bg-app-warning-bg p-3 rounded-md text-sm text-app-warning border border-app-warning">
                                 <strong>Note:</strong> This will immediately post the transaction to the Ledger and update the selected account balance.
                             </div>
 

@@ -46,11 +46,19 @@ class ContactComplianceDocumentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_attachment_data(self, obj):
-        """Lazy-load StoredFileSerializer to avoid cross-module import."""
+        """Lazy-load StoredFileSerializer via the connector."""
         if not obj.attachment_id:
             return None
         try:
-            from apps.storage.serializers.storage_serializers import StoredFileSerializer
+            # Phase 3 — go through the connector instead of importing storage directly
+            from erp.connector_registry import connector
+            StoredFileSerializer = connector.require(
+                'storage.files.get_serializer',
+                org_id=getattr(obj, 'organization_id', 0) or 0,
+                source='crm',
+            )
+            if StoredFileSerializer is None:
+                return None
             return StoredFileSerializer(obj.attachment).data
         except Exception:
             return None

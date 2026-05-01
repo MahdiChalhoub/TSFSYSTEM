@@ -16,9 +16,9 @@ import {
 } from "lucide-react"
 
 const ACTION_CONFIG: Record<string, { label?: string; icon: React.ElementType, color: string, bg: string }> = {
-    CREATE: { label: 'Create', icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    UPDATE: { label: 'Update', icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-    DELETE: { label: 'Delete', icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+    CREATE: { label: 'Create', icon: Plus, color: 'text-app-success', bg: 'bg-app-success-bg border-app-success' },
+    UPDATE: { label: 'Update', icon: Edit, color: 'text-app-info', bg: 'bg-app-info-bg border-app-info' },
+    DELETE: { label: 'Delete', icon: Trash2, color: 'text-app-error', bg: 'bg-app-error-bg border-app-error' },
     POST: { label: 'Post', icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
     REVERSE: { label: 'Reverse', icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
 }

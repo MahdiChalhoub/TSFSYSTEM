@@ -13,8 +13,11 @@ from erp.services import ConfigurationService
 
 from apps.crm.models import Contact
 from apps.crm.serializers import ContactSerializer
-from apps.finance.models import ChartOfAccount
-from apps.finance.services import LedgerService
+
+# Phase 3 — finance / pos access goes through the connector facade.
+# Resolved lazily inside methods so the registry is fully hydrated and
+# module-state (DISABLED / MISSING) drives the fallback path uniformly.
+from erp.connector_registry import connector
 
 
 class ContactViewSet(TenantModelViewSet):
@@ -25,25 +28,29 @@ class ContactViewSet(TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "No organization context"}, status=400)
         organization = Organization.objects.get(id=organization_id)
-        
+
         data = request.data.copy()
+
+        # Resolve finance via the connector — None when Finance module is unavailable.
+        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=organization.id, source='crm')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=organization.id, source='crm')
 
         with transaction.atomic():
             rules = ConfigurationService.get_posting_rules(organization)
             contact_type = data.get('type')
-            
+
             parent_account_id = None
             if contact_type == 'CUSTOMER':
                 parent_account_id = rules.get('sales', {}).get('receivable')
             else:
                 parent_account_id = rules.get('purchases', {}).get('payable')
-            
-            if not parent_account_id:
+
+            if not parent_account_id and ChartOfAccount is not None:
                 fallback_code = '1110' if contact_type == 'CUSTOMER' else '2101'
                 parent = ChartOfAccount.objects.filter(organization=organization, code=fallback_code).first()
                 if parent: parent_account_id = parent.id
-            
-            if parent_account_id:
+
+            if parent_account_id and ChartOfAccount is not None and LedgerService is not None:
                 parent = ChartOfAccount.objects.get(id=parent_account_id)
                 linked_acc = LedgerService.create_linked_account(
                     organization=organization,
@@ -68,83 +75,100 @@ class ContactViewSet(TenantModelViewSet):
 
         contact = self.get_object()
 
-        # Orders (sales or purchases depending on type)
-        from apps.pos.models import Order
         from django.db.models import Sum, Count, Q
         from decimal import Decimal
 
+        # Orders (sales or purchases depending on type) — via connector.
+        Order = connector.require('pos.orders.get_model', org_id=organization_id, source='crm')
         order_type = 'SALE' if contact.type == 'CUSTOMER' else 'PURCHASE'
-        orders = Order.objects.filter(
-            organization_id=organization_id,
-            contact=contact,
-            type=order_type
-        ).order_by('-created_at')
-
-        order_stats = orders.aggregate(
-            total_count=Count('id'),
-            total_amount=Sum('total_amount'),
-            completed=Count('id', filter=Q(status__in=['COMPLETED', 'INVOICED'])),
-            draft=Count('id', filter=Q(status='DRAFT')),
-        )
-
-        recent_orders = orders[:10].values(
-            'id', 'ref_code', 'status', 'total_amount', 'tax_amount',
-            'payment_method', 'created_at', 'invoice_number'
-        )
-
-        # Payments
-        from apps.finance.payment_models import Payment
-        payment_type = 'CUSTOMER_RECEIPT' if contact.type == 'CUSTOMER' else 'SUPPLIER_PAYMENT'
-        payments = Payment.objects.filter(
-            organization_id=organization_id,
-            contact=contact,
-            type=payment_type
-        ).order_by('-payment_date')
-
-        payment_stats = payments.aggregate(
-            total_paid=Sum('amount'),
-            payment_count=Count('id'),
-        )
-
-        recent_payments = payments[:10].values(
-            'id', 'reference', 'amount', 'payment_date', 'method', 'status', 'description'
-        )
-
-        # Balance
-        if contact.type == 'CUSTOMER':
-            from apps.finance.payment_models import CustomerBalance
-            bal_obj = CustomerBalance.objects.filter(
-                organization_id=organization_id, contact=contact
-            ).first()
+        if Order is not None:
+            orders = Order.objects.filter(
+                organization_id=organization_id,
+                contact=contact,
+                type=order_type
+            ).order_by('-created_at')
+            order_stats = orders.aggregate(
+                total_count=Count('id'),
+                total_amount=Sum('total_amount'),
+                completed=Count('id', filter=Q(status__in=['COMPLETED', 'INVOICED'])),
+                draft=Count('id', filter=Q(status='DRAFT')),
+            )
+            recent_orders = orders[:10].values(
+                'id', 'ref_code', 'status', 'total_amount', 'tax_amount',
+                'payment_method', 'created_at', 'invoice_number'
+            )
         else:
-            from apps.finance.payment_models import SupplierBalance
-            bal_obj = SupplierBalance.objects.filter(
-                organization_id=organization_id, contact=contact
-            ).first()
+            orders = None
+            order_stats = {'total_count': 0, 'total_amount': 0, 'completed': 0, 'draft': 0}
+            recent_orders = []
+
+        # Payments — via connector.
+        Payment = connector.require('finance.payments.get_model', org_id=organization_id, source='crm')
+        payment_type = 'CUSTOMER_RECEIPT' if contact.type == 'CUSTOMER' else 'SUPPLIER_PAYMENT'
+        if Payment is not None:
+            payments = Payment.objects.filter(
+                organization_id=organization_id,
+                contact=contact,
+                type=payment_type
+            ).order_by('-payment_date')
+            payment_stats = payments.aggregate(
+                total_paid=Sum('amount'),
+                payment_count=Count('id'),
+            )
+            recent_payments = payments[:10].values(
+                'id', 'reference', 'amount', 'payment_date', 'method', 'status', 'description'
+            )
+        else:
+            payment_stats = {'total_paid': 0, 'payment_count': 0}
+            recent_payments = []
+
+        # Balance — via connector.
+        if contact.type == 'CUSTOMER':
+            CustomerBalance = connector.require(
+                'finance.payments.get_customer_balance_model',
+                org_id=organization_id, source='crm'
+            )
+            bal_obj = (
+                CustomerBalance.objects.filter(organization_id=organization_id, contact=contact).first()
+                if CustomerBalance is not None else None
+            )
+        else:
+            SupplierBalance = connector.require(
+                'finance.payments.get_supplier_balance_model',
+                org_id=organization_id, source='crm'
+            )
+            bal_obj = (
+                SupplierBalance.objects.filter(organization_id=organization_id, contact=contact).first()
+                if SupplierBalance is not None else None
+            )
 
         balance_data = {
             'current_balance': float(bal_obj.current_balance) if bal_obj else 0,
             'last_payment_date': str(bal_obj.last_payment_date) if bal_obj and bal_obj.last_payment_date else None,
         }
 
-        # Journal entries via linked COA sub-account
+        # Journal entries via linked COA sub-account — via connector.
         recent_journal = []
         if contact.linked_account:
-            from apps.finance.models import JournalEntryLine
-            journal_lines = JournalEntryLine.objects.filter(
-                organization_id=organization_id,
-                account_id=contact.linked_account
-            ).select_related('journal_entry', 'account').order_by('-journal_entry__transaction_date')[:10]
+            JournalEntryLine = connector.require(
+                'finance.journal.get_line_model',
+                org_id=organization_id, source='crm'
+            )
+            if JournalEntryLine is not None:
+                journal_lines = JournalEntryLine.objects.filter(
+                    organization_id=organization_id,
+                    account_id=contact.linked_account
+                ).select_related('journal_entry', 'account').order_by('-journal_entry__transaction_date')[:10]
 
-            recent_journal = [{
-                'id': jl.journal_entry.id,
-                'date': str(jl.journal_entry.transaction_date.date()) if jl.journal_entry.transaction_date else None,
-                'reference': jl.journal_entry.reference,
-                'description': jl.description,
-                'account': jl.account.name if jl.account else None,
-                'debit': float(jl.debit),
-                'credit': float(jl.credit),
-            } for jl in journal_lines]
+                recent_journal = [{
+                    'id': jl.journal_entry.id,
+                    'date': str(jl.journal_entry.transaction_date.date()) if jl.journal_entry.transaction_date else None,
+                    'reference': jl.journal_entry.reference,
+                    'description': jl.description,
+                    'account': jl.account.name if jl.account else None,
+                    'debit': float(jl.debit),
+                    'credit': float(jl.credit),
+                } for jl in journal_lines]
 
         return Response({
             'contact': ContactSerializer(contact).data,
@@ -172,7 +196,7 @@ class ContactViewSet(TenantModelViewSet):
 
     def _build_analytics(self, contact, orders, order_stats):
         """Build purchase/sales analytics for the contact."""
-        from django.db.models import Avg, F
+        from django.db.models import Avg, F, Sum
         from django.utils import timezone
         import datetime
 
@@ -187,23 +211,32 @@ class ContactViewSet(TenantModelViewSet):
             'monthly_frequency': 0,
         }
 
+        # When POS is unavailable `orders` is None — short-circuit.
+        if orders is None:
+            return analytics
+
         # Monthly frequency (orders per month over last 12 months)
         twelve_months_ago = timezone.now() - datetime.timedelta(days=365)
         recent_count = orders.filter(created_at__gte=twelve_months_ago).count()
         analytics['monthly_frequency'] = round(recent_count / 12, 1)
 
-        # Top products by revenue
+        # Top products by revenue — OrderLine via connector.
         try:
-            from apps.pos.models import OrderLine
-            top_products = OrderLine.objects.filter(
-                order__in=orders
-            ).values(
-                'product_name'
-            ).annotate(
-                total_qty=Sum('quantity'),
-                total_revenue=Sum(F('quantity') * F('unit_price'))
-            ).order_by('-total_revenue')[:5]
-            analytics['top_products'] = list(top_products)
+            OrderLine = connector.require(
+                'pos.order_lines.get_model',
+                org_id=getattr(contact, 'organization_id', 0) or 0,
+                source='crm',
+            )
+            if OrderLine is not None:
+                top_products = OrderLine.objects.filter(
+                    order__in=orders
+                ).values(
+                    'product_name'
+                ).annotate(
+                    total_qty=Sum('quantity'),
+                    total_revenue=Sum(F('quantity') * F('unit_price'))
+                ).order_by('-total_revenue')[:5]
+                analytics['top_products'] = list(top_products)
         except Exception:
             pass
 

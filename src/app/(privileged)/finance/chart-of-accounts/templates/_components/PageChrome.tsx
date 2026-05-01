@@ -5,6 +5,7 @@ import {
     Library, Search, Maximize2, Minimize2, ChevronLeft,
 } from 'lucide-react'
 import { PageTour } from '@/components/ui/PageTour'
+import { useTranslation } from '@/hooks/use-translation'
 
 type ActiveView = 'gallery' | 'compare' | 'migration' | 'execution'
 type Tab = { id: 'gallery' | 'compare' | 'migration'; label: string; icon: any }
@@ -22,6 +23,7 @@ export function PageHeader({
     setFocusMode: (v: boolean) => void
     tourStepActions: Record<number, () => void>
 }) {
+    const { t } = useTranslation()
     return (
         <div className="flex items-start justify-between gap-4 mb-4 flex-wrap flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -36,7 +38,7 @@ export function PageHeader({
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
-                        <ChevronLeft size={14} /> Back
+                        <ChevronLeft size={14} /> {t('common.back')}
                     </button>
                 )}
                 <div className="page-header-icon bg-app-primary"
@@ -45,10 +47,10 @@ export function PageHeader({
                 </div>
                 <div>
                     <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
-                        Accounting Standards Library
+                        {t('finance.coa_templates_page.title')}
                     </h1>
                     <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
-                        {templates.length} Templates · Compare, Migrate & Import
+                        {t('finance.coa_templates_page.subtitle').replace('{count}', String(templates.length))}
                     </p>
                 </div>
             </div>

@@ -26,8 +26,8 @@ const PAYMENT_ICONS: Record<string, string> = {
 }
 
 const TYPE_CONFIG: Record<string, { color: string, bg: string }> = {
-    SALE: { color: 'text-emerald-700', bg: 'bg-emerald-50' },
-    PURCHASE: { color: 'text-blue-700', bg: 'bg-blue-50' },
+    SALE: { color: 'text-app-success', bg: 'bg-app-success-bg' },
+    PURCHASE: { color: 'text-app-info', bg: 'bg-app-info-bg' },
     RETURN: { color: 'text-orange-700', bg: 'bg-orange-50' },
 }
 
@@ -119,8 +119,8 @@ export default function CashRegisterPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <ShoppingCart size={20} className="text-emerald-600" />
+                            <div className="w-10 h-10 rounded-full bg-app-success-bg flex items-center justify-center">
+                                <ShoppingCart size={20} className="text-app-success" />
                             </div>
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Sales Revenue</p>
@@ -133,12 +133,12 @@ export default function CashRegisterPage() {
                 <Card className="border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <TrendingUp size={20} className="text-green-600" />
+                            <div className="w-10 h-10 rounded-full bg-app-success-bg flex items-center justify-center">
+                                <TrendingUp size={20} className="text-app-success" />
                             </div>
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Net Revenue</p>
-                                <p className="text-2xl font-bold text-green-700">{fmt(data?.net_revenue || 0)}</p>
+                                <p className="text-2xl font-bold text-app-success">{fmt(data?.net_revenue || 0)}</p>
                                 <p className="text-xs text-app-muted-foreground">After returns</p>
                             </div>
                         </div>

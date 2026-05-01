@@ -116,9 +116,9 @@ export default function ProfitDistributionPage() {
     const walletColors = ["from-blue-500 to-blue-600", "from-emerald-500 to-emerald-600", "from-violet-500 to-violet-600", "from-amber-500 to-amber-600", "from-rose-500 to-rose-600", "from-cyan-500 to-cyan-600"]
 
     const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-        POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        APPROVED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-        DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
+        POSTED: { icon: CheckCircle2, color: "text-app-success", bg: "bg-app-success-bg border-app-success" },
+        APPROVED: { icon: CheckCircle2, color: "text-app-info", bg: "bg-app-info-bg border-app-info" },
+        DRAFT: { icon: Clock, color: "text-app-warning", bg: "bg-app-warning-bg border-app-warning" },
     }
 
     if (loading) {
@@ -185,7 +185,7 @@ export default function ProfitDistributionPage() {
                                         ))}
                                     </select>
                                     {closedYears.length === 0 && (
-                                        <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">⚠ No closed fiscal years found</p>
+                                        <p className="text-xs text-app-warning flex items-center gap-1 mt-1">⚠ No closed fiscal years found</p>
                                     )}
                                 </div>
 
@@ -215,14 +215,14 @@ export default function ProfitDistributionPage() {
                                                     <div className={`h-full rounded-full bg-gradient-to-r ${walletColors[idx % walletColors.length]} transition-all`} style={{ width: `${pct}%` }} />
                                                 </div>
                                                 {Object.keys(allocations).length > 1 && (
-                                                    <button type="button" onClick={() => removeWallet(key)} className="text-app-faint hover:text-rose-500 transition-colors">
+                                                    <button type="button" onClick={() => removeWallet(key)} className="text-app-faint hover:text-app-error transition-colors">
                                                         <Trash2 size={14} />
                                                     </button>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-                                    <div className={`mt-3 text-sm font-bold flex items-center gap-1.5 ${isValidPct ? "text-emerald-600" : "text-rose-600"}`}>
+                                    <div className={`mt-3 text-sm font-bold flex items-center gap-1.5 ${isValidPct ? "text-app-success" : "text-app-error"}`}>
                                         {isValidPct ? <CheckCircle2 size={14} /> : <Clock size={14} />}
                                         Total: {totalPct}% {isValidPct ? "✓" : "(must equal 100%)"}
                                     </div>
@@ -247,7 +247,7 @@ export default function ProfitDistributionPage() {
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year</p>
                                     <p className="text-lg font-bold text-app-foreground">{String(preview.fiscal_year)}</p>
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase mt-3">Net Profit</p>
-                                    <p className="text-4xl font-bold text-emerald-600">{Number(preview.net_profit).toLocaleString()}</p>
+                                    <p className="text-4xl font-bold text-app-success">{Number(preview.net_profit).toLocaleString()}</p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -298,7 +298,7 @@ export default function ProfitDistributionPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{distributions.filter(d => d.status === "DRAFT").length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-amber-500" />
+                                <Clock size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -311,7 +311,7 @@ export default function ProfitDistributionPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{distributions.filter(d => d.status === "POSTED").length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
+                                <CheckCircle2 size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -365,7 +365,7 @@ export default function ProfitDistributionPage() {
                                                 variant="outline"
                                                 onClick={() => handlePost(d.id)}
                                                 disabled={isPending}
-                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-app-success border-app-success hover:bg-app-success-bg"
                                             >
                                                 <Send size={12} /> Post
                                             </Button>

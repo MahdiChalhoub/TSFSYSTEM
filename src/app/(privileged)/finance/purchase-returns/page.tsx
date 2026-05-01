@@ -20,9 +20,9 @@ type SortKey = 'return_date' | 'status'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
-    COMPLETED: { label: 'Completed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-    CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
+    PENDING: { label: 'Pending', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Clock },
+    COMPLETED: { label: 'Completed', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: CheckCircle2 },
+    CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 }
 
 export default function PurchaseReturnsPage() {
@@ -66,8 +66,8 @@ export default function PurchaseReturnsPage() {
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+            ? <ArrowUp size={12} className="text-app-success ml-1 inline" />
+            : <ArrowDown size={12} className="text-app-success ml-1 inline" />
     }
 
     const filtered = useMemo(() => {
@@ -109,7 +109,7 @@ export default function PurchaseReturnsPage() {
             <Dialog open={confirmId !== null} onOpenChange={(open) => { if (!open) setConfirmId(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-emerald-700"><Send size={20} /> Complete Purchase Return</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2 text-app-success"><Send size={20} /> Complete Purchase Return</DialogTitle>
                         <DialogDescription>This will remove items from inventory and post a reversing journal entry.</DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 pt-3">
@@ -144,7 +144,7 @@ export default function PurchaseReturnsPage() {
                                 <p className="text-3xl font-bold text-amber-900 mt-1">{pending}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-amber-500" />
+                                <Clock size={22} className="text-app-warning" />
                             </div>
                         </div>
                     </CardContent>
@@ -157,7 +157,7 @@ export default function PurchaseReturnsPage() {
                                 <p className="text-3xl font-bold text-emerald-900 mt-1">{completed}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
+                                <CheckCircle2 size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -209,7 +209,7 @@ export default function PurchaseReturnsPage() {
                                     <TableCell className="text-right">
                                         {r.status === 'PENDING' && (
                                             <Button size="sm" variant="outline" onClick={() => setConfirmId(r.id)} disabled={isPending}
-                                                className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
+                                                className="rounded-xl gap-1 text-app-success border-app-success hover:bg-app-success-bg h-8 text-xs font-semibold">
                                                 <Send size={12} /> Complete
                                             </Button>
                                         )}

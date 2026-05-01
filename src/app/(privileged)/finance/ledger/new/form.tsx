@@ -672,7 +672,7 @@ export default function JournalEntryForm({
                                     ))}
                                 </datalist>
                                 {!line.accountId && line.searchString && (
-                                    <div className="text-tp-xxs text-rose-500 font-bold uppercase tracking-wide mt-1">Unknown Account</div>
+                                    <div className="text-tp-xxs text-app-error font-bold uppercase tracking-wide mt-1">Unknown Account</div>
                                 )}
                             </div>
                             
@@ -736,7 +736,7 @@ export default function JournalEntryForm({
                                     <input
                                         type="number" step="0.01" min="0" value={line.credit}
                                         onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-rose-500 placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-app-error placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -746,7 +746,7 @@ export default function JournalEntryForm({
                             <button
                                 type="button"
                                 onClick={() => removeLine(idx)}
-                                className="absolute bottom-2 right-2 text-rose-500 hover:bg-rose-500/10 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
+                                className="absolute bottom-2 right-2 text-app-error hover:bg-rose-500/10 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
                             >
                                 <Trash2 size={15} />
                             </button>

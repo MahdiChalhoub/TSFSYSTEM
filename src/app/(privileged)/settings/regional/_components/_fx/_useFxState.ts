@@ -12,20 +12,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
     getCurrencies, getExchangeRates, getRevaluations,
-    deleteExchangeRate, deleteRatePolicy, syncRatePolicy, syncAllRatePolicies,
+    deleteRatePolicy, syncRatePolicy, syncAllRatePolicies,
     getRatePolicies, bulkCreateRatePolicies,
     type Currency, type ExchangeRate, type CurrencyRevaluation, type CurrencyRatePolicy,
 } from '@/app/actions/finance/currency'
 import { erpFetch } from '@/lib/erp-api'
 import { msg, type FiscalYear } from '../fx/_shared'
-import { HEALTH, type HealthKey } from './constants'
-
-// Suppress unused-import warning for HEALTH which is referenced via type.
-void HEALTH
-// Suppress unused-import warning — `deleteExchangeRate` is referenced indirectly
-// by RateHistoryView's DeleteRateConfirm flow; we re-export here so a future
-// caller can grab it from the same place.
-void deleteExchangeRate
+import { type HealthKey } from './constants'
 
 export function useFxState() {
     const [currencies, setCurrencies] = useState<Currency[]>([])

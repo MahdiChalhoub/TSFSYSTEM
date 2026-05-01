@@ -206,7 +206,7 @@ export default function AccountCategoriesPage() {
                                             {cat.code}
                                         </span>
                                         {!cat.is_active && (
-                                            <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-rose-500/10 text-rose-500">INACTIVE</span>
+                                            <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-rose-500/10 text-app-error">INACTIVE</span>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5 text-[10px] text-app-text-faint">
@@ -250,7 +250,7 @@ export default function AccountCategoriesPage() {
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => startEdit(cat)}>
                                         <Edit3 className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600" onClick={() => setDeleteTarget(cat.id)}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-app-error hover:text-app-error" onClick={() => setDeleteTarget(cat.id)}>
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>

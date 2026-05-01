@@ -5,10 +5,14 @@ Tracks background PDF generation tasks and stores
 the resulting file reference once the Celery task completes.
 """
 from django.db import models
-from erp.models import Organization
+from erp.models import Organization, TenantModel
 
 
-class GeneratedDocument(models.Model):
+class GeneratedDocument(TenantModel):
+    """Tracks background PDF generation tasks (per-organization).
+
+    Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
+    """
     DOC_TYPE_CHOICES = [
         ('INVOICE',    'Sales Invoice'),
         ('RECEIPT',    'POS Receipt'),
@@ -21,8 +25,11 @@ class GeneratedDocument(models.Model):
         ('FAILED',  'Failed'),
     ]
 
+    # Re-declared to keep historical db_column='organization_id'.
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name='generated_documents'
+        Organization, on_delete=models.CASCADE,
+        related_name='generated_documents',
+        db_column='organization_id',
     )
     # Source references (one or the other, both nullable)
     order_id       = models.IntegerField(null=True, blank=True, db_index=True)

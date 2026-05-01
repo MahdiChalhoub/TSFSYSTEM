@@ -23,10 +23,10 @@ type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
     DRAFT: { label: 'Draft', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Clock },
-    SENT: { label: 'Sent', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Send },
-    PARTIAL_PAID: { label: 'Partial', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Percent },
-    PAID: { label: 'Paid', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-    OVERDUE: { label: 'Overdue', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: AlertTriangle },
+    SENT: { label: 'Sent', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Send },
+    PARTIAL_PAID: { label: 'Partial', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: Percent },
+    PAID: { label: 'Paid', color: 'text-app-success', bg: 'bg-app-success-bg border-app-success', icon: CheckCircle2 },
+    OVERDUE: { label: 'Overdue', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: AlertTriangle },
     CANCELLED: { label: 'Cancelled', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: XCircle },
     WRITTEN_OFF: { label: 'Written Off', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Ban },
 }
@@ -38,7 +38,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
     RETAIL: { label: 'Retail', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
-    WHOLESALE: { label: 'Wholesale', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+    WHOLESALE: { label: 'Wholesale', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning' },
     CONSIGNEE: { label: 'Consignee', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
     STANDARD: { label: 'Standard', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
 }
@@ -80,8 +80,8 @@ export default function InvoicesPage() {
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+            ? <ArrowUp size={12} className="text-app-success ml-1 inline" />
+            : <ArrowDown size={12} className="text-app-success ml-1 inline" />
     }
 
     const filtered = useMemo(() => {
@@ -202,12 +202,12 @@ export default function InvoicesPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Outstanding</p>
-                                <p className="text-2xl font-bold text-blue-900 mt-1">
+                                <p className="text-2xl font-bold text-app-info mt-1">
                                     {(dashboard?.total_outstanding || 0).toLocaleString()}
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <DollarSign size={22} className="text-blue-500" />
+                                <DollarSign size={22} className="text-app-info" />
                             </div>
                         </div>
                     </CardContent>
@@ -216,13 +216,13 @@ export default function InvoicesPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Overdue</p>
+                                <p className="text-xs font-bold text-app-error uppercase tracking-wider">Overdue</p>
                                 <p className="text-2xl font-bold text-red-900 mt-1">
                                     {(dashboard?.total_overdue || 0).toLocaleString()}
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-red-200/60 flex items-center justify-center">
-                                <AlertTriangle size={22} className="text-red-500" />
+                                <AlertTriangle size={22} className="text-app-error" />
                             </div>
                         </div>
                     </CardContent>
@@ -237,7 +237,7 @@ export default function InvoicesPage() {
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <TrendingUp size={22} className="text-emerald-500" />
+                                <TrendingUp size={22} className="text-app-success" />
                             </div>
                         </div>
                     </CardContent>
@@ -441,13 +441,13 @@ export default function InvoicesPage() {
                                         {inv.contact_display || inv.contact_name || `#${inv.contact}`}
                                     </TableCell>
                                     <TableCell className="text-sm text-app-muted-foreground">{inv.issue_date || '—'}</TableCell>
-                                    <TableCell className={`text-sm ${inv.is_overdue ? 'text-red-600 font-semibold' : 'text-app-muted-foreground'}`}>
+                                    <TableCell className={`text-sm ${inv.is_overdue ? 'text-app-error font-semibold' : 'text-app-muted-foreground'}`}>
                                         {inv.due_date || '—'}
                                     </TableCell>
                                     <TableCell className="text-right font-semibold text-app-foreground">
                                         {Number(inv.total_amount || 0).toLocaleString()}
                                     </TableCell>
-                                    <TableCell className={`text-right font-semibold ${Number(inv.balance_due) > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                    <TableCell className={`text-right font-semibold ${Number(inv.balance_due) > 0 ? 'text-app-warning' : 'text-app-success'}`}>
                                         {Number(inv.balance_due || 0).toLocaleString()}
                                     </TableCell>
                                     <TableCell className="text-center">
@@ -459,7 +459,7 @@ export default function InvoicesPage() {
                                         <div className="flex items-center justify-center gap-1">
                                             {inv.status === 'DRAFT' && (
                                                 <>
-                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-blue-600 hover:bg-blue-50"
+                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-app-info hover:bg-app-info-bg"
                                                         onClick={() => handleSend(inv)} disabled={isPending}>
                                                         <Send size={13} />
                                                     </Button>
@@ -470,7 +470,7 @@ export default function InvoicesPage() {
                                                 </>
                                             )}
                                             {['SENT', 'PARTIAL_PAID', 'OVERDUE'].includes(inv.status) && (
-                                                <Button size="sm" variant="ghost" className="h-7 px-2 text-emerald-600 hover:bg-emerald-50"
+                                                <Button size="sm" variant="ghost" className="h-7 px-2 text-app-success hover:bg-app-success-bg"
                                                     onClick={() => { setSelectedInvoice(inv); setPaymentOpen(true) }} disabled={isPending}>
                                                     <CreditCard size={13} />
                                                 </Button>

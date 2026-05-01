@@ -35,7 +35,7 @@ export default function PriceListManager({ priceLists }: { priceLists: Record<st
                                 <td className="px-4 py-3 font-medium text-app-foreground">{list.name}</td>
                                 <td className="px-4 py-3">{list.rules.length}</td>
                                 <td className="px-4 py-3">
-                                    {list.isDefault ? <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Yes</span> : '-'}
+                                    {list.isDefault ? <span className="bg-app-success-bg text-app-success text-xs px-2 py-1 rounded">Yes</span> : '-'}
                                 </td>
                             </tr>
                         ))}

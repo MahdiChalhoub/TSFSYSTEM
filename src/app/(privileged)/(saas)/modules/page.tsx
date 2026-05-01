@@ -364,7 +364,7 @@ export default function SaaSModulesPage() {
                                                         Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version} />
+                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version ?? ''} />
                                             </DialogContent>
                                         </Dialog>
 
@@ -469,7 +469,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
                             <Button
                                 size="sm"
                                 variant="secondary"
-                                onClick={() => onRollback(b.version)}
+                                onClick={() => onRollback(b.version ?? '')}
                                 className="h-8 text-xs font-bold"
                             >
                                 <RotateCcw size={12} className="mr-2" />

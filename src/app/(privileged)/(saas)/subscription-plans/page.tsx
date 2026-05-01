@@ -346,7 +346,7 @@ export default function SubscriptionPlansPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {plans.filter(p => p.category?.id === cat.id).map(plan => {
-                                    const isCustom = parseFloat(plan.monthly_price) < 0 || plan.limits?.custom
+                                    const isCustom = parseFloat(String(plan.monthly_price ?? '0')) < 0 || plan.limits?.custom
                                     const limits = plan.limits || {}
 
                                     return (
@@ -394,14 +394,14 @@ export default function SubscriptionPlansPage() {
                                                                 <div>
                                                                     <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Monthly</p>
                                                                     <p className="text-2xl font-black text-emerald-600">
-                                                                        {parseFloat(plan.monthly_price) === 0 ? 'Free' : `$${parseFloat(plan.monthly_price).toFixed(0)}`}
+                                                                        {parseFloat(String(plan.monthly_price ?? '0')) === 0 ? 'Free' : `$${parseFloat(String(plan.monthly_price ?? '0')).toFixed(0)}`}
                                                                     </p>
                                                                 </div>
-                                                                {parseFloat(plan.annual_price) > 0 && (
+                                                                {parseFloat(String(plan.annual_price ?? '0')) > 0 && (
                                                                     <div className="pb-0.5">
                                                                         <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Annual</p>
                                                                         <p className="text-lg font-bold text-app-muted-foreground">
-                                                                            ${parseFloat(plan.annual_price).toFixed(0)}<span className="text-xs font-normal">/yr</span>
+                                                                            ${parseFloat(String(plan.annual_price ?? '0')).toFixed(0)}<span className="text-xs font-normal">/yr</span>
                                                                         </p>
                                                                     </div>
                                                                 )}

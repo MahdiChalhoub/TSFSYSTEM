@@ -36,9 +36,12 @@ export function ExpiryAlertDialog({ open, onClose, productId, productName, produ
 
     useEffect(() => {
         if (!open) return
-        // Reset form when reopening
+        // Reset form when reopening. Default expiry to TODAY so the user
+        // doesn't have to type a date for items that are already expiring.
+        // Most operators only need to bump the date forward when logging
+        // a future-dated batch — much faster than a blank field.
         setQuantity('1')
-        setExpiryDate('')
+        setExpiryDate(todayISO())
         setBatchNumber('')
         setNotes('')
     }, [open, productId])

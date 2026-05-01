@@ -72,7 +72,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
 
                     {/* Action Area */}
                     {event.status === 'DRAFT' ? (
-                        <Card className="border-blue-200 bg-blue-50/50">
+                        <Card className="border-app-info bg-app-info-bg/50">
                             <CardHeader>
                                 <CardTitle className="text-primary flex items-center gap-2">
                                     <AlertCircle className="h-5 w-5" />
@@ -87,9 +87,9 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                             </CardContent>
                         </Card>
                     ) : (
-                        <Card className="border-green-200 bg-green-50/50">
+                        <Card className="border-app-success bg-app-success-bg/50">
                             <CardHeader>
-                                <CardTitle className="text-green-700 flex items-center gap-2">
+                                <CardTitle className="text-app-success flex items-center gap-2">
                                     <CheckCircle2 className="h-5 w-5" />
                                     Settled
                                 </CardTitle>
@@ -133,9 +133,9 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                                             </span>
                                             <span className="text-right">
                                                 {line.debit > 0 ? (
-                                                    <span className="text-green-600">Dr {Number(line.debit).toFixed(2)}</span>
+                                                    <span className="text-app-success">Dr {Number(line.debit).toFixed(2)}</span>
                                                 ) : (
-                                                    <span className="text-red-600">Cr {Number(line.credit).toFixed(2)}</span>
+                                                    <span className="text-app-error">Cr {Number(line.credit).toFixed(2)}</span>
                                                 )}
                                             </span>
                                         </div>

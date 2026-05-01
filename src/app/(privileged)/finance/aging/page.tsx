@@ -32,10 +32,10 @@ type AgingData = {
 }
 
 const BUCKET_CONFIG = [
-    { key: 'current', label: 'Current (0-30)', color: 'bg-emerald-500', badgeClass: 'bg-emerald-100 text-emerald-700', icon: Clock },
-    { key: '31_60', label: '31-60 Days', color: 'bg-amber-500', badgeClass: 'bg-amber-100 text-amber-700', icon: CalendarClock },
+    { key: 'current', label: 'Current (0-30)', color: 'bg-emerald-500', badgeClass: 'bg-app-success-bg text-app-success', icon: Clock },
+    { key: '31_60', label: '31-60 Days', color: 'bg-amber-500', badgeClass: 'bg-app-warning-bg text-app-warning', icon: CalendarClock },
     { key: '61_90', label: '61-90 Days', color: 'bg-orange-500', badgeClass: 'bg-orange-100 text-orange-700', icon: AlertTriangle },
-    { key: 'over_90', label: '90+ Days', color: 'bg-red-500', badgeClass: 'bg-red-100 text-red-700', icon: AlertTriangle },
+    { key: 'over_90', label: '90+ Days', color: 'bg-red-500', badgeClass: 'bg-app-error-bg text-app-error', icon: AlertTriangle },
 ]
 
 function formatCurrency(n: number) {
@@ -130,8 +130,8 @@ export default function AgingReportPage() {
             <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                 <CardContent className="py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <DollarSign size={20} className="text-blue-600" />
+                        <div className="w-10 h-10 rounded-full bg-app-info-bg flex items-center justify-center">
+                            <DollarSign size={20} className="text-app-info" />
                         </div>
                         <div>
                             <p className="text-sm text-app-muted-foreground">

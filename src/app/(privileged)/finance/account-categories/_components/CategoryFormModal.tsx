@@ -315,7 +315,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                                     <span className="text-[11px] font-black text-app-foreground">{sel.code} — {sel.name}</span>
                                     <span className="text-[9px] font-bold text-app-muted-foreground">({sel.type})</span>
                                     <button type="button" onClick={() => setForm(f => ({ ...f, coa_parent: '' }))}
-                                        className="ml-auto text-app-muted-foreground hover:text-red-400 transition-colors p-0.5">
+                                        className="ml-auto text-app-muted-foreground hover:text-app-error transition-colors p-0.5">
                                         <X size={12} />
                                     </button>
                                 </div>

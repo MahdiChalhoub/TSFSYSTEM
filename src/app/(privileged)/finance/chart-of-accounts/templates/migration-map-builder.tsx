@@ -431,14 +431,14 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                         <div className="flex items-center gap-2">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${qualityReport.quality_score >= 80 ? 'bg-green-500/15 text-green-400' :
                                 qualityReport.quality_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                                    'bg-red-500/15 text-red-400'
+                                    'bg-red-500/15 text-app-error'
                                 }`}>
                                 {Math.round(qualityReport.quality_score)}
                             </div>
                             <div>
                                 <div className="text-tp-xs uppercase tracking-wider text-app-muted-foreground font-medium">Quality</div>
                                 <div className={`text-xs font-bold ${qualityReport.risk.risk_level === 'LOW' ? 'text-green-400' :
-                                    qualityReport.risk.risk_level === 'MEDIUM' ? 'text-amber-400' : 'text-red-400'
+                                    qualityReport.risk.risk_level === 'MEDIUM' ? 'text-amber-400' : 'text-app-error'
                                     }`}>{qualityReport.risk.risk_level} Risk</div>
                             </div>
                         </div>
@@ -452,7 +452,7 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                         <div className="flex items-center gap-1">
                             <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-green-500/15 text-green-400">{qualityReport.confidence.high} hi</span>
                             <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-amber-500/15 text-amber-400">{qualityReport.confidence.medium} md</span>
-                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-red-500/15 text-red-400">{qualityReport.confidence.low} lo</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-red-500/15 text-app-error">{qualityReport.confidence.low} lo</span>
                         </div>
                         <div className="h-8 w-px bg-app-border/50 hidden sm:block" />
                         {/* Critical Roles */}

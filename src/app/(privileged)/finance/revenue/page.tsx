@@ -81,10 +81,10 @@ export default function RevenueBreakdownPage() {
                 <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
+                            <DollarSign size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Revenue</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalRevenue)}</p>
+                                <p className="text-xl font-bold text-app-success">{fmt(totalRevenue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -92,10 +92,10 @@ export default function RevenueBreakdownPage() {
                 <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <BarChart3 size={24} className="text-blue-500" />
+                            <BarChart3 size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Income Accounts</p>
-                                <p className="text-2xl font-bold text-blue-700">{accounts.length}</p>
+                                <p className="text-2xl font-bold text-app-info">{accounts.length}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -114,10 +114,10 @@ export default function RevenueBreakdownPage() {
                 <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Percent size={24} className="text-amber-500" />
+                            <Percent size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Top Account</p>
-                                <p className="text-sm font-bold text-amber-700 truncate">{topAccount?.name || '\u2014'}</p>
+                                <p className="text-sm font-bold text-app-warning truncate">{topAccount?.name || '\u2014'}</p>
                                 <p className="text-[10px] text-app-muted-foreground">{topAccount ? `${(topAccount.balance / totalRevenue * 100).toFixed(1)}% of total` : ''}</p>
                             </div>
                         </div>
@@ -179,7 +179,7 @@ export default function RevenueBreakdownPage() {
                                         <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell className="font-mono text-xs">{a.code}</TableCell>
                                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(a.balance)}</TableCell>
+                                        <TableCell className="text-right font-bold text-app-success">{fmt(a.balance)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center gap-2 justify-end">
                                                 <div className="w-12 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">

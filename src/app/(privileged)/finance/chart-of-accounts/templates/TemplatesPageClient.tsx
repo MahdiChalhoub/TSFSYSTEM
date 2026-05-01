@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useTranslation } from '@/hooks/use-translation'
 import '@/lib/tours/definitions/finance-coa-templates'
 
 import type { Props } from './_components/types'
@@ -23,6 +24,7 @@ import {
 
 export default function TemplatesPageClient({ templates, templatesMap, migrationMaps }: Props) {
     const router = useRouter()
+    const { t } = useTranslation()
     const searchParams = useSearchParams()
     const cameFromCOA = searchParams.get('from') === 'coa'
     const [activeView, setActiveView] = useState<'gallery' | 'compare' | 'migration' | 'execution'>('gallery')
@@ -77,17 +79,17 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
 
     // ── KPI Data ──
     const kpis = [
-        { label: 'Templates', value: templates.length, icon: <Library size={14} />, color: 'var(--app-primary)' },
-        { label: 'Total Accounts', value: totalAccounts.toLocaleString(), icon: <TreePine size={14} />, color: 'var(--app-info, #3b82f6)' },
-        { label: 'Posting Rules', value: totalRules.toLocaleString(), icon: <GitBranch size={14} />, color: 'var(--app-info)' },
-        { label: 'Migrations', value: Object.keys(migrationMaps).length, icon: <ArrowRightLeft size={14} />, color: 'var(--app-warning, #f59e0b)' },
-        { label: 'System', value: templates.filter(t => t.is_system).length, icon: <ShieldCheck size={14} />, color: 'var(--app-success, #22c55e)' },
+        { label: t('finance.coa_templates_page.kpi_templates'),       value: templates.length, icon: <Library size={14} />, color: 'var(--app-primary)' },
+        { label: t('finance.coa_templates_page.kpi_total_accounts'),  value: totalAccounts.toLocaleString(), icon: <TreePine size={14} />, color: 'var(--app-info, #3b82f6)' },
+        { label: t('finance.coa_templates_page.kpi_posting_rules'),   value: totalRules.toLocaleString(), icon: <GitBranch size={14} />, color: 'var(--app-info)' },
+        { label: t('finance.coa_templates_page.kpi_migrations'),      value: Object.keys(migrationMaps).length, icon: <ArrowRightLeft size={14} />, color: 'var(--app-warning, #f59e0b)' },
+        { label: t('finance.coa_templates_page.kpi_system'),          value: templates.filter(tpl => tpl.is_system).length, icon: <ShieldCheck size={14} />, color: 'var(--app-success, #22c55e)' },
     ]
 
     const TABS = [
-        { id: 'gallery' as const, label: 'Gallery', icon: Library },
-        { id: 'compare' as const, label: 'Compare', icon: GitMerge },
-        { id: 'migration' as const, label: 'Migration', icon: ArrowRightLeft },
+        { id: 'gallery' as const,   label: t('finance.coa_templates_page.tab_gallery'),   icon: Library },
+        { id: 'compare' as const,   label: t('finance.coa_templates_page.tab_compare'),   icon: GitMerge },
+        { id: 'migration' as const, label: t('finance.coa_templates_page.tab_migration'), icon: ArrowRightLeft },
     ]
 
     // Interactive tour step actions — drives the view-switcher so users see each mode in action
@@ -156,7 +158,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 })
                                 afterImport(key.replace(/_/g, ' '))
                             } catch (e: unknown) {
-                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+                                toast.error(t('finance.coa_templates_page.error_prefix') + ': ' + (e instanceof Error ? e.message : String(e)))
                             } finally {
                                 setIsPending(false)
                             }
@@ -178,7 +180,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 })
                                 afterImport(migrationTarget.to.replace(/_/g, ' '))
                             } catch (e: unknown) {
-                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+                                toast.error(t('finance.coa_templates_page.error_prefix') + ': ' + (e instanceof Error ? e.message : String(e)))
                             } finally {
                                 setIsPending(false)
                             }
@@ -201,21 +203,21 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
             <ConfirmDialog open={importTarget !== null}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
                 onConfirm={handleConfirmImport}
-                title={`Import ${importTarget?.replace(/_/g, ' ') ?? ''}?`}
+                title={t('finance.coa_templates_page.import_title').replace('{template}', importTarget?.replace(/_/g, ' ') ?? '')}
                 description={
                     coaStatus?.account_count
-                        ? `This will refresh your current chart of accounts from the ${importTarget?.replace(/_/g, ' ') ?? ''} template. Existing template accounts will be updated. Posting rules will be auto-synced.`
-                        : 'This will set up your Chart of Accounts using this template. Posting rules will be auto-synced.'
+                        ? t('finance.coa_templates_page.import_desc_refresh').replace('{template}', importTarget?.replace(/_/g, ' ') ?? '')
+                        : t('finance.coa_templates_page.import_desc_setup')
                 }
-                confirmText="Import" variant="info" />
+                confirmText={t('finance.coa_templates_page.import_confirm')} variant="info" />
 
             {/* ── Replace Dialog (Case 2: untouched COA, safe to replace) ── */}
             <ConfirmDialog open={replaceTarget !== null}
                 onOpenChange={(open) => { if (!open) setReplaceTarget(null) }}
                 onConfirm={handleConfirmReplace}
-                title={`Replace with ${replaceTarget?.replace(/_/g, ' ') ?? ''}?`}
-                description={`Your current chart of accounts (${coaStatus?.current_template?.replace(/_/g, ' ') ?? 'unknown'}) has no transactions, balances, or custom accounts. It will be deleted and replaced with the new template. No migration is needed.`}
-                confirmText="Replace & Import" variant="danger" />
+                title={t('finance.coa_templates_page.replace_title').replace('{template}', replaceTarget?.replace(/_/g, ' ') ?? '')}
+                description={t('finance.coa_templates_page.replace_desc').replace('{current}', coaStatus?.current_template?.replace(/_/g, ' ') ?? 'unknown')}
+                confirmText={t('finance.coa_templates_page.replace_confirm')} variant="danger" />
         </div>
     )
 }
