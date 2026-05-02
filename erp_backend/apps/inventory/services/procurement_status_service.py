@@ -18,6 +18,7 @@ Status Chain:
 """
 import logging
 from django.apps import apps as django_apps
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,14 @@ def get_procurement_status_batch(organization, product_ids):
     result = {}
 
     # ── Phase 1: Operational Requests ──
+    # Each phase runs in its own savepoint so a query failure (e.g. the
+    # missing `operational_request_line.tenant_id` column on the dev DB)
+    # rolls back only that savepoint instead of aborting the surrounding
+    # transaction. Without this, Phase 1's ProgrammingError put the txn in
+    # InFailedSqlTransaction state and Phase 1b + Phase 2 silently returned
+    # nothing — every product showed as "Available".
     try:
+      with transaction.atomic(savepoint=True):
         OperationalRequestLine = django_apps.get_model('inventory', 'OperationalRequestLine')
         # `request__organization=...` is the actual Django field on
         # TenantOwnedModel. The previous `request__tenant=...` matched a
@@ -146,11 +154,12 @@ def get_procurement_status_batch(organization, product_ids):
     # the duplicate. Both callsites need to agree, so query the model
     # directly here too — matches Phase 1's pattern.
     try:
+      with transaction.atomic(savepoint=True):
         # Direct import — ProcurementRequest is defined in pos but not
         # re-exported from apps.pos.models.__init__, so django_apps.get_model
         # raises LookupError. Match the create-PR view's import pattern.
         from apps.pos.models.procurement_request_models import ProcurementRequest
-        
+
         if ProcurementRequest:
             active_reqs = ProcurementRequest.objects.filter(
                 organization=organization,
@@ -192,6 +201,7 @@ def get_procurement_status_batch(organization, product_ids):
 
     # ── Phase 2: PO Lifecycle (overrides requests) ──
     try:
+      with transaction.atomic(savepoint=True):
         PurchaseOrderLine = django_apps.get_model('pos', 'PurchaseOrderLine')
         active_statuses = list(PO_STATUS_PRIORITY.keys())
         active_po_lines = PurchaseOrderLine.objects.filter(
