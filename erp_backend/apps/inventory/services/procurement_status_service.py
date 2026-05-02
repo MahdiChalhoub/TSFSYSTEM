@@ -136,6 +136,7 @@ def get_procurement_status_batch(organization, product_ids):
         
         if ProcurementRequest:
             active_reqs = ProcurementRequest.objects.filter(
+                organization=organization,
                 product_id__in=product_ids,
                 status__in=['PENDING', 'APPROVED']
             ).order_by('product_id', '-requested_at')
