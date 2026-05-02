@@ -138,7 +138,10 @@ def get_procurement_status_batch(organization, product_ids):
     # the duplicate. Both callsites need to agree, so query the model
     # directly here too — matches Phase 1's pattern.
     try:
-        ProcurementRequest = django_apps.get_model('pos', 'ProcurementRequest')
+        # Direct import — ProcurementRequest is defined in pos but not
+        # re-exported from apps.pos.models.__init__, so django_apps.get_model
+        # raises LookupError. Match the create-PR view's import pattern.
+        from apps.pos.models.procurement_request_models import ProcurementRequest
         
         if ProcurementRequest:
             active_reqs = ProcurementRequest.objects.filter(
