@@ -208,7 +208,7 @@ export function BrandRow({
                 ═══════════════════════════════════════════════════════════ */}
             <div
                 className="group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover"
-                onClick={() => onSelect(brand)}
+                onClick={() => { handleToggleOpen(); onSelect(brand) }}
                 style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                 }}>

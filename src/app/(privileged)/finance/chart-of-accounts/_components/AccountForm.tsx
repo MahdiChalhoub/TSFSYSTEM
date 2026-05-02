@@ -50,7 +50,43 @@ export function AccountForm({
     const parentCode = accounts.find(a => String(a.id) === parentId)?.code as string | undefined
     const codePlaceholder = parentCode ? `${parentCode}…` : '1010'
 
-    const [code, setCode] = useState<string>(initialData?.code || '')
+    /** Suggest the next sibling code by reading the *actual* numbering
+     *  pattern the user's template uses — not a global rule.
+     *
+     *  - Need at least 2 siblings to infer a step. With 0 or 1 sibling
+     *    we leave the field blank (any guess is wrong: 1100 alone could
+     *    be followed by 1110, 1200, or 1101.01 depending on the plan).
+     *  - Step = last − second-last (after numeric sort). Handles:
+     *      [1100, 1110, 1120]   step 10  → 1130
+     *      [1100, 1200]         step 100 → 1300
+     *      [1101.01, 1101.02]   step 0.01 → 1101.03
+     *  - Preserves decimal width from the highest sibling so `.01 → .02`
+     *    not `.0100000001`.
+     */
+    const suggestNextCode = (pid: string): string => {
+        if (!pid) return ''
+        const sibs = accounts
+            .filter(a => String(a.parentId) === pid)
+            .map(a => ({ raw: String(a.code || ''), num: parseFloat(String(a.code || '')) }))
+            .filter(s => !isNaN(s.num))
+            .sort((a, b) => a.num - b.num)
+        if (sibs.length < 2) return ''
+        const last = sibs[sibs.length - 1]
+        const step = last.num - sibs[sibs.length - 2].num
+        if (step <= 0) return ''
+        const next = last.num + step
+        const dotIdx = last.raw.indexOf('.')
+        if (dotIdx >= 0) {
+            const decimals = last.raw.length - dotIdx - 1
+            return next.toFixed(decimals)
+        }
+        return String(Math.round(next))
+    }
+    const isEdit = Boolean(initialData?.id)
+    const [code, setCode] = useState<string>(
+        initialData?.code || (preselectedParentId ? suggestNextCode(String(preselectedParentId)) : '')
+    )
+    const [codeIsAuto, setCodeIsAuto] = useState<boolean>(!isEdit && !initialData?.code)
 
     /** Eligible parents — silent-bug guards:
      *  • Active only (inactive accounts can't accept new children)
@@ -103,7 +139,7 @@ export function AccountForm({
                     placeholder={codePlaceholder}
                     required
                     value={code}
-                    onChange={e => setCode(e.target.value)}
+                    onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
                     className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all font-mono font-bold"
                     style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
@@ -137,7 +173,11 @@ export function AccountForm({
             </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" value={parentId} onChange={e => setParentId(e.target.value)} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="parentId" value={parentId} onChange={e => {
+                    const next = e.target.value
+                    setParentId(next)
+                    if (codeIsAuto) setCode(suggestNextCode(next))
+                }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
                     {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                 </select>
