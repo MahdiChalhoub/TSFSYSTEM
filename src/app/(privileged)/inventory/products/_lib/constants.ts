@@ -21,14 +21,11 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ARCHIVED: { label: 'Archived', color: 'var(--app-error, #ef4444)' },
 }
 
-export const PROCUREMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  NONE:        { label: '—',  color: 'var(--app-success, #22c55e)' },
-  REQUESTED:   { label: 'Requested',  color: 'var(--app-warning, #f59e0b)' },
-  PO_SENT:     { label: 'PO Sent',    color: 'var(--app-info, #3b82f6)' },
-  PO_ACCEPTED: { label: 'PO Accepted', color: 'var(--app-info, #3b82f6)' },
-  IN_TRANSIT:  { label: 'In Transit', color: 'var(--app-accent)' },
-  FAILED:      { label: 'Failed',     color: 'var(--app-error, #ef4444)' },
-}
+// Re-export the canonical procurement-status config so existing consumers
+// keep working unchanged. The single source of truth lives in
+// `@/lib/procurement-status` and is shared across /inventory/products,
+// /inventory/requests, and /purchases/new.
+export { PROCUREMENT_STATUS_CONFIG } from '@/lib/procurement-status'
 
 /* ─── Formatters ─── */
 

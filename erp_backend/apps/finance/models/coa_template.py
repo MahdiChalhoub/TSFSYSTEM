@@ -266,6 +266,29 @@ class COATemplate(models.Model):
         help_text='For custom templates: the system template this was forked from'
     )
 
+    # ── Code-Numbering Convention ──
+    # Each accounting standard has its own numbering plan. We store the
+    # convention here so the AccountForm can suggest correct child codes
+    # without falling back to "+1" guesses that violate the standard.
+    #
+    # Schema (all keys optional):
+    #   {
+    #     "scheme": "PREFIX_EXTEND" | "FIXED_STEP",
+    #     "steps": [step_at_depth_0, step_at_depth_1, ...],   # FIXED_STEP only
+    #     "min_digits": [d0, d1, ...],   # PREFIX_EXTEND: digits at each depth
+    #     "decimals": int,               # optional decimal precision
+    #     "notes": "human-readable description"
+    #   }
+    #
+    # PREFIX_EXTEND  (SYSCOHADA, French PCG, Lebanese PCN):
+    #   each child appends a digit to the parent code: 41 → 411 → 4111
+    # FIXED_STEP  (USA GAAP, IFRS):
+    #   each depth has a fixed step: 1000 → 1100 → 1110 → 1111
+    numbering_rules = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per-template numbering convention used to suggest child codes'
+    )
+
     # Kept for backward compat / seed import-export
     accounts = models.JSONField(
         default=list,
@@ -401,6 +424,21 @@ class COATemplateAccount(models.Model):
     is_bank_account = models.BooleanField(default=False)
     is_tax_account = models.BooleanField(default=False)
     is_control_account = models.BooleanField(default=False)
+
+    # ── Branch Scope Default ──
+    # Optional override for ChartOfAccount.scope_mode. When set on a template
+    # account, applying the template seeds a system_role that forces this
+    # scope (tenant_wide / branch_split / branch_located). Empty = let the
+    # ChartOfAccount.scope_mode @property derive from system_role/code/type.
+    SCOPE_CHOICES = [
+        ('tenant_wide', 'Tenant-wide (one shared balance)'),
+        ('branch_split', 'Branch-split (per-branch slice)'),
+        ('branch_located', 'Branch-located (lives at one site)'),
+    ]
+    default_scope_mode = models.CharField(
+        max_length=20, choices=SCOPE_CHOICES, blank=True, default='',
+        help_text='Optional default branch-scope when the account is seeded into an org'
+    )
 
     # ── Incremental Tracking ──
     is_dirty = models.BooleanField(

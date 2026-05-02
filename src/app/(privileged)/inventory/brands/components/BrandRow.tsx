@@ -357,10 +357,14 @@ export function BrandRow({
                                     value={categoriesCount} color="var(--app-info)" />
                                 <StatChip icon={<Globe size={11} />} label="countries"
                                     value={countriesCount} color="var(--app-warning)" />
-                                <StatChip icon={<Tag size={11} />} label="attrs"
-                                    value={attributesCount} color="var(--app-success)"
-                                    placeholder={attributesCount === null ? '?' : undefined}
-                                    placeholderTitle="Click the row to load attributes" />
+                                {/* Attributes only show after products load — there's
+                                    no per-brand attribute count without scanning the
+                                    product list. Hidden when null instead of showing
+                                    "?" which read as broken/missing data. */}
+                                {attributesCount !== null && (
+                                    <StatChip icon={<Tag size={11} />} label="attrs"
+                                        value={attributesCount} color="var(--app-success)" />
+                                )}
                             </div>
                         )
                     })()}
