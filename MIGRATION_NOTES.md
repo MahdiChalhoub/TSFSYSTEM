@@ -241,6 +241,97 @@ Per-agent log: `/tmp/drift_audit_remaining_apps.log`.
 
 ---
 
+## Replay attempt 2026-05-01/02 — additional drift discovered
+
+After the static audits completed, a real `manage.py migrate` against a fresh DB surfaced drift categories the AST audit didn't catch. Documented here so the operator running the v3.5.0 cutover knows what's left.
+
+### Category F — `AddField` on a column that already exists
+
+The AST audit checked AlterField/RemoveField/RemoveIndex against virtual state, but didn't catch the inverse: `AddField` on a column already in state. 99 such ops surfaced at runtime.
+
+**Fix applied** (bulk via inline Python regex pass): every flagged `AddField` was changed to `AlterField`. AlterField on an unchanged column is a no-op; on a changed column it applies the diff. Same end state, no crash.
+
+**Files patched (15)**:
+- `client_portal/0002_initial.py` (1), `0003_initial.py` (1), `0004_initial.py` (23)
+- `crm/0020_*` (9), `0021_merge_*` (11), `0022_remove_contact_idx_*` (3)
+- `finance/0015_remove_invoice_*` (11)
+- `inventory/0012_remove_brand_*` (4 — brand/category/parfum/unit), `0013_remove_stockmove_*` (1), `0022_remove_product_*` (7), `0042_add_timestamps_*` (2)
+- `migration/0002_initial.py` (3)
+- `workforce/0007_rename_workforce_ese_*` (3)
+- `workspace/0006_remove_autotaskrule_*` (17), `0009_autotaskrule_sync_state.py` (7)
+- `erp/0010_auditlog_*` (1 — Role.organization)
+
+### Category G — `RenameIndex` on an index that doesn't exist on fresh DB
+
+`erp/0025_rename_*` performs 13 `RenameIndex` ops on indexes from `erp/0010`. On a fresh DB, those indexes either don't exist or were auto-renamed by an intervening `AlterModelTable`.
+
+**Fix applied**: each RenameIndex wrapped in `SeparateDatabaseAndState` with idempotent `RunSQL("ALTER INDEX IF EXISTS old RENAME TO new;")`.
+
+### Category H — Cascade-drop walks live Python registry
+
+`erp/0028_remove_approvalrule_organization_and_more.py` drops Contract/ContractUsage/etc. The `AlterUniqueTogether` op crashes with `ContractUsage has no field named 'contract'` because Django's field-state lookup walks the live model registry — and the models are absent from source.
+
+**Action**: `--fake` at apply time. Already documented above as needing fake; confirmed at this replay too.
+
+### Category I — Cross-app model ownership transfer without paired RemoveModel
+
+`apps_core/0004_kernelpermission_resourcepermission_role_userrole_and_more.py` tries to `CreateModel` `KernelPermission/ResourcePermission/Role/UserRole` — but the tables (`kernel_permission`, `kernel_role`, etc.) were already created by `erp/0010` via `AlterModelTable`. The migration was generated as part of moving these models from `erp` to `apps_core`, but the corresponding `RemoveModel` in erp was never authored.
+
+**Action**: `--fake` apps_core/0004. Tables exist with correct schema; only the migration record needs updating.
+
+### Category J — Multiple parallel `_initial` branches in one app
+
+`client_portal` has TWO independent migration branches sharing number prefixes:
+
+```
+Branch A: 0002_clientportalconfig_store_mode_fields → 0004_clientportalconfig_storefront_theme → 0005_clientportalconfig_storefront_type → 0006_alter_clientportalconfig_storefront_type_and_more
+Branch B: 0002_initial → 0003_initial → 0004_initial → 0005_clientorderline_variant... → 0006_clientportalconfig_layout
+```
+
+`0009_alter_clientorder_delivery_rating_and_more.py` tries to `AlterField` `ClientPortalConfig.allow_guest_browsing` — added by branch A's `0002_clientportalconfig_store_mode_fields:38`. Django applies in dependency order; the actual order may interleave so 0009 hits before branch A is fully consumed in the Django state passed to its database_forwards.
+
+**Cannot be patched migration-by-migration.** The state is structurally tangled — multiple `initial = True` migrations, divergent dependency chains.
+
+**Action**: `squashmigrations client_portal 0001 <latest>` is the right tool. After squashing, the app gets ONE clean migration built from current model definitions. All parallel-branch tangles vanish because the squash regenerates from `models.py`.
+
+**This is the forcing function for the v3.5.0 cutover.** client_portal cannot be cleanly replayed without squashing first.
+
+### Replay state at end of session 2026-05-02
+
+The dev DB was advanced through (in this order):
+- All `erp` migrations 0001–0028 (0028 faked)
+- All `inventory` migrations through 0017
+- All `finance` migrations through 0014
+- All `pos` migrations through 0049
+- All `crm` migrations applied
+- `apps_core` through 0004 (faked)
+- Standard Django apps (auth, contenttypes, authtoken, sessions, admin)
+- `client_portal` through 0008
+- **Crashed at**: `client_portal/0009` (Category J — needs squash, not patch)
+
+To resume from this state: operator should run `squashmigrations` per app (preferably all apps at once via `scripts/release/squash_for_release.py v3.5.0`), validate the squashed tree replays cleanly on a fresh DB, then proceed with Phase 2-4 of the cutover runbook.
+
+### Updated drift category catalog (for next static audit pass)
+
+Adds to the original A/B/C/D/E:
+
+- **F**: `AddField` on a column already in state. Fix: `AddField → AlterField`.
+- **G**: `RenameIndex` on an index that doesn't exist on fresh replay. Fix: wrap in `SeparateDatabaseAndState` with idempotent `RunSQL`.
+- **H**: Cascade-drop walks live Python registry for fields not in source. Fix: `--fake`.
+- **I**: Cross-app model-ownership transfer with missing paired `RemoveModel`. Fix: `--fake` the new app's CreateModel.
+- **J**: Multiple parallel `_initial` branches with shared number prefixes. Fix: `squashmigrations` (no per-migration patch resolves it).
+
+Future static audit passes should scan for F + G + J explicitly. H and I require live introspection so are runtime-discovery items.
+
+### Net progress this session
+
+- **Static audits**: 404 migrations analyzed across all apps; 50 issues found, 49 patched, 1 documented.
+- **Runtime drift**: 99 Cat F + 13 Cat G + 1 Cat H (faked) + 1 Cat I (faked) + ~150 migrations applied successfully.
+- **Forcing function identified**: Category J in `client_portal`. Per-migration patches cannot resolve; squashing is mandatory.
+- **Code-only patches saved**: ~150 fixes across ~20 migration files. Squash will subsume all of them.
+
+---
+
 ## Per-release cleanup log
 
 Future entries follow this template:
@@ -260,3 +351,50 @@ Future entries follow this template:
 ### Open drift (left for next cutover)
 - (any drift spotted but not addressed this round)
 ```
+
+---
+
+### Category J inventory (2026-05-02)
+
+**Method**: scanned every migration filename under `erp_backend/erp/migrations/` and `erp_backend/apps/*/migrations/` for duplicate leading number prefixes (e.g. `0002_X.py` AND `0002_Y.py`); parsed `dependencies = [...]` to distinguish parallel branches from linear chains; counted `initial = True` markers; verified whether any descendant `*_merge_*.py` migration converges all duplicate-prefix heads.
+
+**Classification rules**:
+- **CLEAN**: no duplicate number prefixes. (`0001_initial` + `0002_initial` co-existing as a Django circular-FK split is benign — both initial=True but the second linearly depends on the first, which is the standard idiom.)
+- **MERGED**: duplicate prefixes exist, but every duplicate is a true descendant of a `*_merge_*.py` node, AND no duplicate-prefix bucket contains an `initial=True` parallel branch. Replay can succeed today; the merge nodes are the historic Category-J fingerprint but are now structurally sound.
+- **CATEGORY J**: at least one of (a) duplicate prefixes that no merge migration resolves, (b) a duplicate-prefix bucket that contains an `initial=True` file alongside a non-`initial` parallel branch (two heads that both claim "initial"), or (c) `initial=True` count strictly greater than 2 (beyond the standard circular-FK split). For these apps `squashmigrations` is mandatory before clean replay.
+
+| App | Status | Duplicate prefixes | Merged by | initial=True count |
+|---|---|---|---|---|
+| client_portal | CATEGORY J | 0002, 0004, 0005, 0006, 0010, 0011, 0012 | partial: 0002/0004/0005/0006 by `0016_merge_20260412_0207`, 0010 by `0011_merge_0010_coupon`, 0011/0012 by `0013_merge_0012` — but parallel `*_initial.py` branch (0002/0003/0004 all initial=True) makes the structural drift unrecoverable without squash | 4 |
+| compliance | CLEAN | — | — | 1 |
+| core | CLEAN | — | — | 1 |
+| crm | MERGED | 0020, 0021 | `0021_merge_20260311_0135` | 2 (standard 0001+0002 circular-FK split) |
+| ecommerce | CLEAN | — | — | 1 |
+| erp | CLEAN | — | — | 2 (standard 0001+0002 circular-FK split) |
+| finance | MERGED | 0029, 0030, 0031, 0076 | 0029 by `0031_merge_compound_tax_and_enterprise_posting`; 0030/0031 by `0035_merge_tax_account_and_policy_fks`; 0076 by `0079_merge_branches` | 2 (standard split) |
+| hr | CLEAN | — | — | 1 |
+| iam | CLEAN | — | — | 1 |
+| integrations | CLEAN | — | — | 1 |
+| inventory | MERGED | 0013, 0039 | 0013 by `0018_merge_20260307_0036`; 0039 by `0041_merge_20260317_1638` | 2 (standard split) |
+| mcp | CLEAN | — | — | 1 |
+| migration | CLEAN | — | — | 2 (standard 0001+0002 circular-FK split) |
+| migration_v2 | CLEAN | — | — | 1 |
+| packages | CLEAN | — | — | 1 |
+| pos | MERGED | 0022, 0031, 0033, 0034, 0035, 0045, 0046 | 0022 by `0045_merge_0022_restrict_cash_0044_generated_document`; 0031 by `0033_merge_20260302_2036`; 0033 by `0034_merge_20260302_2042`; 0034 by `0035_merge_20260302_2226`; 0035 by `0036_merge_0035_merge_20260302_2226_0035_stock_move`; 0045/0046 by `0048_merge_20260305_0130` | 1 |
+| reference | CLEAN | — | — | 1 |
+| storage | CLEAN | — | — | 1 |
+| supplier_portal | CLEAN | — | — | 1 |
+| workforce | CLEAN | — | — | 1 |
+| workspace | CLEAN | — | — | 1 |
+
+**Apps requiring squash before clean replay** (CATEGORY J): `client_portal`.
+
+**Apps where merge migrations resolve all duplicates** (MERGED — replayable today, but the structural fingerprint is preserved and any future migration that touches a duplicate-prefix ancestor is at risk): `crm`, `finance`, `inventory`, `pos`.
+
+**Apps with no duplicate prefixes** (CLEAN): `compliance`, `core`, `ecommerce`, `erp`, `hr`, `iam`, `integrations`, `mcp`, `migration`, `migration_v2`, `packages`, `reference`, `storage`, `supplier_portal`, `workforce`, `workspace`.
+
+**Notes for the operator**:
+- Total apps analyzed: 21 (1 root `erp` + 20 under `apps/`). `apps_core` is `apps/core/` (single-level, already covered).
+- The standard Django circular-FK split (`0001_initial` + `0002_initial` linearly chained) was excluded from the Category-J trigger; only `client_portal` exhibits more than two `initial=True` files (4) — three of which (`0002_initial`, `0003_initial`, `0004_initial`) form a parallel branch off `0001_initial` distinct from the `0002_clientportalconfig_store_mode_fields` branch. This is the canonical "two parallel `_initial`-named branches" pattern from the runbook.
+- `pos` carries the largest count of duplicate-prefix buckets (7) — all merged. Worth a defensive squash candidate even though replay currently passes.
+- Full per-app dependency dumps (every duplicate-prefix file with its `dependencies = [...]` and `initial` flag) are recorded at `/tmp/category_j_inventory.log`.

@@ -5,7 +5,7 @@ import type { PurchaseLine } from '@/types/erp'
 import { createPurchaseInvoice, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
 import {
     ShoppingCart, ArrowLeft, Settings2,
-    ListFilter, BookOpen, Plus, ArrowRight,
+    Plus, ArrowRight, BookOpen,
     DollarSign, Hash, Layers, TrendingUp,
     Building2, MapPin,
 } from 'lucide-react'
@@ -17,6 +17,13 @@ import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
 import { AdminSidebar } from './_components/AdminSidebar'
 import { POLifecycle, type POStatus } from './_components/POLifecycle'
+import { CatalogueModal } from './_components/CatalogueModal'
+import { ColumnVisibilityButton, ColumnVisibilityPanel, DEFAULT_VISIBLE, DEFAULT_ORDER, COLUMN_DEFS, type ColumnKey } from './_components/ColumnVisibility'
+import type { POViewProfile } from './_lib/profiles'
+import {
+    loadProfiles, loadActiveProfileId, saveProfiles, saveActiveProfileId,
+    syncProfileToBackend, loadProfileFromBackend,
+} from './_lib/profiles'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 
@@ -128,6 +135,79 @@ export default function PurchaseForm({
     )
     const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [catalogueOpen, setCatalogueOpen] = useState(false)
+    const [columnsOpen, setColumnsOpen] = useState(false)
+
+    // ── Column visibility profiles (backend-persisted, same as Products) ──
+    const [colProfiles, setColProfiles] = useState<POViewProfile[]>(() => loadProfiles())
+    const [activeColProfileId, setActiveColProfileId] = useState(() => loadActiveProfileId())
+    const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(() => {
+        const p = loadProfiles().find(pr => pr.id === loadActiveProfileId())
+        if (p) return new Set(Object.entries(p.columns).filter(([, v]) => v).map(([k]) => k as ColumnKey))
+        return new Set(DEFAULT_VISIBLE)
+    })
+    const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(() => {
+        const p = loadProfiles().find(pr => pr.id === loadActiveProfileId())
+        return p?.columnOrder || [...DEFAULT_ORDER]
+    })
+
+    // Load from backend on mount
+    useEffect(() => {
+        loadProfileFromBackend(colProfiles, activeColProfileId).then(result => {
+            if (!result) return
+            setColProfiles(result.profiles)
+            setVisibleColumns(new Set(
+                Object.entries(result.columns).filter(([, v]) => v).map(([k]) => k as ColumnKey)
+            ))
+            setColumnOrder(result.columnOrder)
+        })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const handleColumnToggle = useCallback((key: ColumnKey) => {
+        setVisibleColumns(prev => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            // Also update the active profile
+            setColProfiles(profiles => {
+                const updated = profiles.map(p => {
+                    if (p.id !== activeColProfileId) return p
+                    const cols = { ...p.columns, [key]: !prev.has(key) }
+                    return { ...p, columns: cols }
+                })
+                saveProfiles(updated)
+                const ap = updated.find(p => p.id === activeColProfileId)
+                if (ap) syncProfileToBackend(ap)
+                return updated
+            })
+            return next
+        })
+    }, [activeColProfileId])
+
+    const handleColumnReorder = useCallback((newOrder: ColumnKey[]) => {
+        setColumnOrder(newOrder)
+        setColProfiles(profiles => {
+            const updated = profiles.map(p =>
+                p.id === activeColProfileId ? { ...p, columnOrder: newOrder } : p
+            )
+            saveProfiles(updated)
+            const ap = updated.find(p => p.id === activeColProfileId)
+            if (ap) syncProfileToBackend(ap)
+            return updated
+        })
+    }, [activeColProfileId])
+
+    const switchColProfile = useCallback((id: string) => {
+        const prof = colProfiles.find(p => p.id === id)
+        if (!prof) return
+        setActiveColProfileId(id)
+        saveActiveProfileId(id)
+        setVisibleColumns(new Set(
+            Object.entries(prof.columns).filter(([, v]) => v).map(([k]) => k as ColumnKey)
+        ))
+        setColumnOrder(prof.columnOrder || [...DEFAULT_ORDER])
+    }, [colProfiles])
 
     // ── Lifecycle status (edit mode only) ─────────────────────────────
     // On new POs this is always DRAFT (hardcoded). On edit mode it reads
@@ -439,17 +519,13 @@ export default function PurchaseForm({
                         <div className="flex-1">
                             <ProductSearch ref={searchRef} callback={addProductToLines} siteId={Number(selectedSiteId) || 1} />
                         </div>
-                        <button type="button"
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all flex-shrink-0">
-                            <ListFilter size={13} />
-                            <span className="hidden md:inline">Cols</span>
-                        </button>
-                        <button type="button"
+                        <ColumnVisibilityButton visibleColumns={visibleColumns} onClick={() => setColumnsOpen(true)} />
+                        <button type="button" onClick={() => setCatalogueOpen(true)}
                             className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all flex-shrink-0">
                             <BookOpen size={13} />
                             <span className="hidden md:inline">Catalogue</span>
                         </button>
-                        <button type="button"
+                        <button type="button" onClick={() => searchRef.current?.focus()}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                             <Plus size={14} />
@@ -459,7 +535,7 @@ export default function PurchaseForm({
 
                     {/* Table */}
                     <div className="bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col" style={{ minHeight: '400px' }}>
-                        <LineColumnHeaders />
+                        <LineColumnHeaders visibleColumns={visibleColumns} />
                         <div className="overflow-y-auto custom-scrollbar flex-1">
                             {lines.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
@@ -469,12 +545,35 @@ export default function PurchaseForm({
                                 </div>
                             ) : (
                                 lines.map((line, idx) => (
-                                    <LineRowDesktop key={line.productId as React.Key} line={line} idx={idx} onUpdate={updateLine} onRemove={removeLine} />
+                                    <LineRowDesktop key={line.productId as React.Key} line={line} idx={idx} onUpdate={updateLine} onRemove={removeLine} visibleColumns={visibleColumns} />
                                 ))
                             )}
                         </div>
                     </div>
                 </div>
+
+                {/* ── Catalogue Modal ── */}
+                <CatalogueModal
+                    open={catalogueOpen}
+                    onClose={() => setCatalogueOpen(false)}
+                    onAddProduct={addProductToLines}
+                    existingProductIds={lines.map(l => l.productId as number)}
+                    supplierId={supplierId}
+                />
+
+                {/* ── Column Visibility Panel (same pattern as Products CustomizePanel) ── */}
+                <ColumnVisibilityPanel
+                    isOpen={columnsOpen}
+                    onClose={() => setColumnsOpen(false)}
+                    visibleColumns={visibleColumns}
+                    onToggle={handleColumnToggle}
+                    columnOrder={columnOrder}
+                    onReorder={handleColumnReorder}
+                    profiles={colProfiles}
+                    setProfiles={setColProfiles}
+                    activeProfileId={activeColProfileId}
+                    switchProfile={switchColProfile}
+                />
 
                 {/* ── Configuration Drawer (same pattern as categories detail panel) ── */}
                 {sidebarOpen && (

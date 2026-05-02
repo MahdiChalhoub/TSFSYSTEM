@@ -191,6 +191,26 @@ class RefCurrencyViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=False, methods=['get'], url_path='tenants', permission_classes=[permissions.IsAuthenticated])
+    def tenants(self, request):
+        """
+        SU-only: map of currency_id → tenants that have enabled it (via
+        OrgCurrency). Mirrors the country `tenants` action so the SaaS-admin
+        currencies page can render a "Tenants Using" branch under each
+        currency without going per-row.
+        """
+        if not request.user.is_superuser:
+            return Response({'detail': 'Superuser only.'}, status=status.HTTP_403_FORBIDDEN)
+        rows = OrgCurrency.all_objects.select_related('currency', 'organization').filter(is_enabled=True)
+        out: dict[int, list[dict]] = {}
+        for r in rows:
+            out.setdefault(r.currency_id, []).append({
+                'org_id': r.organization_id,
+                'org_name': getattr(r.organization, 'name', None) or getattr(r.organization, 'slug', None) or f'Org #{r.organization_id}',
+                'is_default': getattr(r, 'is_default', False),
+            })
+        return Response(out)
+
 
 class RefCountryCurrencyMapViewSet(viewsets.ModelViewSet):
     """

@@ -105,7 +105,53 @@
 - **Verification**: `manage.py check` passes (1 baseline warning); `manage.py migrate --plan` correctly shows the new migration as pending.
 - **Note**: A pre-existing finance migration conflict (`0076_backfill_monetary_classification` vs `0078_payment_gateway_catalog`) is unrelated to Phase 4; needs `makemigrations --merge` from finance owner.
 
-### [BLOCKED — needs operator] Migration tree has accumulated drift across multiple apps
+### [DONE 2026-05-02] Migration release pipeline — pre-cutover prep complete
+- **Discovered**: 2026-05-01 (during dev DB replay attempt)
+- **Impact**: Built the full release pipeline infrastructure — versioned squash baselines, CI gates, drift detection, runbooks. Pre-cutover drift work reduced from "discover + fix N unknown issues at apply time" to "run audit_drift, fix critical findings, run squash for the v3.5.0 cutover."
+- **Architecture**: `task and plan/maintainability/migration_release_pipeline_001.md` (3-layer: VERSIONS.md registry / per-app squash baselines / post-squash incrementals).
+- **Runbook**: `task and plan/maintainability/migration_release_pipeline_001_runbook.md` (5-phase cutover with printable checklist).
+- **Tooling** (all in `erp_backend/scripts/release/`):
+  - `verify_clean_replay.sh` — drops scratch DB, replays from zero, asserts clean exit. CI gate before any release.
+  - `squash_for_release.py vX.Y.Z` — squashes every app's post-baseline migrations into a new `0001_squashed_v{X}_{Y}_{Z}.py` per app, in dependency order.
+  - `verify_versions_md.py` — sanity-checks VERSIONS.md against the migration tree on disk.
+  - **`audit_drift.py`** — comprehensive 10-category drift detector (A-J), supports `--app`, `--category`, `--quiet`, `--json` flags. Reports critical (must-fix-before-merge) vs squash-required (Cat I/J). Exit 0/1 driven by critical findings.
+  - `test_audit_drift.py` — 7 unit tests with fixture migrations. All pass.
+  - `README.md` — script catalog + category reference + CI snippet.
+- **Registry**: `VERSIONS.md` skeleton at repo root with v3.5.0 entry template.
+- **Drift cleanup notes**: `MIGRATION_NOTES.md` — comprehensive log of every drift point found across two static-audit passes + one runtime replay attempt. 10 drift categories cataloged (5 from initial design + 5 discovered during replay). Per-app inventory of Category J branches (`/tmp/category_j_inventory.log`).
+- **Drift fixed inline this session**:
+  - `apps/finance/migrations/0079_merge_branches.py` — no-op merge for the 0076 leaf-node split.
+  - `apps/inventory/migrations/0004` — 2× AlterField → AddField for legacy_id (Cat A).
+  - `apps/pos/migrations/0043` — 5 RenameIndex wrapped state-only (incl. `sal_org_order_idx`, Cat C).
+  - `apps/pos/migrations/0065` — 18 RemoveIndex collapsed to idempotent RunSQL + 6 RenameIndex wrapped state-only (Cat C).
+  - `apps/client_portal/migrations/0009` — 8 AlterField → AddField (Cat A, via earlier audit).
+  - `apps/workforce/migrations/0007` — 13 RenameIndex → idempotent RunSQL (Cat C).
+  - `apps/erp/migrations/0010` — 1 AddField → AlterField for Role.organization (Cat F).
+  - `apps/erp/migrations/0025` — 13 RenameIndex wrapped in `SeparateDatabaseAndState` (Cat G).
+  - **99 Cat F bulk-patches** across 14 files (AddField → AlterField for fields already in state) — `client_portal/0002_initial`, `0003_initial`, `0004_initial`; `crm/0020`, `0021_merge`, `0022`; `finance/0015`; `inventory/0012`, `0013`, `0022`, `0042`; `migration/0002_initial`; `workforce/0007`; `workspace/0006`, `0009`.
+  - **Total**: ~150 individual fixes across ~20 migration files.
+- **Audit results on the live tree**:
+  - Static audit (404 migrations): 50 issues found, 49 patched, 1 documented.
+  - Runtime replay: 99 Cat F + 13 Cat G + 1 Cat H (faked: erp/0028) + 1 Cat I (faked: apps_core/0004) + ~150 migrations applied successfully → halted at Cat J in client_portal.
+  - `audit_drift.py` final pass: 9 findings (6 Cat C state-only RenameIndex in pos/0065 — by design, wrapped in SeparateDatabaseAndState; 2 Cat I — apps/core/0004 vs erp/0010 kernel_permission/kernel_role; 1 Cat J — apps/crm 0020/0021).
+  - `client_portal` was the canonical Cat J case (4 `initial=True` files); per Agent A's structural analysis, all duplicates are merged but the `_initial` parallel branch makes squash mandatory.
+- **What's left for the operator (v3.5.0 cutover)**:
+  1. Drop & recreate dev DB (or use scratch).
+  2. Run `manage.py migrate` — should advance ~150 migrations cleanly with the patches in place.
+  3. `--fake` the 2 known cases: `erp/0028` (Cat H) and `apps_core/0004` (Cat I).
+  4. Run `scripts/release/squash_for_release.py v3.5.0` — squashes all apps; resolves Cat I and Cat J structurally.
+  5. Run `verify_clean_replay.sh` to confirm the squashed tree replays from zero.
+  6. Tag `v3.5.0`, push, open PR.
+  - Estimated time: 2-4 hours, down from the original 1-2 day estimate.
+- **Risk**: LOW for the prep work; MEDIUM for the cutover itself (operator risk only — drop+recreate of dev DB, full replay).
+
+### [BLOCKED — needs operator DB authority] Apply v3.5.0 cutover
+- **Depends on**: Pre-cutover prep (above) — DONE 2026-05-02.
+- **What's needed**: Operator with `manage.py migrate`, `manage.py squashmigrations`, `--fake` permissions; `pg_dump`/`pg_restore` for backup; ability to tag git.
+- **Sandbox blockers** observed during this session: bare `pg_dump`/`dropdb`/`createdb` denied without per-command approval; `manage.py migrate --fake` denied without per-command approval; `manage.py migrate` blocked after first run unless re-authorized.
+- **Estimated time at cutover**: 2-4 hours.
+
+### [SUPERSEDED 2026-05-02] Migration tree has accumulated drift across multiple apps
 - **Discovered**: 2026-05-01 (during dev DB replay attempt)
 - **Impact**: Dev DB cannot be migrated forward. Investigation revealed the tree has multiple stale operations that fail when applied to a clean DB:
   - `erp.0028_remove_approvalrule_organization_and_more` tries to drop tables (`contract`, `approvalrule`, `contractversion`, `contractusage`, `customdomain`, etc.) that no earlier migration in the tree creates. The corresponding models also no longer exist in the Python source. Likely an effect of an old `makemigrations` run after some of those models were removed.

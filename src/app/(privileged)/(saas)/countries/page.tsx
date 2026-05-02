@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Globe, Loader2, Plus, Pencil, Trash2, Check, X,
   MapPin, DollarSign, Phone, Shield, Save, Hash,
-  CreditCard, FileText,
+  CreditCard, FileText, Power, PowerOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -474,46 +475,45 @@ const LINKED_KIND_META: Record<Exclude<TreeNode['kind'], 'country'>, { color: st
 
 const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'tax', 'gateway', 'einvoice', 'tenant']
 
+/**
+ * LinkedLeaf — uses the SAME row template as CountryRow (icon w-8 h-8,
+ * name in text-tp-md font-bold, code/subtitle below). The only difference
+ * is depth-driven indentation + a tree connector. This is what categories
+ * does: parent and child share the row look so the page reads as one
+ * consistent tree, not "two pages glued together".
+ */
 function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'country'>]
+  // Country-flag emoji for tax/gateway children that carry an iso2 hint.
   return (
-    <div className="relative" style={{ paddingLeft: '20px' }}>
-      {/* Vertical connector segment for this row (extends only to mid-row if last) */}
+    <div className="relative" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
-        style={{
-          left: '4px',
-          top: 0,
-          bottom: isLast ? '50%' : 0,
-          width: '1px',
-          background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
-        }} />
-      {/* Horizontal branch into the row */}
+        style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
       <div className="absolute pointer-events-none"
-        style={{
-          left: '4px',
-          top: '50%',
-          width: '12px',
-          height: '1px',
-          background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
-        }} />
+        style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
       <a
         href={meta.href}
-        className="group flex items-center gap-2 transition-all duration-150 rounded-md no-underline"
-        style={{
-          padding: '4px 8px',
-          color: 'inherit',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}
+        className="group flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg no-underline"
+        style={{ padding: '8px 10px', color: 'inherit' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+        {/* Same w-8 h-8 icon as the parent row so heights line up vertically. */}
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
           {meta.icon}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-bold text-app-foreground truncate">{node.name}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-tp-md font-bold text-app-foreground truncate">{node.name}</span>
+            {/* Subtle type tag — replaces the loud uppercase group header. */}
+            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
+              style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+              {meta.label}
+            </span>
+          </div>
           {node.subtitle && (
-            <div className="text-[10px] text-app-muted-foreground truncate">{node.subtitle}</div>
+            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate">{node.subtitle}</p>
           )}
         </div>
       </a>
@@ -522,31 +522,23 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
 }
 
 /**
- * Render the linked entities for a single country, grouped by kind.
- * Groups sit at the same level (sibling sections) and each can be
- * expanded / collapsed independently. Default = collapsed so the
- * country row stays compact; user clicks a group to reveal leaves.
+ * Render the linked entities for a single country as a flat list of rows
+ * — same row template as the parent country row, just indented and with
+ * a tree connector. Mirrors the categories page, where children share
+ * the parent row look. Each leaf carries its own subtle "type" pill so
+ * the row tells you what it is without needing a group header.
+ *
+ * Sort order is fixed (Currency → Tax → Gateway → E-Invoice → Tenant) so
+ * the structure stays predictable when expanding different countries.
  */
 function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
-  // Bucket by kind once
-  const buckets: Record<string, TreeNode[]> = {}
-  for (const n of nodes) {
-    if (n.kind === 'country') continue
-    const k = n.kind
-    if (!buckets[k]) buckets[k] = []
-    buckets[k].push(n)
-  }
-  const visibleKinds = KIND_ORDER.filter(k => buckets[k]?.length)
+  const ordered = nodes
+    .filter(n => n.kind !== 'country')
+    .sort((a, b) => KIND_ORDER.indexOf(a.kind as any) - KIND_ORDER.indexOf(b.kind as any))
 
-  // Per-group expand/collapse — local to this country's expanded view.
-  // Defaulting to collapsed keeps the surface scannable when a country has
-  // many gateways or templates; clicking a group's chevron expands just it.
-  const [openKinds, setOpenKinds] = useState<Record<string, boolean>>({})
-  const toggleKind = (k: string) => setOpenKinds(prev => ({ ...prev, [k]: !prev[k] }))
-
-  if (visibleKinds.length === 0) {
+  if (ordered.length === 0) {
     return (
-      <div className="px-12 py-2 text-[11px] text-app-muted-foreground italic">
+      <div className="ml-9 px-3 py-2 text-tp-xs text-app-muted-foreground italic">
         No linked currency, tax template, payment gateway, or e-invoice standard.
       </div>
     )
@@ -554,87 +546,12 @@ function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
 
   return (
     <div className="relative ml-9 mr-2 mb-2 mt-1">
-      {/* Trunk vertical line — runs through the column of group headers. */}
+      {/* Trunk vertical line — connects all children to the parent above. */}
       <div className="absolute pointer-events-none"
-        style={{
-          left: '11px',
-          top: 0,
-          bottom: '14px',
-          width: '1px',
-          background: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
-        }} />
-      {visibleKinds.map((kind, gIdx) => {
-        const meta = LINKED_KIND_META[kind]
-        const items = buckets[kind]
-        const isOpen = !!openKinds[kind]
-        return (
-          <div key={kind} className="relative" style={{ paddingLeft: '24px', marginTop: gIdx === 0 ? 0 : 2 }}>
-            {/* Horizontal branch from trunk into this group's chevron row. */}
-            <div className="absolute pointer-events-none"
-              style={{
-                left: '11px',
-                top: '14px',
-                width: '12px',
-                height: '1px',
-                background: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
-              }} />
-
-            {/* Group header — clickable, with chevron and count. */}
-            <button
-              type="button"
-              onClick={() => toggleKind(kind)}
-              className="w-full flex items-center gap-1.5 py-1 px-1.5 rounded-md transition-all text-left"
-              style={{ background: 'transparent' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-            >
-              {/* Chevron */}
-              <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0"
-                style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                  <path d="M4 2 L8 6 L4 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              {/* Kind icon */}
-              <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
-                style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
-                {meta.icon}
-              </div>
-              {/* Label */}
-              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: meta.color }}>
-                {meta.group}
-              </span>
-              {/* Count badge */}
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
-                style={{
-                  background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
-                  color: meta.color,
-                }}>
-                {items.length}
-              </span>
-            </button>
-
-            {/* Leaf list — only when this group is expanded */}
-            {isOpen && (
-              <div className="relative ml-3 mt-0.5 pb-1">
-                {items.length > 1 && (
-                  <div className="absolute pointer-events-none"
-                    style={{
-                      left: '4px',
-                      top: 0,
-                      bottom: '50%',
-                      width: '1px',
-                      background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
-                    }} />
-                )}
-                {items.map((n, idx) => (
-                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1} />
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })}
+        style={{ left: '11px', top: 0, bottom: '24px', width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+      {ordered.map((n, idx) => (
+        <LinkedLeaf key={String(n.id)} node={n} isLast={idx === ordered.length - 1} />
+      ))}
     </div>
   )
 }
@@ -891,6 +808,42 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, onEdit, onDel
 }
 
 /* ═══════════════════════════════════════════════════════
+   Floating Bulk Action Bar — shown when N>0 rows selected.
+   Mirrors the categories BulkActionBar shape for visual parity.
+   ═══════════════════════════════════════════════════════ */
+
+function BulkActionBar({ count, onDelete, onClear }: { count: number; onDelete: () => void; onClear: () => void }) {
+  if (count === 0) return null
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
+      style={{
+        background: 'var(--app-surface)',
+        border: '1px solid var(--app-border)',
+        boxShadow: '0 12px 36px rgba(0,0,0,0.22)',
+      }}>
+      <div className="px-3 py-1.5 rounded-xl text-tp-sm font-bold"
+        style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+        {count} selected
+      </div>
+      <button onClick={onDelete}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
+        style={{
+          background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)',
+          color: 'var(--app-error, #ef4444)',
+          border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)',
+        }}>
+        <Trash2 size={13} /> Delete
+      </button>
+      <button onClick={onClear} title="Clear selection"
+        className="w-8 h-8 flex items-center justify-center rounded-xl transition-all"
+        style={{ color: 'var(--app-muted-foreground)' }}>
+        <X size={14} />
+      </button>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
    Main Page — TreeMasterPage consumer
    ═══════════════════════════════════════════════════════ */
 
@@ -907,6 +860,14 @@ export default function SaaSCountriesPage() {
   const [loading, setLoading] = useState(true)
   const [editingCountry, setEditingCountry] = useState<Country | null | 'new'>(null)
   const [editingCurrency, setEditingCurrency] = useState<Currency | null | 'new'>(null)
+  /** Friendly delete-confirm state — matches the categories pattern. */
+  const [deleteTarget, setDeleteTarget] = useState<Country | null>(null)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  /** Selection ref kept in sync from TreeMasterPage's render-prop. */
+  const selectionRef = React.useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({
+    selectedIds: new Set(),
+    clearSelection: () => {},
+  })
 
   const fetchCurrencies = useCallback(async () => {
     try {
@@ -945,13 +906,42 @@ export default function SaaSCountriesPage() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  const handleDelete = async (c: Country) => {
-    if (!confirm(`Delete ${c.name} (${c.iso2})?`)) return
+  // Friendly delete via ConfirmDialog state — keeps the modal stack
+  // consistent across the app (chart-of-accounts / categories pattern).
+  const requestDelete = (c: Country) => setDeleteTarget(c)
+  const handleConfirmedDelete = async () => {
+    if (!deleteTarget) return
+    const target = deleteTarget
+    setDeleteTarget(null)
     try {
-      await erpFetch(`reference/countries/${c.id}/`, { method: 'DELETE' })
-      toast.success(`${c.name} deleted`)
+      await erpFetch(`reference/countries/${target.id}/`, { method: 'DELETE' })
+      toast.success(`${target.name} deleted`)
       fetchAll()
-    } catch { toast.error('Failed to delete') }
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to delete'
+      if (/enabled by/i.test(msg)) {
+        toast.error('Country is enabled by one or more tenants. Disable it from those tenants first.', { duration: 7000 })
+      } else {
+        toast.error(msg)
+      }
+    }
+  }
+
+  // Bulk delete — fan-out DELETEs in parallel, aggregate result.
+  const handleConfirmedBulkDelete = async () => {
+    const ids = Array.from(selectionRef.current.selectedIds)
+    setBulkDeleteOpen(false)
+    if (ids.length === 0) return
+    const t = toast.loading(`Deleting ${ids.length} ${ids.length === 1 ? 'country' : 'countries'}...`)
+    const results = await Promise.allSettled(ids.map(id =>
+      erpFetch(`reference/countries/${id}/`, { method: 'DELETE' })
+    ))
+    toast.dismiss(t)
+    const failed = results.filter(r => r.status === 'rejected').length
+    if (failed === 0) toast.success(`${ids.length} deleted`)
+    else toast.error(`${failed} of ${ids.length} failed (likely enabled by tenants)`)
+    selectionRef.current.clearSelection()
+    fetchAll()
   }
 
   // Note: country activation is intentionally NOT exposed here. The global
@@ -1125,15 +1115,19 @@ export default function SaaSCountriesPage() {
             icon: <Plus size={14} />,
             onClick: () => setEditingCountry('new' as any),
           },
-          // Currencies are manageable here; activation is tenant-level so
-          // there's no global "Activate All" — see the per-tenant org-
-          // countries admin for that.
+          // Currencies create + navigation to related SaaS-admin pages so
+          // operators can flow between linked masters without going through
+          // the sidebar each time. Mirrors the categories "Cleanup" pattern.
           secondaryActions: [
             {
               label: 'New Currency',
               icon: <DollarSign size={13} />,
               onClick: () => setEditingCurrency('new' as any),
             },
+            { label: 'Currencies',  icon: <DollarSign size={13} />, href: '/currencies' },
+            { label: 'Tax Templates', icon: <Shield size={13} />,    href: '/country-tax-templates' },
+            { label: 'Payment Gateways', icon: <CreditCard size={13} />, href: '/payment-gateways' },
+            { label: 'E-Invoice', icon: <FileText size={13} />, href: '/e-invoice-standards' },
           ],
           dataTools: {
             title: 'Country Data',
@@ -1212,7 +1206,22 @@ export default function SaaSCountriesPage() {
             actionLabel: 'Add First Country',
           },
           onRefresh: fetchAll,
+          // Bulk-selection mode — drives the BulkActionBar below.
+          selectable: true,
+          // Audit trail panel — same shape as categories.
+          auditTrail: {
+            endpoint: 'audit-trail',
+            resourceType: 'country',
+            title: 'Country Audit Trail',
+          },
         }}
+        bulkActions={({ count, clearSelection: clear }) => (
+          <BulkActionBar
+            count={count}
+            onDelete={() => setBulkDeleteOpen(true)}
+            onClear={clear}
+          />
+        )}
         detailPanel={(node, { onClose }) => {
           // The tree node is our combined-shape; only country rows have the
           // detail panel — children open the editor for their own type.
@@ -1224,14 +1233,16 @@ export default function SaaSCountriesPage() {
               hasTaxTemplate={taxTemplateCountries.has(country.iso2)}
               currencies={currencies}
               onEdit={() => { setEditingCountry(country); onClose() }}
-              onDelete={() => { handleDelete(country); onClose() }}
+              onDelete={() => { requestDelete(country); onClose() }}
               onClose={onClose}
             />
           )
         }}
       >
         {(renderProps) => {
-          const { tree, isSelected, openNode, isCompact, expandAll } = renderProps
+          const { tree, isSelected, openNode, isCompact, expandAll, selectedIds, toggleSelect, clearSelection } = renderProps
+          // Sync selection ref for the BulkActionBar handlers.
+          selectionRef.current = { selectedIds, clearSelection }
           // tree contains TreeNode objects (built by buildTree) with `children`.
           // We only render top-level country nodes here — linked children are
           // rendered inside CountryRow when expanded.
@@ -1247,9 +1258,12 @@ export default function SaaSCountriesPage() {
                   isSelected={isSelected(n)}
                   onSelect={() => openNode(n, 'overview')}
                   onEdit={() => setEditingCountry(country)}
-                  onDelete={() => handleDelete(country)}
+                  onDelete={() => requestDelete(country)}
                   compact={isCompact}
                   forceExpanded={expandAll}
+                  selectable
+                  isCheckedFn={(id) => selectedIds.has(id)}
+                  onToggleCheck={toggleSelect}
                   // `children` is populated by buildTree on the wrapper node;
                   // pass it through so CountryRow can render linked rows.
                   children={(n.children as TreeNode[]) || []}
@@ -1278,6 +1292,32 @@ export default function SaaSCountriesPage() {
           onSaved={() => fetchCurrencies()}
         />
       )}
+
+      {/* Single-row delete — themed confirm dialog (matches categories). */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        onConfirm={handleConfirmedDelete}
+        title={`Delete ${deleteTarget?.name || 'country'}?`}
+        description={
+          deleteTarget
+            ? `This removes "${deleteTarget.name}" (${deleteTarget.iso2}) from the global registry. If any tenant has enabled this country, the deletion will be blocked.`
+            : 'This action cannot be undone.'
+        }
+        confirmText="Delete"
+        variant="danger"
+      />
+
+      {/* Bulk delete — same shape as the single-row dialog. */}
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleConfirmedBulkDelete}
+        title={`Delete ${selectionRef.current.selectedIds.size} ${selectionRef.current.selectedIds.size === 1 ? 'country' : 'countries'}?`}
+        description="Any country still enabled by at least one tenant will be skipped — the rest will be removed from the registry."
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   )
 }

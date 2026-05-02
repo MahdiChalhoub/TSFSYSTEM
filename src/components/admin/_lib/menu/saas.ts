@@ -33,7 +33,7 @@ export const saasControl: MenuItem = {
             icon: Globe,
             children: [
                 { title: 'Countries & Regions', path: '/countries', stage: 'in-progress' },
-                { title: 'Currencies', path: '/currencies' },
+                { title: 'Currencies', path: '/currencies', stage: 'in-progress' },
                 { title: 'Payment Gateways', path: '/payment-gateways', icon: CreditCard, stage: 'in-progress' },
                 { title: 'Country Tax Templates', path: '/country-tax-templates', stage: 'in-progress' },
                 { title: 'E-Invoice Standards', path: '/e-invoice-standards', stage: 'in-progress' },

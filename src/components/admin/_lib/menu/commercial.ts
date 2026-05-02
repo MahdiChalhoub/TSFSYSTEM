@@ -69,7 +69,6 @@ export const commercial: MenuItem = {
             title: 'Purchasing',
             icon: Wallet,
             children: [
-                { title: 'Procurement Center', path: '/purchases', stage: 'in-progress' },
                 { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                 { title: 'New Order v2', path: '/purchases/new-order-v2' },
                 { title: 'New Purchase Order', path: '/purchases/new' },

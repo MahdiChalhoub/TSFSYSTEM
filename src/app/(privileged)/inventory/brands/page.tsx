@@ -4,7 +4,7 @@ import { BrandsGateway } from "./BrandsGateway";
 export const dynamic = 'force-dynamic';
 
 async function getBrands() {
-    try { return await erpFetch('brands/'); }
+    try { return await erpFetch('inventory/brands/?with_counts=true'); }
     catch { return []; }
 }
 
@@ -14,7 +14,7 @@ async function getCountries() {
 }
 
 async function getCategories() {
-    try { return await erpFetch('categories/'); }
+    try { return await erpFetch('inventory/categories/'); }
     catch { return []; }
 }
 
