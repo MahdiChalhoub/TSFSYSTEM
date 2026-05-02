@@ -1,6 +1,7 @@
 'use client'
 
-import { Loader2, Lock } from 'lucide-react'
+import { useState } from 'react'
+import { Loader2, Lock, Info } from 'lucide-react'
 import { TYPE_CONFIG } from './types'
 import { useScope } from '@/hooks/useScope'
 import { useTranslation } from '@/hooks/use-translation'
@@ -26,6 +27,13 @@ export function AccountForm({
 }: AccountFormProps) {
     const { isOfficial } = useScope()
     const { t } = useTranslation()
+    /** Track foreign-currency state in real time. The Monetary classification
+     *  field is only meaningful for FX-bearing accounts (IAS 21 / ASC 830);
+     *  on a home-currency account it has zero effect at period close. We
+     *  hide it unless the user types a currency that isn't blank. */
+    const [hasForeignCurrency, setHasForeignCurrency] = useState<boolean>(
+        Boolean(initialData?.currency)
+    )
     return (
         <form action={onSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
             <div className="col-span-full mb-1 flex items-center justify-between">
@@ -103,30 +111,49 @@ export function AccountForm({
                   alone; only set them on accounts that actually transact in
                   a foreign currency. */}
             <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_currency')}</label>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}
+                    title="Leave blank if this account uses your tenant's home currency. Set ONLY when the account holds balances in another currency (e.g. USD/EUR) — then the Monetary class field below appears.">
+                    {t('finance.coa.form_currency')}
+                </label>
                 <input
                     name="currency"
                     placeholder={t('finance.coa.form_currency_placeholder')}
                     defaultValue={initialData?.currency || ''}
+                    onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
                     className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none uppercase"
                     maxLength={10}
                     style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
             </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_monetary_class')}</label>
-                <select
-                    name="monetaryClassification"
-                    defaultValue={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'}
-                    className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
-                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                    title="IAS 21 / ASC 830 — drives the rate type used at FX revaluation."
-                >
-                    <option value="MONETARY">{t('finance.coa.form_monetary')}</option>
-                    <option value="NON_MONETARY">{t('finance.coa.form_non_monetary')}</option>
-                    <option value="INCOME_EXPENSE">{t('finance.coa.form_income_expense')}</option>
-                </select>
-            </div>
+            {/* Monetary class — IAS 21 / ASC 830 — only relevant when this
+                account holds a NON-home currency. We hide it on home-currency
+                accounts (where it would have zero effect) to remove a source
+                of accountant confusion. The hidden input still ships the
+                default 'MONETARY' so the backend stays happy. */}
+            {hasForeignCurrency ? (
+                <div>
+                    <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}
+                        title="IAS 21 / ASC 830 — controls the FX rate used at period-end revaluation:&#10;• Monetary: closing rate (Cash/AR/AP/Loans)&#10;• Non-Monetary: historical rate, no revaluation (Inventory/Fixed Assets/Capital)&#10;• Income/Expense: average rate (Sales/Costs)">
+                        {t('finance.coa.form_monetary_class')}
+                        <Info size={11} className="opacity-60" />
+                    </label>
+                    <select
+                        name="monetaryClassification"
+                        defaultValue={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'}
+                        className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
+                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                    >
+                        <option value="MONETARY">{t('finance.coa.form_monetary')}</option>
+                        <option value="NON_MONETARY">{t('finance.coa.form_non_monetary')}</option>
+                        <option value="INCOME_EXPENSE">{t('finance.coa.form_income_expense')}</option>
+                    </select>
+                </div>
+            ) : (
+                // Hidden submit so we don't break the backend's required field.
+                // Defaults to MONETARY, which is the standard pick anyway.
+                <input type="hidden" name="monetaryClassification"
+                    value={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'} />
+            )}
 
             {/* ── Branch scope ─────────────────────────────────────────────
                 Auto picks the right behavior from type/system_role/code (the
@@ -161,20 +188,29 @@ export function AccountForm({
                     <option value="BRANCH_LOCATED">📦 Branch-located</option>
                 </select>
             </div>
-            <div className="col-span-full">
-                <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
-                    <input
-                        type="checkbox"
-                        name="revaluationRequired"
-                        defaultChecked={!!(initialData?.revaluation_required ?? initialData?.revaluationRequired)}
-                        className="w-4 h-4 rounded accent-app-info"
-                    />
-                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.coa.form_revalue')}</span>
-                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
-                        {t('finance.coa.form_revalue_hint')}
-                    </span>
-                </label>
-            </div>
+            {/* "Revalue at period end" — same gating as Monetary class. The
+                FX-revaluation pipeline only touches accounts that hold a
+                non-home currency. Hide on home-currency accounts so the
+                form is shorter; preserve the stored value via hidden input. */}
+            {hasForeignCurrency ? (
+                <div className="col-span-full">
+                    <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                        <input
+                            type="checkbox"
+                            name="revaluationRequired"
+                            defaultChecked={!!(initialData?.revaluation_required ?? initialData?.revaluationRequired)}
+                            className="w-4 h-4 rounded accent-app-info"
+                        />
+                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.coa.form_revalue')}</span>
+                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {t('finance.coa.form_revalue_hint')}
+                        </span>
+                    </label>
+                </div>
+            ) : (
+                <input type="hidden" name="revaluationRequired"
+                    value={(initialData?.revaluation_required ?? initialData?.revaluationRequired) ? 'on' : ''} />
+            )}
 
             <div className="col-span-full flex gap-2 items-end justify-end">
                 <button
