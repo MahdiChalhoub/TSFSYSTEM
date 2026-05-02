@@ -792,42 +792,6 @@ class DashboardViewSet(viewsets.ViewSet):
         tax_ctx = TaxEngineContext.from_org(organization)
         settings = ConfigurationService.get_global_settings(organization)
 
-        # Resolve pipeline_status for the page in one batched call so the
-        # Catalogue picker on /purchases/new can stamp it onto each line.
-        # Without this, lines defaulted to NONE → "Available", contradicting
-        # what /inventory/products correctly shows for the same product.
-        page_ids = [p.id for p in products_page]
-        pipeline_map = {}
-        try:
-            from apps.inventory.services.procurement_status_service import (
-                get_procurement_status_batch,
-            )
-            batch = get_procurement_status_batch(organization, page_ids)
-            # Map raw service labels → canonical frontend enum keys (mirrors
-            # _PROCUREMENT_LABEL_TO_KEY in apps/inventory/serializers/product_serializers.py)
-            label_to_key = {
-                'Requested to Purchase': 'REQUESTED_PURCHASE',
-                'Requested to Transfer': 'REQUESTED_TRANSFER',
-                'Approved to Purchase':  'REQUESTED_PURCHASE',
-                'Approved to Transfer':  'REQUESTED_TRANSFER',
-                'Requested · P+T':       'REQUESTED_BOTH',
-                'Adjustment Pending':    'REQUESTED',
-                'Adjustment Approved':   'REQUESTED',
-                'Pending PO':            'PO_SENT',
-                'Pending Approval':      'PO_SENT',
-                'PO Approved':           'PO_ACCEPTED',
-                'Ordered':               'PO_SENT',
-                'In Transit':            'IN_TRANSIT',
-                'Partially Received':    'IN_TRANSIT',
-                'Received':              'NONE',
-                'Failed':                'FAILED',
-                'PO Rejected':           'FAILED',
-            }
-            for pid, entry in batch.items():
-                pipeline_map[pid] = label_to_key.get(entry.get('status'), 'NONE')
-        except Exception:
-            pass
-
         # Resolve Cost using Product.get_effective_cost (One Source of Truth)
         results = []
         for p in products_page:
@@ -862,7 +826,6 @@ class DashboardViewSet(viewsets.ViewSet):
                 'margin_pct': round(p.margin_pct, 1),
                 'safety_tag': safety_tag,
                 'is_expiry_tracked': is_expiry,
-                'pipeline_status': pipeline_map.get(p.id, 'NONE'),
             })
         
         return Response({

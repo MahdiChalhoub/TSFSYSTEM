@@ -48,6 +48,7 @@ type CatalogueItem = {
     selling_price: number
     margin_pct: number
     safety_tag: string
+    pipeline_status: string | null
 }
 
 /** Map a raw `products/` row to the CatalogueItem shape used by this modal. */
@@ -73,6 +74,7 @@ function mapProductToCatalogueItem(p: Record<string, any>): CatalogueItem {
         selling_price: sell,
         margin_pct: marginPct,
         safety_tag: String(p.safety_tag || ''),
+        pipeline_status: (p.pipeline_status as string) ?? null,
     }
 }
 
