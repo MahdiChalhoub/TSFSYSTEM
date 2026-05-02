@@ -42,25 +42,34 @@ export function ChartOfAccountsViewer({ accounts }: {
     const [scopeFilter, setScopeFilter] = useState<null | 'tenant_wide' | 'branch_split' | 'branch_located'>(null)
     const searchRef = useRef<HTMLInputElement>(null)
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts. Escape exits focus mode from anywhere — even
+    // while typing in the search box — because losing the data view in
+    // focus mode is more disruptive than losing in-progress search text.
+    // If there's an active search query we clear that first; the second
+    // press exits focus mode. Two escapes back you all the way out.
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
-            // Escape exits focus mode — universal "back out" key, no
-            // browser conflict (the previous Ctrl+Q is captured by the
-            // browser as "quit" on many systems and never reached here).
-            // Guard against the search input handling its own escape.
             if (e.key === 'Escape') {
-                const target = e.target as HTMLElement | null
-                const inEditable = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
-                if (!inEditable) {
-                    setFocusMode(prev => prev ? false : prev)
+                // First Esc with a search query → clear it (keep focus mode).
+                if (searchQuery) {
+                    setSearchQuery('')
+                    e.preventDefault()
+                    return
+                }
+                // Otherwise Esc exits focus mode.
+                if (focusMode) {
+                    setFocusMode(false)
+                    e.preventDefault()
+                    // Drop input focus so the user can press Esc again
+                    // without it being trapped to clear an empty input.
+                    ;(document.activeElement as HTMLElement | null)?.blur?.()
                 }
             }
         }
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
-    }, [])
+    }, [focusMode, searchQuery])
 
     // KPI stats
     const stats = useMemo(() => {
@@ -286,40 +295,32 @@ export function ChartOfAccountsViewer({ accounts }: {
                         className="w-full h-9 pl-9 pr-3 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none focus:border-app-primary/40 focus:ring-2 focus:ring-app-primary/10 transition-all" />
                 </div>
 
-                {/* Scope filter — segmented tab strip with the iOS-style
-                    "lifted" active tab pattern: the strip itself sits in a
-                    slightly recessed gray, and the active tab pops out
-                    on a solid surface with a soft shadow. The contrast
-                    comes from LIGHTNESS difference between strip and
-                    active-tab backgrounds — not from a color-mix tint that
-                    disappears against the surface (the bug just fixed). */}
-                <div className="h-9 inline-flex items-stretch rounded-xl flex-shrink-0 p-1 gap-0.5"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-border) 35%, transparent)',
-                        border: '1px solid var(--app-border)',
-                    }}>
+                {/* Scope filter — flat tabs matching the project's tab
+                    philosophy used in CategoryDetailPanel + Country/Currency
+                    detail panels: idle = muted-foreground text on transparent,
+                    active = `color-mix(<color> 10%, transparent)` background
+                    with the color's hue for text + count chip. Each tab uses
+                    PRIMARY when neutral (All/Tenant) and its own scope color
+                    when branded (Split=info, Located=warning). */}
+                <div className="h-9 inline-flex items-center gap-1 flex-shrink-0">
                     {([
-                        { key: null,             label: 'All',      count: scopeCounts.all,            activeColor: 'var(--app-foreground)',          emoji: null },
-                        { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    activeColor: 'var(--app-foreground)',          emoji: '🌐' },
-                        { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   activeColor: 'var(--app-info, #3b82f6)',       emoji: '🏢' },
-                        { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, activeColor: 'var(--app-warning, #f59e0b)',    emoji: '📦' },
+                        { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-primary)',                   emoji: null },
+                        { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-primary)',                   emoji: '🌐' },
+                        { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',             emoji: '🏢' },
+                        { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)',          emoji: '📦' },
                     ] as const).map(chip => {
                         const active = scopeFilter === chip.key
-                        const ac = chip.activeColor
+                        const c = chip.color
                         return (
                             <button
                                 key={chip.key ?? 'all'}
                                 onClick={() => setScopeFilter(chip.key as any)}
-                                className="inline-flex items-center gap-1.5 px-3 rounded-lg text-tp-xs font-semibold transition-all"
-                                style={{
-                                    // Active = SOLID page-background lift (high contrast vs the
-                                    //          recessed strip below). Idle = transparent.
-                                    background: active ? 'var(--app-background, var(--app-surface, #ffffff))' : 'transparent',
-                                    color: active ? ac : 'var(--app-muted-foreground)',
-                                    boxShadow: active
-                                        ? '0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06)'
-                                        : 'none',
-                                    border: active ? '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' : '1px solid transparent',
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-tp-sm font-semibold transition-colors"
+                                style={active ? {
+                                    background: `color-mix(in srgb, ${c} 10%, transparent)`,
+                                    color: c,
+                                } : {
+                                    color: 'var(--app-muted-foreground)',
                                 }}
                                 title={
                                     chip.key === 'tenant_wide' ? 'Tenant-wide — Balances do NOT change with branch filter (AR/AP/Bank/Equity).'
@@ -330,12 +331,12 @@ export function ChartOfAccountsViewer({ accounts }: {
                             >
                                 {chip.emoji && <span className="text-[13px] leading-none">{chip.emoji}</span>}
                                 <span>{chip.label}</span>
-                                <span className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md leading-none"
+                                <span className="ml-0.5 text-tp-xxs font-bold px-1 py-[1px] rounded-full min-w-[16px] text-center"
                                     style={{
                                         background: active
-                                            ? `color-mix(in srgb, ${ac} 16%, transparent)`
-                                            : 'color-mix(in srgb, var(--app-border) 60%, transparent)',
-                                        color: active ? ac : 'var(--app-muted-foreground)',
+                                            ? `color-mix(in srgb, ${c} 15%, transparent)`
+                                            : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                        color: active ? c : 'var(--app-muted-foreground)',
                                     }}>
                                     {chip.count}
                                 </span>
@@ -388,7 +389,34 @@ export function ChartOfAccountsViewer({ accounts }: {
                     <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">{t('finance.coa.col_account')}</div><div className="w-36 hidden lg:block text-app-success">{t('finance.coa.col_syscohada')}</div><div className="w-24 hidden sm:block">{t('finance.coa.col_type')}</div><div className="w-24 hidden md:block text-center" title="Branch-scope behavior — Tenant-wide (AR/AP/Equity) · Branch-split (Revenue/Expense/COGS) · Branch-located (Inventory/WIP)">SCOPE</div><div className="w-28 text-right">{t('finance.coa.col_balance')}</div><div className="w-16 flex-shrink-0" />
                 </div>
                 <div className="flex-1 overflow-y-auto overscroll-contain">
-                    {tree.map(node => <AccountNode key={node.id} node={node} level={0} accounts={accounts} onEdit={setEditingAccount} onAddChild={(id) => { setPreselectedParentId(id); setIsAdding(true) }} onReactivate={(id) => setPendingAction({ type: 'reactivate', title: t('finance.coa.confirm_reactivate_title'), description: t('finance.coa.confirm_reactivate_desc'), variant: 'warning', id })} />)}
+                    {tree.length > 0 ? (
+                        tree.map(node => <AccountNode key={node.id} node={node} level={0} accounts={accounts} onEdit={setEditingAccount} onAddChild={(id) => { setPreselectedParentId(id); setIsAdding(true) }} onReactivate={(id) => setPendingAction({ type: 'reactivate', title: t('finance.coa.confirm_reactivate_title'), description: t('finance.coa.confirm_reactivate_desc'), variant: 'warning', id })} />)
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 opacity-50"
+                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                <BookOpen size={20} />
+                            </div>
+                            <p className="text-tp-sm font-bold text-app-muted-foreground mb-1">No accounts match the current filters.</p>
+                            <p className="text-tp-xs text-app-muted-foreground">
+                                {scopeFilter && `Scope = "${scopeFilter.replace('_', '-')}"`}
+                                {scopeFilter && (typeFilter || searchQuery) && ' · '}
+                                {typeFilter && `Type = "${typeFilter}"`}
+                                {(scopeFilter || typeFilter) && searchQuery && ' · '}
+                                {searchQuery && `Search = "${searchQuery}"`}
+                            </p>
+                            <button
+                                onClick={() => { setScopeFilter(null); setTypeFilter(null); setSearchQuery('') }}
+                                className="mt-3 px-3 py-1.5 rounded-lg text-tp-xs font-bold transition-all"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                    color: 'var(--app-primary)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                }}>
+                                Clear filters
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-tp-sm font-bold border-t border-app-border/50 bg-app-surface/70 text-app-muted-foreground">
                     <div>{footerStats.totalActive} {t('finance.coa.active')} · {footerStats.withBalance} {t('finance.coa.with_balance')}</div>

@@ -75,16 +75,18 @@ export function BrandRow({
         }
     }, [forceExpanded, products, loading, fetchProducts])
 
-    // Group products by country
+    // Group products by country. Products with no country FK are
+    // bucketed under "Universal" — meaning the product is sold across
+    // all countries, not tied to a specific market.
     const byCountry = useMemo(() => {
         if (!products) return []
         const map = new Map<string, { id: number | null, name: string, code: string, items: ProductRow[] }>()
         products.forEach(p => {
-            const key = String(p.country ?? 'unknown')
+            const key = String(p.country ?? 'universal')
             if (!map.has(key)) {
                 map.set(key, {
                     id: p.country ?? null,
-                    name: p.country_name || (p.country ? '—' : 'Unknown Country'),
+                    name: p.country_name || (p.country ? '—' : 'Universal'),
                     code: p.country_code || '',
                     items: []
                 })
@@ -92,8 +94,8 @@ export function BrandRow({
             map.get(key)!.items.push(p)
         })
         return [...map.values()].sort((a, b) => {
-            if (a.id === null) return 1  // Unknown country last
-            if (b.id === null) return -1
+            if (a.id === null) return -1  // Universal first
+            if (b.id === null) return 1
             return a.name.localeCompare(b.name)
         })
     }, [products])
@@ -183,20 +185,26 @@ export function BrandRow({
                                 </span>
                             )}
                         </div>
-                        {(countries > 0 || cats > 0) && (
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                                {countries > 0 && (
-                                    <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
-                                        <Globe size={9} /> {countries} countr{countries === 1 ? 'y' : 'ies'}
-                                    </span>
-                                )}
-                                {cats > 0 && (
-                                    <span className="text-tp-xxs font-medium text-app-muted-foreground">
-                                        · {cats} categor{cats === 1 ? 'y' : 'ies'}
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {countries > 0 ? (
+                                <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
+                                    <Globe size={9} /> {countries} linked countr{countries === 1 ? 'y' : 'ies'}
+                                </span>
+                            ) : (
+                                <span className="text-tp-xxs font-bold flex items-center gap-0.5 px-1.5 py-[1px] rounded-full"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
+                                        color: 'var(--app-info)'
+                                    }}>
+                                    <Globe size={9} /> Universal
+                                </span>
+                            )}
+                            {cats > 0 && (
+                                <span className="text-tp-xxs font-medium text-app-muted-foreground">
+                                    · {cats} categor{cats === 1 ? 'y' : 'ies'}
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Stat columns */}
@@ -301,9 +309,13 @@ export function BrandRow({
                                         transform: isCountryOpen ? 'rotate(90deg)' : 'none'
                                     }} />
 
-                                {/* Country flag emoji + name */}
+                                {/* Country flag emoji + name. Products with no
+                                    country FK fall under "Universal" — sold
+                                    across all countries, not market-specific. */}
                                 <div className="flex items-center gap-1.5">
-                                    {country.code ? (
+                                    {country.id === null ? (
+                                        <Globe size={14} style={{ color: 'var(--app-info)' }} />
+                                    ) : country.code ? (
                                         <span className="text-sm">
                                             {country.code.toUpperCase().split('').map((char) =>
                                                 String.fromCodePoint(0x1F1E6 + (char.charCodeAt(0) - 65))
@@ -312,9 +324,15 @@ export function BrandRow({
                                     ) : (
                                         <Flag size={14} style={{ color: 'var(--app-text-faint)' }} />
                                     )}
-                                    <span className="text-tp-sm font-semibold text-app-foreground">
+                                    <span className="text-tp-sm font-semibold"
+                                        style={{ color: country.id === null ? 'var(--app-info)' : 'var(--app-foreground)' }}>
                                         {country.name}
                                     </span>
+                                    {country.id === null && (
+                                        <span className="text-tp-xxs font-medium text-app-muted-foreground">
+                                            (sold across all countries)
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Product count badge */}
