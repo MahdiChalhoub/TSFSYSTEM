@@ -246,9 +246,29 @@ export function BrandRow({
             {/* ═══════════════════════════════════════════════════════════
                 LEVEL 1 & 2 — COUNTRIES + PRODUCTS (rendered when expanded)
                 ═══════════════════════════════════════════════════════════ */}
+
+            {/* Loading state */}
+            {isOpen && loading && (
+                <div className="flex items-center gap-2 py-3 pl-12 text-tp-sm text-app-muted-foreground"
+                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Loading products…</span>
+                </div>
+            )}
+
+            {/* Empty state — fetched but no products for this brand */}
+            {isOpen && !loading && products !== null && products.length === 0 && (
+                <div className="flex items-center gap-2 py-3 pl-12 text-tp-sm text-app-muted-foreground italic"
+                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                    <Package size={13} className="opacity-50" />
+                    <span>No products under {brand.name} yet.</span>
+                </div>
+            )}
+
+            {/* Country + product tree */}
             {isOpen && products && byCountry.map(country => {
                 const countryKey = String(country.id)
-                const isCountryOpen = openCountries.has(countryKey as any)
+                const isCountryOpen = openCountries.has(countryKey)
                 const countryProducts = country.items
 
                 return (

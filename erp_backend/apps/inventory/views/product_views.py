@@ -80,6 +80,38 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
     ordering_fields = ['name', 'sku', 'selling_price_ttc', 'cost_price', 'stock_level',
                        'created_at', 'data_completeness_level']
 
+    def filter_queryset(self, queryset):
+        """
+        Standard DRF filtering + custom support for '!' prefix (exclusion).
+        If a filter value starts with '!', we use .exclude() instead of .filter().
+        """
+        # 1. Extract and remove '!' params so they don't break DjangoFilterBackend
+        params = self.request.query_params.copy()
+        exclude_params = {}
+        for key in self.filterset_fields:
+            val = params.get(key)
+            if val and val.startswith('!'):
+                exclude_params[key] = val[1:]
+                params.pop(key)
+        
+        # 2. Let standard backends handle the rest (search, ordering, inclusion filters)
+        from django.http import QueryDict
+        original_params = self.request._request.GET
+        self.request._request.GET = params
+        try:
+            queryset = super().filter_queryset(queryset)
+        finally:
+            self.request._request.GET = original_params
+
+        # 3. Apply exclusions
+        for key, val in exclude_params.items():
+            if val == '__NONE__':
+                queryset = queryset.exclude(**{f"{key}__isnull": True})
+            else:
+                queryset = queryset.exclude(**{key: val})
+        
+        return queryset
+
     def perform_update(self, serializer):
         """Refresh completeness level after any product field update."""
         instance = serializer.save()

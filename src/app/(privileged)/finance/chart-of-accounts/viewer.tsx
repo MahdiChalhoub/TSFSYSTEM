@@ -286,53 +286,63 @@ export function ChartOfAccountsViewer({ accounts }: {
                         className="w-full h-9 pl-9 pr-3 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none focus:border-app-primary/40 focus:ring-2 focus:ring-app-primary/10 transition-all" />
                 </div>
 
-                {/* Scope filter chips — h-9 to match search. `activeColor`
-                    is what's visible in selected state. For neutral chips
-                    (All, Tenant) we use `--app-foreground` so the active
-                    state is clearly visible — a 14% mix of muted-foreground
-                    was nearly invisible against the surface. */}
-                {([
-                    { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-muted-foreground)', activeColor: 'var(--app-foreground)',          emoji: null },
-                    { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-muted-foreground)', activeColor: 'var(--app-foreground)',          emoji: '🌐' },
-                    { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    activeColor: 'var(--app-info, #3b82f6)',       emoji: '🏢' },
-                    { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', activeColor: 'var(--app-warning, #f59e0b)',    emoji: '📦' },
-                ] as const).map(chip => {
-                    const active = scopeFilter === chip.key
-                    const ac = chip.activeColor
-                    return (
-                        <button
-                            key={chip.key ?? 'all'}
-                            onClick={() => setScopeFilter(chip.key as any)}
-                            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl text-tp-xs font-semibold transition-all flex-shrink-0"
-                            style={{
-                                background: active ? `color-mix(in srgb, ${ac} 14%, transparent)` : 'var(--app-surface, transparent)',
-                                border: `1px solid ${active
-                                    ? `color-mix(in srgb, ${ac} 45%, transparent)`
-                                    : 'var(--app-border)'}`,
-                                color: active ? ac : 'var(--app-muted-foreground)',
-                                boxShadow: active ? `0 1px 0 color-mix(in srgb, ${ac} 18%, transparent)` : 'none',
-                            }}
-                            title={
-                                chip.key === 'tenant_wide' ? 'Tenant-wide — Balances do NOT change with branch filter (AR/AP/Bank/Equity).'
-                                : chip.key === 'branch_split' ? 'Branch-split — Balances filter to the selected branch (Revenue/Expense/COGS).'
-                                : chip.key === 'branch_located' ? 'Branch-located — Balances reflect only the selected branch (Inventory/WIP).'
-                                : 'Show every account regardless of scope behavior.'
-                            }
-                        >
-                            {chip.emoji && <span className="text-[13px] leading-none">{chip.emoji}</span>}
-                            <span>{chip.label}</span>
-                            <span className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md leading-none"
+                {/* Scope filter — segmented tab strip with the iOS-style
+                    "lifted" active tab pattern: the strip itself sits in a
+                    slightly recessed gray, and the active tab pops out
+                    on a solid surface with a soft shadow. The contrast
+                    comes from LIGHTNESS difference between strip and
+                    active-tab backgrounds — not from a color-mix tint that
+                    disappears against the surface (the bug just fixed). */}
+                <div className="h-9 inline-flex items-stretch rounded-xl flex-shrink-0 p-1 gap-0.5"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-border) 35%, transparent)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                    {([
+                        { key: null,             label: 'All',      count: scopeCounts.all,            activeColor: 'var(--app-foreground)',          emoji: null },
+                        { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    activeColor: 'var(--app-foreground)',          emoji: '🌐' },
+                        { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   activeColor: 'var(--app-info, #3b82f6)',       emoji: '🏢' },
+                        { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, activeColor: 'var(--app-warning, #f59e0b)',    emoji: '📦' },
+                    ] as const).map(chip => {
+                        const active = scopeFilter === chip.key
+                        const ac = chip.activeColor
+                        return (
+                            <button
+                                key={chip.key ?? 'all'}
+                                onClick={() => setScopeFilter(chip.key as any)}
+                                className="inline-flex items-center gap-1.5 px-3 rounded-lg text-tp-xs font-semibold transition-all"
                                 style={{
-                                    background: active
-                                        ? `color-mix(in srgb, ${ac} 22%, transparent)`
-                                        : 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    // Active = SOLID page-background lift (high contrast vs the
+                                    //          recessed strip below). Idle = transparent.
+                                    background: active ? 'var(--app-background, var(--app-surface, #ffffff))' : 'transparent',
                                     color: active ? ac : 'var(--app-muted-foreground)',
-                                }}>
-                                {chip.count}
-                            </span>
-                        </button>
-                    )
-                })}
+                                    boxShadow: active
+                                        ? '0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06)'
+                                        : 'none',
+                                    border: active ? '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' : '1px solid transparent',
+                                }}
+                                title={
+                                    chip.key === 'tenant_wide' ? 'Tenant-wide — Balances do NOT change with branch filter (AR/AP/Bank/Equity).'
+                                    : chip.key === 'branch_split' ? 'Branch-split — Balances filter to the selected branch (Revenue/Expense/COGS).'
+                                    : chip.key === 'branch_located' ? 'Branch-located — Balances reflect only the selected branch (Inventory/WIP).'
+                                    : 'Show every account regardless of scope behavior.'
+                                }
+                            >
+                                {chip.emoji && <span className="text-[13px] leading-none">{chip.emoji}</span>}
+                                <span>{chip.label}</span>
+                                <span className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md leading-none"
+                                    style={{
+                                        background: active
+                                            ? `color-mix(in srgb, ${ac} 16%, transparent)`
+                                            : 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                        color: active ? ac : 'var(--app-muted-foreground)',
+                                    }}>
+                                    {chip.count}
+                                </span>
+                            </button>
+                        )
+                    })}
+                </div>
 
                 <button onClick={() => setShowInactive(p => !p)}
                     title={t('finance.coa.inactive')}
