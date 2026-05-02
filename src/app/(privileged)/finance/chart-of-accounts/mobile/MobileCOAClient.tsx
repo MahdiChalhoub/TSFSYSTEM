@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useTransition } from 'react'
 import {
     BookOpen, Plus, Wallet, TrendingDown, TrendingUp, BarChart3, Scale,
     Eye, EyeOff, RefreshCcw, Settings2, Library, FileText,
-    Pencil, Power, Copy, Eye as EyeIcon,
+    Pencil, Power, Copy, Eye as EyeIcon, X,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import { MobileAccountDetailSheet } from './MobileAccountDetailSheet'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/finance-chart-of-accounts-mobile'
 import { RecalculateBalancesDialog } from '../_components/RecalculateBalancesDialog'
+import { useBranchScope } from '@/context/BranchContext'
 
 // Loose COA-account shape — backend sends a denormalized DRF tree.
 type COAAccount = {
@@ -40,7 +41,38 @@ export function MobileCOAClient({ accounts }: { accounts: COAAccount[] }) {
     const [actionNode, setActionNode] = useState<COATreeNode | COAAccount | null>(null)
     const [showInactive, setShowInactive] = useState(false)
     const [typeFilter, setTypeFilter] = useState<string | null>(null)
+    const [scopeFilter, setScopeFilter] = useState<null | 'tenant_wide' | 'branch_split' | 'branch_located'>(null)
     const [recalcOpen, setRecalcOpen] = useState(false)
+    const { branchId } = useBranchScope()
+    const isBranchScoped = branchId != null
+    /** Dismissable session-scoped banner state — same key as the desktop. */
+    const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false
+        return sessionStorage.getItem('coa.branch_banner_dismissed') === '1'
+    })
+    const dismissBanner = () => {
+        setBannerDismissed(true)
+        try { sessionStorage.setItem('coa.branch_banner_dismissed', '1') } catch { /* private mode */ }
+    }
+
+    // Mirror of backend ChartOfAccount.scope_mode (matches MobileAccountRow / desktop).
+    const deriveScope = (a: any): 'tenant_wide' | 'branch_split' | 'branch_located' => {
+        const role = String(a.system_role || '').toUpperCase()
+        if (['INVENTORY','INVENTORY_ASSET','WIP'].includes(role)) return 'branch_located'
+        if (['REVENUE','REVENUE_CONTROL','COGS','COGS_CONTROL','EXPENSE','DISCOUNT_GIVEN','DISCOUNT_RECEIVED','FX_GAIN','FX_LOSS','DEPRECIATION_EXP','BAD_DEBT','DELIVERY_FEES','VAT_INPUT','VAT_OUTPUT','GRNI'].includes(role)) return 'branch_split'
+        const sysco = String(a.syscohadaCode || a.syscohada_code || '')
+        if (sysco) {
+            if (sysco[0] === '3') return 'branch_located'
+            if (sysco[0] === '6' || sysco[0] === '7') return 'branch_split'
+        }
+        const code = String(a.code || '')
+        if (a.type === 'ASSET' && /^3\d/.test(code)) return 'branch_located'
+        const name = String(a.name || '').toLowerCase()
+        if (a.type === 'ASSET' && /\b(stock|inventory|inventaire|marchandise|matiere|matière|wip)\b/.test(name)) return 'branch_located'
+        if (a.type === 'INCOME' || a.type === 'EXPENSE') return 'branch_split'
+        return 'tenant_wide'
+    }
+    const scopeOf = (a: any) => (a.scope_mode as string) || deriveScope(a)
 
     const stats = useMemo(() => {
         const byType = (t: string) => accounts.filter((a) => a.type === t)
@@ -128,17 +160,32 @@ export function MobileCOAClient({ accounts }: { accounts: COAAccount[] }) {
     const tree = useMemo(() => {
         let filtered = showInactive ? accounts : accounts.filter((a) => a.isActive !== false)
         if (typeFilter) filtered = filtered.filter((a) => a.type === typeFilter)
+        if (scopeFilter) filtered = filtered.filter((a: any) => scopeOf(a) === scopeFilter)
 
         const map: Record<string, COATreeNode> = {}
         filtered.forEach(a => { map[a.id] = { ...a, children: [] } })
         const roots: COATreeNode[] = []
         filtered.forEach(a => {
             const pid = a.parentId ?? a.parent
+            // Orphan-promote: keep matching rows visible even when parent
+            // got filtered out (otherwise the count chip would lie).
             if (pid && map[pid]) map[pid].children.push(map[a.id])
-            else if (!pid) roots.push(map[a.id])
+            else roots.push(map[a.id])
         })
         return roots
-    }, [accounts, showInactive, typeFilter])
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- scopeOf is stable
+    }, [accounts, showInactive, typeFilter, scopeFilter])
+
+    const scopeCounts = useMemo(() => {
+        const active = accounts.filter((a) => a.isActive !== false)
+        return {
+            all: active.length,
+            tenant_wide: active.filter((a: any) => scopeOf(a) === 'tenant_wide').length,
+            branch_split: active.filter((a: any) => scopeOf(a) === 'branch_split').length,
+            branch_located: active.filter((a: any) => scopeOf(a) === 'branch_located').length,
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [accounts])
 
     return (
         <MobileMasterPage
@@ -265,6 +312,62 @@ export function MobileCOAClient({ accounts }: { accounts: COAAccount[] }) {
 
                 return (
                     <>
+                        {/* Branch-scope banner — compact, dismissable. */}
+                        {isBranchScoped && !bannerDismissed && (
+                            <div className="mb-2 rounded-lg px-2 py-1 flex items-center gap-2"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 22%, transparent)',
+                                }}>
+                                <span style={{ fontSize: 11, lineHeight: 1 }}>⚠️</span>
+                                <span className="flex-1 truncate"
+                                    style={{ fontSize: 'var(--tp-xxs)', color: 'var(--app-foreground)' }}>
+                                    <strong className="font-bold">Branch active</strong>
+                                    <span className="text-app-muted-foreground"> — chip per row</span>
+                                </span>
+                                <button onClick={dismissBanner}
+                                    title="Dismiss"
+                                    aria-label="Dismiss"
+                                    className="flex items-center justify-center rounded-md flex-shrink-0 active:scale-90 transition-transform"
+                                    style={{
+                                        width: 20, height: 20,
+                                        color: 'var(--app-muted-foreground)',
+                                    }}>
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Scope-filter chip rail — tenant / split / located. */}
+                        <div data-tour="scope-filter-rail" className="flex gap-1.5 overflow-x-auto mb-2 pb-1" style={{ scrollbarWidth: 'none' }}>
+                            {([
+                                { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-primary)',          emoji: null },
+                                { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-foreground)',       emoji: '🌐' },
+                                { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    emoji: '🏢' },
+                                { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', emoji: '📦' },
+                            ] as const).map(f => {
+                                const active = scopeFilter === f.key
+                                return (
+                                    <button
+                                        key={f.label}
+                                        onClick={() => setScopeFilter(active ? null : (f.key as any))}
+                                        className="flex-shrink-0 inline-flex items-center gap-1 font-bold uppercase tracking-wide rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+                                        style={{
+                                            fontSize: 'var(--tp-xxs)',
+                                            background: active
+                                                ? `color-mix(in srgb, ${f.color} 14%, transparent)`
+                                                : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                                            color: active ? f.color : 'var(--app-muted-foreground)',
+                                            border: `1px solid ${active ? `color-mix(in srgb, ${f.color} 40%, transparent)` : 'color-mix(in srgb, var(--app-border) 45%, transparent)'}`,
+                                        }}>
+                                        {f.emoji && <span style={{ fontSize: 12, lineHeight: 1 }}>{f.emoji}</span>}
+                                        <span>{f.label}</span>
+                                        <span style={{ fontSize: 9, fontWeight: 700, opacity: 0.85 }}>{f.count}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
                         {/* Type-filter chip rail */}
                         <div className="flex gap-1.5 overflow-x-auto mb-2 pb-1" style={{ scrollbarWidth: 'none' }}>
                             {[

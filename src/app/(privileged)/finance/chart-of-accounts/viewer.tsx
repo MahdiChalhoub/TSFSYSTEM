@@ -40,6 +40,16 @@ export function ChartOfAccountsViewer({ accounts }: {
     /** Scope filter — narrows the tree to one of the three scope_mode buckets.
      *  null = show everything. Set by the chip row directly under the KPIs. */
     const [scopeFilter, setScopeFilter] = useState<null | 'tenant_wide' | 'branch_split' | 'branch_located'>(null)
+    /** Lets the user dismiss the branch-filter explainer banner for the
+     *  remainder of the session. sessionStorage so it returns on next visit. */
+    const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false
+        return sessionStorage.getItem('coa.branch_banner_dismissed') === '1'
+    })
+    const dismissBanner = () => {
+        setBannerDismissed(true)
+        try { sessionStorage.setItem('coa.branch_banner_dismissed', '1') } catch { /* private mode */ }
+    }
     const searchRef = useRef<HTMLInputElement>(null)
 
     // Keyboard shortcuts. Escape exits focus mode from anywhere — even
@@ -164,12 +174,40 @@ export function ChartOfAccountsViewer({ accounts }: {
         return roots
     }, [accounts, showInactive, searchQuery, typeFilter, scopeFilter])
 
+    /**
+     * Map the form's Branch-Scope override to a representative `system_role`.
+     * The derivation in ChartOfAccount.scope_mode reads system_role first,
+     * so writing one of these values forces the desired classification.
+     * AUTO keeps whatever role the user (or template) already picked.
+     */
+    const resolveSystemRole = (override: string | null, accountType: string): string | undefined => {
+        switch (override) {
+            case 'BRANCH_LOCATED':
+                return 'INVENTORY'
+            case 'BRANCH_SPLIT':
+                // Pick a sensible role per account type.
+                return accountType === 'INCOME' ? 'REVENUE'
+                    : accountType === 'EXPENSE' ? 'EXPENSE'
+                    : 'EXPENSE'  // ASSET/LIABILITY scoped to branch are rare; use generic.
+            case 'TENANT_WIDE':
+                return accountType === 'ASSET' ? 'BANK_ACCOUNT'
+                    : accountType === 'LIABILITY' ? 'PAYABLE'
+                    : accountType === 'EQUITY' ? 'CAPITAL'
+                    : undefined
+            default:
+                return undefined  // AUTO — leave system_role untouched.
+        }
+    }
+
     // Handlers
     async function handleCreate(formData: FormData) {
+        const accountType = formData.get('type') as string
+        const scopeOverride = formData.get('scopeOverride') as string | null
+        const systemRoleFromScope = resolveSystemRole(scopeOverride, accountType)
         const data = {
             code: formData.get('code') as string,
             name: formData.get('name') as string,
-            type: formData.get('type') as string,
+            type: accountType,
             subType: formData.get('subType') as string,
             parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : undefined,
             syscohadaCode: formData.get('syscohadaCode') as string,
@@ -177,6 +215,9 @@ export function ChartOfAccountsViewer({ accounts }: {
             currency: (formData.get('currency') as string) || undefined,
             revaluationRequired: formData.get('revaluationRequired') === 'on',
             monetaryClassification: (formData.get('monetaryClassification') as 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE') || undefined,
+            // Pass system_role only when the override is non-Auto. Action
+            // / serializer will accept it as a valid SYSTEM_ROLE choice.
+            ...(systemRoleFromScope ? { systemRole: systemRoleFromScope } : {}),
         }
         startTransition(async () => {
             const { createAccount } = await import('@/app/actions/finance/accounts')
@@ -190,10 +231,13 @@ export function ChartOfAccountsViewer({ accounts }: {
 
     async function handleUpdate(formData: FormData) {
         if (!editingAccount) return
+        const accountType = formData.get('type') as string
+        const scopeOverride = formData.get('scopeOverride') as string | null
+        const systemRoleFromScope = resolveSystemRole(scopeOverride, accountType)
         const data = {
             code: formData.get('code') as string,
             name: formData.get('name') as string,
-            type: formData.get('type') as string,
+            type: accountType,
             subType: formData.get('subType') as string,
             parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null,
             syscohadaCode: formData.get('syscohadaCode') as string,
@@ -202,6 +246,7 @@ export function ChartOfAccountsViewer({ accounts }: {
             currency: (formData.get('currency') as string) || undefined,
             revaluationRequired: formData.get('revaluationRequired') === 'on',
             monetaryClassification: (formData.get('monetaryClassification') as 'MONETARY' | 'NON_MONETARY' | 'INCOME_EXPENSE') || undefined,
+            ...(systemRoleFromScope ? { systemRole: systemRoleFromScope } : {}),
         }
         startTransition(async () => {
             const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')
@@ -264,23 +309,32 @@ export function ChartOfAccountsViewer({ accounts }: {
                 </div>
             )}
 
-            {/* Branch-scope explainer banner — surfaces only when a branch
-                is selected, so users understand which balances filter and
-                which don't. Avoids the silent-bug class where AR/AP/Equity
-                look unchanged and the user wonders if the filter broke. */}
-            {!focusMode && isBranchScoped && (
-                <div className="mx-4 md:mx-6 mb-3 rounded-xl px-3 py-2 flex items-start gap-2"
+            {/* Branch-scope explainer banner — compact, dismissable. Tells
+                the user which balances filter vs. stay tenant-wide. Hidden
+                once dismissed for the session. */}
+            {!focusMode && isBranchScoped && !bannerDismissed && (
+                <div className="mx-4 md:mx-6 mb-2 rounded-lg px-2.5 py-1 flex items-center gap-2"
                     style={{
                         background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)',
-                        border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 22%, transparent)',
                     }}>
-                    <span className="text-[14px] flex-shrink-0 mt-0.5">⚠️</span>
-                    <div className="text-tp-xs leading-snug" style={{ color: 'var(--app-foreground)' }}>
-                        <strong className="font-bold">Branch filter active.</strong>{' '}
-                        Some balances change with branch (Revenue, COGS, Expense, Inventory)
-                        — others stay tenant-wide on purpose (AR, AP, Bank, Equity).
-                        Each row shows a chip indicating its scope behavior.
-                    </div>
+                    <span style={{ fontSize: 11, lineHeight: 1 }}>⚠️</span>
+                    <span className="flex-1 truncate text-tp-xxs" style={{ color: 'var(--app-foreground)' }}
+                        title="Some balances change with branch (Revenue/COGS/Expense/Inventory) — others stay tenant-wide on purpose (AR/AP/Bank/Equity). Each row's chip indicates its scope.">
+                        <strong className="font-bold">Branch filter active</strong>
+                        <span className="text-app-muted-foreground"> — see chip per row</span>
+                    </span>
+                    <button onClick={dismissBanner}
+                        title="Dismiss for this session"
+                        className="flex items-center justify-center rounded-md transition-colors flex-shrink-0"
+                        style={{
+                            width: 18, height: 18,
+                            color: 'var(--app-muted-foreground)',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-warning, #f59e0b)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}>
+                        <X size={11} />
+                    </button>
                 </div>
             )}
 

@@ -28,6 +28,10 @@ const CoaAccountSchema = z.object({
     currency: z.string().optional(),
     revaluationRequired: z.boolean().optional(),
     monetaryClassification: z.enum(['MONETARY', 'NON_MONETARY', 'INCOME_EXPENSE']).optional(),
+    // Drives ChartOfAccount.scope_mode classification on the backend.
+    // Set explicitly via the form's "Branch Scope" field (Auto leaves
+    // it untouched). Accepts any SYSTEM_ROLE_CHOICES value.
+    systemRole: z.string().optional(),
 }).passthrough()
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
@@ -113,6 +117,7 @@ export async function createAccount(data: unknown) {
                 currency: parsed.currency,
                 revaluation_required: parsed.revaluationRequired ?? false,
                 monetary_classification: parsed.monetaryClassification ?? 'MONETARY',
+                ...(parsed.systemRole ? { system_role: parsed.systemRole } : {}),
             })
         })
         revalidatePath('/finance/chart-of-accounts')
@@ -141,6 +146,7 @@ export async function updateChartOfAccount(id: number, data: unknown) {
                 currency: parsed.currency,
                 revaluation_required: parsed.revaluationRequired,
                 monetary_classification: parsed.monetaryClassification,
+                ...(parsed.systemRole ? { system_role: parsed.systemRole } : {}),
             })
         })
         revalidatePath('/finance/chart-of-accounts')

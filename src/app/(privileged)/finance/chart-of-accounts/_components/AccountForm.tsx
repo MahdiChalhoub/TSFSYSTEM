@@ -127,6 +127,40 @@ export function AccountForm({
                     <option value="INCOME_EXPENSE">{t('finance.coa.form_income_expense')}</option>
                 </select>
             </div>
+
+            {/* ── Branch scope ─────────────────────────────────────────────
+                Auto picks the right behavior from type/system_role/code (the
+                derivation in ChartOfAccount.scope_mode). For accountants who
+                want to override the auto-classification, set explicitly:
+                  • Tenant-wide  — never filtered by branch (AR/AP/Bank/Equity)
+                  • Branch-split — filtered to selected branch (Revenue/Expense)
+                  • Branch-located — physically scoped (Inventory/WIP)
+                Selecting a non-Auto value sets a representative `system_role`
+                that the derivation already recognizes — no schema change. */}
+            <div>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block"
+                    style={{ color: 'var(--app-muted-foreground)' }}
+                    title="Controls how this account's balance reacts to a Branch filter. Auto picks the right answer based on type and code; override only if the auto-classification is wrong.">
+                    Branch Scope
+                </label>
+                <select
+                    name="scopeOverride"
+                    defaultValue={(() => {
+                        const role = String(initialData?.system_role || '').toUpperCase()
+                        if (['INVENTORY','INVENTORY_ASSET','WIP'].includes(role)) return 'BRANCH_LOCATED'
+                        if (['REVENUE','REVENUE_CONTROL','COGS','COGS_CONTROL','EXPENSE','DELIVERY_FEES','DEPRECIATION_EXP','BAD_DEBT','GRNI'].includes(role)) return 'BRANCH_SPLIT'
+                        if (['AR_CONTROL','AP_CONTROL','CASH_ACCOUNT','BANK_ACCOUNT','RECEIVABLE','PAYABLE','CAPITAL','RETAINED_EARNINGS','LOAN','TAX_PAYABLE','TAX_RECEIVABLE'].includes(role)) return 'TENANT_WIDE'
+                        return 'AUTO'
+                    })()}
+                    className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
+                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                >
+                    <option value="AUTO">Auto (recommended)</option>
+                    <option value="TENANT_WIDE">🌐 Tenant-wide</option>
+                    <option value="BRANCH_SPLIT">🏢 Branch-split</option>
+                    <option value="BRANCH_LOCATED">📦 Branch-located</option>
+                </select>
+            </div>
             <div className="col-span-full">
                 <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
                     <input

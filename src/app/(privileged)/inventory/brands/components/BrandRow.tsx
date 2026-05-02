@@ -634,8 +634,15 @@ export function BrandRow({
  *  so the three facets stay consistent.
  * ═══════════════════════════════════════════════════════════ */
 
+/**
+ * Facet group header — visual match for the LinkedTree group headers on
+ * the /countries page: 4% color tint background, 12% colored border, 3px
+ * left accent stripe in kind color, 32×32 icon tile, chevron + colored
+ * label + count badge. Indented + branched off a trunk line so it reads
+ * as a section divider inside the parent brand row.
+ */
 function FacetSection({
-    label, icon, color, isOpen, onToggle, count, selectable, children
+    label, icon, color, isOpen, onToggle, count, children
 }: {
     label: string
     icon: React.ReactNode
@@ -647,81 +654,112 @@ function FacetSection({
     children: React.ReactNode
 }) {
     return (
-        <>
-            <div
-                className="group flex items-stretch relative cursor-pointer transition-colors duration-150 hover:bg-app-surface-hover"
+        <div className="relative mx-3 my-2" style={{ paddingLeft: '24px' }}>
+            {/* Branch from trunk (vertical bar drawn by parent layout)
+                into this group's row — same connector treatment as
+                /countries page LinkedTree. */}
+            <div className="absolute pointer-events-none"
+                style={{ left: '11px', top: 0, bottom: isOpen ? 0 : '50%', width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+            <div className="absolute pointer-events-none"
+                style={{ left: '11px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+
+            <button
+                type="button"
                 onClick={onToggle}
+                className="w-full group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer rounded-lg text-left relative overflow-hidden"
                 style={{
-                    paddingLeft: '12px',
-                    background: 'color-mix(in srgb, var(--app-border) 15%, transparent)',
-                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                }}>
-                {selectable && <div className="w-9 flex-shrink-0" />}
-                <div className="flex items-center gap-2 flex-1 min-w-0 py-1.5 pl-3 pr-3">
-                    <ChevronRight
-                        size={12}
-                        className="flex-shrink-0 transition-transform duration-200"
-                        style={{ color, transform: isOpen ? 'rotate(90deg)' : 'none' }} />
+                    padding: '8px 10px',
+                    background: `color-mix(in srgb, ${color} 4%, transparent)`,
+                    border: `1px solid color-mix(in srgb, ${color} 12%, transparent)`,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${color} 8%, transparent)` }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${color} 4%, transparent)` }}>
+                {/* Left accent stripe in the kind's color — depth marker */}
+                <span className="absolute left-0 top-0 bottom-0 w-[3px] pointer-events-none"
+                    style={{ background: color, opacity: 0.7 }} />
+                <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0 ml-1"
+                    style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
+                    <ChevronRight size={11} />
+                </span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
                     {icon}
-                    <span className="text-tp-xxs font-black uppercase tracking-widest"
-                        style={{ color }}>
-                        {label}
-                    </span>
-                    <span className="ml-auto text-tp-xxs font-bold px-1.5 py-[1px] rounded-full"
-                        style={{
-                            background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                            color
-                        }}>
+                </div>
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span className="text-tp-md font-bold truncate" style={{ color }}>{label}</span>
+                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded tabular-nums"
+                        style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
                         {count}
                     </span>
                 </div>
-            </div>
-            {isOpen && children}
-        </>
+            </button>
+
+            {isOpen && (
+                <div className="relative mt-1" style={{ paddingLeft: '12px' }}>
+                    {children}
+                </div>
+            )}
+        </div>
     )
 }
 
+/**
+ * Level-3 value row — same row template as the /countries LinkedLeaf:
+ * 28×28 icon at 7% color tint, muted-foreground name, lighter weight,
+ * branch connector lines on the left so the eye reads it as the
+ * deepest level. Clickable to expand into product list.
+ */
 function FacetValueRow({
-    label, isOpen, onToggle, count, indent, selectable, iconColor, icon, isMuted
+    label, isOpen, onToggle, count, iconColor, icon, isMuted, isLast
 }: {
     label: string
     isOpen: boolean
     onToggle: () => void
     count: number
-    indent: number
+    indent?: number
     selectable?: boolean
     iconColor: string
     icon: React.ReactNode
     isMuted?: boolean
+    isLast?: boolean
 }) {
     return (
-        <div
-            className="group flex items-stretch relative cursor-pointer transition-colors duration-150 hover:bg-app-surface-hover"
-            onClick={onToggle}
-            style={{
-                paddingLeft: '12px',
-                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
-            }}>
-            {selectable && <div className="w-9 flex-shrink-0" />}
-            <div className="flex items-center gap-2 flex-1 min-w-0 py-2 pr-3"
-                style={{ paddingLeft: `${indent}px` }}>
-                <ChevronRight
-                    size={13}
-                    className="flex-shrink-0 transition-transform duration-200"
-                    style={{ color: 'var(--app-text-faint)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
-                <span style={{ color: iconColor }}>{icon}</span>
-                <span className={`text-tp-sm font-semibold ${isMuted ? 'italic' : ''}`}
-                    style={{ color: isMuted ? 'var(--app-text-faint)' : 'var(--app-foreground)' }}>
-                    {label}
+        <div className="relative" style={{ paddingLeft: '24px' }}>
+            {/* Branch connectors */}
+            <div className="absolute pointer-events-none"
+                style={{ left: '4px', top: 0, bottom: isLast && !isOpen ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+            <div className="absolute pointer-events-none"
+                style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+
+            <button
+                type="button"
+                onClick={onToggle}
+                className="group w-full text-left flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg cursor-pointer"
+                style={{ padding: '6px 10px', color: 'inherit', background: 'transparent' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0"
+                    style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
+                    <ChevronRight size={10} />
                 </span>
-                <span className="ml-auto text-tp-xxs font-semibold px-2 py-0.5 rounded-full"
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: `color-mix(in srgb, ${iconColor} 7%, transparent)`, color: iconColor, opacity: 0.85 }}>
+                    {icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <span className={`text-tp-sm font-semibold truncate ${isMuted ? 'italic' : ''}`}
+                        style={{ color: isMuted ? 'var(--app-text-faint)' : 'var(--app-muted-foreground)' }}>
+                        {label}
+                    </span>
+                </div>
+                <span className="text-tp-xxs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                     style={{
-                        background: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
+                        background: `color-mix(in srgb, ${iconColor} 8%, transparent)`,
                         color: iconColor
                     }}>
                     {count}
                 </span>
-            </div>
+            </button>
         </div>
     )
 }
