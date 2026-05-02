@@ -37,6 +37,9 @@ export function ChartOfAccountsViewer({ accounts }: {
     const [editingAccount, setEditingAccount] = useState<Record<string, any> | null>(null)
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info'; id?: number } | null>(null)
     const [recalcOpen, setRecalcOpen] = useState(false)
+    /** Scope filter — narrows the tree to one of the three scope_mode buckets.
+     *  null = show everything. Set by the chip row directly under the KPIs. */
+    const [scopeFilter, setScopeFilter] = useState<null | 'tenant_wide' | 'branch_split' | 'branch_located'>(null)
     const searchRef = useRef<HTMLInputElement>(null)
 
     // Keyboard shortcuts
@@ -64,10 +67,22 @@ export function ChartOfAccountsViewer({ accounts }: {
         // eslint-disable-next-line react-hooks/exhaustive-deps -- locale change forces full reload
     }, [accounts])
 
+    // Counts for the scope-filter chips — recomputed when accounts change.
+    const scopeCounts = useMemo(() => {
+        const active = accounts.filter(a => a.isActive)
+        return {
+            all: active.length,
+            tenant_wide: active.filter(a => a.scope_mode === 'tenant_wide').length,
+            branch_split: active.filter(a => a.scope_mode === 'branch_split').length,
+            branch_located: active.filter(a => a.scope_mode === 'branch_located').length,
+        }
+    }, [accounts])
+
     // Filter + build tree
     const tree = useMemo(() => {
         let filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
         if (typeFilter) filtered = filtered.filter(a => a.type === typeFilter)
+        if (scopeFilter) filtered = filtered.filter(a => a.scope_mode === scopeFilter)
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase()
             filtered = filtered.filter(a =>
@@ -84,7 +99,7 @@ export function ChartOfAccountsViewer({ accounts }: {
             else if (!a.parentId) roots.push(map[a.id])
         })
         return roots
-    }, [accounts, showInactive, searchQuery, typeFilter])
+    }, [accounts, showInactive, searchQuery, typeFilter, scopeFilter])
 
     // Handlers
     async function handleCreate(formData: FormData) {
@@ -207,6 +222,58 @@ export function ChartOfAccountsViewer({ accounts }: {
             )}
 
             {!focusMode && <KPIStrip stats={stats} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />}
+
+            {/* Scope filter chips — split tenant-wide / branch-split /
+                branch-located accounts with one click. Lets the user
+                isolate the kind of accounts they care about. */}
+            {!focusMode && (
+                <div className="flex items-center gap-1.5 mb-3 px-4 md:px-6 flex-wrap flex-shrink-0">
+                    <span className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mr-1">
+                        Scope
+                    </span>
+                    {([
+                        { key: null,             label: 'All',             count: scopeCounts.all,            color: 'var(--app-muted-foreground)', emoji: null },
+                        { key: 'tenant_wide',    label: 'Tenant-wide',     count: scopeCounts.tenant_wide,    color: 'var(--app-muted-foreground)', emoji: '🌐' },
+                        { key: 'branch_split',   label: 'Branch-split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    emoji: '🏢' },
+                        { key: 'branch_located', label: 'Branch-located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', emoji: '📦' },
+                    ] as const).map(chip => {
+                        const active = scopeFilter === chip.key
+                        return (
+                            <button
+                                key={chip.key ?? 'all'}
+                                onClick={() => setScopeFilter(chip.key as any)}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-tp-xs font-bold transition-all"
+                                style={{
+                                    background: active
+                                        ? `color-mix(in srgb, ${chip.color} 12%, transparent)`
+                                        : 'transparent',
+                                    border: `1px solid ${active
+                                        ? `color-mix(in srgb, ${chip.color} 35%, transparent)`
+                                        : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
+                                    color: active ? chip.color : 'var(--app-muted-foreground)',
+                                }}
+                                title={
+                                    chip.key === 'tenant_wide' ? 'Balances do NOT change with branch filter (AR/AP/Bank/Equity).'
+                                    : chip.key === 'branch_split' ? 'Balances filter to the selected branch (Revenue/Expense/COGS).'
+                                    : chip.key === 'branch_located' ? 'Balances reflect only the selected branch (Inventory/WIP).'
+                                    : 'Show every account regardless of scope behavior.'
+                                }
+                            >
+                                {chip.emoji && <span>{chip.emoji}</span>}
+                                <span>{chip.label}</span>
+                                <span className="text-tp-xxs font-bold tabular-nums px-1 rounded"
+                                    style={{
+                                        background: active
+                                            ? `color-mix(in srgb, ${chip.color} 18%, transparent)`
+                                            : 'color-mix(in srgb, var(--app-border) 35%, transparent)',
+                                    }}>
+                                    {chip.count}
+                                </span>
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
 
             <div data-tour="search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
                 <div className="flex-1 relative">
