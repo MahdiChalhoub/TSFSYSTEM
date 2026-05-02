@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
     Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag
 } from 'lucide-react'
@@ -31,40 +31,49 @@ export function BrandRow({
     const [isOpen, setIsOpen] = useState(forceExpanded || false)
     const [products, setProducts] = useState<ProductRow[] | null>(null)
     const [loading, setLoading] = useState(false)
-    const [openCountries, setOpenCountries] = useState<Set<number>>(new Set())
+    const [openCountries, setOpenCountries] = useState<Set<string>>(new Set())
 
     const cats = brand.categories?.length || 0
     const countries = brand.countries?.length || 0
     const totalProducts = brand.product_count || 0
 
-    // Fetch products on expand
-    const handleToggleOpen = useCallback(async () => {
-        if (!isOpen && products === null && !loading) {
-            setLoading(true)
-            try {
-                const res = await erpFetch(`inventory/products/?brand=${brand.id}&page_size=200`)
-                const items = Array.isArray(res) ? res : (res?.results ?? [])
-                setProducts(items)
-            } catch (e) {
-                setProducts([])
-            } finally {
-                setLoading(false)
-            }
+    // Lazy fetch products
+    const fetchProducts = useCallback(async () => {
+        if (products !== null || loading) return
+        setLoading(true)
+        try {
+            const res = await erpFetch(`inventory/products/?brand=${brand.id}&page_size=200`)
+            const items = Array.isArray(res) ? res : (res?.results ?? [])
+            setProducts(items)
+        } catch {
+            setProducts([])
+        } finally {
+            setLoading(false)
         }
-        setIsOpen(v => !v)
-    }, [brand.id, isOpen, products, loading])
+    }, [brand.id, products, loading])
 
-    // Force expand if search matches brand name
-    if (searchQuery && !isOpen && products === null) {
-        setIsOpen(true)
-        if (!loading && products === null) {
-            setLoading(true)
-            erpFetch(`inventory/products/?brand=${brand.id}&page_size=200`)
-                .then(res => setProducts(Array.isArray(res) ? res : (res?.results ?? [])))
-                .catch(() => setProducts([]))
-                .finally(() => setLoading(false))
+    const handleToggleOpen = useCallback(() => {
+        if (!isOpen && products === null) fetchProducts()
+        setIsOpen(v => !v)
+    }, [isOpen, products, fetchProducts])
+
+    // Auto-expand on search query
+    useEffect(() => {
+        if (searchQuery && searchQuery.trim().length > 0) {
+            setIsOpen(true)
+            if (products === null && !loading) fetchProducts()
         }
-    }
+    }, [searchQuery, products, loading, fetchProducts])
+
+    // Honor Expand-All toggle from TreeMasterPage
+    useEffect(() => {
+        if (forceExpanded === true) {
+            setIsOpen(true)
+            if (products === null && !loading) fetchProducts()
+        } else if (forceExpanded === false) {
+            setIsOpen(false)
+        }
+    }, [forceExpanded, products, loading, fetchProducts])
 
     // Group products by country
     const byCountry = useMemo(() => {
@@ -90,14 +99,11 @@ export function BrandRow({
     }, [products])
 
     const toggleCountry = useCallback((countryId: number | null) => {
+        const key = String(countryId)
         setOpenCountries(prev => {
             const next = new Set(prev)
-            const key = String(countryId)
-            if (next.has(key as any)) {
-                next.delete(key as any)
-            } else {
-                next.add(key as any)
-            }
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
             return next
         })
     }, [])
@@ -109,7 +115,7 @@ export function BrandRow({
                 ═══════════════════════════════════════════════════════════ */}
             <div
                 className="group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover"
-                onClick={() => { if (countries > 0) handleToggleOpen() }}
+                onClick={() => handleToggleOpen()}
                 onDoubleClick={() => onSelect(brand)}
                 style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
@@ -138,24 +144,22 @@ export function BrandRow({
                 {/* Row body */}
                 <div className="relative flex items-center gap-2 flex-1 min-w-0 py-2.5 pl-3 pr-3">
 
-                    {/* Expand chevron */}
-                    {countries > 0 ? (
-                        <div className="flex-shrink-0">
-                            {loading ? (
-                                <Loader2 size={14} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
-                            ) : (
-                                <ChevronRight
-                                    size={14}
-                                    className="transition-transform duration-200"
-                                    style={{
-                                        color: 'var(--app-text-faint)',
-                                        transform: isOpen ? 'rotate(90deg)' : 'none'
-                                    }} />
-                            )}
-                        </div>
-                    ) : (
-                        <div className="w-3.5" />
-                    )}
+                    {/* Expand chevron — always visible. Even when the brand
+                        has no M2M countries, products may carry country FKs
+                        that produce sub-groups on expand. */}
+                    <div className="flex-shrink-0">
+                        {loading ? (
+                            <Loader2 size={14} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+                        ) : (
+                            <ChevronRight
+                                size={14}
+                                className="transition-transform duration-200"
+                                style={{
+                                    color: 'var(--app-text-faint)',
+                                    transform: isOpen ? 'rotate(90deg)' : 'none'
+                                }} />
+                        )}
+                    </div>
 
                     {/* Logo or icon */}
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
@@ -281,7 +285,7 @@ export function BrandRow({
                                 <div className="flex items-center gap-1.5">
                                     {country.code ? (
                                         <span className="text-sm">
-                                            {country.code.toUpperCase().split('').map((char, idx) =>
+                                            {country.code.toUpperCase().split('').map((char) =>
                                                 String.fromCodePoint(0x1F1E6 + (char.charCodeAt(0) - 65))
                                             ).join('')}
                                         </span>
