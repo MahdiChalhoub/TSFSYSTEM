@@ -186,19 +186,48 @@ export function BrandRow({
                             )}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                            {countries > 0 ? (
-                                <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
-                                    <Globe size={9} /> {countries} linked countr{countries === 1 ? 'y' : 'ies'}
-                                </span>
-                            ) : (
-                                <span className="text-tp-xxs font-bold flex items-center gap-0.5 px-1.5 py-[1px] rounded-full"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
-                                        color: 'var(--app-info)'
-                                    }}>
-                                    <Globe size={9} /> Universal
-                                </span>
-                            )}
+                            {(() => {
+                                // Prefer the count derived from products once
+                                // they're loaded — that reflects where the brand
+                                // is *actually* sold. Fall back to the M2M
+                                // brand.countries field only when products
+                                // haven't been fetched yet.
+                                const productCountries = byCountry.filter(c => c.id !== null).length
+                                const hasUniversal = byCountry.some(c => c.id === null)
+                                const linkedCount = products !== null ? productCountries : countries
+
+                                if (linkedCount > 0 && hasUniversal) {
+                                    return (
+                                        <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
+                                            <Globe size={9} /> {linkedCount} countr{linkedCount === 1 ? 'y' : 'ies'} + Universal
+                                        </span>
+                                    )
+                                }
+                                if (linkedCount > 0) {
+                                    return (
+                                        <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
+                                            <Globe size={9} /> {linkedCount} linked countr{linkedCount === 1 ? 'y' : 'ies'}
+                                        </span>
+                                    )
+                                }
+                                if (hasUniversal) {
+                                    return (
+                                        <span className="text-tp-xxs font-bold flex items-center gap-0.5 px-1.5 py-[1px] rounded-full"
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
+                                                color: 'var(--app-info)'
+                                            }}>
+                                            <Globe size={9} /> Universal
+                                        </span>
+                                    )
+                                }
+                                // Products not loaded yet AND no M2M countries
+                                return (
+                                    <span className="text-tp-xxs font-medium text-app-muted-foreground italic">
+                                        Click to load
+                                    </span>
+                                )
+                            })()}
                             {cats > 0 && (
                                 <span className="text-tp-xxs font-medium text-app-muted-foreground">
                                     · {cats} categor{cats === 1 ? 'y' : 'ies'}
