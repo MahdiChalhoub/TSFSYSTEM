@@ -22,12 +22,15 @@
  */
 
 export type ProcurementStatus =
-    | 'NONE'         // no active request or PO
-    | 'REQUESTED'    // request pending or approved, no PO yet
-    | 'PO_SENT'      // PO created and sent to supplier
-    | 'PO_ACCEPTED'  // supplier accepted the PO
-    | 'IN_TRANSIT'   // goods in transit
-    | 'FAILED'       // request rejected/cancelled or PO failed
+    | 'NONE'                  // no active request or PO
+    | 'REQUESTED_PURCHASE'    // purchase request pending or approved, no PO yet
+    | 'REQUESTED_TRANSFER'    // transfer request pending or approved
+    | 'REQUESTED_BOTH'        // both purchase AND transfer active
+    | 'REQUESTED'             // generic fallback (legacy / unknown type)
+    | 'PO_SENT'               // PO created and sent to supplier
+    | 'PO_ACCEPTED'           // supplier accepted the PO
+    | 'IN_TRANSIT'            // goods in transit
+    | 'FAILED'                // request rejected/cancelled or PO failed
 
 export interface ProcurementStatusMeta {
     label: string
@@ -39,12 +42,15 @@ export interface ProcurementStatusMeta {
 // still type-check. Use `getProcurementStatus()` below for safe lookup with
 // fallback.
 export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = {
-    NONE:        { label: 'Available',   color: 'var(--app-success, #22c55e)' },
-    REQUESTED:   { label: 'Requested',   color: 'var(--app-warning, #f59e0b)' },
-    PO_SENT:     { label: 'PO Sent',     color: 'var(--app-info, #3b82f6)' },
-    PO_ACCEPTED: { label: 'PO Accepted', color: 'var(--app-info, #3b82f6)' },
-    IN_TRANSIT:  { label: 'In Transit',  color: 'var(--app-accent)' },
-    FAILED:      { label: 'Failed',      color: 'var(--app-error, #ef4444)' },
+    NONE:               { label: 'Available',           color: 'var(--app-success, #22c55e)' },
+    REQUESTED_PURCHASE: { label: 'Requested · Purchase', color: 'var(--app-warning, #f59e0b)' },
+    REQUESTED_TRANSFER: { label: 'Requested · Transfer', color: 'var(--app-warning, #f59e0b)' },
+    REQUESTED_BOTH:     { label: 'Requested · P+T',      color: 'var(--app-warning, #f59e0b)' },
+    REQUESTED:          { label: 'Requested',            color: 'var(--app-warning, #f59e0b)' },
+    PO_SENT:            { label: 'PO Sent',              color: 'var(--app-info, #3b82f6)' },
+    PO_ACCEPTED:        { label: 'PO Accepted',          color: 'var(--app-info, #3b82f6)' },
+    IN_TRANSIT:         { label: 'In Transit',           color: 'var(--app-accent)' },
+    FAILED:             { label: 'Failed',               color: 'var(--app-error, #ef4444)' },
 }
 
 /**
@@ -59,10 +65,11 @@ export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = 
  */
 const BACKEND_LABEL_TO_ENUM: Record<string, ProcurementStatus> = {
     // Operational / Procurement requests
-    'Requested to Purchase':  'REQUESTED',
-    'Approved to Purchase':   'REQUESTED',
-    'Requested to Transfer':  'REQUESTED',
-    'Approved to Transfer':   'REQUESTED',
+    'Requested to Purchase':  'REQUESTED_PURCHASE',
+    'Approved to Purchase':   'REQUESTED_PURCHASE',
+    'Requested to Transfer':  'REQUESTED_TRANSFER',
+    'Approved to Transfer':   'REQUESTED_TRANSFER',
+    'Requested · P+T':        'REQUESTED_BOTH',
     'Adjustment Pending':     'REQUESTED',
     'Adjustment Approved':    'REQUESTED',
     'Requested':              'REQUESTED',

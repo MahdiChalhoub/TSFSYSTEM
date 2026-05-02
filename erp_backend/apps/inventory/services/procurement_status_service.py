@@ -150,27 +150,34 @@ def get_procurement_status_batch(organization, product_ids):
                 status__in=['PENDING', 'APPROVED']
             ).order_by('product_id', '-requested_at')
 
-            seen_pids = set()
+            # Group by product so we can detect "both purchase AND transfer
+            # are active" and emit a composite label instead of dropping one.
+            by_pid = {}
             for req in active_reqs:
-                pid = req.product_id
-                if pid in seen_pids:
-                    continue
-                seen_pids.add(pid)
+                by_pid.setdefault(req.product_id, []).append(req)
 
-                # Skip if already have a higher priority status from OperationalRequest
-                if pid in result and result[pid]['priority'] >= REQUEST_PRIORITY.get(req.status, 1):
+            for pid, reqs in by_pid.items():
+                # Skip if Phase 1 (OperationalRequest) already set a higher-
+                # or equal-priority status for this product.
+                top_status = max(REQUEST_PRIORITY.get(r.status, 1) for r in reqs)
+                if pid in result and result[pid]['priority'] >= top_status:
                     continue
 
-                label = REQUEST_LABELS.get((req.request_type, req.status), 'Requested')
-                priority = REQUEST_PRIORITY.get(req.status, 1)
-                
+                types = {r.request_type for r in reqs}
+                latest = reqs[0]  # already ordered by -requested_at
+                if 'PURCHASE' in types and 'TRANSFER' in types:
+                    label = 'Requested · P+T'
+                else:
+                    label = REQUEST_LABELS.get((latest.request_type, latest.status), 'Requested')
+
                 result[pid] = {
                     'status': label,
-                    'detail': f"Requested · {int(req.quantity)} units",
-                    'po_number': f'REQ-{req.id}',
-                    'qty_ordered': float(req.quantity),
+                    'detail': f"Requested · {int(latest.quantity)} units"
+                              + (f" · +{len(reqs) - 1}" if len(reqs) > 1 else ''),
+                    'po_number': f'REQ-{latest.id}',
+                    'qty_ordered': float(latest.quantity),
                     'qty_received': 0,
-                    'priority': priority,
+                    'priority': top_status,
                 }
     except Exception as exc:
         logger.error('Procurement status: failed to query ProcurementRequest via connector', exc_info=exc)

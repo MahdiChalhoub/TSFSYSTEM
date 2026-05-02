@@ -197,10 +197,11 @@ class ProductSerializer(serializers.ModelSerializer):
             # product was actively being procured.
             LABEL_TO_KEY = {
                 # Operational / Procurement requests
-                'Requested to Purchase': 'REQUESTED',
-                'Requested to Transfer': 'REQUESTED',
-                'Approved to Purchase':  'REQUESTED',
-                'Approved to Transfer':  'REQUESTED',
+                'Requested to Purchase': 'REQUESTED_PURCHASE',
+                'Requested to Transfer': 'REQUESTED_TRANSFER',
+                'Approved to Purchase':  'REQUESTED_PURCHASE',
+                'Approved to Transfer':  'REQUESTED_TRANSFER',
+                'Requested · P+T':       'REQUESTED_BOTH',
                 'Adjustment Pending':    'REQUESTED',
                 'Adjustment Approved':   'REQUESTED',
                 # PO lifecycle
