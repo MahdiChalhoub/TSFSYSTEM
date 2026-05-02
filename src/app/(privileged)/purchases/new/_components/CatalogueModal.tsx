@@ -57,7 +57,13 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(false)
     const [filtersOpen, setFiltersOpen] = useState(false)
+    const [showSupplierOnly, setShowSupplierOnly] = useState(!!supplierId)
     const searchRef = useRef<HTMLInputElement>(null)
+
+    // Sync showSupplierOnly with prop if it changes
+    useEffect(() => {
+        if (supplierId) setShowSupplierOnly(true)
+    }, [supplierId])
 
     // Fetch filters once
     useEffect(() => {
@@ -78,7 +84,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             if (query) params.set('query', query)
             if (category) params.set('category', category)
             if (brand) params.set('brand', brand)
-            if (supplierId) params.set('supplier', String(supplierId))
+            if (showSupplierOnly && supplierId) params.set('supplier', String(supplierId))
 
             const data: any = await erpFetch(`dashboard/catalogue_list/?${params}`)
             const newItems = data?.items || []
@@ -90,14 +96,14 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         } finally {
             setLoading(false)
         }
-    }, [query, category, brand, supplierId])
+    }, [query, category, brand, supplierId, showSupplierOnly])
 
     // Refetch on filter/query change
     useEffect(() => {
         if (!open) return
         const timer = setTimeout(() => fetchItems(1), 300)
         return () => clearTimeout(timer)
-    }, [open, query, category, brand, fetchItems])
+    }, [open, query, category, brand, showSupplierOnly, fetchItems])
 
     // Focus search on open
     useEffect(() => {
@@ -141,6 +147,16 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                                placeholder="Search by name, SKU, or barcode..."
                                value={query} onChange={(e) => setQuery(e.target.value)} />
                     </div>
+                    
+                    {/* Supplier filter toggle */}
+                    {supplierId && (
+                        <button type="button" onClick={() => setShowSupplierOnly((s: boolean) => !s)}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold border transition-all ${showSupplierOnly ? 'bg-app-success/10 text-app-success border-app-success/30' : 'text-app-muted-foreground border-app-border hover:bg-app-background'}`}>
+                            <ShoppingCart size={12} />
+                            {showSupplierOnly ? 'Supplier Only' : 'All Products'}
+                        </button>
+                    )}
+
                     <button type="button" onClick={() => setFiltersOpen(f => !f)}
                             className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[11px] font-bold border transition-all ${filtersOpen ? 'bg-app-primary/10 text-app-primary border-app-primary/30' : 'text-app-muted-foreground border-app-border hover:bg-app-background'}`}>
                         <Filter size={12} />
@@ -162,8 +178,8 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                             <option value="">All Brands</option>
                             {filters.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
-                        {(category || brand) && (
-                            <button type="button" onClick={() => { setCategory(''); setBrand('') }}
+                        {(category || brand || (supplierId && !showSupplierOnly)) && (
+                            <button type="button" onClick={() => { setCategory(''); setBrand(''); setShowSupplierOnly(true) }}
                                     className="text-[10px] font-bold text-app-error hover:underline">
                                 Clear filters
                             </button>

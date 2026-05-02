@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Coins, Loader2, Plus, Pencil, Trash2, X, DollarSign, Save, Check, Hash,
-  Power, PowerOff, Globe, Building2,
+  Power, PowerOff, Globe, Building2, Pin, Unlink,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -62,8 +62,12 @@ const labelClass = "text-[10px] font-black uppercase tracking-wider text-app-mut
    Currency Edit Modal — opens for create + edit
    ═══════════════════════════════════════════════════════ */
 
-function CurrencyEditModal({ currency, onClose, onSaved }: {
+function CurrencyEditModal({ currency, allCountries = [], initialLinkedCountryIds = [], onClose, onSaved }: {
   currency: Currency | null
+  /** Available countries to choose from — pass to enable the country-link picker. */
+  allCountries?: RelatedCountry[]
+  /** Pre-selected on open: countries whose default_currency is already this one. */
+  initialLinkedCountryIds?: number[]
   onClose: () => void
   onSaved: () => void
 }) {
@@ -77,18 +81,61 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
     is_active: currency?.is_active ?? true,
   })
   const [saving, setSaving] = useState(false)
+  // Linked-countries multi-select. Saved on submit by PATCHing each
+  // delta-country to set/unset its default_currency FK.
+  const [linkedCountryIds, setLinkedCountryIds] = useState<Set<number>>(new Set(initialLinkedCountryIds))
+  const [countrySearch, setCountrySearch] = useState('')
+
+  const toggleCountry = (id: number) => setLinkedCountryIds(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
+
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return allCountries
+    const q = countrySearch.trim().toLowerCase()
+    return allCountries.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.iso2.toLowerCase().includes(q) ||
+      c.iso3.toLowerCase().includes(q)
+    )
+  }, [allCountries, countrySearch])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
       const payload = { ...form, code: form.code.toUpperCase() }
+      let savedId = currency?.id
       if (isNew) {
-        await erpFetch('reference/currencies/', { method: 'POST', body: JSON.stringify(payload) })
+        const created = await erpFetch('reference/currencies/', { method: 'POST', body: JSON.stringify(payload) })
+        savedId = created?.id
         toast.success(`Currency ${payload.code} created`)
       } else {
         await erpFetch(`reference/currencies/${currency!.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
         toast.success(`Currency ${payload.code} updated`)
+      }
+      // Apply country-link deltas. Add new links by setting default_currency
+      // on the country; remove unlinked countries by setting default_currency
+      // back to null. Runs in parallel; failures get aggregated.
+      if (savedId) {
+        const initialSet = new Set(initialLinkedCountryIds)
+        const toLink = Array.from(linkedCountryIds).filter(id => !initialSet.has(id))
+        const toUnlink = initialLinkedCountryIds.filter(id => !linkedCountryIds.has(id))
+        const ops: Promise<any>[] = []
+        for (const cid of toLink) ops.push(
+          erpFetch(`reference/countries/${cid}/`, { method: 'PATCH', body: JSON.stringify({ default_currency: savedId }) })
+        )
+        for (const cid of toUnlink) ops.push(
+          erpFetch(`reference/countries/${cid}/`, { method: 'PATCH', body: JSON.stringify({ default_currency: null }) })
+        )
+        if (ops.length > 0) {
+          const results = await Promise.allSettled(ops)
+          const failed = results.filter(r => r.status === 'rejected').length
+          if (failed > 0) toast.error(`${failed} country link${failed === 1 ? '' : 's'} failed to update`)
+          else toast.success(`Linked ${toLink.length}, unlinked ${toUnlink.length} country/ies`)
+        }
       }
       onSaved()
       onClose()
@@ -138,8 +185,11 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
                 onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required />
             </div>
             <div>
-              <label className={labelClass}>Numeric</label>
+              <label className={labelClass} title="ISO 4217 numeric code — the 3-digit identifier assigned to this currency. Used by banking files (SWIFT, ISO 20022) and some payment processors. Optional.">
+                Numeric
+              </label>
               <input className={fieldClass} value={form.numeric_code} maxLength={3} placeholder="840"
+                title="3-digit ISO 4217 code (e.g., USD=840, EUR=978, JPY=392)"
                 onChange={e => setForm(f => ({ ...f, numeric_code: e.target.value }))} />
             </div>
             <div>
@@ -167,6 +217,52 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
               className="w-4 h-4 rounded border-app-border accent-[var(--app-primary)]" />
             <span className="text-[12px] font-bold text-app-foreground">Active</span>
           </label>
+
+          {/* Linked countries — multi-select. Hidden when no country list
+              was passed (e.g., when this modal is invoked inline from
+              /countries' country form). Saving updates each country's
+              default_currency FK so the linkage shows up on /countries. */}
+          {allCountries.length > 0 && <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className={labelClass + ' mb-0'}>Linked Countries</label>
+              <span className="text-[10px] font-bold text-app-muted-foreground">
+                {linkedCountryIds.size} selected
+              </span>
+            </div>
+            <input
+              type="text"
+              value={countrySearch}
+              onChange={e => setCountrySearch(e.target.value)}
+              placeholder="Search countries..."
+              className={fieldClass + ' mb-1.5'}
+            />
+            <div className="max-h-44 overflow-y-auto rounded-lg space-y-px"
+              style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+              {filteredCountries.length === 0 ? (
+                <div className="px-3 py-3 text-tp-xs text-app-muted-foreground italic">
+                  No countries match.
+                </div>
+              ) : filteredCountries.map(c => {
+                const checked = linkedCountryIds.has(c.id)
+                return (
+                  <label key={c.id}
+                    className="flex items-center gap-2 px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-app-surface"
+                    style={{ background: checked ? 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, transparent)' : 'transparent' }}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleCountry(c.id)}
+                      className="w-3.5 h-3.5 rounded border-app-border accent-[var(--app-info,#3b82f6)] flex-shrink-0" />
+                    <span className="text-tp-sm">{getFlagEmoji(c.iso2)}</span>
+                    <span className="font-mono text-[10px] font-bold text-app-muted-foreground">{c.iso2}</span>
+                    <span className="text-[12px] font-semibold text-app-foreground truncate flex-1">{c.name}</span>
+                    {c.default_currency_code && (
+                      <span className="font-mono text-[10px] font-bold text-app-muted-foreground">
+                        currently {c.default_currency_code}
+                      </span>
+                    )}
+                  </label>
+                )
+              })}
+            </div>
+          </div>}
 
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose}
@@ -476,12 +572,26 @@ function CurrencyRow({ item, isSelected, onSelect, onEdit, onDelete, compact, se
    Detail Panel
    ═══════════════════════════════════════════════════════ */
 
-function CurrencyDetailPanel({ currency, onEdit, onDelete, onClose }: {
+type CurrencyPanelTab = 'overview' | 'countries' | 'tenants'
+
+function getFlagEmojiForLeaf(code: string): string {
+  if (!code || code.length < 2) return '🌍'
+  const cc = code.toUpperCase().slice(0, 2)
+  return String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+}
+
+function CurrencyDetailPanel({ currency, countriesUsing, tenantsUsing, onEdit, onDelete, onClose, onPin, onUnlinkCountry }: {
   currency: Currency
+  countriesUsing: RelatedCountry[]
+  tenantsUsing: TenantUsage[]
   onEdit: () => void
   onDelete: () => void
   onClose: () => void
+  onPin?: () => void
+  onUnlinkCountry?: (ct: RelatedCountry) => void
 }) {
+  const [tab, setTab] = useState<CurrencyPanelTab>('overview')
+
   const Stat = ({ label, value, icon, color }: { label: string; value: React.ReactNode; icon: React.ReactNode; color?: string }) => (
     <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
       style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
@@ -490,59 +600,189 @@ function CurrencyDetailPanel({ currency, onEdit, onDelete, onClose }: {
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
-        <div className="text-[12px] font-black text-app-foreground truncate">{value}</div>
+        <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
+        <div className="text-tp-sm font-bold text-app-foreground truncate">{value}</div>
       </div>
     </div>
   )
 
+  const tabs: { key: CurrencyPanelTab; label: string; icon: React.ReactNode; count?: number; color?: string }[] = [
+    { key: 'overview',  label: 'Overview',  icon: <DollarSign size={13} /> },
+    { key: 'countries', label: 'Countries', icon: <Globe size={13} />,    count: countriesUsing.length, color: 'var(--app-info, #3b82f6)' },
+    { key: 'tenants',   label: 'Tenants',   icon: <Building2 size={13} />, count: tenantsUsing.length,   color: 'var(--app-primary)' },
+  ]
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-start gap-3 px-4 py-3" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black flex-shrink-0"
-          style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+      <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
+        style={{
+          background: 'linear-gradient(180deg, color-mix(in srgb, var(--app-info, #3b82f6) 5%, var(--app-surface)), var(--app-surface))',
+          borderBottom: '1px solid var(--app-border)',
+        }}>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, var(--app-info, #3b82f6), color-mix(in srgb, var(--app-info, #3b82f6) 75%, var(--app-accent)))',
+            color: 'white',
+            boxShadow: '0 3px 10px color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)',
+          }}>
           {currency.symbol || currency.code.slice(0, 2)}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h2 className="text-[15px] font-black text-app-foreground truncate font-mono">{currency.code}</h2>
+          <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight font-mono" style={{ color: 'var(--app-foreground)' }}>
+            {currency.code}
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-tp-xxs font-medium italic truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+              {currency.name}
+            </span>
             {!currency.is_active && (
-              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+              <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
                 Inactive
               </span>
             )}
           </div>
-          <p className="text-[11px] text-app-muted-foreground truncate mt-0.5">{currency.name}</p>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all flex-shrink-0">
-          <X size={14} />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onEdit}
+            className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+            style={{ color: 'var(--app-muted-foreground)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-info, #3b82f6)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+            title="Edit">
+            <Pencil size={13} />
+          </button>
+          {onPin && (
+            <button onClick={onPin}
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+              style={{ color: 'var(--app-muted-foreground)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-info, #3b82f6)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+              title="Pin sidebar">
+              <Pin size={13} />
+            </button>
+          )}
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+            style={{ color: 'var(--app-muted-foreground)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+            title="Close">
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-        <Stat label="ISO 4217 Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
-        <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
-        <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
-        <Stat label="Minor Unit" value={`${currency.minor_unit} decimal ${currency.minor_unit === 1 ? 'place' : 'places'}`} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
-        <Stat label="Status" value={currency.is_active ? 'Active' : 'Inactive'} icon={<Check size={12} />} color={currency.is_active ? 'var(--app-success, #22c55e)' : 'var(--app-error)'} />
+      {/* Tab strip */}
+      <div className="flex-shrink-0 flex items-center px-1 py-1" style={{ borderBottom: '1px solid var(--app-border)' }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-tp-sm font-semibold transition-colors"
+            style={tab === t.key ? {
+              background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)',
+              color: 'var(--app-info, #3b82f6)',
+            } : { color: 'var(--app-muted-foreground)' }}>
+            {t.icon} {t.label}
+            {t.count != null && t.count > 0 && (
+              <span className="ml-0.5 text-tp-xxs font-bold px-1 py-[1px] rounded-full min-w-[16px] text-center"
+                style={{
+                  background: tab === t.key
+                    ? `color-mix(in srgb, ${t.color || 'var(--app-info, #3b82f6)'} 15%, transparent)`
+                    : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                  color: tab === t.key ? (t.color || 'var(--app-info, #3b82f6)') : 'var(--app-muted-foreground)',
+                }}>
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2">
+        {tab === 'overview' && (
+          <>
+            <Stat label="ISO 4217 Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
+            <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+            <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+            <Stat label="Minor Unit" value={`${currency.minor_unit} decimal ${currency.minor_unit === 1 ? 'place' : 'places'}`} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+            <Stat label="Status" value={currency.is_active ? 'Active' : 'Inactive'} icon={<Check size={12} />} color={currency.is_active ? 'var(--app-success, #22c55e)' : 'var(--app-error)'} />
+          </>
+        )}
+        {tab === 'countries' && (
+          countriesUsing.length === 0 ? (
+            <EmptyTab icon={<Globe size={24} />} title="No countries linked" subtitle="Edit a country and set this as its default currency to link them." />
+          ) : (
+            countriesUsing.map(c => (
+              <div key={c.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-tp-md"
+                  style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)' }}>
+                  {getFlagEmojiForLeaf(c.iso2)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
+                    {c.region || c.iso2}
+                  </div>
+                  <div className="text-tp-sm font-bold text-app-foreground truncate">{c.name}</div>
+                </div>
+                {onUnlinkCountry && (
+                  <button onClick={() => onUnlinkCountry(c)}
+                    title={`Unlink ${c.name}`}
+                    className="p-1.5 rounded-lg transition-all flex-shrink-0"
+                    style={{ color: 'var(--app-warning, #f59e0b)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                    <Unlink size={12} />
+                  </button>
+                )}
+              </div>
+            ))
+          )
+        )}
+        {tab === 'tenants' && (
+          tenantsUsing.length === 0 ? (
+            <EmptyTab icon={<Building2 size={24} />} title="No tenants using this currency" subtitle="Tenants enable currencies from their own admin (Regional Settings)." />
+          ) : (
+            tenantsUsing.map(t => (
+              <Stat key={t.org_id}
+                label={t.is_default ? 'Default for tenant' : `Org #${t.org_id}`}
+                value={t.org_name}
+                icon={<Building2 size={12} />}
+                color="var(--app-primary)" />
+            ))
+          )
+        )}
       </div>
 
       {/* Actions */}
       <div className="flex-shrink-0 flex gap-2 px-4 py-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
         <button onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-tp-xs font-bold text-white rounded-lg transition-all hover:brightness-110"
           style={{ background: 'var(--app-info, #3b82f6)' }}>
           <Pencil size={12} /> Edit
         </button>
         <button onClick={onDelete}
-          className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all"
+          className="flex items-center justify-center gap-1.5 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
           style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
           <Trash2 size={12} /> Delete
         </button>
       </div>
+    </div>
+  )
+}
+
+/** Generic centered empty state used inside detail-panel tabs. */
+function EmptyTab({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-10 px-4">
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-2 opacity-40 text-app-muted-foreground"
+        style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)' }}>
+        {icon}
+      </div>
+      <p className="text-tp-sm font-bold text-app-muted-foreground">{title}</p>
+      {subtitle && <p className="text-tp-xxs text-app-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -617,6 +857,33 @@ export default function CurrenciesPage() {
   /** Themed delete-confirm state — matches categories / countries pattern. */
   const [deleteTarget, setDeleteTarget] = useState<Currency | null>(null)
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  /** Same shape as the countries page — generic link/unlink prompt. */
+  type LinkAction = {
+    title: string
+    description: string
+    confirmText: string
+    variant: 'danger' | 'warning' | 'info'
+    run: () => Promise<void>
+  }
+  const [linkAction, setLinkAction] = useState<LinkAction | null>(null)
+
+  /** Unlink a country from this currency (set country.default_currency = null). */
+  const promptUnlinkCountry = (currency: Currency, ct: RelatedCountry) => {
+    setLinkAction({
+      title: `Unlink ${ct.name} from ${currency.code}?`,
+      description: `${ct.name} will no longer use ${currency.code} as its default currency. Tenants in ${ct.name} will need to pick another currency for new transactions.`,
+      confirmText: 'Unlink country',
+      variant: 'warning',
+      run: async () => {
+        await erpFetch(`reference/countries/${ct.id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ default_currency: null }),
+        })
+        toast.success(`${ct.name} unlinked from ${currency.code}`)
+        await fetchAll()
+      },
+    })
+  }
   // Bulk-action selection ref kept in sync from the render-prop. Lets the
   // BulkActionBar handlers read the current selection without prop drilling.
   const selectionRef = React.useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({
@@ -813,15 +1080,8 @@ export default function CurrenciesPage() {
             icon: <Plus size={14} />,
             onClick: () => setEditing('new' as any),
           },
-          // Navigation links to related SaaS-admin masters — same pattern
-          // as categories (Cleanup link). Lets users hop between linked
-          // reference data without going through the sidebar.
-          secondaryActions: [
-            { label: 'Countries',  icon: <Globe size={13} />,    href: '/countries' },
-            { label: 'Tax Templates', icon: <DollarSign size={13} />, href: '/country-tax-templates' },
-            { label: 'Payment Gateways', icon: <DollarSign size={13} />, href: '/payment-gateways' },
-            { label: 'E-Invoice', icon: <DollarSign size={13} />, href: '/e-invoice-standards' },
-          ],
+          // No nav-link secondary actions — those links lived in the toolbar
+          // before but cluttered it. Audit and Split Panel are enough.
           dataTools: {
             title: 'Currency Data',
             exportFilename: 'currencies',
@@ -936,15 +1196,22 @@ export default function CurrenciesPage() {
             title: 'Currency Audit Trail',
           },
         }}
-        detailPanel={(node, { onClose }) => {
+        detailPanel={(node, { onClose, onPin }) => {
           const currency: Currency | null = node?.kind === 'currency' ? node.data : null
           if (!currency) return null
+          const countriesUsing = relatedCountries.filter(ct =>
+            ct.default_currency === currency.id || ct.default_currency_code === currency.code
+          )
           return (
             <CurrencyDetailPanel
               currency={currency}
+              countriesUsing={countriesUsing}
+              tenantsUsing={tenantsByCurrency[currency.id] || []}
               onEdit={() => { setEditing(currency); onClose() }}
               onDelete={() => { requestDelete(currency); onClose() }}
               onClose={onClose}
+              onPin={onPin ? () => onPin(node) : undefined}
+              onUnlinkCountry={(ct) => promptUnlinkCountry(currency, ct)}
             />
           )
         }}
@@ -989,6 +1256,14 @@ export default function CurrenciesPage() {
       {editing !== null && (
         <CurrencyEditModal
           currency={editing === 'new' ? null : editing as Currency}
+          allCountries={relatedCountries}
+          initialLinkedCountryIds={
+            editing === 'new'
+              ? []
+              : relatedCountries
+                  .filter(ct => ct.default_currency === (editing as Currency).id || ct.default_currency_code === (editing as Currency).code)
+                  .map(ct => ct.id)
+          }
           onClose={() => setEditing(null)}
           onSaved={fetchAll}
         />
@@ -1018,6 +1293,24 @@ export default function CurrenciesPage() {
         description="Currencies still in use by at least one tenant will be skipped. The rest will be removed from the registry."
         confirmText="Delete"
         variant="danger"
+      />
+
+      {/* Generic link/unlink prompt — variant + impact summary stay
+          consistent across every guarded relationship action. */}
+      <ConfirmDialog
+        open={linkAction !== null}
+        onOpenChange={(open) => { if (!open) setLinkAction(null) }}
+        onConfirm={async () => {
+          const a = linkAction
+          if (!a) return
+          setLinkAction(null)
+          try { await a.run() }
+          catch (err: any) { toast.error(err?.message || 'Action failed') }
+        }}
+        title={linkAction?.title || ''}
+        description={linkAction?.description || ''}
+        confirmText={linkAction?.confirmText || 'Confirm'}
+        variant={linkAction?.variant || 'warning'}
       />
     </div>
   )

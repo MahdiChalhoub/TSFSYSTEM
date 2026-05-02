@@ -13,8 +13,6 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 import { ProductSearch } from './_components/ProductSearch'
-import { LineColumnHeaders } from './_components/LineColumnHeaders'
-import { LineRowDesktop } from './_components/LineRowDesktop'
 import { LineCardGrid } from './_components/LineCardGrid'
 import { AdminSidebar } from './_components/AdminSidebar'
 import { POLifecycle, type POStatus } from './_components/POLifecycle'
@@ -352,7 +350,7 @@ export default function PurchaseForm({
     }, [colProfiles])
 
     return (
-        <>
+        <div className="h-full flex flex-col overflow-hidden bg-app-background">
             <input type="hidden" name="scope" value={scope} form="po-form" />
 
             {/* ── Page Header ── */}
@@ -535,10 +533,10 @@ export default function PurchaseForm({
             </div>
 
             {/* ── Content Row: Grid + Sidebar side-by-side ── */}
-            <div className="flex gap-0 px-4 md:px-6 pb-4" style={{ minHeight: '500px' }}>
+            <div className="flex-1 flex gap-0 px-4 md:px-6 pb-0 min-h-0">
 
                 {/* Intelligence Grid */}
-                <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex-1 flex flex-col min-w-0 h-full">
 
                     {/* Toolbar */}
                     <div className="flex items-center gap-3 mb-3 flex-shrink-0">
@@ -578,7 +576,7 @@ export default function PurchaseForm({
                     </div>
 
                     {/* Table / Grid */}
-                    <div className="bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col" style={{ minHeight: '400px' }}>
+                    <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
                         {/* ═══════════════════════════════════════════════════════════
                             PO INTELLIGENCE GRID
                             ============================================
@@ -731,7 +729,7 @@ export default function PurchaseForm({
                 )}
 
             </div>
-        </>
+        </div>
     )
 }
 

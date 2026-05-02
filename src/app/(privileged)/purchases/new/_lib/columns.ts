@@ -38,7 +38,7 @@ export const COLUMN_DEFS: ColumnDef[] = [
     { key: 'sales', label: 'Sales', sublabel: 'monthly', defaultVisible: true },
     { key: 'score', label: 'Score', sublabel: 'adjust', defaultVisible: true },
     { key: 'purchased', label: 'Purchased', sublabel: 'sold', defaultVisible: true },
-    { key: 'cost', label: 'Cost', sublabel: 'sell price', alwaysVisible: true, defaultVisible: true },
+    { key: 'cost', label: 'Cost', sublabel: 'sell price', defaultVisible: true },
     { key: 'supplier', label: 'Supplier', sublabel: 'price', defaultVisible: true },
     { key: 'expiry', label: 'Expiry', sublabel: 'safety', defaultVisible: true },
     { key: 'supPlus', label: 'SUP+', defaultVisible: false },

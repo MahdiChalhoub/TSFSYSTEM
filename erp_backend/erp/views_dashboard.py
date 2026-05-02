@@ -1,19 +1,10 @@
 """
-Kernel Views — Infrastructure & Cross-Cutting Concerns Only
-============================================================
-This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
- - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
- - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
-
-All business-domain ViewSets live in their canonical module locations:
- - apps.finance.views
- - apps.inventory.views
- - apps.pos.views
- - apps.crm.views
- - apps.hr.views
-
-Backward-compatible re-exports are provided at the bottom of this file.
+Kernel Views — Dashboard & Analytics Aggregation
+================================================
+This file contains ViewSets for dashboard KPIs, statistics, and 
+analytics-heavy listing endpoints:
+ - DashboardViewSet (Admin stats, SaaS stats, Financial stats, Realtime KPIs)
+ - catalogue_list action (Powers the Purchase Order Catalogue modal)
 """
 from decimal import Decimal
 from django.db.models import Q, Sum, F, Avg, Case, When, Value, Count, CharField
@@ -21,6 +12,7 @@ from django.db import models, transaction
 from rest_framework import viewsets, status, serializers, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action, permission_classes
+from datetime import timedelta
 from django.utils import timezone
 from .middleware import get_current_tenant_id
 from .mixins import AuditLogMixin, TenantFilterMixin, UDLEViewSetMixin

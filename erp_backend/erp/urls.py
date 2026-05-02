@@ -122,12 +122,15 @@ if _APPS_DIR.exists():
             # Verify the module can be imported before adding
             importlib.import_module(_module_path)
             
-            # 1. Flat mount (backward compatible) — /api/accounts/
-            urlpatterns.insert(0, path('', include(_module_path)))
-            # 2. Namespaced mount (new standard) — /api/finance/accounts/
-            urlpatterns.insert(1, path(f'{_module_code}/', include(_module_path)))
+            # 1. Namespaced mount (new standard) — /api/finance/accounts/
+            urlpatterns.insert(0, path(f'{_module_code}/', include(_module_path)))
             
+            # 2. Flat mount (backward compatible) — /api/accounts/
+            urlpatterns.insert(1, path('', include(_module_path)))
+            
+            print(f"[DEBUG URLs] Registered module: {_module_code}")
             _logger.info(f"[URLs] Registered module: {_module_code} (flat + namespaced)")
         except Exception as _e:
+            print(f"[DEBUG URLs] Skipping module {_module_code}: {_e}")
             _logger.warning(f"[URLs] Skipping module {_module_code}: {_e}")
 

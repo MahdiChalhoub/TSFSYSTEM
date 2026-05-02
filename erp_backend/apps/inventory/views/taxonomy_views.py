@@ -792,6 +792,7 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     pagination_class = None  # Taxonomy data — return all brands for tree building
 
     def list(self, request, *args, **kwargs):
+        print(f"[DEBUG] BrandViewSet.list called for org: {request.headers.get('X-Tenant-Id')}")
         organization, err = _get_org_or_400()
         if err: return err
 

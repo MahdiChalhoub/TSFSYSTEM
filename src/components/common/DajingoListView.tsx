@@ -248,12 +248,12 @@ export function DajingoListView<T>({
 
   // ── Visible column count for horizontal scroll detection ──
   const visibleColCount = orderedColumns.filter(col =>
-    !phc.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
+    !phc.has(col.key) && (col.alwaysVisible || (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]))
   ).length
 
   // ── Track weight + basis (for proportional sharing with Product column) ──
   const visibleCols = orderedColumns.filter(col =>
-    !phc.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
+    !phc.has(col.key) && (col.alwaysVisible || (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]))
   )
   const trackWeight = visibleCols.reduce((s, c) => s + parseWidthWeight(columnWidths[c.key] || 'w-16'), 0) || 1
   const trackBasisRem = trackWeight * 0.25
@@ -334,7 +334,7 @@ export function DajingoListView<T>({
             <div className="flex items-center gap-2 md:gap-3 fill-cols" style={{ flex: `${trackWeight} 1 ${trackBasisRem}rem`, minWidth: 0 }}>
               {orderedColumns.map(col => {
                 if (phc.has(col.key)) return null
-                const isOn = col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]
+                const isOn = col.alwaysVisible || (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
                 if (!isOn) return null
                 const w = columnWidths[col.key] || 'w-16'
                 const align = rac.has(col.key) ? ' text-right' : cac.has(col.key) ? ' text-center' : ''
@@ -518,7 +518,7 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
 
   // Same track-weight computation as the header (Option D proportional layout).
   const _visibleCols = orderedColumns.filter(col =>
-    !policyHiddenColumns.has(col.key) && (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key])
+    !policyHiddenColumns.has(col.key) && (col.alwaysVisible || (col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]))
   )
   const trackWeight = _visibleCols.reduce((s, c) => s + parseWidthWeight(columnWidths[c.key] || 'w-16'), 0) || 1
   const trackBasisRem = trackWeight * 0.25

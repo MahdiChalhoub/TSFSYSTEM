@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Globe, Loader2, Plus, Pencil, Trash2, Check, X,
   MapPin, DollarSign, Phone, Shield, Save, Hash,
-  CreditCard, FileText, Power, PowerOff,
+  CreditCard, FileText, Power, PowerOff, Pin,
+  Link2, Unlink, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -199,8 +200,11 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
                 onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required />
             </div>
             <div>
-              <label className={labelClass}>Numeric</label>
+              <label className={labelClass} title="ISO 4217 numeric code — 3-digit identifier (e.g., USD=840, EUR=978). Used by banking files (SWIFT/ISO 20022) and some payment processors. Optional.">
+                Numeric
+              </label>
               <input className={fieldClass} value={form.numeric_code} maxLength={3} placeholder="840"
+                title="3-digit ISO 4217 code (e.g., USD=840, EUR=978, JPY=392)"
                 onChange={e => setForm(f => ({ ...f, numeric_code: e.target.value }))} />
             </div>
             <div>
@@ -255,14 +259,21 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
    is auto-selected and the local list refreshes.
    ═══════════════════════════════════════════════════════ */
 
-function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesChanged }: {
+function CountryEditModal({ country, currencies, taxTemplates, eInvoiceStandards, onClose, onSaved, onCurrenciesChanged, onTaxTemplatesChanged }: {
   country: Country | null
   currencies: Currency[]
+  taxTemplates: TaxTemplate[]
+  eInvoiceStandards: EInvoiceStandard[]
   onClose: () => void
   onSaved: () => void
   onCurrenciesChanged: () => Promise<void> | void
+  onTaxTemplatesChanged: () => Promise<void> | void
 }) {
   const isNew = !country
+  // Find the existing tax template for this country (matches iso2 OR iso3).
+  const existingTpl = country
+    ? taxTemplates.find(t => t.country_code === country.iso2 || t.country_code === country.iso3)
+    : null
   const [form, setForm] = useState({
     iso2: country?.iso2 || '',
     iso3: country?.iso3 || '',
@@ -274,6 +285,10 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
     subregion: country?.subregion || '',
     default_currency: country?.default_currency || ('' as number | string),
     is_active: country?.is_active ?? true,
+    // Tax-policy parameters routed via CountryTaxTemplate. Saved as a
+    // separate PATCH/POST after the country itself saves.
+    e_invoice_standard: existingTpl?.e_invoice_standard ?? ('' as number | string),
+    einvoice_enforcement: existingTpl?.einvoice_enforcement || 'OPTIONAL',
   })
   const [saving, setSaving] = useState(false)
   const [showCurrencyModal, setShowCurrencyModal] = useState(false)
@@ -283,10 +298,18 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
     setSaving(true)
     try {
       const payload = {
-        ...form,
+        iso2: form.iso2,
+        iso3: form.iso3,
+        numeric_code: form.numeric_code,
+        name: form.name,
+        official_name: form.official_name,
+        phone_code: form.phone_code,
+        region: form.region,
+        subregion: form.subregion,
         default_currency: form.default_currency || null,
         is_active: true, // Force-on; per-tenant gate lives in OrgCountry.
       }
+      let savedCountryIso = form.iso2
       if (isNew) {
         await erpFetch('reference/countries/', { method: 'POST', body: JSON.stringify(payload) })
         toast.success('Country created')
@@ -294,6 +317,31 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
         await erpFetch(`reference/countries/${country!.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
         toast.success('Country updated')
       }
+
+      // Tax-policy parameters live on CountryTaxTemplate. We upsert a
+      // template row (or PATCH the existing one) keyed by ISO2 so the
+      // e-invoice link surfaces on /e-invoice-standards and /countries.
+      const wantsTplFields = form.e_invoice_standard !== '' || (form.einvoice_enforcement && form.einvoice_enforcement !== 'NONE')
+      if (savedCountryIso && (existingTpl || wantsTplFields)) {
+        try {
+          const tplPayload: Record<string, unknown> = {
+            country_code: savedCountryIso,
+            country_name: form.name || country?.name || savedCountryIso,
+            currency_code: currencies.find(c => c.id === form.default_currency)?.code || 'USD',
+            e_invoice_standard: form.e_invoice_standard || null,
+            einvoice_enforcement: form.einvoice_enforcement || 'OPTIONAL',
+          }
+          if (existingTpl) {
+            await erpFetch(`finance/country-tax-templates/${existingTpl.id}/`, { method: 'PATCH', body: JSON.stringify(tplPayload) })
+          } else if (wantsTplFields) {
+            await erpFetch('finance/country-tax-templates/', { method: 'POST', body: JSON.stringify(tplPayload) })
+          }
+          await onTaxTemplatesChanged()
+        } catch (err: any) {
+          toast.error(`Country saved, but tax-template update failed: ${err?.message || 'unknown error'}`)
+        }
+      }
+
       onSaved()
       onClose()
     } catch (err: any) {
@@ -349,8 +397,11 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
                 onChange={e => setForm(f => ({ ...f, iso3: e.target.value.toUpperCase() }))} required />
             </div>
             <div>
-              <label className={labelClass}>Numeric</label>
+              <label className={labelClass} title="ISO 3166-1 numeric code — 3-digit identifier for the country (e.g., US=840, FR=250, LB=422). Used by customs/UN systems. Optional.">
+                Numeric
+              </label>
               <input className={fieldClass} value={form.numeric_code} maxLength={3} placeholder="840"
+                title="3-digit ISO 3166-1 country code (e.g., US=840, FR=250, LB=422)"
                 onChange={e => setForm(f => ({ ...f, numeric_code: e.target.value }))} />
             </div>
           </div>
@@ -412,10 +463,34 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
             </div>
           </div>
 
+          {/* Tax-policy parameters — saved as a CountryTaxTemplate row.
+              Picking an e-invoice standard here links it to this country
+              so it surfaces under the country in the tree on /countries. */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+            <div>
+              <label className={labelClass}>E-Invoice Standard</label>
+              <select className={fieldClass} value={form.e_invoice_standard}
+                onChange={e => setForm(f => ({ ...f, e_invoice_standard: e.target.value }))}>
+                <option value="">— None —</option>
+                {eInvoiceStandards.filter(ei => ei.is_active !== false).map(ei => (
+                  <option key={ei.id} value={ei.id}>{ei.code} — {ei.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Enforcement</label>
+              <select className={fieldClass} value={form.einvoice_enforcement}
+                onChange={e => setForm(f => ({ ...f, einvoice_enforcement: e.target.value }))}>
+                <option value="NONE">None</option>
+                <option value="OPTIONAL">Optional</option>
+                <option value="RECOMMENDED">Recommended</option>
+                <option value="MANDATORY">Mandatory</option>
+              </select>
+            </div>
+          </div>
+
           {/* Note: `is_active` is NOT exposed here — country availability
-              is managed per-tenant via OrgCountry (see /organizations).
-              We always submit is_active:true so legacy false rows in the
-              global registry don't keep cascading. */}
+              is managed per-tenant via OrgCountry. */}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
@@ -782,16 +857,39 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
    Country Detail Panel — sidebar / split-pane content
    ═══════════════════════════════════════════════════════ */
 
-function CountryDetailPanel({ country, hasTaxTemplate, currencies, onEdit, onDelete, onClose }: {
+type CountryPanelTab = 'overview' | 'currency' | 'tax' | 'gateways' | 'tenants'
+
+function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates, eInvoiceStandards, paymentGateways, tenantsForCountry, onEdit, onDelete, onClose, onPin, onUnlinkCurrency, onToggleGateway, onUnlinkEInvoice }: {
   country: Country
   hasTaxTemplate: boolean
   currencies: Currency[]
+  taxTemplates: TaxTemplate[]
+  eInvoiceStandards: EInvoiceStandard[]
+  paymentGateways: PaymentGateway[]
+  tenantsForCountry: TenantUsage[]
   onEdit: () => void
   onDelete: () => void
   onClose: () => void
+  onPin?: () => void
+  /** Open the unlink-currency confirm dialog. */
+  onUnlinkCurrency?: () => void
+  /** Open the toggle-gateway confirm dialog. */
+  onToggleGateway?: (gateway: PaymentGateway) => void
+  /** Open the unlink-e-invoice confirm dialog. */
+  onUnlinkEInvoice?: (tpl: TaxTemplate, eiName: string) => void
 }) {
+  const [tab, setTab] = useState<CountryPanelTab>('overview')
   const regionColor = REGION_COLORS[country.region] || 'var(--app-muted-foreground)'
   const currency = currencies.find(c => c.id === country.default_currency)
+    || currencies.find(c => c.code === country.default_currency_code)
+  const taxTpl = taxTemplates.find(t => t.country_code === country.iso2 || t.country_code === country.iso3)
+  const eiStandard = taxTpl?.e_invoice_standard
+    ? eInvoiceStandards.find(s => s.id === taxTpl.e_invoice_standard)
+    : null
+  const matchingGateways = paymentGateways.filter(g => {
+    const codes = g.country_codes || []
+    return !codes.length || codes.includes(country.iso2)
+  })
 
   const Stat = ({ label, value, icon, color }: { label: string; value: React.ReactNode; icon: React.ReactNode; color?: string }) => (
     <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
@@ -801,80 +899,250 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, onEdit, onDel
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
-        <div className="text-[12px] font-black text-app-foreground truncate">{value}</div>
+        <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
+        <div className="text-tp-sm font-bold text-app-foreground truncate">{value}</div>
       </div>
     </div>
   )
 
+  // Categories-style tab strip with counts.
+  const tabs: { key: CountryPanelTab; label: string; icon: React.ReactNode; count?: number; color?: string }[] = [
+    { key: 'overview', label: 'Overview', icon: <Globe size={13} /> },
+    { key: 'currency', label: 'Currency', icon: <DollarSign size={13} />, count: currency ? 1 : 0, color: 'var(--app-info, #3b82f6)' },
+    { key: 'tax',      label: 'Tax',      icon: <Shield size={13} />,      count: hasTaxTemplate ? 1 : 0, color: 'var(--app-success, #22c55e)' },
+    { key: 'gateways', label: 'Gateways', icon: <CreditCard size={13} />, count: matchingGateways.length, color: 'var(--app-accent)' },
+    { key: 'tenants',  label: 'Tenants',  icon: <Globe size={13} />,       count: tenantsForCountry.length, color: 'var(--app-primary)' },
+  ]
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-start gap-3 px-4 py-3" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
-          style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
+      <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3"
+        style={{
+          background: 'linear-gradient(180deg, color-mix(in srgb, var(--app-primary) 5%, var(--app-surface)), var(--app-surface))',
+          borderBottom: '1px solid var(--app-border)',
+        }}>
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 75%, var(--app-accent)))',
+            boxShadow: '0 3px 10px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+          }}>
           {getFlagEmoji(country.iso2)}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h2 className="text-[15px] font-black text-app-foreground truncate">{country.name}</h2>
-            {/* No Active/Inactive badge — activation is per-tenant
-                (OrgCountry), not a property of the global registry. */}
-          </div>
-          {country.official_name && (
-            <p className="text-[11px] text-app-muted-foreground truncate mt-0.5">{country.official_name}</p>
-          )}
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded"
-              style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
-              {country.iso2}
+          <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight" style={{ color: 'var(--app-foreground)' }}>
+            {country.name}
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-flex items-center gap-1 text-tp-xxs font-bold">
+              <span className="uppercase tracking-widest opacity-60" style={{ color: 'var(--app-muted-foreground)' }}>ISO</span>
+              <span className="font-mono px-1.5 py-0.5 rounded"
+                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                {country.iso2}
+              </span>
+              <span className="font-mono opacity-60" style={{ color: 'var(--app-muted-foreground)' }}>{country.iso3}</span>
             </span>
-            <span className="font-mono text-[9px] font-bold text-app-muted-foreground">{country.iso3}</span>
-            {country.numeric_code && (
-              <span className="font-mono text-[9px] text-app-muted-foreground">· {country.numeric_code}</span>
+            {country.official_name && (
+              <span className="text-tp-xxs font-medium italic truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                {country.official_name}
+              </span>
             )}
           </div>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all flex-shrink-0">
-          <X size={14} />
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onEdit}
+            className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+            style={{ color: 'var(--app-muted-foreground)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+            title="Edit">
+            <Pencil size={13} />
+          </button>
+          {onPin && (
+            <button onClick={onPin}
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+              style={{ color: 'var(--app-muted-foreground)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+              title="Pin sidebar">
+              <Pin size={13} />
+            </button>
+          )}
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+            style={{ color: 'var(--app-muted-foreground)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent' }}
+            title="Close">
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-        <Stat label="Region" value={country.region || '—'} icon={<MapPin size={12} />} color={regionColor} />
-        {country.subregion && <Stat label="Subregion" value={country.subregion} icon={<MapPin size={12} />} color={regionColor} />}
-        <Stat label="Phone Code" value={country.phone_code || '—'} icon={<Phone size={12} />} color="var(--app-muted-foreground)" />
-        <Stat
-          label="Default Currency"
-          value={currency ? `${currency.code} ${currency.symbol ? `(${currency.symbol})` : ''} — ${currency.name}` : '—'}
-          icon={<DollarSign size={12} />}
-          color="var(--app-info, #3b82f6)"
-        />
-        {country.numeric_code && (
-          <Stat label="ISO Numeric" value={country.numeric_code} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+      {/* Tab strip */}
+      <div className="flex-shrink-0 flex items-center px-1 py-1 overflow-x-auto" style={{ borderBottom: '1px solid var(--app-border)' }}>
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-tp-sm font-semibold transition-colors flex-shrink-0"
+            style={tab === t.key ? {
+              background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+              color: 'var(--app-primary)',
+            } : { color: 'var(--app-muted-foreground)' }}>
+            {t.icon} {t.label}
+            {t.count != null && t.count > 0 && (
+              <span className="ml-0.5 text-tp-xxs font-bold px-1 py-[1px] rounded-full min-w-[16px] text-center"
+                style={{
+                  background: tab === t.key
+                    ? `color-mix(in srgb, ${t.color || 'var(--app-primary)'} 15%, transparent)`
+                    : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                  color: tab === t.key ? (t.color || 'var(--app-primary)') : 'var(--app-muted-foreground)',
+                }}>
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2">
+        {tab === 'overview' && (
+          <>
+            <Stat label="Region" value={country.region || '—'} icon={<MapPin size={12} />} color={regionColor} />
+            {country.subregion && <Stat label="Subregion" value={country.subregion} icon={<MapPin size={12} />} color={regionColor} />}
+            <Stat label="Phone Code" value={country.phone_code || '—'} icon={<Phone size={12} />} color="var(--app-muted-foreground)" />
+            <Stat label="Default Currency"
+              value={currency ? `${currency.code} ${currency.symbol ? `(${currency.symbol})` : ''} — ${currency.name}` : '—'}
+              icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
+            {country.numeric_code && (
+              <Stat label="ISO Numeric" value={country.numeric_code} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+            )}
+            <Stat label="Tax Template"
+              value={hasTaxTemplate ? 'Configured' : 'Not configured'}
+              icon={<Shield size={12} />}
+              color={hasTaxTemplate ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)'} />
+          </>
         )}
-        <Stat
-          label="Tax Template"
-          value={hasTaxTemplate ? 'Configured' : 'Not configured'}
-          icon={<Shield size={12} />}
-          color={hasTaxTemplate ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)'}
-        />
+        {tab === 'currency' && (
+          currency ? (
+            <>
+              <Stat label="Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
+              <Stat label="Name" value={currency.name} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+              <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+              <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+              <Stat label="Decimal Places" value={String(currency.minor_unit ?? 2)} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+              {onUnlinkCurrency && (
+                <button onClick={onUnlinkCurrency}
+                  className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
+                  style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                  <Unlink size={12} /> Unlink currency from {country.iso2}
+                </button>
+              )}
+            </>
+          ) : (
+            <EmptyTab icon={<DollarSign size={24} />} title="No currency linked" subtitle="Edit this country to set its default currency." />
+          )
+        )}
+        {tab === 'tax' && (
+          taxTpl ? (
+            <>
+              <Stat label="Template Country" value={taxTpl.country_code} icon={<Shield size={12} />} color="var(--app-success, #22c55e)" />
+              {taxTpl.country_name && (
+                <Stat label="Template Name" value={taxTpl.country_name} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
+              )}
+              <Stat label="E-Invoice Standard"
+                value={eiStandard ? `${eiStandard.code} — ${eiStandard.name}` : '—'}
+                icon={<FileText size={12} />} color="var(--app-warning, #f59e0b)" />
+              {taxTpl.einvoice_enforcement && (
+                <Stat label="Enforcement" value={taxTpl.einvoice_enforcement} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
+              )}
+              {eiStandard && onUnlinkEInvoice && (
+                <button onClick={() => onUnlinkEInvoice(taxTpl, eiStandard.name)}
+                  className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
+                  style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                  <Unlink size={12} /> Unlink {eiStandard.code}
+                </button>
+              )}
+            </>
+          ) : (
+            <EmptyTab icon={<Shield size={24} />} title="No tax template" subtitle="Edit this country to attach a tax template + e-invoice standard." />
+          )
+        )}
+        {tab === 'gateways' && (
+          matchingGateways.length === 0 ? (
+            <EmptyTab icon={<CreditCard size={24} />} title="No payment gateways available" subtitle="No global gateways exist, and none target this country's ISO2 code." />
+          ) : (
+            matchingGateways.map(g => {
+              const codes = g.country_codes || []
+              const isGlobal = codes.length === 0
+              const isLinked = codes.includes(country.iso2)
+              return (
+                <div key={g.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                  style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
+                    <CreditCard size={12} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
+                      {isGlobal ? 'Global gateway' : (g.family || g.code)}
+                    </div>
+                    <div className="text-tp-sm font-bold text-app-foreground truncate">{g.name}</div>
+                  </div>
+                  {onToggleGateway && (
+                    <button onClick={() => onToggleGateway(g)}
+                      title={isLinked ? `Unlink from ${country.iso2}` : `Link to ${country.iso2}`}
+                      className="p-1.5 rounded-lg transition-all flex-shrink-0"
+                      style={{ color: isLinked ? 'var(--app-warning, #f59e0b)' : 'var(--app-info, #3b82f6)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                      {isLinked ? <Unlink size={12} /> : <Link2 size={12} />}
+                    </button>
+                  )}
+                </div>
+              )
+            })
+          )
+        )}
+        {tab === 'tenants' && (
+          tenantsForCountry.length === 0 ? (
+            <EmptyTab icon={<Globe size={24} />} title="No tenants using this country" subtitle="Tenants enable countries from their own admin (Regional Settings)." />
+          ) : (
+            tenantsForCountry.map(t => (
+              <Stat key={t.org_id} label={t.is_default ? 'Default for this tenant' : `Org #${t.org_id}`}
+                value={t.org_name} icon={<Globe size={12} />} color="var(--app-primary)" />
+            ))
+          )
+        )}
       </div>
 
-      {/* Actions */}
+      {/* Footer actions */}
       <div className="flex-shrink-0 flex gap-2 px-4 py-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
         <button onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-tp-xs font-bold text-white rounded-lg transition-all hover:brightness-110"
           style={{ background: 'var(--app-primary)' }}>
           <Pencil size={12} /> Edit
         </button>
         <button onClick={onDelete}
-          className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all"
+          className="flex items-center justify-center gap-1.5 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
           style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
           <Trash2 size={12} /> Delete
         </button>
       </div>
+    </div>
+  )
+}
+
+/** Generic centered empty state used inside detail-panel tabs. */
+function EmptyTab({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-10 px-4">
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-2 opacity-40 text-app-muted-foreground"
+        style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)' }}>
+        {icon}
+      </div>
+      <p className="text-tp-sm font-bold text-app-muted-foreground">{title}</p>
+      {subtitle && <p className="text-tp-xxs text-app-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -935,6 +1203,20 @@ export default function SaaSCountriesPage() {
   /** Friendly delete-confirm state — matches the categories pattern. */
   const [deleteTarget, setDeleteTarget] = useState<Country | null>(null)
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  /**
+   * Generic link/unlink action prompt. Each entry describes what to do
+   * (`run`), how to phrase it (`title`, `description`), and what severity
+   * to render the dialog with. We re-use ConfirmDialog so the gating UX
+   * matches every other guarded action in the app.
+   */
+  type LinkAction = {
+    title: string
+    description: string
+    confirmText: string
+    variant: 'danger' | 'warning' | 'info'
+    run: () => Promise<void>
+  }
+  const [linkAction, setLinkAction] = useState<LinkAction | null>(null)
   /** Selection ref kept in sync from TreeMasterPage's render-prop. */
   const selectionRef = React.useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({
     selectedIds: new Set(),
@@ -1014,6 +1296,108 @@ export default function SaaSCountriesPage() {
     else toast.error(`${failed} of ${ids.length} failed (likely enabled by tenants)`)
     selectionRef.current.clearSelection()
     fetchAll()
+  }
+
+  // ─── Link / unlink helpers ───────────────────────────────────────────
+  // Each builder returns a LinkAction prompt rather than running directly,
+  // so every operation goes through the ConfirmDialog with a severity-
+  // tinted variant + impact summary. Matches the categories migrate-and-
+  // delete pattern: never mutate without an explicit confirmation step.
+
+  /** Unlink a country's default currency (PATCH default_currency = null). */
+  const promptUnlinkCurrency = (country: Country) => {
+    const code = country.default_currency_code || 'this currency'
+    setLinkAction({
+      title: `Unlink ${code} from ${country.name}?`,
+      description: `${country.name} will no longer have a default currency. Tenants enabled in this country will need to pick a currency manually for new transactions. Existing records keep their currency.`,
+      confirmText: 'Unlink currency',
+      variant: 'warning',
+      run: async () => {
+        await erpFetch(`reference/countries/${country.id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ default_currency: null }),
+        })
+        toast.success(`Currency unlinked from ${country.name}`)
+        await fetchAll()
+      },
+    })
+  }
+
+  /** Add or remove a country's iso2 from a gateway's country_codes list. */
+  const promptToggleGateway = (country: Country, gateway: PaymentGateway) => {
+    const codes = gateway.country_codes || []
+    const isCurrentlyLinked = codes.includes(country.iso2)
+    const isGlobal = codes.length === 0
+    if (isGlobal) {
+      // Linking a country to a global gateway implicitly converts it to
+      // a country-scoped gateway (only listed codes will see it). Warn.
+      setLinkAction({
+        title: `Restrict ${gateway.name} to ${country.name}?`,
+        description: `${gateway.name} is currently a GLOBAL gateway (available to every country). Linking only ${country.name} will convert it to a country-scoped gateway and REMOVE it from every other country. Use "Add country to existing list" only when you want to scope a global gateway down. This change is rarely what you want — usually you'd edit the gateway directly.`,
+        confirmText: 'Make country-only',
+        variant: 'danger',
+        run: async () => {
+          await erpFetch(`reference/payment-gateways/${gateway.id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ country_codes: [country.iso2] }),
+          })
+          toast.success(`${gateway.name} restricted to ${country.name}`)
+          await fetchAll()
+        },
+      })
+      return
+    }
+    if (isCurrentlyLinked) {
+      setLinkAction({
+        title: `Unlink ${gateway.name} from ${country.name}?`,
+        description: `${gateway.name} will no longer be offered in ${country.name}. Tenants in ${country.name} that have already configured ${gateway.name} keep their setup; new tenants won't see this option.`,
+        confirmText: 'Unlink gateway',
+        variant: 'warning',
+        run: async () => {
+          const next = codes.filter(c => c !== country.iso2)
+          await erpFetch(`reference/payment-gateways/${gateway.id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ country_codes: next }),
+          })
+          toast.success(`${gateway.name} unlinked from ${country.name}`)
+          await fetchAll()
+        },
+      })
+    } else {
+      setLinkAction({
+        title: `Link ${gateway.name} to ${country.name}?`,
+        description: `${gateway.name} will be available to tenants in ${country.name}.`,
+        confirmText: 'Link gateway',
+        variant: 'info',
+        run: async () => {
+          const next = [...codes, country.iso2]
+          await erpFetch(`reference/payment-gateways/${gateway.id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ country_codes: next }),
+          })
+          toast.success(`${gateway.name} linked to ${country.name}`)
+          await fetchAll()
+        },
+      })
+    }
+  }
+
+  /** Unlink the e-invoice standard from a country's tax template. */
+  const promptUnlinkEInvoice = (country: Country, tpl: TaxTemplate, eiName: string) => {
+    setLinkAction({
+      title: `Unlink ${eiName} from ${country.name}?`,
+      description: `${country.name} will lose its e-invoicing standard. Tenants in ${country.name} won't be required to submit e-invoices going forward (the tax template stays). Re-link any time from the country form.`,
+      confirmText: 'Unlink standard',
+      variant: 'warning',
+      run: async () => {
+        await erpFetch(`finance/country-tax-templates/${tpl.id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ e_invoice_standard: null, einvoice_enforcement: 'NONE' }),
+        })
+        toast.success('E-invoice standard unlinked')
+        await fetchAll()
+      },
+    })
   }
 
   // Note: country activation is intentionally NOT exposed here. The global
@@ -1213,19 +1597,12 @@ export default function SaaSCountriesPage() {
             icon: <Plus size={14} />,
             onClick: () => setEditingCountry('new' as any),
           },
-          // Currencies create + navigation to related SaaS-admin pages so
-          // operators can flow between linked masters without going through
-          // the sidebar each time. Mirrors the categories "Cleanup" pattern.
           secondaryActions: [
             {
               label: 'New Currency',
               icon: <DollarSign size={13} />,
               onClick: () => setEditingCurrency('new' as any),
             },
-            { label: 'Currencies',  icon: <DollarSign size={13} />, href: '/currencies' },
-            { label: 'Tax Templates', icon: <Shield size={13} />,    href: '/country-tax-templates' },
-            { label: 'Payment Gateways', icon: <CreditCard size={13} />, href: '/payment-gateways' },
-            { label: 'E-Invoice', icon: <FileText size={13} />, href: '/e-invoice-standards' },
           ],
           dataTools: {
             title: 'Country Data',
@@ -1320,9 +1697,7 @@ export default function SaaSCountriesPage() {
             onClear={clear}
           />
         )}
-        detailPanel={(node, { onClose }) => {
-          // The tree node is our combined-shape; only country rows have the
-          // detail panel — children open the editor for their own type.
+        detailPanel={(node, { onClose, onPin }) => {
           const country: Country | null = node?.kind === 'country' ? node.data : null
           if (!country) return null
           return (
@@ -1330,9 +1705,17 @@ export default function SaaSCountriesPage() {
               country={country}
               hasTaxTemplate={hasTaxTemplateFor(country)}
               currencies={currencies}
+              taxTemplates={taxTemplates}
+              eInvoiceStandards={eInvoiceStandards}
+              paymentGateways={paymentGateways}
+              tenantsForCountry={tenantsByCountry[country.id] || []}
               onEdit={() => { setEditingCountry(country); onClose() }}
               onDelete={() => { requestDelete(country); onClose() }}
               onClose={onClose}
+              onPin={onPin ? () => onPin(node) : undefined}
+              onUnlinkCurrency={() => promptUnlinkCurrency(country)}
+              onToggleGateway={(g) => promptToggleGateway(country, g)}
+              onUnlinkEInvoice={(tpl, eiName) => promptUnlinkEInvoice(country, tpl, eiName)}
             />
           )
         }}
@@ -1376,9 +1759,12 @@ export default function SaaSCountriesPage() {
         <CountryEditModal
           country={editingCountry === 'new' ? null : editingCountry as Country}
           currencies={currencies}
+          taxTemplates={taxTemplates}
+          eInvoiceStandards={eInvoiceStandards}
           onClose={() => setEditingCountry(null)}
           onSaved={fetchAll}
           onCurrenciesChanged={fetchCurrencies}
+          onTaxTemplatesChanged={fetchAll}
         />
       )}
 
@@ -1415,6 +1801,24 @@ export default function SaaSCountriesPage() {
         description="Any country still enabled by at least one tenant will be skipped — the rest will be removed from the registry."
         confirmText="Delete"
         variant="danger"
+      />
+
+      {/* Generic link/unlink prompt — every link/unlink action goes through
+          this dialog so the variant + impact summary stay consistent. */}
+      <ConfirmDialog
+        open={linkAction !== null}
+        onOpenChange={(open) => { if (!open) setLinkAction(null) }}
+        onConfirm={async () => {
+          const a = linkAction
+          if (!a) return
+          setLinkAction(null)
+          try { await a.run() }
+          catch (err: any) { toast.error(err?.message || 'Action failed') }
+        }}
+        title={linkAction?.title || ''}
+        description={linkAction?.description || ''}
+        confirmText={linkAction?.confirmText || 'Confirm'}
+        variant={linkAction?.variant || 'warning'}
       />
     </div>
   )
