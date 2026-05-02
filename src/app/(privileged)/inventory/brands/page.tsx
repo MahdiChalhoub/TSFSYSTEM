@@ -5,7 +5,11 @@ import { NoTenantNotice } from "./NoTenantNotice";
 export const dynamic = 'force-dynamic';
 
 async function getBrands() {
-    try { return await erpFetch('inventory/brands/?with_counts=true'); }
+    // no-store: counts (categories/countries/attrs) are derived from
+    // products and change when products move. The default 30s revalidate
+    // cache let stale counts persist long enough that the user opened the
+    // page after a backend update and saw 0s. Fresh on every request.
+    try { return await erpFetch('inventory/brands/?with_counts=true', { cache: 'no-store' }); }
     catch { return []; }
 }
 

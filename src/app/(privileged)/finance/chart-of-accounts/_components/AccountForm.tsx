@@ -1,10 +1,58 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Lock, Info } from 'lucide-react'
+import { Loader2, Lock, Info, Hash, Layers, Coins, Building2 } from 'lucide-react'
 import { TYPE_CONFIG } from './types'
 import { useScope } from '@/hooks/useScope'
 import { useTranslation } from '@/hooks/use-translation'
+
+/** Visual section wrapper — groups related fields under a header with an
+ *  icon + title. Cleaner than the previous flat grid, especially in the
+ *  narrow mobile bottom-sheet layout. */
+function FormSection({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-2xl p-3 sm:p-4"
+            style={{
+                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-border) 35%, transparent)',
+            }}>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                    {icon}
+                </div>
+                <h4 className="text-tp-xs font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--app-muted-foreground)' }}>{title}</h4>
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+                {children}
+            </div>
+        </div>
+    )
+}
+
+/** Reusable input/select wrapper — consistent label + control styling. */
+function FormField({ label, hint, children, fullSpan }: { label: string; hint?: string; children: React.ReactNode; fullSpan?: boolean }) {
+    return (
+        <div className={fullSpan ? 'col-span-full' : ''}>
+            <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1.5 block"
+                style={{ color: 'var(--app-muted-foreground)' }}
+                title={hint}>
+                {label}
+                {hint && <Info size={10} className="inline ml-1 opacity-60" />}
+            </label>
+            {children}
+        </div>
+    )
+}
+
+const inputClass = "w-full text-tp-md px-3 py-2.5 rounded-xl outline-none transition-all"
+const inputStyle: React.CSSProperties = {
+    background: 'var(--app-bg, #020617)',
+    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+    color: 'var(--app-foreground)',
+    minHeight: '42px',  // touch-friendly
+}
 
 interface AccountFormProps {
     accounts: Record<string, any>[]

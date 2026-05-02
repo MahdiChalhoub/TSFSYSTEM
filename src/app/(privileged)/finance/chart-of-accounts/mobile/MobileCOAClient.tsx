@@ -45,25 +45,28 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
 }) {
     const router = useRouter()
     const searchParams = useSearchParams()
-    /** Add-form bottom sheet — opens when ?add=1 is in the URL (set by the
-     *  page header's "+ New Account" button or by Add-sub on a row). When
-     *  ?parent=ID is also set, the form pre-fills that parent. */
+    /** Add-form bottom sheet. Driven by local state for instant open —
+     *  routing through ?add=1 introduced a Next.js server roundtrip on
+     *  every tap (slow). The URL param is still respected for deep-links
+     *  (e.g. desktop Add-sub button) but only on first mount. */
     const [addOpen, setAddOpen] = useState(false)
     const [addParentId, setAddParentId] = useState<number | undefined>(undefined)
+    const openAddSheet = useCallback((parentId?: number) => {
+        setAddParentId(parentId)
+        setAddOpen(true)
+    }, [])
     useEffect(() => {
         if (searchParams.get('add') === '1') {
             const p = searchParams.get('parent')
-            setAddParentId(p ? Number(p) : undefined)
-            setAddOpen(true)
-        } else {
-            setAddOpen(false)
+            openAddSheet(p ? Number(p) : undefined)
+            // Clean the URL once, so a refresh doesn't keep re-opening.
+            router.replace('/finance/chart-of-accounts')
         }
-    }, [searchParams])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
     const closeAddSheet = useCallback(() => {
         setAddOpen(false)
-        // Clean the URL so a refresh doesn't re-open the sheet.
-        router.replace('/finance/chart-of-accounts')
-    }, [router])
+    }, [])
     const [isPending, startTransition] = useTransition()
     const [sheetNode, setSheetNode] = useState<COATreeNode | COAAccount | null>(null)
     const [actionNode, setActionNode] = useState<COATreeNode | COAAccount | null>(null)
@@ -127,8 +130,8 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
     }, [router])
 
     const handleAddChild = useCallback((parentId: number) => {
-        router.push(`/finance/chart-of-accounts?add=1&parent=${parentId}`)
-    }, [router])
+        openAddSheet(parentId)
+    }, [openAddSheet])
 
     const handleReactivate = useCallback((n: COATreeNode | COAAccount) => {
         startTransition(async () => {
@@ -246,7 +249,7 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
                 primaryAction: {
                     label: 'New Account',
                     icon: <Plus size={16} strokeWidth={2.6} />,
-                    onClick: () => router.push('/finance/chart-of-accounts?add=1'),
+                    onClick: () => openAddSheet(),
                 },
                 secondaryActions: [
                     { label: 'Templates', icon: <Library size={14} />, href: '/finance/chart-of-accounts/templates' },
