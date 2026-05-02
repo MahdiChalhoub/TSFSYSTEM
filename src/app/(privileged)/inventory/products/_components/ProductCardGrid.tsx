@@ -208,14 +208,14 @@ const ProductCard = memo(function ProductCard({
           {/* Procurement badge — shown only if active (Requested, Ordered, etc.) */}
           {hasProcurement && (
             <span
-              className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg"
+              className="inline-flex flex-col items-center text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg leading-tight"
               style={{
                 background: `color-mix(in srgb, ${ps.color} 12%, var(--app-surface))`,
                 color: ps.color,
                 border: `1px solid color-mix(in srgb, ${ps.color} 25%, transparent)`,
               }}
             >
-              {ps.label}
+              {ps.label.split(' · ').map((p, i) => <span key={i} className="whitespace-nowrap">{p}</span>)}
             </span>
           )}
         </div>

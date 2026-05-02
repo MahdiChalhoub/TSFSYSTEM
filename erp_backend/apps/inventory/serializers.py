@@ -91,30 +91,39 @@ class BrandSerializer(serializers.ModelSerializer):
     def get_product_count(self, obj):
         return obj.products.count()
 
-    # The category/country counts include a "Universal/Uncategorized"
-    # bucket when at least one product has the FK unset, so the chip
-    # number matches the facet-group count the user sees inside the
-    # expanded tree (e.g. tree shows "By Country: 1 (Universal)" → chip
-    # shows "1 country"). Brand with zero products still shows 0.
+    # Counts are the UNION of:
+    #   • M2M-linked entries (brand.categories / brand.countries) — the
+    #     explicit "this brand is registered against X" links the user
+    #     manages from the brand edit dialog
+    #   • product-derived entries — distinct values seen on this brand's
+    #     products via Product.category / Product.country FK
+    # …plus a "Universal / Uncategorized / No-attributes" bucket when at
+    # least one product has the FK unset (mirrors the tree's facet-group
+    # count). Without the union, a brand with M2M categories but no
+    # products in those categories would show 0 — which contradicted the
+    # row subtitle showing "N categories".
     def get_category_count(self, obj):
-        if not obj.products.exists():
-            return 0
-        real = obj.products.exclude(category__isnull=True).values('category').distinct().count()
+        m2m_ids = set(obj.categories.values_list('id', flat=True))
+        product_ids = set(
+            obj.products.exclude(category__isnull=True).values_list('category', flat=True)
+        )
+        union_ids = m2m_ids | product_ids
         has_uncategorized = obj.products.filter(category__isnull=True).exists()
-        return real + (1 if has_uncategorized else 0)
+        return len(union_ids) + (1 if has_uncategorized else 0)
 
     def get_country_count(self, obj):
-        if not obj.products.exists():
-            return 0
-        real = obj.products.exclude(country__isnull=True).values('country').distinct().count()
-        has_universal = obj.products.filter(country__isnull=True).exists()
-        return real + (1 if has_universal else 0)
+        m2m_ids = set(obj.countries.values_list('id', flat=True))
+        product_ids = set(
+            obj.products.exclude(country__isnull=True).values_list('country', flat=True)
+        )
+        union_ids = m2m_ids | product_ids
+        has_universal = obj.products.filter(country__isnull=True).exists() if obj.products.exists() else False
+        return len(union_ids) + (1 if has_universal else 0)
 
     def get_attribute_count(self, obj):
-        # Distinct ProductAttribute leaf nodes used by this brand's
-        # products, plus a "no attributes" bucket when at least one
-        # product has zero attribute_values. Mirrors the tree's
-        # By Attribute group count exactly.
+        # Attributes only come from products (no brand↔attribute M2M in
+        # the schema). Plus a "No attributes" bucket if any product has
+        # zero attribute_values.
         if not obj.products.exists():
             return 0
         from .models import ProductAttribute

@@ -81,16 +81,21 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
       const hasLifecycle = product.procurement_status && product.procurement_status !== 'NONE'
       // Stack: stock tier on the first line (only when not "Available"), lifecycle on the second (only when active).
       // When neither tier nor lifecycle is set, fall back to a single "Available" badge.
-      const pill = (label: string, color: string) => (
-        <span className="inline-flex items-center text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded whitespace-nowrap"
-          style={{
-            color,
-            background: `color-mix(in srgb, ${color} 10%, transparent)`,
-            border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-          }}>
-          {label}
-        </span>
-      )
+      const pill = (label: string, color: string) => {
+        // Labels like "Requested · Purchase" stack onto two lines so the
+        // request type stays readable in narrow columns.
+        const parts = label.split(' · ')
+        return (
+          <span className="inline-flex flex-col items-center text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded leading-tight"
+            style={{
+              color,
+              background: `color-mix(in srgb, ${color} 10%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+            }}>
+            {parts.map((p, i) => <span key={i} className="whitespace-nowrap">{p}</span>)}
+          </span>
+        )
+      }
       if (!tierLabel && !hasLifecycle) return pill(ps.label, ps.color)
       return (
         <span className="inline-flex flex-col items-center gap-0.5">

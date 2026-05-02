@@ -471,9 +471,12 @@ export function AccountForm({
                 </FormField>
             </FormSection>
 
-            {/* ── Sticky action bar ── */}
-            <div className="sticky bottom-0 -mx-3 sm:mx-0 px-3 sm:px-0 pt-3 pb-1 flex gap-2 justify-end"
-                style={{ background: 'linear-gradient(to top, var(--app-bg) 70%, transparent)' }}>
+            {/* Action bar — sits at the end of the form and scrolls with
+                the rest of the content. The previous `sticky bottom-0`
+                attached the bar to the scroll container's bottom edge,
+                which produced a half-floating bar that wasn't aligned
+                with the actual end of the form. */}
+            <div className="flex gap-2 justify-end pt-2">
                 <button
                     type="button"
                     onClick={onCancel}
