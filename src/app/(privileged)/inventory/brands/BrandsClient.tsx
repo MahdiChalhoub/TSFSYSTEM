@@ -300,7 +300,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 )}
             >
                 {(renderProps) => {
-                    const { tree, expandKey, isSelected, openNode, isCompact, selectedIds, toggleSelect } = renderProps
+                    const { tree, expandKey, isSelected, openNode, isCompact, selectedIds, toggleSelect, searchQuery, expandAll } = renderProps
                     selectionRef.current = { selectedIds, clearSelection: renderProps.clearSelection }
 
                     return tree.map((node: Brand) => (
@@ -315,6 +315,8 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                                 selectable
                                 isChecked={selectedIds.has(node.id)}
                                 onToggleCheck={() => toggleSelect(node.id)}
+                                searchQuery={searchQuery}
+                                forceExpanded={expandAll}
                             />
                         </div>
                     ))

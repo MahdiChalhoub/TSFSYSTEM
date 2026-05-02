@@ -67,22 +67,58 @@ export function ChartOfAccountsViewer({ accounts }: {
         // eslint-disable-next-line react-hooks/exhaustive-deps -- locale change forces full reload
     }, [accounts])
 
+    // Mirror of the backend ChartOfAccount.scope_mode property + the
+    // AccountNode fallback — keep all three in lockstep.
+    const deriveScope = (a: Record<string, any>): 'tenant_wide' | 'branch_split' | 'branch_located' => {
+        const role = String(a.system_role || '').toUpperCase()
+        if (role === 'INVENTORY' || role === 'INVENTORY_ASSET' || role === 'WIP') return 'branch_located'
+        if (['AR_CONTROL','AP_CONTROL','CASH_ACCOUNT','BANK_ACCOUNT','TAX_PAYABLE','TAX_RECEIVABLE',
+             'RETAINED_EARNINGS','P_L_SUMMARY','OPENING_BALANCE_OFFSET','RECEIVABLE','PAYABLE',
+             'CAPITAL','WITHDRAWAL','LOAN','WITHHOLDING','ACCUM_DEPRECIATION'].includes(role)) {
+            return 'tenant_wide'
+        }
+        if (['REVENUE','REVENUE_CONTROL','COGS','COGS_CONTROL','EXPENSE','DISCOUNT_GIVEN',
+             'DISCOUNT_RECEIVED','FX_GAIN','FX_LOSS','DEPRECIATION_EXP','BAD_DEBT',
+             'DELIVERY_FEES','VAT_INPUT','VAT_OUTPUT','GRNI'].includes(role)) {
+            return 'branch_split'
+        }
+        // SYSCOHADA / code patterns (class 3 = stocks → branch-located).
+        const syscoCode = String(a.syscohadaCode || a.syscohada_code || '')
+        if (syscoCode) {
+            const first = syscoCode[0]
+            if (first === '3') return 'branch_located'
+            if (first === '6' || first === '7') return 'branch_split'
+        }
+        const code = String(a.code || '')
+        if (a.type === 'ASSET' && /^3\d/.test(code)) return 'branch_located'
+        // Name keyword sniff for inventory-shaped accounts without role/code.
+        const name = String(a.name || '').toLowerCase()
+        if (a.type === 'ASSET' && /\b(stock|inventory|inventaire|marchandise|matiere|matière|wip|work[-\s]in[-\s]progress|en[-\s]cours)\b/.test(name)) {
+            return 'branch_located'
+        }
+        if (a.type === 'INCOME' || a.type === 'EXPENSE') return 'branch_split'
+        if (a.type === 'LIABILITY' || a.type === 'EQUITY') return 'tenant_wide'
+        return 'tenant_wide'
+    }
+    const scopeOf = (a: Record<string, any>) => (a.scope_mode as string) || deriveScope(a)
+
     // Counts for the scope-filter chips — recomputed when accounts change.
     const scopeCounts = useMemo(() => {
         const active = accounts.filter(a => a.isActive)
         return {
             all: active.length,
-            tenant_wide: active.filter(a => a.scope_mode === 'tenant_wide').length,
-            branch_split: active.filter(a => a.scope_mode === 'branch_split').length,
-            branch_located: active.filter(a => a.scope_mode === 'branch_located').length,
+            tenant_wide: active.filter(a => scopeOf(a) === 'tenant_wide').length,
+            branch_split: active.filter(a => scopeOf(a) === 'branch_split').length,
+            branch_located: active.filter(a => scopeOf(a) === 'branch_located').length,
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accounts])
 
     // Filter + build tree
     const tree = useMemo(() => {
         let filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
         if (typeFilter) filtered = filtered.filter(a => a.type === typeFilter)
-        if (scopeFilter) filtered = filtered.filter(a => a.scope_mode === scopeFilter)
+        if (scopeFilter) filtered = filtered.filter(a => scopeOf(a) === scopeFilter)
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase()
             filtered = filtered.filter(a =>
@@ -95,8 +131,16 @@ export function ChartOfAccountsViewer({ accounts }: {
         filtered.forEach(a => { map[a.id] = { ...a, children: [] } })
         const roots: Record<string, any>[] = []
         filtered.forEach(a => {
-            if (a.parentId && map[a.parentId]) map[a.parentId].children.push(map[a.id])
-            else if (!a.parentId) roots.push(map[a.id])
+            // Attach to parent IF the parent survived the filter; otherwise
+            // promote to root so the row remains visible. Without this,
+            // applying a filter (e.g., "Branch-located") would silently
+            // drop every child whose parent didn't match — the count chip
+            // would say 13 but the tree would show 0.
+            if (a.parentId && map[a.parentId]) {
+                map[a.parentId].children.push(map[a.id])
+            } else {
+                roots.push(map[a.id])
+            }
         })
         return roots
     }, [accounts, showInactive, searchQuery, typeFilter, scopeFilter])
@@ -291,7 +335,7 @@ export function ChartOfAccountsViewer({ accounts }: {
 
             <div data-tour="account-tree" className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6 mb-2 border border-app-border bg-app-surface/30">
                 <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b border-app-border/50 text-tp-xs font-bold uppercase tracking-wider text-app-muted-foreground bg-app-surface/60">
-                    <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">{t('finance.coa.col_account')}</div><div className="w-36 hidden lg:block text-app-success">{t('finance.coa.col_syscohada')}</div><div className="w-24 hidden sm:block">{t('finance.coa.col_type')}</div><div className="w-28 text-right">{t('finance.coa.col_balance')}</div><div className="w-16 flex-shrink-0" />
+                    <div className="w-5 flex-shrink-0" /><div className="w-7 flex-shrink-0" /><div className="flex-1">{t('finance.coa.col_account')}</div><div className="w-36 hidden lg:block text-app-success">{t('finance.coa.col_syscohada')}</div><div className="w-24 hidden sm:block">{t('finance.coa.col_type')}</div><div className="w-24 hidden md:block text-center" title="Branch-scope behavior — Tenant-wide (AR/AP/Equity) · Branch-split (Revenue/Expense/COGS) · Branch-located (Inventory/WIP)">SCOPE</div><div className="w-28 text-right">{t('finance.coa.col_balance')}</div><div className="w-16 flex-shrink-0" />
                 </div>
                 <div className="flex-1 overflow-y-auto overscroll-contain">
                     {tree.map(node => <AccountNode key={node.id} node={node} level={0} accounts={accounts} onEdit={setEditingAccount} onAddChild={(id) => { setPreselectedParentId(id); setIsAdding(true) }} onReactivate={(id) => setPendingAction({ type: 'reactivate', title: t('finance.coa.confirm_reactivate_title'), description: t('finance.coa.confirm_reactivate_desc'), variant: 'warning', id })} />)}

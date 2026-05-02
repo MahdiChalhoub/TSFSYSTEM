@@ -16,4 +16,16 @@ export interface Brand {
     parent?: null // Brands are flat — always null, needed for TreeMasterPage
 }
 
+export interface ProductRow {
+    id: number
+    name: string
+    sku?: string
+    country?: number | null | undefined
+    country_name?: string | null | undefined
+    country_code?: string | null | undefined
+    attribute_value_names?: string[] | undefined
+    selling_price_ttc?: number | undefined
+    image?: string | null | undefined
+}
+
 export type BrandPanelTab = 'overview' | 'products' | 'categories' | 'audit'

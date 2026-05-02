@@ -319,13 +319,38 @@ class ChartOfAccount(TenantModel):
         }:
             return self.SCOPE_BRANCH_SPLIT
 
-        # 2) Type-based fallback for accounts without a system_role.
+        # 2) SYSCOHADA class signal — class 3 is stocks (inventory),
+        # class 6 = charges, class 7 = produits. Catches inventory accounts
+        # that admins haven't tagged with a system_role yet.
+        sysco = (getattr(self, 'syscohada_code', None) or '').strip()
+        if sysco:
+            first = sysco[0]
+            if first == '3':
+                return self.SCOPE_BRANCH_LOCATED
+            if first in ('6', '7'):
+                return self.SCOPE_BRANCH_SPLIT
+
+        # 3) Code prefix fallback — SYSCOHADA-styled codes even when
+        # syscohada_code wasn't separately filled.
+        code = (self.code or '').strip()
+        if self.type == 'ASSET' and code and code[:2].isdigit() and code.startswith('3'):
+            return self.SCOPE_BRANCH_LOCATED
+
+        # 4) Name-keyword sniff for inventory-shaped accounts.
+        name = (self.name or '').lower()
+        if self.type == 'ASSET':
+            for kw in ('stock', 'inventory', 'inventaire', 'marchandise',
+                       'matiere', 'matière', 'wip', 'work in progress', 'en cours'):
+                if kw in name:
+                    return self.SCOPE_BRANCH_LOCATED
+
+        # 5) Type-based fallback for accounts without a system_role.
         if self.type in ('INCOME', 'EXPENSE'):
             return self.SCOPE_BRANCH_SPLIT
         if self.type in ('LIABILITY', 'EQUITY'):
             return self.SCOPE_TENANT_WIDE
-        # ASSET without a known role — most are tenant-wide bank/AR-style;
-        # default to tenant-wide and let admins override via system_role.
+        # ASSET without any of the above signals — default tenant-wide
+        # (covers AR/AP/Bank/Receivable/Cash). Admins override via system_role.
         return self.SCOPE_TENANT_WIDE
 
     def save(self, *args, **kwargs):
