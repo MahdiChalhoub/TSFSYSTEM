@@ -47,10 +47,55 @@ export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = 
     FAILED:      { label: 'Failed',      color: 'var(--app-error, #ef4444)' },
 }
 
-/** Safe resolver — unknown / null / undefined values map to NONE. */
+/**
+ * Backend-label → canonical enum mapping.
+ *
+ * The Python service `apps/inventory/services/procurement_status_service.py`
+ * returns human-friendly strings like "Requested to Purchase" / "Pending PO"
+ * / "Ordered" / "In Transit" / "Received" — NOT the enum keys above. We
+ * normalize those into our canonical vocabulary so the UI shows consistent
+ * labels everywhere. The mapping mirrors the priority chain in the service
+ * (request lifecycle → PO lifecycle → received).
+ */
+const BACKEND_LABEL_TO_ENUM: Record<string, ProcurementStatus> = {
+    // Operational / Procurement requests
+    'Requested to Purchase':  'REQUESTED',
+    'Approved to Purchase':   'REQUESTED',
+    'Requested to Transfer':  'REQUESTED',
+    'Approved to Transfer':   'REQUESTED',
+    'Adjustment Pending':     'REQUESTED',
+    'Adjustment Approved':    'REQUESTED',
+    'Requested':              'REQUESTED',
+    // PO lifecycle
+    'Pending PO':             'PO_SENT',
+    'Pending Approval':       'PO_SENT',
+    'PO Approved':            'PO_ACCEPTED',
+    'Ordered':                'PO_SENT',
+    'In Transit':             'IN_TRANSIT',
+    'Partially Received':     'IN_TRANSIT',
+    // Terminal states
+    'Received':               'NONE',         // cycle complete — back to baseline
+    'Failed':                 'FAILED',
+    'PO Rejected':            'FAILED',
+}
+
+/**
+ * Safe resolver — accepts either:
+ *   - a canonical enum key ('REQUESTED', 'PO_SENT', ...)
+ *   - a backend human label ('Requested to Purchase', 'Ordered', ...)
+ *   - null / undefined / unknown → NONE fallback
+ *
+ * Always returns a valid ProcurementStatusMeta.
+ */
 export function getProcurementStatus(value: string | null | undefined): ProcurementStatusMeta {
     if (!value) return PROCUREMENT_STATUS_CONFIG.NONE
-    return PROCUREMENT_STATUS_CONFIG[value as ProcurementStatus] ?? PROCUREMENT_STATUS_CONFIG.NONE
+    // First try direct enum-key match (frontend-only paths use this)
+    const direct = PROCUREMENT_STATUS_CONFIG[value]
+    if (direct) return direct
+    // Then try backend-label mapping (most API responses go through this)
+    const mapped = BACKEND_LABEL_TO_ENUM[value]
+    if (mapped) return PROCUREMENT_STATUS_CONFIG[mapped]
+    return PROCUREMENT_STATUS_CONFIG.NONE
 }
 
 /**
