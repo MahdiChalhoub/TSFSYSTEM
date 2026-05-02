@@ -103,6 +103,24 @@ cd "$APP_ROOT"
 git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 
+# ── Step 1.5: v3.5.0 cutover guard (idempotent) ───────────────────────────────
+# After v3.5.0, the migration tree was regenerated (clean break, no `replaces`).
+# If we deploy v3.5.0+ code against an old DB, `manage.py migrate` will crash
+# because `django_migrations` references migrations that no longer exist as
+# files. Run cutover_v3_5_0.sh in --auto mode: it self-detects whether the
+# cutover is needed and exits 0 silently when already done.
+if [ -f "$APP_ROOT/scripts/cutover_v3_5_0.sh" ] && [[ "${SKIP_V3_5_GUARD:-0}" != "1" ]]; then
+    log "🛡️  Checking v3.5.0 baseline state..."
+    if bash "$APP_ROOT/scripts/cutover_v3_5_0.sh" --auto --skip-archive 2>&1 | tee -a "$LOG_FILE"; then
+        ok "  v3.5.0 baseline OK (cutover already applied or skipped)"
+    else
+        # cutover ran and failed mid-way — abort the whole deploy so atomic
+        # symlink swap doesn't happen against a half-cutover DB
+        err "  v3.5.0 cutover failed. Aborting deploy. See archive in /root/archives/ for rollback."
+        exit 1
+    fi
+fi
+
 # Create staging release directory
 mkdir -p "$NEW_RELEASE"
 rsync -a --exclude 'node_modules' --exclude '.git' --exclude 'venv' \

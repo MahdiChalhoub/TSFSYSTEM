@@ -52,10 +52,12 @@ LOG_FILE="${LOG_FILE:-/var/log/tsf-cutover-v3.5.0-${TIMESTAMP}.log}"
 
 ARCHIVE_ONLY=false
 SKIP_ARCHIVE=false
+AUTO_SKIP_IF_DONE=false  # set by --auto: skip silently if cutover already happened
 for arg in "$@"; do
     case "$arg" in
         --archive-only) ARCHIVE_ONLY=true ;;
         --skip-archive) SKIP_ARCHIVE=true ;;
+        --auto) AUTO_SKIP_IF_DONE=true ;;
         --help|-h)
             grep -E "^# " "$0" | head -50; exit 0 ;;
     esac
@@ -80,6 +82,26 @@ echo "════════════════════════�
 [ -d "$APP_ROOT/erp_backend" ] || { echo "❌ erp_backend not under $APP_ROOT"; exit 1; }
 command -v pg_dump >/dev/null || { echo "❌ pg_dump not in PATH"; exit 1; }
 command -v pm2 >/dev/null || { echo "⚠ pm2 not in PATH — service control will fail"; }
+
+# ── Idempotency check ────────────────────────────────────────────────────────
+# If --auto, detect whether the v3.5.0 cutover has already been applied. We
+# look for any pre-v3.5 finance migration in `django_migrations` (those don't
+# exist in the post-cutover tree). If none are found, we assume v3.5.0+ and
+# skip — letting deploy_atomic.sh continue with its normal `migrate` flow.
+if $AUTO_SKIP_IF_DONE; then
+    PRE_V3_5_COUNT=$(sudo -u postgres psql -p "$DB_PORT" -d "$DB_NAME" -tAc \
+        "SELECT count(*) FROM django_migrations WHERE app='finance' AND name LIKE '%payment_gateway_catalog%' OR app='inventory' AND name LIKE '0004_alter_category_barcode_sequence%' OR app='client_portal' AND name='0002_initial' AND id IN (SELECT id FROM django_migrations WHERE app='client_portal' AND name='0002_initial' LIMIT 1)" \
+        2>/dev/null || echo "ERR")
+    if [ "$PRE_V3_5_COUNT" = "0" ]; then
+        echo "✅ v3.5.0 cutover already applied (no pre-v3.5 migrations in django_migrations). Skipping."
+        exit 0
+    fi
+    if [ "$PRE_V3_5_COUNT" = "ERR" ]; then
+        echo "⚠ Could not query django_migrations (DB may be empty or unreachable). Treating as fresh DB → cutover applies."
+    else
+        echo "ℹ Detected $PRE_V3_5_COUNT pre-v3.5 migration record(s) — proceeding with cutover."
+    fi
+fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Phase 1 — ARCHIVE (no destructive ops)
