@@ -186,17 +186,38 @@ class ProductSerializer(serializers.ModelSerializer):
                 getattr(obj, 'min_stock_level', 0)
             )
             
-            # Map back to constant keys for frontend
+            # Map back to canonical frontend enum keys.
+            # Mirror the priority chain in
+            # apps/inventory/services/procurement_status_service.py and the
+            # frontend's src/lib/procurement-status.ts so all values from
+            # get_product_display_status() resolve to a known key — previously
+            # 8 labels (Pending PO, Pending Approval, PO Approved, Partially
+            # Received, Adjustment Pending/Approved, Out of Stock, Low Stock)
+            # fell through to NONE and showed an em-dash even when the
+            # product was actively being procured.
             LABEL_TO_KEY = {
+                # Operational / Procurement requests
                 'Requested to Purchase': 'REQUESTED',
                 'Requested to Transfer': 'REQUESTED',
-                'Approved to Purchase': 'REQUESTED',
-                'Approved to Transfer': 'REQUESTED',
-                'In Transit': 'IN_TRANSIT',
-                'Ordered': 'PO_SENT',
-                'Received': 'RECEIVED',
-                'Failed': 'FAILED',
-                'Available': 'NONE',
+                'Approved to Purchase':  'REQUESTED',
+                'Approved to Transfer':  'REQUESTED',
+                'Adjustment Pending':    'REQUESTED',
+                'Adjustment Approved':   'REQUESTED',
+                # PO lifecycle
+                'Pending PO':            'PO_SENT',
+                'Pending Approval':      'PO_SENT',
+                'PO Approved':           'PO_ACCEPTED',
+                'Ordered':               'PO_SENT',
+                'In Transit':            'IN_TRANSIT',
+                'Partially Received':    'IN_TRANSIT',
+                # Terminal states
+                'Received':              'NONE',     # cycle complete — back to baseline
+                'Failed':                'FAILED',
+                'PO Rejected':           'FAILED',
+                # Stock tiers (no active procurement; baseline state)
+                'Available':             'NONE',
+                'Out of Stock':          'NONE',
+                'Low Stock':             'NONE',
             }
             final_status = LABEL_TO_KEY.get(status, 'NONE')
             cache[obj.id] = final_status
