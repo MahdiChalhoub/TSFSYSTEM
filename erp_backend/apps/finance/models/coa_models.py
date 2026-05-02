@@ -266,6 +266,68 @@ class ChartOfAccount(TenantModel):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
+    # ─────────────────────────────────────────────────────────────────
+    # Branch-scope behavior (derived, not stored)
+    # ─────────────────────────────────────────────────────────────────
+    # Categorizes how an account's balance behaves under a branch filter.
+    # Some accounts (AR, AP, Bank, Equity) are intrinsically tenant-wide:
+    # filtering by branch produces the SAME balance because the account
+    # represents an obligation/right of the company-as-a-whole. Others
+    # (Sales, COGS, Operating Expense) accumulate per-branch — Branch A's
+    # sales for the period really are a different number than Branch B's.
+    # Inventory and WIP are branch-LOCATED: stock physically lives in one
+    # warehouse / branch.
+    #
+    # The UI uses this to render twin "Branch / Total" columns honestly:
+    #   - tenant_wide  → both columns equal (no real per-branch number)
+    #   - branch_split → Branch column = filtered sum
+    #   - branch_located → Branch column = filtered to that branch's
+    #     warehouses; Total = tenant-wide.
+    SCOPE_TENANT_WIDE = 'tenant_wide'
+    SCOPE_BRANCH_SPLIT = 'branch_split'
+    SCOPE_BRANCH_LOCATED = 'branch_located'
+
+    @property
+    def scope_mode(self) -> str:
+        """Derive scope behavior from system_role + type.
+
+        Order of resolution:
+          1. Explicit system_role wins (most specific signal we have)
+          2. Fallback to type-based classification (Income/Expense → split)
+
+        This is a read-only derivation — change account_type or system_role
+        on the record itself if you need to alter the behavior.
+        """
+        # 1) System-role overrides — most precise.
+        role = (self.system_role or '').upper()
+        if role in {'INVENTORY', 'INVENTORY_ASSET', 'WIP'}:
+            return self.SCOPE_BRANCH_LOCATED
+        if role in {
+            'AR_CONTROL', 'AP_CONTROL', 'CASH_ACCOUNT', 'BANK_ACCOUNT',
+            'TAX_PAYABLE', 'TAX_RECEIVABLE',
+            'RETAINED_EARNINGS', 'P_L_SUMMARY', 'OPENING_BALANCE_OFFSET',
+            'RECEIVABLE', 'PAYABLE', 'CAPITAL', 'WITHDRAWAL',
+            'LOAN', 'WITHHOLDING', 'ACCUM_DEPRECIATION',
+        }:
+            return self.SCOPE_TENANT_WIDE
+        if role in {
+            'REVENUE', 'REVENUE_CONTROL', 'COGS', 'COGS_CONTROL',
+            'EXPENSE', 'DISCOUNT_GIVEN', 'DISCOUNT_RECEIVED',
+            'FX_GAIN', 'FX_LOSS', 'DEPRECIATION_EXP',
+            'BAD_DEBT', 'DELIVERY_FEES', 'VAT_INPUT', 'VAT_OUTPUT',
+            'GRNI',
+        }:
+            return self.SCOPE_BRANCH_SPLIT
+
+        # 2) Type-based fallback for accounts without a system_role.
+        if self.type in ('INCOME', 'EXPENSE'):
+            return self.SCOPE_BRANCH_SPLIT
+        if self.type in ('LIABILITY', 'EQUITY'):
+            return self.SCOPE_TENANT_WIDE
+        # ASSET without a known role — most are tenant-wide bank/AR-style;
+        # default to tenant-wide and let admins override via system_role.
+        return self.SCOPE_TENANT_WIDE
+
     def save(self, *args, **kwargs):
         # ── Enterprise Structural Lock ──
         if self.pk:

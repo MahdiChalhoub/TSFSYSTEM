@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import '../globals.css';
 import { AdminProvider } from '@/context/AdminContext';
+import { BranchProvider } from '@/context/BranchContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LayoutShellGateway } from '@/components/admin/LayoutShellGateway';
 import { DevProvider } from '@/context/DevContext';
@@ -165,6 +166,7 @@ export default async function AdminLayout({
             initialTabLayout={tabLayout || 'horizontal'}
         >
         <FavoritesProvider>
+          <BranchProvider>
           <TourProvider>
             <DevProvider>
                 <LayoutShellGateway
@@ -185,6 +187,7 @@ export default async function AdminLayout({
                 <CommandPalette />
             </DevProvider>
           </TourProvider>
+          </BranchProvider>
         </FavoritesProvider>
         </AdminProvider>
         </DesignSystemProvider>

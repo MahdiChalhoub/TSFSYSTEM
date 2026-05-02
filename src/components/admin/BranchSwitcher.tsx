@@ -1,25 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, Check, GitBranch, Warehouse, Building2, ChevronRight } from 'lucide-react';
+import { ChevronDown, Check, GitBranch, Warehouse, Building2, ChevronRight, Globe } from 'lucide-react';
 import { getAllWarehouseContextItems } from '@/app/actions/inventory/warehouses';
-
-const LS_BRANCH_KEY = 'tsf_active_branch';
-const LS_LOCATION_KEY = 'tsf_active_location';
+import { useBranchScope } from '@/context/BranchContext';
 
 export function BranchLocationSwitcher() {
     const [all, setAll] = useState<Record<string, any>[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+    // Reads from BranchContext (which reads localStorage on mount + writes
+    // to cookie + triggers router.refresh on change). The dropdown is now
+    // a thin VIEW over the shared scope state — every page that uses
+    // useBranchScope sees the same selection.
+    const { branchId: selectedBranchId, locationId: selectedLocationId, setSelection } = useBranchScope();
 
     useEffect(() => {
-        const savedBranch = localStorage.getItem(LS_BRANCH_KEY);
-        const savedLocation = localStorage.getItem(LS_LOCATION_KEY);
-        if (savedBranch) setSelectedBranchId(Number(savedBranch));
-        if (savedLocation) setSelectedLocationId(Number(savedLocation));
-
         getAllWarehouseContextItems().then(data => {
             setAll(data);
             setLoading(false);
@@ -37,30 +33,30 @@ export function BranchLocationSwitcher() {
     const selectedLocation = locations.find(l => l.id === selectedLocationId) ?? null;
 
     const handleSelectBranch = (id: number | null) => {
-        setSelectedBranchId(id);
-        // Clear location when branch changes
-        setSelectedLocationId(null);
-        localStorage.removeItem(LS_LOCATION_KEY);
-        if (id === null) localStorage.removeItem(LS_BRANCH_KEY);
-        else localStorage.setItem(LS_BRANCH_KEY, String(id));
+        // Clear location when branch changes (location only makes sense
+        // inside a chosen branch). Setting null on both = "All Branches".
+        setSelection(id, null);
     };
 
     const handleSelectLocation = (id: number | null) => {
-        setSelectedLocationId(id);
-        if (id === null) localStorage.removeItem(LS_LOCATION_KEY);
-        else localStorage.setItem(LS_LOCATION_KEY, String(id));
+        setSelection(selectedBranchId, id);
+        setIsOpen(false);
+    };
+
+    /** "All Branches" — the explicit top-level scope. Clears both. */
+    const handleSelectAllBranches = () => {
+        setSelection(null, null);
         setIsOpen(false);
     };
 
     // Don't render if nothing to show and not loading
     if (!loading && branches.length === 0 && locations.length === 0) return null;
 
-    // Trigger label: "Branch > Location" or just branch or fallback
+    // Trigger label — use "All Branches" when nothing is scoped so the
+    // user can see at a glance whether they're filtering or not.
     const triggerLabel = selectedBranch
-        ? selectedLocation
-            ? `${selectedBranch.name}`
-            : selectedBranch.name
-        : 'Branch / Location';
+        ? (selectedLocation ? `${selectedBranch.name} · ${selectedLocation.name}` : selectedBranch.name)
+        : 'All Branches';
 
     return (
         <div className="relative flex-shrink-0">
@@ -125,13 +121,41 @@ export function BranchLocationSwitcher() {
                                     <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-faint)' }}>
                                         Branch
                                     </span>
+                                    <span className="text-[8px] font-bold px-1 rounded ml-auto"
+                                        style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-faint)' }}>
+                                        {branches.length}
+                                    </span>
                                 </div>
                                 <div className="px-1.5 pb-1.5">
+                                    {/* "All Branches" — the explicit unscoped state. Click to clear
+                                        both branch and location filters and work across everything. */}
+                                    <button
+                                        onClick={handleSelectAllBranches}
+                                        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg transition-colors duration-100"
+                                        style={{
+                                            background: selectedBranchId === null ? 'var(--app-primary-light)' : 'transparent',
+                                            borderLeft: selectedBranchId === null ? '2px solid var(--app-primary)' : '2px solid transparent',
+                                        }}
+                                        onMouseEnter={(e) => { if (selectedBranchId !== null) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
+                                        onMouseLeave={(e) => { if (selectedBranchId !== null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                                        <Globe size={12} className="flex-shrink-0"
+                                            style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-text-faint)' }} />
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <p className="text-xs font-semibold truncate"
+                                                style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-text)' }}>
+                                                All Branches
+                                            </p>
+                                            <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                                                No filter — see data from every branch
+                                            </p>
+                                        </div>
+                                        {selectedBranchId === null && <Check size={13} className="flex-shrink-0" style={{ color: 'var(--app-primary)' }} />}
+                                    </button>
                                     {branches.map(branch => {
                                         const isActive = branch.id === selectedBranchId;
                                         return (
                                             <button key={branch.id}
-                                                onClick={() => handleSelectBranch(isActive ? null : branch.id)}
+                                                onClick={() => handleSelectBranch(branch.id)}
                                                 className="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg transition-colors duration-100"
                                                 style={{
                                                     background: isActive ? 'var(--app-primary-light)' : 'transparent',

@@ -7,6 +7,9 @@ class ChartOfAccountSerializer(serializers.ModelSerializer):
     # Computed properties from model
     effective_normal_balance = serializers.CharField(read_only=True)
     is_debit_normal = serializers.BooleanField(read_only=True)
+    # Branch-scope behavior (derived). UI uses this to render twin-column
+    # "Branch / Total" balances and decide which accounts to filter.
+    scope_mode = serializers.CharField(read_only=True)
     level = serializers.SerializerMethodField()
     children_count = serializers.SerializerMethodField()
 

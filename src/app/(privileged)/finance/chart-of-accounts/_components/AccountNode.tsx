@@ -146,12 +146,36 @@ export const AccountNode = ({
                     </span>
                 </div>
 
-                {/* Balance */}
-                <div
-                    className="w-28 text-right font-mono text-tp-md font-bold flex-shrink-0 tabular-nums"
-                    style={{ color: node.balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
-                >
-                    {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {/* Balance + scope chip — the chip explains whether this
+                    balance reacts to a branch filter. Tenant-wide accounts
+                    (AR/AP/Bank/Equity) ALWAYS show the same number regardless
+                    of branch selection — the chip makes that explicit so
+                    users don't think the filter is broken. */}
+                <div className="w-28 text-right flex-shrink-0 flex flex-col items-end">
+                    <span className="font-mono text-tp-md font-bold tabular-nums"
+                        style={{ color: node.balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}>
+                        {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                    {node.scope_mode && (
+                        <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5 leading-none"
+                            title={
+                                node.scope_mode === 'tenant_wide'
+                                    ? 'Tenant-wide — balance does NOT change with branch filter (AR/AP/Bank/Equity).'
+                                    : node.scope_mode === 'branch_split'
+                                        ? 'Branch-split — balance is filtered to the selected branch (Revenue/Expense/COGS).'
+                                        : 'Branch-located — balance reflects only the selected branch (Inventory/WIP).'
+                            }
+                            style={{
+                                color:
+                                    node.scope_mode === 'tenant_wide' ? 'var(--app-muted-foreground, #94A3B8)'
+                                    : node.scope_mode === 'branch_split' ? 'var(--app-info, #3b82f6)'
+                                    : 'var(--app-warning, #f59e0b)',
+                            }}>
+                            {node.scope_mode === 'tenant_wide' ? '🌐 tenant-wide'
+                                : node.scope_mode === 'branch_split' ? '🏢 branch-split'
+                                : '📦 branch-located'}
+                        </span>
+                    )}
                 </div>
 
                 {/* Actions */}

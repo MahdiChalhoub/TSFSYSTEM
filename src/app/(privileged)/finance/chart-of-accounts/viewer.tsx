@@ -18,12 +18,15 @@ import { KPIStrip } from './_components/KPIStrip'
 import { AccountNode } from './_components/AccountNode'
 import { AccountForm } from './_components/AccountForm'
 import { RecalculateBalancesDialog } from './_components/RecalculateBalancesDialog'
+import { useBranchScope } from '@/context/BranchContext'
 
 export function ChartOfAccountsViewer({ accounts }: {
     accounts: Record<string, any>[]
 }) {
     const router = useRouter()
     const { t } = useTranslation()
+    const { branchId } = useBranchScope()
+    const isBranchScoped = branchId != null
     const [isPending, startTransition] = useTransition()
     const [searchQuery, setSearchQuery] = useState('')
     const [showInactive, setShowInactive] = useState(false)
@@ -179,6 +182,26 @@ export function ChartOfAccountsViewer({ accounts }: {
                         <button data-tour="add-account-btn" onClick={() => setIsAdding(true)} className="toolbar-btn-primary"><Plus size={14} /> {t('finance.coa.new_account')}</button>
                         <PageTour tourId="finance-chart-of-accounts" />
                         <button onClick={() => setFocusMode(p => !p)} className="p-1.5 rounded-xl border border-app-border text-app-muted-foreground">{focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Branch-scope explainer banner — surfaces only when a branch
+                is selected, so users understand which balances filter and
+                which don't. Avoids the silent-bug class where AR/AP/Equity
+                look unchanged and the user wonders if the filter broke. */}
+            {!focusMode && isBranchScoped && (
+                <div className="mx-4 md:mx-6 mb-3 rounded-xl px-3 py-2 flex items-start gap-2"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
+                    }}>
+                    <span className="text-[14px] flex-shrink-0 mt-0.5">⚠️</span>
+                    <div className="text-tp-xs leading-snug" style={{ color: 'var(--app-foreground)' }}>
+                        <strong className="font-bold">Branch filter active.</strong>{' '}
+                        Some balances change with branch (Revenue, COGS, Expense, Inventory)
+                        — others stay tenant-wide on purpose (AR, AP, Bank, Equity).
+                        Each row shows a chip indicating its scope behavior.
                     </div>
                 </div>
             )}
