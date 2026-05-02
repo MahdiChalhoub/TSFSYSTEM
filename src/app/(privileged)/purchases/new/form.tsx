@@ -7,7 +7,7 @@ import {
     ShoppingCart, ArrowLeft, Settings2,
     Plus, ArrowRight, BookOpen,
     DollarSign, Hash, Layers, TrendingUp,
-    Building2, MapPin,
+    Building2, MapPin, List, LayoutGrid,
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -15,10 +15,17 @@ import { toast } from 'sonner'
 import { ProductSearch } from './_components/ProductSearch'
 import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
+import { LineCardGrid } from './_components/LineCardGrid'
 import { AdminSidebar } from './_components/AdminSidebar'
 import { POLifecycle, type POStatus } from './_components/POLifecycle'
 import { CatalogueModal } from './_components/CatalogueModal'
-import { ColumnVisibilityButton, ColumnVisibilityPanel, DEFAULT_VISIBLE, DEFAULT_ORDER, COLUMN_DEFS, type ColumnKey } from './_components/ColumnVisibility'
+import { ColumnVisibilityButton, ColumnVisibilityPanel } from './_components/ColumnVisibility'
+import { DajingoListView } from '@/components/common/DajingoListView'
+import { renderPurchaseCell } from './_components/PurchaseColumns'
+import {
+    COLUMN_DEFS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS,
+    DEFAULT_VISIBLE, DEFAULT_ORDER, type ColumnKey
+} from './_lib/columns'
 import type { POViewProfile } from './_lib/profiles'
 import {
     loadProfiles, loadActiveProfileId, saveProfiles, saveActiveProfileId,
@@ -26,23 +33,35 @@ import {
 } from './_lib/profiles'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
+import { Package, Trash2, Maximize2 } from 'lucide-react'
 
 type PurchaseFormMode = 'create' | 'edit'
 
-export default function PurchaseForm({
-    suppliers, sites, financialSettings, users, profilesData,
-    mode = 'create', initialPO = null,
-}: {
+interface PurchaseFormProps {
     suppliers: Record<string, any>[]
     sites: Record<string, any>[]
     financialSettings: Record<string, any>
     users: Record<string, any>[]
     profilesData: AnalyticsProfilesData
+    currentUser?: any
     /** When 'edit', the form prefills from `initialPO` and submits via
      *  `updatePurchaseInvoice` (PATCH) instead of the create action. */
     mode?: PurchaseFormMode
     initialPO?: Record<string, any> | null
-}) {
+}
+
+export default function PurchaseForm({
+    suppliers,
+    sites,
+    financialSettings,
+    users,
+    profilesData,
+    currentUser,
+    mode = 'create',
+    initialPO = null,
+}: PurchaseFormProps) {
+    const isStaff = currentUser?.is_staff || currentUser?.is_superuser;
+
     const isEdit = mode === 'edit' && !!initialPO
     const editId = isEdit ? Number(initialPO?.id) : null
     const initialState = { message: '', errors: {} }
@@ -219,6 +238,7 @@ export default function PurchaseForm({
         const s = (initialPO?.status as string || 'DRAFT').toUpperCase()
         return s as POStatus
     })
+    const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
     const [statusTransitioning, setStatusTransitioning] = useState(false)
 
     const handleStatusChange = useCallback(async (next: POStatus) => {
@@ -324,6 +344,12 @@ export default function PurchaseForm({
         { label: 'VAT', value: totals.vat.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: 'var(--app-accent)', icon: <Layers size={14} /> },
         { label: 'Total TTC', value: totals.ttc.toLocaleString('fr-FR', { minimumFractionDigits: 0 }), color: 'var(--app-success)', icon: <TrendingUp size={14} /> },
     ]
+
+    const handleShareProfile = useCallback(async (id: string, shared: boolean) => {
+        const { shareProfile } = await import('./_lib/profiles')
+        const updated = await shareProfile(colProfiles, id, shared)
+        setColProfiles(updated)
+    }, [colProfiles])
 
     return (
         <>
@@ -525,6 +551,24 @@ export default function PurchaseForm({
                             <BookOpen size={13} />
                             <span className="hidden md:inline">Catalogue</span>
                         </button>
+                        <div className="flex items-center p-0.5 rounded-lg bg-app-surface border border-app-border">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md transition-all ${viewMode === 'list' ? 'bg-app-primary text-white' : 'text-app-muted-foreground hover:text-app-foreground'}`}
+                                title="List View"
+                            >
+                                <List size={13} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('card')}
+                                className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-md transition-all ${viewMode === 'card' ? 'bg-app-primary text-white' : 'text-app-muted-foreground hover:text-app-foreground'}`}
+                                title="Card View"
+                            >
+                                <LayoutGrid size={13} />
+                            </button>
+                        </div>
                         <button type="button" onClick={() => searchRef.current?.focus()}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
@@ -533,22 +577,93 @@ export default function PurchaseForm({
                         </button>
                     </div>
 
-                    {/* Table */}
+                    {/* Table / Grid */}
                     <div className="bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col" style={{ minHeight: '400px' }}>
-                        <LineColumnHeaders visibleColumns={visibleColumns} />
-                        <div className="overflow-y-auto custom-scrollbar flex-1">
-                            {lines.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                                    <ShoppingCart size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                                    <p className="text-sm font-bold text-app-muted-foreground">No products added yet</p>
-                                    <p className="text-[11px] text-app-muted-foreground mt-1">Search above or browse the catalogue to add products.</p>
-                                </div>
-                            ) : (
-                                lines.map((line, idx) => (
-                                    <LineRowDesktop key={line.productId as React.Key} line={line} idx={idx} onUpdate={updateLine} onRemove={removeLine} visibleColumns={visibleColumns} />
-                                ))
-                            )}
+                        {/* ═══════════════════════════════════════════════════════════
+                            PO INTELLIGENCE GRID
+                            ============================================
+                            Universal Template (Dajingo Pro V2)
+                            Supports drag-reorder, proportional scaling, and mobile dual-layout.
+                            ═══════════════════════════════════════════════════════════ */}
+                        <div className={viewMode === 'card' ? 'hidden' : 'contents'}>
+                            <DajingoListView<PurchaseLine>
+                                data={lines}
+                                allData={lines}
+                                loading={false}
+                                getRowId={line => line.productId as number}
+                                
+                                columns={COLUMN_DEFS}
+                                visibleColumns={Object.fromEntries(COLUMN_DEFS.map(c => [c.key, visibleColumns.has(c.key as ColumnKey)]))}
+                                columnWidths={COLUMN_WIDTHS}
+                                rightAlignedCols={RIGHT_ALIGNED_COLS}
+                                centerAlignedCols={CENTER_ALIGNED_COLS}
+                                growCols={GROW_COLS}
+                                columnOrder={columnOrder}
+                                onColumnReorder={handleColumnReorder as (order: string[]) => void}
+                                
+                                entityLabel="Product"
+                                
+                                renderRowIcon={() => (
+                                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                                        <Package size={14} />
+                                    </div>
+                                )}
+                                
+                                renderRowTitle={line => (
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="truncate text-[12px] font-bold tracking-tight text-app-foreground leading-tight">{String(line.productName || '')}</span>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[10px] font-mono font-bold text-app-muted-foreground uppercase tracking-widest bg-app-surface/50 px-1.5 py-0.5 rounded-md border border-app-border/40">
+                                                {String(line.productId || 0).padStart(4, '0')}
+                                            </span>
+                                            {!!line.categoryName && (
+                                                <span className="text-[9px] font-black text-app-muted-foreground/60 uppercase tracking-tighter">
+                                                    • {String(line.categoryName)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                renderColumnCell={(key, line) => {
+                                    const idx = lines.findIndex(l => l.productId === line.productId)
+                                    return renderPurchaseCell(key, line, idx, updateLine)
+                                }}
+                                
+                                menuActions={line => {
+                                    const idx = lines.findIndex(l => l.productId === line.productId)
+                                    return [
+                                        { label: 'View Product Details', icon: <Maximize2 size={12} className="text-app-primary" />, onClick: () => window.open(`/inventory/products/${line.productId}`, '_blank') },
+                                        { label: 'Remove from PO', icon: <Trash2 size={12} className="text-app-error" />, onClick: () => removeLine(idx), separator: true },
+                                    ]
+                                }}
+                                
+                                emptyIcon={<ShoppingCart size={36} />}
+                                emptyMessage="No products added to this purchase order yet."
+                                
+                                /* Selection */
+                                selectedIds={new Set()}
+                                
+                                /* Toolbar Integration (matches List View pattern) */
+                                onToggleCustomize={() => setColumnsOpen(true)}
+                                
+                            />
                         </div>
+                        
+                        {viewMode === 'card' && (
+                            <div className="overflow-y-auto custom-scrollbar flex-1">
+                                {lines.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                                        <ShoppingCart size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                                        <p className="text-sm font-bold text-app-muted-foreground">No products added yet</p>
+                                        <p className="text-[11px] text-app-muted-foreground mt-1">Search above or browse the catalogue to add products.</p>
+                                    </div>
+                                ) : (
+                                    <LineCardGrid lines={lines} onUpdate={updateLine} onRemove={removeLine} />
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -573,6 +688,8 @@ export default function PurchaseForm({
                     setProfiles={setColProfiles}
                     activeProfileId={activeColProfileId}
                     switchProfile={switchColProfile}
+                    onShare={handleShareProfile}
+                    isStaff={isStaff}
                 />
 
                 {/* ── Configuration Drawer (same pattern as categories detail panel) ── */}

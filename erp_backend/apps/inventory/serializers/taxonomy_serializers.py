@@ -279,7 +279,26 @@ class BrandSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization', 'reference_code']
 
     def get_product_count(self, obj):
+        pre = (self.context or {}).get('product_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
         return Product.objects.filter(brand=obj).count()
+
+    @classmethod
+    def prefetch_counts(cls, organization):
+        """
+        Bulk calculate product counts for all brands in an organization.
+        Returns a dict mapping brand_id -> product_count.
+        """
+        from django.db.models import Count
+        from apps.inventory.models import Product
+        
+        counts = Product.objects.filter(organization=organization) \
+            .values('brand_id') \
+            .annotate(count=Count('id')) \
+            .filter(brand_id__isnull=False)
+            
+        return {item['brand_id']: item['count'] for item in counts}
 
 
 class BrandDetailSerializer(serializers.ModelSerializer):

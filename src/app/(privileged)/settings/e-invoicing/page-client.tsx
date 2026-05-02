@@ -75,7 +75,7 @@ export default function EInvoiceSettingsPage() {
   async function loadState() {
     setLoading(true)
     try {
-      const data = await erpFetch('finance/e-invoice-standards/resolve-for-tenant/')
+      const data = await erpFetch('finance/einvoice-standards/resolve-for-tenant/')
       setState(data)
       if (data.resolved && data.standard) {
         setCredentials(data.saved_credentials || {})

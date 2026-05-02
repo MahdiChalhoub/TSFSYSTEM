@@ -28,6 +28,8 @@ interface CustomizePanelProps {
   setProfiles: (p: ViewProfile[]) => void
   activeProfileId: string
   setActiveProfileId: (id: string) => void
+  onShare?: (id: string, shared: boolean) => void
+  isStaff?: boolean
   policyHiddenColumns: Set<string>
   policyHiddenFilters: Set<string>
 }
@@ -36,6 +38,7 @@ export function CustomizePanel({
   isOpen, onClose, visibleColumns, setVisibleColumns, visibleFilters, setVisibleFilters,
   columnOrder, setColumnOrder,
   profiles, setProfiles, activeProfileId, setActiveProfileId, 
+  onShare, isStaff,
   policyHiddenColumns, policyHiddenFilters,
 }: CustomizePanelProps) {
 
@@ -113,6 +116,8 @@ export function CustomizePanel({
       
       onSaveProfiles={saveProfiles as any}
       onSaveActiveId={saveActiveProfileId}
+      onShareProfile={onShare}
+      isStaff={isStaff}
       
       otherTabContent={(
         <>

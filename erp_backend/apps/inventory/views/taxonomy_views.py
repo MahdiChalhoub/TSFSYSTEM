@@ -791,6 +791,22 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     queryset = Brand.objects.all()
     pagination_class = None  # Taxonomy data — return all brands for tree building
 
+    def list(self, request, *args, **kwargs):
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        with_counts = str(request.query_params.get('with_counts', '')).lower() in ('true', '1', 'yes')
+        context = self.get_serializer_context()
+        
+        if with_counts:
+            # Bulk-calculate product counts to avoid N+1 queries
+            context['product_counts'] = BrandSerializer.prefetch_counts(organization)
+
+        serializer = self.get_serializer(queryset, many=True, context=context)
+        return Response(serializer.data)
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return BrandDetailSerializer

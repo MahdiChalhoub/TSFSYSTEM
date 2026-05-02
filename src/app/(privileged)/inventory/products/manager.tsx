@@ -62,7 +62,9 @@ function toRequestable(p: Product): RequestableProduct {
  *  MAIN PAGE
  * ═══════════════════════════════════════════════════════════ */
 
-export default function ProductMasterManager({ initialProducts = [], totalProductCount, lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; totalProductCount?: number; lookups?: Lookups; initialFilters?: Record<string, string> }) {
+export default function ProductMasterManager({ initialProducts = [], totalProductCount, lookups = EMPTY_LOOKUPS, currentUser }: { initialProducts?: Product[]; totalProductCount?: number; lookups?: Lookups; initialFilters?: Record<string, string>; currentUser?: any }) {
+  const isStaff = currentUser?.is_staff || currentUser?.is_superuser;
+
   const router = useRouter()
   const { openTab } = useAdmin()
   const { trigger: triggerRequest } = useRequestFlow()
@@ -198,6 +200,12 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
     { label: 'Out of Stock', value: stats.outOfStock, icon: <AlertTriangle size={11} />, color: 'var(--app-error, #ef4444)' },
     { label: 'Avg Price', value: fmt(Math.round(stats.avgPrice)), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
   ], [stats])
+
+  const handleShareProfile = useCallback(async (id: string, shared: boolean) => {
+    const { shareProfile } = await import('./_lib/profiles')
+    const updated = await shareProfile(profiles, id, shared)
+    setProfiles(updated)
+  }, [profiles])
 
   /* ═══════════════════════════════════════════════════════════
    *  RENDER
@@ -508,6 +516,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
         columnOrder={columnOrder} setColumnOrder={setColumnOrder}
         profiles={profiles} setProfiles={setProfiles}
         activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
+        onShare={handleShareProfile} isStaff={isStaff}
         policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
     </DajingoPageShell>
   )

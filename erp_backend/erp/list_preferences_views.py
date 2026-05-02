@@ -22,11 +22,30 @@ def user_list_preference(request, list_key):
         return Response({"error": "Organization context missing"}, status=400)
 
     if request.method == 'GET':
-        # Try user preference first
+        # 1. Fetch organization defaults (shared profiles)
+        shared_profiles = []
+        org_active_id = 'default'
+        try:
+            org_default = OrgListDefault.objects.get(
+                organization_id=org_id, list_key=list_key
+            )
+            shared_profiles = org_default.view_profiles or []
+            org_active_id = org_default.active_profile_id or 'default'
+            # Mark shared profiles
+            for p in shared_profiles:
+                p['is_shared'] = True
+        except OrgListDefault.DoesNotExist:
+            org_default = None
+
+        # 2. Fetch user preferences
         try:
             pref = UserListPreference.objects.get(
                 user=request.user, organization_id=org_id, list_key=list_key
             )
+            
+            # Merge shared profiles into user's profiles
+            all_profiles = shared_profiles + (pref.view_profiles or [])
+            
             return Response({
                 'source': 'user',
                 'list_key': list_key,
@@ -35,17 +54,14 @@ def user_list_preference(request, list_key):
                 'page_size': pref.page_size,
                 'sort_column': pref.sort_column,
                 'sort_direction': pref.sort_direction,
-                'view_profiles': pref.view_profiles,
+                'view_profiles': all_profiles,
                 'active_profile_id': pref.active_profile_id,
             })
         except UserListPreference.DoesNotExist:
             pass
 
-        # Fall back to org default
-        try:
-            org_default = OrgListDefault.objects.get(
-                organization_id=org_id, list_key=list_key
-            )
+        # 3. Fall back to org default if no user preference exists
+        if org_default:
             return Response({
                 'source': 'organization',
                 'list_key': list_key,
@@ -54,11 +70,11 @@ def user_list_preference(request, list_key):
                 'page_size': org_default.page_size,
                 'sort_column': org_default.sort_column,
                 'sort_direction': org_default.sort_direction,
+                'view_profiles': shared_profiles,
+                'active_profile_id': org_active_id,
             })
-        except OrgListDefault.DoesNotExist:
-            pass
 
-        # No preference set
+        # 4. Total fallback
         return Response({
             'source': 'default',
             'list_key': list_key,
@@ -67,10 +83,17 @@ def user_list_preference(request, list_key):
             'page_size': 25,
             'sort_column': '',
             'sort_direction': 'asc',
+            'view_profiles': [],
+            'active_profile_id': 'default',
         })
 
     elif request.method == 'PUT':
         data = request.data
+        # Filter out shared profiles before saving to user preferences
+        # (Users can't modify shared profiles in their own space)
+        all_profiles = data.get('view_profiles', [])
+        user_profiles = [p for p in all_profiles if not p.get('is_shared')]
+
         pref, created = UserListPreference.objects.update_or_create(
             user=request.user,
             organization_id=org_id,
@@ -81,7 +104,7 @@ def user_list_preference(request, list_key):
                 'page_size': data.get('page_size', 25),
                 'sort_column': data.get('sort_column', ''),
                 'sort_direction': data.get('sort_direction', 'asc'),
-                'view_profiles': data.get('view_profiles', []),
+                'view_profiles': user_profiles,
                 'active_profile_id': data.get('active_profile_id', 'default'),
             }
         )
@@ -115,6 +138,8 @@ def org_list_default(request, list_key):
                 'page_size': org_default.page_size,
                 'sort_column': org_default.sort_column,
                 'sort_direction': org_default.sort_direction,
+                'view_profiles': org_default.view_profiles,
+                'active_profile_id': org_default.active_profile_id,
             })
         except OrgListDefault.DoesNotExist:
             return Response({
@@ -124,6 +149,8 @@ def org_list_default(request, list_key):
                 'page_size': 25,
                 'sort_column': '',
                 'sort_direction': 'asc',
+                'view_profiles': [],
+                'active_profile_id': 'default',
             })
 
     elif request.method == 'PUT':
@@ -135,6 +162,11 @@ def org_list_default(request, list_key):
             )
 
         data = request.data
+        # Ensure all saved profiles are marked as shared
+        shared_profiles = data.get('view_profiles', [])
+        for p in shared_profiles:
+            p['is_shared'] = True
+
         default, created = OrgListDefault.objects.update_or_create(
             organization_id=org_id,
             list_key=list_key,
@@ -144,6 +176,8 @@ def org_list_default(request, list_key):
                 'page_size': data.get('page_size', 25),
                 'sort_column': data.get('sort_column', ''),
                 'sort_direction': data.get('sort_direction', 'asc'),
+                'view_profiles': shared_profiles,
+                'active_profile_id': data.get('active_profile_id', 'default'),
             }
         )
         return Response({

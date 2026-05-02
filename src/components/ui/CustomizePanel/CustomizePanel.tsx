@@ -37,6 +37,8 @@ interface CustomizePanelProps<CK extends string = string, FK extends string = st
   // Persistence Helpers
   onSaveProfiles: (p: ViewProfile<CK>[]) => void
   onSaveActiveId: (id: string) => void
+  onShareProfile?: (id: string, shared: boolean) => void
+  isStaff?: boolean
   
   footerContent?: React.ReactNode
   otherTabContent?: React.ReactNode
@@ -54,7 +56,7 @@ export function CustomizePanel<CK extends string, FK extends string>({
   profiles, setProfiles, activeProfileId, switchProfile,
   visibleColumns, visibleFilters, columnOrder,
   onToggleColumn, onToggleFilter, onReorderColumns, onResetColumns, onResetFilters,
-  onSaveProfiles, onSaveActiveId,
+  onSaveProfiles, onSaveActiveId, onShareProfile, isStaff,
   footerContent, otherTabContent
 }: CustomizePanelProps<CK, FK>) {
   const [activeTab, setActiveTab] = useState<'layout' | 'filter' | 'other'>('layout')
@@ -99,6 +101,8 @@ export function CustomizePanel<CK extends string, FK extends string>({
           currentOrder={columnOrder}
           onSaveProfiles={onSaveProfiles as any}
           onSaveActiveId={onSaveActiveId}
+          onShareProfile={onShareProfile as any}
+          isStaff={isStaff}
         />
 
         {/* Tabs */}

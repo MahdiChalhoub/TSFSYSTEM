@@ -103,25 +103,81 @@ function profileToPayload(profile: ViewProfile) {
 }
 
 /**
- * Debounced sync: writes the active profile to the backend.
- * Called after every local change (column toggle, reorder, etc.)
+ * Debounced sync: writes all non-shared profiles to the user's preference.
  */
 export function syncProfileToBackend(profile: ViewProfile) {
   if (typeof window === 'undefined') return
+  // Find current profiles from localStorage to ensure we save the full set
+  const profiles = loadProfiles()
+  
   if (_syncTimer) clearTimeout(_syncTimer)
   _syncTimer = setTimeout(async () => {
     try {
-      const payload = profileToPayload(profile)
+      // User only saves their private profiles.
+      // Backend merges them with shared ones on GET.
+      const privateProfiles = profiles.filter(p => !p.is_shared)
+      
+      const payload = {
+          ...profileToPayload(profile),
+          view_profiles: privateProfiles,
+          active_profile_id: profile.is_shared ? undefined : profile.id
+      }
       await saveUserListPreference(LIST_KEY, payload)
     } catch {
       // Silent fail — localStorage is the fallback
     }
-  }, 800) // 800ms debounce
+  }, 800)
+}
+
+/**
+ * Promote or demote a profile to "shared" (organization-wide) status.
+ */
+export async function shareProfile(profiles: ViewProfile[], id: string, shared: boolean): Promise<ViewProfile[]> {
+    const { getOrgListDefault, saveOrgListDefault } = await import('@/app/actions/list-preferences')
+    
+    // 1. Get current org defaults
+    const orgDefaults = await getOrgListDefault(LIST_KEY)
+    const orgProfiles: ViewProfile[] = orgDefaults?.view_profiles || []
+    
+    // 2. Find the profile to share
+    const profile = profiles.find(p => p.id === id)
+    if (!profile) return profiles
+
+    let nextOrgProfiles = [...orgProfiles]
+    if (shared) {
+        // Add to org profiles if not already there
+        if (!nextOrgProfiles.find(p => p.id === id)) {
+            nextOrgProfiles.push({ ...profile, is_shared: true })
+        }
+    } else {
+        // Remove from org profiles
+        nextOrgProfiles = nextOrgProfiles.filter(p => p.id !== id)
+    }
+
+    // 3. Save to backend
+    await saveOrgListDefault(LIST_KEY, {
+        view_profiles: nextOrgProfiles
+    })
+
+    // 4. Update local state: shared profiles are marked as such
+    const updated = profiles.map(p => {
+        if (p.id === id) return { ...p, is_shared: shared }
+        return p
+    })
+    
+    // Also merge in any other org profiles we just fetched to keep in sync
+    nextOrgProfiles.forEach(op => {
+        if (!updated.find(u => u.id === op.id)) {
+            updated.push(op)
+        }
+    })
+
+    saveProfiles(updated)
+    return updated
 }
 
 /**
  * Load from backend and merge into the active local profile.
- * Called once on page mount.
  * Returns updated profiles array or null if backend had nothing.
  */
 export async function loadProfileFromBackend(
@@ -135,54 +191,33 @@ export async function loadProfileFromBackend(
 } | null> {
   try {
     const backendPref = await getUserListPreference(LIST_KEY)
-    if (!backendPref || backendPref.source === 'default') return null
+    if (!backendPref) return null
 
-    // Backend has saved preferences — merge into the active profile
-    const visibleCols = backendPref.visible_columns || []
-    if (visibleCols.length === 0) return null
+    // Backend returns merged profiles (private + shared)
+    const backendProfiles = (backendPref.view_profiles || []) as ViewProfile[]
+    
+    if (backendProfiles.length === 0) {
+        // Fallback for legacy "single profile" users
+        const visibleCols = backendPref.visible_columns || []
+        if (visibleCols.length === 0) return null
+        return null // Skip complex merge for now if no profiles
+    }
 
-    // Derive column visibility map from the ordered visible list
-    const colVisibility: Record<string, boolean> = {}
-    ALL_COLUMNS.forEach(col => {
-      colVisibility[col.key] = visibleCols.includes(col.key)
-    })
-
-    // Derive column order: backend list order first, then remaining columns
-    const backendOrder = [...visibleCols]
-    ALL_COLUMNS.forEach(col => {
-      if (!backendOrder.includes(col.key)) backendOrder.push(col.key)
-    })
-
-    // Derive filter visibility
-    const filterVisibility: Record<string, boolean> = {}
-    const savedFilters = backendPref.default_filters || {}
-    ALL_FILTERS.forEach(f => {
-      filterVisibility[f.key] = !!savedFilters[f.key]
-    })
-
-    // Update the active profile
-    const updatedProfiles = profiles.map(p => {
-      if (p.id === activeProfileId) {
-        return {
-          ...p,
-          columns: colVisibility,
-          filters: filterVisibility,
-          columnOrder: backendOrder,
-        }
-      }
-      return p
-    })
+    // Determine the "real" active profile: backend's recommendation or current local
+    const finalActiveId = backendPref.active_profile_id || activeProfileId
+    const activeProfile = backendProfiles.find(p => p.id === finalActiveId) || backendProfiles[0]
 
     // Cache locally
-    saveProfiles(updatedProfiles)
+    saveProfiles(backendProfiles)
+    saveActiveProfileId(activeProfile.id)
 
     return {
-      profiles: updatedProfiles,
-      columns: colVisibility,
-      filters: filterVisibility,
-      columnOrder: backendOrder,
+      profiles: backendProfiles,
+      columns: activeProfile.columns,
+      filters: activeProfile.filters,
+      columnOrder: activeProfile.columnOrder || DEFAULT_COLUMN_ORDER,
     }
   } catch {
-    return null // Backend unavailable — use localStorage
+    return null
   }
 }

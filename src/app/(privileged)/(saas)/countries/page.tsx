@@ -52,7 +52,10 @@ type EInvoiceStandard = {
 type TaxTemplate = {
   id: number
   country_code: string
+  country_name?: string
   name?: string
+  e_invoice_standard?: number | null
+  einvoice_enforcement?: string
 }
 
 /**
@@ -476,44 +479,45 @@ const LINKED_KIND_META: Record<Exclude<TreeNode['kind'], 'country'>, { color: st
 const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'tax', 'gateway', 'einvoice', 'tenant']
 
 /**
- * LinkedLeaf — uses the SAME row template as CountryRow (icon w-8 h-8,
- * name in text-tp-md font-bold, code/subtitle below). The only difference
- * is depth-driven indentation + a tree connector. This is what categories
- * does: parent and child share the row look so the page reads as one
- * consistent tree, not "two pages glued together".
+ * Level-3 leaf row. Uses the same row template as the parent country row
+ * (w-8 h-8 icon, text-tp-md name) but with a quieter visual treatment so
+ * the eye reads it as the deepest level:
+ *   • Smaller icon (28×28 vs 32×32 on level 1/2)
+ *   • Lighter icon-bg saturation (7% vs 12%)
+ *   • Muted-foreground name color
+ *   • Smaller text-tp-sm (12px vs 13px)
+ * The kind-specific color survives only in the icon + tag, so type is
+ * still scannable.
  */
 function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'country'>]
-  // Country-flag emoji for tax/gateway children that carry an iso2 hint.
   return (
     <div className="relative" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
-        style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+        style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <div className="absolute pointer-events-none"
-        style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+        style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <a
         href={meta.href}
         className="group flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg no-underline"
-        style={{ padding: '8px 10px', color: 'inherit' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
+        style={{ padding: '6px 10px', color: 'inherit' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        {/* Same w-8 h-8 icon as the parent row so heights line up vertically. */}
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: `color-mix(in srgb, ${meta.color} 7%, transparent)`, color: meta.color, opacity: 0.85 }}>
           {meta.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-tp-md font-bold text-app-foreground truncate">{node.name}</span>
-            {/* Subtle type tag — replaces the loud uppercase group header. */}
+            <span className="text-tp-sm font-semibold text-app-muted-foreground truncate">{node.name}</span>
             <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
-              style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+              style={{ background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color }}>
               {meta.label}
             </span>
           </div>
           {node.subtitle && (
-            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate">{node.subtitle}</p>
+            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
           )}
         </div>
       </a>
@@ -522,36 +526,108 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
 }
 
 /**
- * Render the linked entities for a single country as a flat list of rows
- * — same row template as the parent country row, just indented and with
- * a tree connector. Mirrors the categories page, where children share
- * the parent row look. Each leaf carries its own subtle "type" pill so
- * the row tells you what it is without needing a group header.
- *
- * Sort order is fixed (Currency → Tax → Gateway → E-Invoice → Tenant) so
- * the structure stays predictable when expanding different countries.
+ * Three-level tree: country → group (Currency / Tax / Gateways / E-Invoice
+ * / Tenants) → leaf. Group headers use the same row template as the parent
+ * country row (w-8 h-8 icon, text-tp-md label) so the hierarchy reads with
+ * consistent typography across all three levels — only depth indentation
+ * and the tree connector mark the level. Each group is collapsible.
  */
 function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
-  const ordered = nodes
-    .filter(n => n.kind !== 'country')
-    .sort((a, b) => KIND_ORDER.indexOf(a.kind as any) - KIND_ORDER.indexOf(b.kind as any))
-
-  if (ordered.length === 0) {
-    return (
-      <div className="ml-9 px-3 py-2 text-tp-xs text-app-muted-foreground italic">
-        No linked currency, tax template, payment gateway, or e-invoice standard.
-      </div>
-    )
+  // Bucket once by kind, preserving the fixed visual order.
+  const buckets: Record<string, TreeNode[]> = {}
+  for (const n of nodes) {
+    if (n.kind === 'country') continue
+    const k = n.kind
+    if (!buckets[k]) buckets[k] = []
+    buckets[k].push(n)
   }
+  // Always render every kind (Currency / Tax / Gateway / E-Invoice / Tenant)
+  // so the user sees the full hierarchy and can drill into empty sections
+  // to discover what's available. Empty groups show a "(none)" leaf inside.
+  const visibleKinds = KIND_ORDER
+  const [openKinds, setOpenKinds] = useState<Record<string, boolean>>({})
+  const toggleKind = (k: string) => setOpenKinds(prev => ({ ...prev, [k]: !prev[k] }))
 
   return (
     <div className="relative ml-9 mr-2 mb-2 mt-1">
-      {/* Trunk vertical line — connects all children to the parent above. */}
+      {/* Trunk vertical line — runs through the column of group headers. */}
       <div className="absolute pointer-events-none"
         style={{ left: '11px', top: 0, bottom: '24px', width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-      {ordered.map((n, idx) => (
-        <LinkedLeaf key={String(n.id)} node={n} isLast={idx === ordered.length - 1} />
-      ))}
+      {visibleKinds.map((kind, gIdx) => {
+        const meta = LINKED_KIND_META[kind]
+        const items = buckets[kind] || []
+        const isOpen = !!openKinds[kind]
+        const isLastGroup = gIdx === visibleKinds.length - 1
+        return (
+          <div key={kind} className="relative" style={{ paddingLeft: '24px' }}>
+            {/* Horizontal branch from trunk into this group's row. */}
+            <div className="absolute pointer-events-none"
+              style={{ left: '11px', top: '24px', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+
+            {/* Level-2 group header. Carries a subtle colored band (left
+                accent stripe + faint kind-tinted background) so the eye
+                reads it as a "section divider" between the country (L1)
+                and the leaves (L3). Same row geometry as L1 so heights
+                still line up. */}
+            <button
+              type="button"
+              onClick={() => toggleKind(kind)}
+              className="w-full group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer rounded-lg text-left relative overflow-hidden"
+              style={{
+                padding: '8px 10px',
+                background: `color-mix(in srgb, ${meta.color} 4%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${meta.color} 12%, transparent)`,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${meta.color} 8%, transparent)` }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${meta.color} 4%, transparent)` }}
+            >
+              {/* Left accent stripe in the kind's color — depth marker. */}
+              <span className="absolute left-0 top-0 bottom-0 w-[3px] pointer-events-none"
+                style={{ background: meta.color, opacity: 0.7 }} />
+              <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0 ml-1"
+                style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2 L8 6 L4 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: `color-mix(in srgb, ${meta.color} 14%, transparent)`, color: meta.color }}>
+                {meta.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-tp-md font-bold truncate" style={{ color: meta.color }}>{meta.group}</span>
+                  <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded tabular-nums"
+                    style={{ background: `color-mix(in srgb, ${meta.color} 14%, transparent)`, color: meta.color }}>
+                    {items.length}
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {/* Inner trunk that continues to the next group when this one
+                is closed (so the vertical guide line never breaks). */}
+            {!isLastGroup && (
+              <div className="absolute pointer-events-none"
+                style={{ left: '11px', top: '24px', bottom: 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+            )}
+
+            {/* Leaf list — only when this group is expanded. Empty groups
+                show a "(none configured)" hint instead of disappearing. */}
+            {isOpen && (
+              <div className="relative" style={{ paddingLeft: '12px' }}>
+                {items.length === 0 ? (
+                  <div className="ml-6 px-3 py-1.5 text-tp-xs text-app-muted-foreground italic">
+                    None configured for this country yet.
+                  </div>
+                ) : items.map((n, idx) => (
+                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -742,12 +818,8 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, onEdit, onDel
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <h2 className="text-[15px] font-black text-app-foreground truncate">{country.name}</h2>
-            {!country.is_active && (
-              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
-                Inactive
-              </span>
-            )}
+            {/* No Active/Inactive badge — activation is per-tenant
+                (OrgCountry), not a property of the global registry. */}
           </div>
           {country.official_name && (
             <p className="text-[11px] text-app-muted-foreground truncate mt-0.5">{country.official_name}</p>
@@ -885,7 +957,7 @@ export default function SaaSCountriesPage() {
         fetchCurrencies(),
         erpFetch('finance/country-tax-templates/').catch(() => []),
         erpFetch('reference/payment-gateways/?limit=200').catch(() => []),
-        erpFetch('reference/e-invoice-standards/?limit=200').catch(() => []),
+        erpFetch('finance/einvoice-standards/?limit=200').catch(() => []),
         // SU-only tenants endpoint — returns {} on older backends.
         erpFetch('reference/countries/tenants/').catch(() => ({})),
       ])
@@ -950,15 +1022,22 @@ export default function SaaSCountriesPage() {
   // OrgCountry table — that's done from each tenant's own admin, not from
   // this SaaS-wide registry.
 
-  // Quick-lookup sets
-  const taxTemplateCountries = useMemo(() => new Set(taxTemplates.map(t => t.country_code)), [taxTemplates])
+  // Quick-lookup set — keyed by every country_code we've seen on a template.
+  // Values are uppercase to match the `iso2 / iso3` we test against later.
+  const taxTemplateCountries = useMemo(() => new Set(taxTemplates.map(t => (t.country_code || '').toUpperCase())), [taxTemplates])
+  /** Returns true if any tax template references this country by iso2 OR iso3. */
+  const hasTaxTemplateFor = useCallback(
+    (c?: { iso2?: string | null; iso3?: string | null } | null) =>
+      Boolean(c && (taxTemplateCountries.has((c.iso2 || '').toUpperCase()) || taxTemplateCountries.has((c.iso3 || '').toUpperCase()))),
+    [taxTemplateCountries],
+  )
 
   // Computed sets
   const regions = useMemo(() => Array.from(new Set(countries.map(c => c.region).filter(Boolean))).sort(), [countries])
   const stats = useMemo(() => {
     const active = countries.filter(c => c.is_active).length
     const withCurrency = countries.filter(c => c.default_currency_code).length
-    const withTemplate = countries.filter(c => taxTemplateCountries.has(c.iso2)).length
+    const withTemplate = countries.filter(c => hasTaxTemplateFor(c)).length
     return { total: countries.length, active, regions: regions.length, withCurrency, withTemplate }
   }, [countries, regions, taxTemplateCountries])
 
@@ -1025,8 +1104,11 @@ export default function SaaSCountriesPage() {
         })
       }
 
-      // 2) Tax templates
-      const taxes = taxByCountry.get(c.iso2) || []
+      // 2) Tax templates — match by iso2 OR iso3 since seed data uses both.
+      const taxes = [
+        ...(taxByCountry.get(c.iso2) || []),
+        ...(taxByCountry.get(c.iso3) || []),
+      ]
       for (const tx of taxes) {
         const childName = tx.name || `Tax template ${tx.country_code}`
         out.push({
@@ -1057,23 +1139,39 @@ export default function SaaSCountriesPage() {
         })
       }
 
-      // 4) E-invoice standards by region match
-      if (c.region) {
-        for (const ei of eInvoiceStandards) {
-          if (!ei.region) continue
-          if (ei.region.toLowerCase() === c.region.toLowerCase()) {
-            out.push({
-              id: `c${c.id}-ei-${ei.id}`,
-              parent: c.id,
-              kind: 'einvoice',
-              name: ei.name,
-              subtitle: ei.invoice_format ? `${ei.code} · ${ei.invoice_format}` : ei.code,
-              data: ei,
-              searchBlob: `${countryBlob} ${ei.name} ${ei.code} ${ei.invoice_format || ''}`.toLowerCase(),
-            })
-          }
-        }
+      // 4) E-invoice standards — proper linkage chain:
+      //    Country → CountryTaxTemplate (by country_code) → e_invoice_standard FK.
+      // Each country has at most one standard via its tax template. We also
+      // tolerate templates linked by either ISO2 or ISO3 (the seed file
+      // uses both shapes inconsistently across countries).
+      const tplsForCountry = taxes // taxes was matched above by iso2 only
+      // Re-match including iso3 to find tax templates that use 3-letter codes.
+      const allTplsForCountry = taxTemplates.filter(t =>
+        t.country_code === c.iso2 || t.country_code === c.iso3
+      )
+      const seenStandards = new Set<number>()
+      for (const tpl of allTplsForCountry) {
+        const eiId = tpl.e_invoice_standard
+        if (eiId == null || seenStandards.has(eiId)) continue
+        const ei = eInvoiceStandards.find(s => s.id === eiId)
+        if (!ei) continue
+        seenStandards.add(eiId)
+        out.push({
+          id: `c${c.id}-ei-${ei.id}`,
+          parent: c.id,
+          kind: 'einvoice',
+          name: ei.name,
+          subtitle: [
+            ei.code,
+            ei.invoice_format,
+            tpl.einvoice_enforcement && tpl.einvoice_enforcement !== 'NONE' ? tpl.einvoice_enforcement.toLowerCase() : null,
+          ].filter(Boolean).join(' · '),
+          data: ei,
+          searchBlob: `${countryBlob} ${ei.name} ${ei.code} ${ei.invoice_format || ''}`.toLowerCase(),
+        })
       }
+      // Silence the unused-var lint since we kept tplsForCountry for clarity.
+      void tplsForCountry
 
       // 5) Tenants that have enabled this country (cross-tenant view)
       const tenants = tenantsByCountry[c.id] || []
@@ -1187,14 +1285,14 @@ export default function SaaSCountriesPage() {
             // Predicates only inspect TREE NODES; we route on `kind` so KPI
             // counts measure countries, not linked-row noise.
             withCurrency: (n: any) => n.kind === 'country' && Boolean(n.data?.default_currency_code),
-            withTaxTemplate: (n: any) => n.kind === 'country' && taxTemplateCountries.has(String(n.data?.iso2)),
+            withTaxTemplate: (n: any) => n.kind === 'country' && hasTaxTemplateFor(n.data),
             inUse: (n: any) => n.kind === 'country' && (tenantsByCountry[Number(n.data?.id)]?.length || 0) > 0,
           },
           kpis: [
             { label: 'Total', icon: <Globe size={11} />, color: 'var(--app-primary)', filterKey: 'all', value: (_, all) => all.filter((n: any) => n.kind === 'country').length },
             { label: 'Regions', icon: <MapPin size={11} />, color: 'var(--app-info, #3b82f6)', value: () => stats.regions },
             { label: 'With Currency', icon: <DollarSign size={11} />, color: 'var(--app-accent)', filterKey: 'withCurrency', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && n.data?.default_currency_code).length },
-            { label: 'Tax Templates', icon: <Shield size={11} />, color: 'var(--app-warning, #f59e0b)', filterKey: 'withTaxTemplate', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && taxTemplateCountries.has(n.data?.iso2)).length },
+            { label: 'Tax Templates', icon: <Shield size={11} />, color: 'var(--app-warning, #f59e0b)', filterKey: 'withTaxTemplate', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && hasTaxTemplateFor(n.data)).length },
             { label: 'In Use', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'inUse', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && (tenantsByCountry[Number(n.data?.id)]?.length || 0) > 0).length },
           ],
           emptyState: {
@@ -1230,7 +1328,7 @@ export default function SaaSCountriesPage() {
           return (
             <CountryDetailPanel
               country={country}
-              hasTaxTemplate={taxTemplateCountries.has(country.iso2)}
+              hasTaxTemplate={hasTaxTemplateFor(country)}
               currencies={currencies}
               onEdit={() => { setEditingCountry(country); onClose() }}
               onDelete={() => { requestDelete(country); onClose() }}
@@ -1254,7 +1352,7 @@ export default function SaaSCountriesPage() {
                 <CountryRow
                   key={String(n.id)}
                   item={country}
-                  hasTaxTemplate={taxTemplateCountries.has(country.iso2)}
+                  hasTaxTemplate={hasTaxTemplateFor(country)}
                   isSelected={isSelected(n)}
                   onSelect={() => openNode(n, 'overview')}
                   onEdit={() => setEditingCountry(country)}

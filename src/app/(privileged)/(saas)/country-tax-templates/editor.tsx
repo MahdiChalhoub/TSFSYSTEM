@@ -95,7 +95,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
       }).catch(() => {})
     }
     // Fetch e-invoice standards
-    erpFetch('finance/e-invoice-standards/').then(data => {
+    erpFetch('finance/einvoice-standards/').then(data => {
       const list = Array.isArray(data) ? data : data?.results || []
       setEinvoiceStds(list)
     }).catch(() => {})

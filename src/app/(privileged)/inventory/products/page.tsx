@@ -38,7 +38,7 @@ const INITIAL_PAGE_SIZE = 100
 export default async function ProductMasterPage(props: {
   searchParams: Promise<{ unit?: string; category?: string; brand?: string }>
 }) {
-  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree]] = await Promise.all([
+  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree, currentUser]] = await Promise.all([
     props.searchParams,
     Promise.all([
       safeLoadPaginated(`products/?page_size=${INITIAL_PAGE_SIZE}`),
@@ -48,6 +48,7 @@ export default async function ProductMasterPage(props: {
       safeLoad('reference/countries/'),
       safeLoad('reference/sourcing-countries/'),
       safeLoad('inventory/product-attributes/tree/'),
+      import('@/app/actions/auth').then(m => m.getUser()),
     ]),
   ])
   const products = productsResp.results
@@ -88,6 +89,7 @@ export default async function ProductMasterPage(props: {
         initialProducts={products}
         totalProductCount={totalProductCount}
         initialFilters={Object.keys(initialFilters).length ? initialFilters : undefined}
+        currentUser={currentUser}
         lookups={{
           categories: categories.map((c: any) => ({ id: c.id, name: c.name })),
           brands: brands.map((b: any) => ({ id: b.id, name: b.name })),

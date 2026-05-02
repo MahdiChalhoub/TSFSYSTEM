@@ -206,9 +206,8 @@ function getFlagEmoji(code: string): string {
 }
 
 /**
- * Same row template as CurrencyRow (icon w-9 h-9, name in text-tp-md font-bold,
- * subtitle below). Indentation + tree connector make hierarchy visible while
- * the typography stays consistent with the parent row — like categories.
+ * Level-3 leaf — quieter than its parent row so the depth reads naturally:
+ * smaller icon, lighter saturation, muted name color, smaller text size.
  */
 function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'currency'>]
@@ -216,30 +215,30 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   return (
     <div className="relative" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
-        style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+        style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <div className="absolute pointer-events-none"
-        style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }} />
+        style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <a
         href={meta.href}
         className="group flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg no-underline"
-        style={{ padding: '8px 10px', color: 'inherit' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
+        style={{ padding: '6px 10px', color: 'inherit' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
-          {flag ? <span className="text-tp-md leading-none">{flag}</span> : meta.icon}
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: `color-mix(in srgb, ${meta.color} 7%, transparent)`, color: meta.color, opacity: 0.85 }}>
+          {flag ? <span className="text-tp-sm leading-none">{flag}</span> : meta.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-tp-md font-bold text-app-foreground truncate">{node.name}</span>
+            <span className="text-tp-sm font-semibold text-app-muted-foreground truncate">{node.name}</span>
             <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
-              style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+              style={{ background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color }}>
               {meta.label}
             </span>
           </div>
           {node.subtitle && (
-            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate">{node.subtitle}</p>
+            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
           )}
         </div>
       </a>
@@ -248,29 +247,94 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
 }
 
 /**
- * Flat list of children matching the parent row template — same row look,
- * connector indent shows hierarchy. Same pattern as countries / categories.
+ * Three-level tree: currency → group (Countries Using / Tenants Using) →
+ * leaf. Group rows share the parent row template so all three levels use
+ * the same typography; only indent + tree connector marks the level.
+ * Each group is collapsible.
  */
 function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
-  const ordered = nodes
-    .filter(n => n.kind !== 'currency')
-    .sort((a, b) => KIND_ORDER.indexOf(a.kind as any) - KIND_ORDER.indexOf(b.kind as any))
-
-  if (ordered.length === 0) {
-    return (
-      <div className="ml-9 px-3 py-2 text-tp-xs text-app-muted-foreground italic">
-        Not yet linked to any country or tenant.
-      </div>
-    )
+  const buckets: Record<string, TreeNode[]> = {}
+  for (const n of nodes) {
+    if (n.kind === 'currency') continue
+    const k = n.kind
+    if (!buckets[k]) buckets[k] = []
+    buckets[k].push(n)
   }
+  // Always show every kind — empty groups still render with a "(none)"
+  // expand-state, so the user sees the full hierarchy.
+  const visibleKinds = KIND_ORDER
+  const [openKinds, setOpenKinds] = useState<Record<string, boolean>>({})
+  const toggleKind = (k: string) => setOpenKinds(prev => ({ ...prev, [k]: !prev[k] }))
 
   return (
     <div className="relative ml-9 mr-2 mb-2 mt-1">
       <div className="absolute pointer-events-none"
         style={{ left: '11px', top: 0, bottom: '24px', width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-      {ordered.map((n, idx) => (
-        <LinkedLeaf key={String(n.id)} node={n} isLast={idx === ordered.length - 1} />
-      ))}
+      {visibleKinds.map((kind, gIdx) => {
+        const meta = LINKED_KIND_META[kind]
+        const items = buckets[kind] || []
+        const isOpen = !!openKinds[kind]
+        const isLastGroup = gIdx === visibleKinds.length - 1
+        return (
+          <div key={kind} className="relative" style={{ paddingLeft: '24px' }}>
+            <div className="absolute pointer-events-none"
+              style={{ left: '11px', top: '24px', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+            {/* Level-2 group header — colored band so it sits visually
+                between the parent currency row (L1) and the leaves (L3). */}
+            <button
+              type="button"
+              onClick={() => toggleKind(kind)}
+              className="w-full group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer rounded-lg text-left relative overflow-hidden"
+              style={{
+                padding: '8px 10px',
+                background: `color-mix(in srgb, ${meta.color} 4%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${meta.color} 12%, transparent)`,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${meta.color} 8%, transparent)` }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${meta.color} 4%, transparent)` }}
+            >
+              <span className="absolute left-0 top-0 bottom-0 w-[3px] pointer-events-none"
+                style={{ background: meta.color, opacity: 0.7 }} />
+              <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0 ml-1"
+                style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2 L8 6 L4 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: `color-mix(in srgb, ${meta.color} 14%, transparent)`, color: meta.color }}>
+                {meta.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-tp-md font-bold truncate" style={{ color: meta.color }}>{meta.group}</span>
+                  <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded tabular-nums"
+                    style={{ background: `color-mix(in srgb, ${meta.color} 14%, transparent)`, color: meta.color }}>
+                    {items.length}
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {!isLastGroup && (
+              <div className="absolute pointer-events-none"
+                style={{ left: '11px', top: '24px', bottom: 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
+            )}
+
+            {isOpen && (
+              <div className="relative" style={{ paddingLeft: '12px' }}>
+                {items.length === 0 ? (
+                  <div className="ml-6 px-3 py-1.5 text-tp-xs text-app-muted-foreground italic">
+                    None linked yet.
+                  </div>
+                ) : items.map((n, idx) => (
+                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

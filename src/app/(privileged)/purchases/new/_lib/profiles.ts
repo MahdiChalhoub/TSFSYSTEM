@@ -12,7 +12,7 @@
  */
 import type { ColumnKey } from './columns'
 import { COLUMN_DEFS, DEFAULT_ORDER } from './columns'
-import { getUserListPreference, saveUserListPreference } from '@/app/actions/list-preferences'
+import { getUserListPreference, saveUserListPreference, saveOrgListDefault } from '@/app/actions/list-preferences'
 import type { ViewProfile } from '@/components/ui/CustomizePanel/types'
 export type POViewProfile = ViewProfile<ColumnKey>
 
@@ -164,4 +164,40 @@ export async function loadProfileFromBackend(
     } catch {
         return null // Backend unavailable — use localStorage
     }
+}
+
+/**
+ * Promote or demote a profile to organization-wide shared status.
+ */
+export async function shareProfile(
+    activeProfiles: POViewProfile[],
+    profileId: string,
+    shared: boolean,
+): Promise<POViewProfile[]> {
+    const profile = activeProfiles.find(p => p.id === profileId)
+    if (!profile) return activeProfiles
+
+    // 1. Update the profile flag locally
+    const updated = activeProfiles.map(p => 
+        p.id === profileId ? { ...p, is_shared: shared } : p
+    )
+
+    try {
+        const sharedSet = updated.filter(p => p.is_shared)
+        
+        // Save Org defaults (requires staff perms check in backend)
+        await saveOrgListDefault(LIST_KEY, {
+            visible_columns: [], // handled per profile
+            default_filters: {},
+            view_profiles: sharedSet,
+        })
+
+        // Trigger a normal sync for the user's view (backend handles user_profiles split)
+        syncProfileToBackend(updated.find(p => p.id === profileId) || updated[0])
+
+    } catch (error) {
+        console.error("Failed to share profile:", error)
+    }
+
+    return updated
 }

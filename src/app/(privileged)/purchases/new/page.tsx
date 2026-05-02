@@ -63,13 +63,14 @@ export default async function NewPurchasePage({
     const params = (await searchParams) ?? {}
     const editId = params.edit && /^\d+$/.test(params.edit) ? params.edit : null
 
-    const [suppliers, sites, financialSettings, users, profilesData, initialPO] = await Promise.all([
+    const [suppliers, sites, financialSettings, users, profilesData, initialPO, currentUser] = await Promise.all([
         getContactsByType('SUPPLIER'),
         getSitesAndWarehouses(),
         getFinancialSettings(),
         getUsers(),
         getAnalyticsProfiles('purchase-order'),
         editId ? getEditableOrder(editId) : Promise.resolve(null),
+        import('@/app/actions/auth').then(m => m.getUser()),
     ]);
 
     return (
@@ -79,6 +80,7 @@ export default async function NewPurchasePage({
             financialSettings={serializeDecimals(financialSettings)}
             users={users}
             profilesData={profilesData}
+            currentUser={currentUser}
             mode={initialPO ? 'edit' : 'create'}
             initialPO={initialPO ? (serializeDecimals(initialPO) as Record<string, unknown>) : null}
         />

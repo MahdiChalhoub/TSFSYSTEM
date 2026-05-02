@@ -52,14 +52,17 @@ type PanelProps = {
     onReorder: (order: ColumnKey[]) => void
     // Profile management
     profiles: POViewProfile[]
-    setProfiles: (p: POViewProfile[]) => void
+    setProfiles: React.Dispatch<React.SetStateAction<POViewProfile[]>>
     activeProfileId: string
     switchProfile: (id: string) => void
+    onShare?: (id: string, shared: boolean) => void
+    isStaff?: boolean
 }
 
 export function ColumnVisibilityPanel({
     isOpen, onClose, visibleColumns, onToggle, columnOrder, onReorder,
     profiles, setProfiles, activeProfileId, switchProfile,
+    onShare, isStaff
 }: PanelProps) {
     
     // Map Set<ColumnKey> to Record<string, boolean> for the shared component
@@ -93,6 +96,8 @@ export function ColumnVisibilityPanel({
             
             onSaveProfiles={(p) => saveProfiles(p)}
             onSaveActiveId={(id) => saveActiveProfileId(id)}
+            onShareProfile={onShare}
+            isStaff={isStaff}
         />
     )
 }

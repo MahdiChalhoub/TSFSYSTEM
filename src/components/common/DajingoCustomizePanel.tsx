@@ -520,44 +520,50 @@ function DraggableColumnList({
         {orderedCols.filter(col => !policyHiddenColumns.has(col.key)).map(col => {
           const isOn = col.defaultVisible ? visibleColumns[col.key] !== false : !!visibleColumns[col.key]
           const isDragTarget = dragOver === col.key
-          return (
-            <div
-              key={col.key}
-              className={`flex items-center gap-1.5 px-2 py-2 rounded-xl transition-all ${isDragTarget ? 'ring-2 ring-app-primary/40 bg-app-primary/5' : 'hover:bg-app-surface/60'}`}
-              draggable
-              onDragStart={() => { dragRef.current = col.key }}
-              onDragOver={e => { e.preventDefault(); setDragOver(col.key) }}
-              onDragLeave={() => { if (dragOver === col.key) setDragOver(null) }}
-              onDrop={() => {
-                setDragOver(null)
-                if (!dragRef.current || dragRef.current === col.key) return
-                const newOrder = [...columnOrder]
-                const fromIdx = newOrder.indexOf(dragRef.current)
-                const toIdx = newOrder.indexOf(col.key)
-                if (fromIdx < 0 || toIdx < 0) return
-                newOrder.splice(fromIdx, 1)
-                newOrder.splice(toIdx, 0, dragRef.current)
-                onReorder(newOrder)
-                dragRef.current = null
-              }}
-              onDragEnd={() => { dragRef.current = null; setDragOver(null) }}
-            >
-              {/* Grip handle */}
-              <div className="cursor-grab active:cursor-grabbing text-app-muted-foreground hover:text-app-foreground flex-shrink-0">
-                <GripVertical size={14} />
+            return (
+              <div
+                key={col.key}
+                className={`flex items-center gap-1.5 px-2 py-2 rounded-xl transition-all ${isDragTarget ? 'ring-2 ring-app-primary/40 bg-app-primary/5' : 'hover:bg-app-surface/60'}`}
+                draggable={!col.alwaysVisible}
+                onDragStart={() => { dragRef.current = col.key }}
+                onDragOver={e => { e.preventDefault(); setDragOver(col.key) }}
+                onDragLeave={() => { if (dragOver === col.key) setDragOver(null) }}
+                onDrop={() => {
+                  setDragOver(null)
+                  if (!dragRef.current || dragRef.current === col.key) return
+                  const newOrder = [...columnOrder]
+                  const fromIdx = newOrder.indexOf(dragRef.current)
+                  const toIdx = newOrder.indexOf(col.key)
+                  if (fromIdx < 0 || toIdx < 0) return
+                  newOrder.splice(fromIdx, 1)
+                  newOrder.splice(toIdx, 0, dragRef.current)
+                  onReorder(newOrder)
+                  dragRef.current = null
+                }}
+                onDragEnd={() => { dragRef.current = null; setDragOver(null) }}
+              >
+                {/* Grip handle */}
+                <div className={`flex-shrink-0 ${col.alwaysVisible ? 'text-app-muted-foreground/20 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing text-app-muted-foreground hover:text-app-foreground'}`}>
+                  <GripVertical size={14} />
+                </div>
+                {/* Label — clicking toggles visibility (if allowed) */}
+                <button type="button" 
+                  onClick={() => !col.alwaysVisible && onToggle(col.key)} 
+                  className={`flex-1 text-left min-w-0 ${col.alwaysVisible ? 'cursor-default' : ''}`}
+                >
+                  <span className={`text-[12px] font-bold ${isOn ? 'text-app-foreground' : 'text-app-muted-foreground line-through opacity-60'}`}>
+                    {col.label}
+                  </span>
+                  {col.alwaysVisible && (
+                    <span className="ml-2 text-[8px] font-black uppercase text-app-primary bg-app-primary/10 px-1 py-0.5 rounded border border-app-primary/20">Pinned</span>
+                  )}
+                </button>
+                {/* Toggle */}
+                <div className={`flex-shrink-0 ${col.alwaysVisible ? 'opacity-30 cursor-not-allowed' : ''}`} onClick={() => !col.alwaysVisible && onToggle(col.key)}>
+                  <ToggleSwitch on={isOn} />
+                </div>
               </div>
-              {/* Label — clicking toggles visibility */}
-              <button type="button" onClick={() => onToggle(col.key)} className="flex-1 text-left min-w-0">
-                <span className={`text-[12px] font-bold ${isOn ? 'text-app-foreground' : 'text-app-muted-foreground line-through opacity-60'}`}>
-                  {col.label}
-                </span>
-              </button>
-              {/* Toggle */}
-              <div className="flex-shrink-0" onClick={() => onToggle(col.key)}>
-                <ToggleSwitch on={isOn} />
-              </div>
-            </div>
-          )
+            )
         })}
       </div>
     </div>

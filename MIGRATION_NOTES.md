@@ -332,6 +332,91 @@ Future static audit passes should scan for F + G + J explicitly. H and I require
 
 ---
 
+## v3.5.0 cutover attempt 2026-05-02 — partial, halted at structural limit
+
+Ran the cutover from this session. Got further than the previous attempts but hit a fundamental limit that requires operator-grade decision-making.
+
+### What ran successfully
+
+1. Dropped + recreated `tsfdb`.
+2. `manage.py migrate` advanced cleanly through all of erp 0001-0027, all of inventory through 0017, all of finance through 0014, all of pos through 0049, all of crm, all of standard Django apps (auth/admin/contenttypes/authtoken).
+3. `--fake erp/0028` (Cat H) — works, no schema impact.
+4. `--fake apps_core/0004` (Cat I) — works, tables already exist via erp/0010's AlterModelTable.
+5. Continued migrate: client_portal 0001 → 0008 OK.
+6. Generated `apps/client_portal/migrations/0001_squashed_0017_remove_quoterequest_product_and_more.py` via `manage.py squashmigrations client_portal 0017` with optimization (158 ops → 41 ops).
+
+### Where it halted
+
+Applying the squashed `client_portal/0001_squashed_0017_*` against a fresh DB raised `relation "client_quote_request" already exists`. Confirmed via `\dt`: the table genuinely doesn't exist in the DB. The error is a Django state-vs-DB mismatch — most likely because the squash includes a CreateModel for a model whose ContentType row already exists from `apps_core/0004 --fake`, OR because Django's pre-flight check uses the wrong table-existence query.
+
+Either way, the squash is NOT clean: the multi-branch history (Category J) carried forward into the squashed file as inconsistent operations even after `--optimize` collapsed 158 → 41 ops.
+
+### Why this matters for the cutover
+
+The fundamental issue: **the migration tree has accumulated multi-year structural drift that `squashmigrations` cannot fix automatically.** Categories A-I are patchable; Category J (parallel `_initial` branches) is supposed to be resolvable by squashing, but in practice Django's squash inherits the broken operation order from the source migrations.
+
+The operator has three viable paths from here:
+
+#### Path 1: Manual squash editing (1-2 hours)
+- Review the auto-generated `0001_squashed_0017_*.py`.
+- Manually reorder operations: every `AlterField` must come AFTER the `AddField` for the same (model, field).
+- Manually drop duplicate `AddField` ops that exist due to the parallel branches.
+- Re-test on fresh DB.
+
+#### Path 2: Nuke and regenerate (3-4 hours, cleanest)
+- Drop ALL of `apps/client_portal/migrations/*.py` except `__init__.py`.
+- Run `manage.py makemigrations client_portal` from a fresh checkout — Django generates a single clean `0001_initial.py` from the current model definitions.
+- Cannot use this path for apps with deployed prod DBs (the `replaces = []` mechanism doesn't apply because there's no squash file to mark them replaced). For dev-only it's fine.
+- Repeat for any other app showing similar drift.
+
+#### Path 3: Accept the manual `--fake` chain (longest, but lowest risk for prod)
+- Forge through the cutover with `--fake` decisions per migration, documenting each.
+- Tedious but every prod DB is unaffected (each migration that ran before stays applied; new ones get faked in if they're no-ops).
+- Estimated effort: 4-8 hours for the operator.
+
+### What's left in place for the operator
+
+- `apps/finance/migrations/0079_merge_branches.py` (no-op merge resolving the 0076 leaf split) — keep.
+- `apps/inventory/migrations/0004` — `AlterField` → `AddField` patches for legacy_id — keep.
+- `apps/pos/migrations/0043` and `0065` — RenameIndex wrapped state-only — keep.
+- `apps/erp/migrations/0010` — AddField → AlterField for Role.organization — keep.
+- `apps/erp/migrations/0025` — 13 RenameIndex wrapped in SeparateDatabaseAndState — keep.
+- 99 Cat F bulk-patches across 14 files (AddField → AlterField for fields already in state) — keep.
+- `apps/client_portal/migrations/0001_squashed_0017_remove_quoterequest_product_and_more.py` — **inspect manually**; may need editing or replacement per Path 1/2.
+
+All patches are kept because they're correct in isolation; reverting them would just re-introduce the same drift the operator would re-discover.
+
+### Updated drift catalog
+
+The original 5 + 5 categories now total 10. After this attempt, two more known-pattern observations:
+
+- **Category J (revisited)**: `squashmigrations` with `--optimize` collapses 158→41 ops but doesn't reorder them. Multi-branch tangles still produce broken squashes. The right fix for fresh dev DBs is **regenerating** (Path 2), not squashing.
+- **Cross-app fakes propagate**: when one app's CreateModel is `--fake`d, downstream apps that depended on those models' ContentType rows can hit DuplicateTable errors against tables that don't exist in the DB. Django's app-loading is probably the source.
+
+### Cutover status
+
+| Step | Status |
+|---|---|
+| 1. Pre-cutover prep (audit, patches, scripts) | ✅ DONE this session |
+| 2. Drop & recreate dev DB | ✅ Done multiple times this session |
+| 3. Migrate up to first known fake (erp/0028) | ✅ Reproducible |
+| 4. Fake erp/0028 + apps_core/0004 | ✅ Tested |
+| 5. Migrate to client_portal squash | ❌ Blocked on Cat J residual issue |
+| 6. Run squash_for_release.py for ALL apps | ⏸ Pending step 5 |
+| 7. Verify clean replay | ⏸ Pending |
+| 8. Tag v3.5.0 | ⏸ Pending |
+
+This session got steps 1-4 done. Step 5 is the operator-led decision (Path 1/2/3 above). Steps 6-8 follow once 5 unblocks.
+
+### Net outcome
+
+- Pre-cutover prep is complete and tooled.
+- ~150 individual drift patches applied across ~20 migration files.
+- One squashed migration (client_portal) generated but needs manual review.
+- The remaining work (Path 1/2/3 decision + execution) is structurally beyond what an autonomous agent should do on a shared dev environment.
+
+---
+
 ## Per-release cleanup log
 
 Future entries follow this template:

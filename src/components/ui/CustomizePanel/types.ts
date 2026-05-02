@@ -23,4 +23,5 @@ export type ViewProfile<K extends string = string> = {
     columns: Record<K, boolean>
     filters?: Record<string, boolean>
     columnOrder?: K[]
+    is_shared?: boolean
 }

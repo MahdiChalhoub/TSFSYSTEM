@@ -30,6 +30,15 @@ class OrgListDefault(models.Model):
         max_length=4, default='asc',
         choices=[('asc', 'Ascending'), ('desc', 'Descending')]
     )
+    # ── V2: Shared Organization Profiles ──
+    view_profiles = models.JSONField(
+        default=list, blank=True,
+        help_text='Array of shared DajingoViewProfile objects'
+    )
+    active_profile_id = models.CharField(
+        max_length=100, default='default', blank=True,
+        help_text='Recommended default profile for the organization'
+    )
 
     class Meta:
         db_table = 'org_list_default'

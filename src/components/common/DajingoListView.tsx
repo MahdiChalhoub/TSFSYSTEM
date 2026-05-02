@@ -48,6 +48,7 @@ import { DajingoCustomizePanel } from './DajingoCustomizePanel'
 export type DajingoColumnDef = {
   key: string
   label: string
+  alwaysVisible?: boolean
   defaultVisible: boolean
 }
 

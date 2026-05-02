@@ -146,7 +146,7 @@ export default function EInvoiceStandardsPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await erpFetch('finance/e-invoice-standards/')
+      const data = await erpFetch('finance/einvoice-standards/')
       setStandards(Array.isArray(data) ? data : data?.results || [])
     } catch { toast.error('Failed to load standards') }
     setLoading(false)
@@ -160,7 +160,7 @@ export default function EInvoiceStandardsPage() {
     setSaving(true)
     try {
       const method = editing.id ? 'PUT' : 'POST'
-      const url = editing.id ? `finance/e-invoice-standards/${editing.id}/` : 'finance/e-invoice-standards/'
+      const url = editing.id ? `finance/einvoice-standards/${editing.id}/` : 'finance/einvoice-standards/'
       const result = await erpFetch(url, { method, body: JSON.stringify(editing) })
       toast.success(editing.id ? 'Standard updated' : 'Standard created')
       if (!editing.id && result?.id) setEditing({ ...editing, id: result.id })
@@ -173,7 +173,7 @@ export default function EInvoiceStandardsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this e-invoice standard?')) return
     try {
-      await erpFetch(`finance/e-invoice-standards/${id}/`, { method: 'DELETE' })
+      await erpFetch(`finance/einvoice-standards/${id}/`, { method: 'DELETE' })
       toast.success('Standard deleted')
       fetchAll()
     } catch { toast.error('Failed to delete') }

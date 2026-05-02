@@ -19,8 +19,8 @@
 import { erpFetch, handleAuthError } from '@/lib/erp-api'
 
 export interface ListPreferencePayload {
-  visible_columns: string[]
-  default_filters: Record<string, unknown>
+  visible_columns?: string[]
+  default_filters?: Record<string, unknown>
   page_size?: number
   sort_column?: string
   sort_direction?: 'asc' | 'desc'
@@ -54,6 +54,35 @@ export async function getUserListPreference(listKey: string): Promise<ListPrefer
 export async function saveUserListPreference(listKey: string, data: ListPreferencePayload): Promise<boolean> {
   try {
     await erpFetch(`list-preferences/${listKey}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Load organization-wide default for a specific view.
+ */
+export async function getOrgListDefault(listKey: string): Promise<ListPreferenceResponse | null> {
+  try {
+    const res = await erpFetch(`list-preferences/org-default/${listKey}/`)
+    return res ?? null
+  } catch (error) {
+    handleAuthError(error)
+    return null
+  }
+}
+
+/**
+ * Save organization-wide default for a specific view.
+ * Only staff/superusers can perform this action.
+ */
+export async function saveOrgListDefault(listKey: string, data: ListPreferencePayload): Promise<boolean> {
+  try {
+    await erpFetch(`list-preferences/org-default/${listKey}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })

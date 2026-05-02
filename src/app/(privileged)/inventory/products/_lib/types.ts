@@ -61,6 +61,7 @@ export type ViewProfile = {
   columns: Record<string, boolean>
   filters: Record<string, boolean>
   columnOrder?: string[]  // custom column ordering — keys from ALL_COLUMNS
+  is_shared?: boolean
 }
 
 export type ColumnDef = { key: string; label: string; defaultVisible: boolean }
