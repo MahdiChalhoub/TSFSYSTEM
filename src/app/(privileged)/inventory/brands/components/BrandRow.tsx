@@ -201,8 +201,7 @@ export function BrandRow({
                 ═══════════════════════════════════════════════════════════ */}
             <div
                 className="group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover"
-                onClick={() => handleToggleOpen()}
-                onDoubleClick={() => onSelect(brand)}
+                onClick={() => onSelect(brand)}
                 style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                 }}>
@@ -230,10 +229,16 @@ export function BrandRow({
                 {/* Row body */}
                 <div className="relative flex items-center gap-2 flex-1 min-w-0 py-2.5 pl-3 pr-3">
 
-                    {/* Expand chevron — always visible. Even when the brand
-                        has no M2M countries, products may carry country FKs
-                        that produce sub-groups on expand. */}
-                    <div className="flex-shrink-0">
+                    {/* Expand chevron — clickable on its own (stops bubbling
+                        so the row click still opens the side panel). Click
+                        the row body → open panel; click the chevron → expand
+                        the inline tree. Standard tree pattern. */}
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleToggleOpen() }}
+                        className="flex-shrink-0 p-1 -m-1 rounded hover:bg-app-border/40 transition-colors"
+                        title={isOpen ? 'Collapse' : 'Expand to see categories, countries, attributes'}
+                        aria-expanded={isOpen}>
                         {loading ? (
                             <Loader2 size={14} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
                         ) : (
@@ -245,7 +250,7 @@ export function BrandRow({
                                     transform: isOpen ? 'rotate(90deg)' : 'none'
                                 }} />
                         )}
-                    </div>
+                    </button>
 
                     {/* Logo or icon */}
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"

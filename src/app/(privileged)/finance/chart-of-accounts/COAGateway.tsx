@@ -29,9 +29,9 @@ function GatewaySkeleton() {
     )
 }
 
-export function COAGateway({ accounts }: { accounts: any[] }) {
+export function COAGateway({ accounts, orgCurrencies = [] }: { accounts: any[]; orgCurrencies?: any[] }) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileErrorBoundary><MobileClient accounts={accounts} /></MobileErrorBoundary>
-        : <DesktopClient accounts={accounts} />
+        ? <MobileErrorBoundary><MobileClient accounts={accounts} orgCurrencies={orgCurrencies} /></MobileErrorBoundary>
+        : <DesktopClient accounts={accounts} orgCurrencies={orgCurrencies} />
 }

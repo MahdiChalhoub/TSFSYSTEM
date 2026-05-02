@@ -8,6 +8,11 @@ import { useTranslation } from '@/hooks/use-translation'
 
 interface AccountFormProps {
     accounts: Record<string, any>[]
+    /** Tenant's enabled currencies (Regional Settings → FX tab). When
+     *  provided, the currency field renders as a dropdown of these
+     *  currencies + "Default (home)". Empty array → falls back to a
+     *  free-text input so legacy callers still work. */
+    orgCurrencies?: Record<string, any>[]
     isPending: boolean
     onSubmit: (formData: FormData) => void
     initialData?: Record<string, any>
@@ -18,6 +23,7 @@ interface AccountFormProps {
 
 export function AccountForm({
     accounts,
+    orgCurrencies = [],
     isPending,
     onSubmit,
     initialData,
@@ -112,18 +118,53 @@ export function AccountForm({
                   a foreign currency. */}
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}
-                    title="Leave blank if this account uses your tenant's home currency. Set ONLY when the account holds balances in another currency (e.g. USD/EUR) — then the Monetary class field below appears.">
+                    title="Leave on Default (home) if this account uses your tenant's home currency. Pick another currency only when the account holds balances in that currency — then the Monetary class field below appears. The list comes from your enabled currencies in Regional Settings → FX.">
                     {t('finance.coa.form_currency')}
                 </label>
-                <input
-                    name="currency"
-                    placeholder={t('finance.coa.form_currency_placeholder')}
-                    defaultValue={initialData?.currency || ''}
-                    onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
-                    className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none uppercase"
-                    maxLength={10}
-                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                />
+                {orgCurrencies.length > 0 ? (
+                    // Dropdown sourced from /settings/regional?tab=fx (org-currencies).
+                    // Default option (empty value) means "use the tenant's home /
+                    // default currency" — no explicit currency stored on the account.
+                    <select
+                        name="currency"
+                        defaultValue={initialData?.currency || ''}
+                        onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
+                        className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
+                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                        <option value="">
+                            {(() => {
+                                const def = orgCurrencies.find(c => c.is_default)
+                                return def
+                                    ? `Default — ${def.currency_code || 'home'}${def.currency_symbol ? ` (${def.currency_symbol})` : ''}`
+                                    : 'Default (home currency)'
+                            })()}
+                        </option>
+                        {/* List enabled currencies, default first if any. */}
+                        {[...orgCurrencies]
+                            .filter(c => c.is_enabled !== false)
+                            .sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0))
+                            .map(c => (
+                                <option key={c.id} value={c.currency_code || ''}>
+                                    {c.currency_code}
+                                    {c.currency_symbol ? ` (${c.currency_symbol})` : ''}
+                                    {c.currency_name ? ` — ${c.currency_name}` : ''}
+                                    {c.is_default ? '  · default' : ''}
+                                </option>
+                            ))}
+                    </select>
+                ) : (
+                    // Fallback for callers that didn't load org-currencies — same
+                    // free-text behavior as before so nothing breaks.
+                    <input
+                        name="currency"
+                        placeholder={t('finance.coa.form_currency_placeholder')}
+                        defaultValue={initialData?.currency || ''}
+                        onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
+                        className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none uppercase"
+                        maxLength={10}
+                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                    />
+                )}
             </div>
             {/* Monetary class — IAS 21 / ASC 830 — only relevant when this
                 account holds a NON-home currency. We hide it on home-currency
