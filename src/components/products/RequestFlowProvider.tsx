@@ -156,23 +156,26 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
             else allowed.push(p)
         }
         if (blocked.length > 0) {
+            // Already in flight → bump priority directly instead of showing
+            // a "blocked" warning. The user's intent is "I want this product
+            // procured" — if a request already exists, escalate it rather
+            // than ask them to take a second action.
             const names = blocked.slice(0, 3).map(p => p.name).join(', ')
             const more = blocked.length > 3 ? ` +${blocked.length - 3} more` : ''
-            toast.warning(`${blocked.length} already in flight`, {
-                description: `${names}${more}. Bump priority to remind procurement, or wait for delivery.`,
-                action: {
-                    label: 'Bump priority',
-                    onClick: async () => {
-                        const results = await Promise.all(
-                            blocked.map(p => bumpProcurementRequest({ productId: p.id })),
-                        )
-                        const ok = results.filter(r => r.success).length
-                        const fail = results.length - ok
-                        if (ok > 0) toast.success(`Bumped ${ok} request${ok === 1 ? '' : 's'}`)
-                        if (fail > 0) toast.error(`${fail} bump${fail === 1 ? '' : 's'} failed`)
-                    },
-                },
-            })
+            ;(async () => {
+                const results = await Promise.all(
+                    blocked.map(p => bumpProcurementRequest({ productId: p.id })),
+                )
+                const ok = results.filter(r => r.success).length
+                const fail = results.length - ok
+                if (ok > 0) {
+                    toast.success(`Bumped ${ok} request${ok === 1 ? '' : 's'}`, {
+                        description: `${names}${more} — already in flight, priority escalated.`,
+                        action: { label: 'View →', onClick: () => { window.location.href = '/inventory/requests' } },
+                    })
+                }
+                if (fail > 0) toast.error(`${fail} bump${fail === 1 ? '' : 's'} failed`)
+            })()
         }
         if (allowed.length === 0) return
         const m = modeRef.current
