@@ -196,14 +196,16 @@ cd "$APP_ROOT"
 echo ""
 echo "── Phase 2.1: $DOCKER_COMPOSE down (stop + remove old containers) ──"
 $DOCKER_COMPOSE down 2>&1 | tail -10
+# Also stop legacy container if it exists
+docker stop tsf_db 2>/dev/null || true
 
 echo ""
 echo "── Phase 2.2: $DOCKER_COMPOSE build (with v3.5.0 code) ──"
 $DOCKER_COMPOSE build 2>&1 | tail -20
 
 echo ""
-echo "── Phase 2.3: $DOCKER_COMPOSE up -d ──"
-$DOCKER_COMPOSE up -d 2>&1 | tail -10
+echo "── Phase 2.3: $DOCKER_COMPOSE up -d (DB + Redis first) ──"
+$DOCKER_COMPOSE up -d postgres redis 2>&1 | tail -10
 
 echo ""
 echo "── Phase 2.4: Wait for postgres healthcheck ──"
@@ -216,26 +218,39 @@ for i in $(seq 1 60); do
     [ "$i" = "60" ] && { echo "❌ postgres did not become ready in 60s"; exit 2; }
 done
 
-echo ""
-echo "── Phase 2.5: Drop + recreate $DB_NAME (the v3.5.0 cutover) ──"
-docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres -c "REVOKE CONNECT ON DATABASE \"$DB_NAME\" FROM public;" 2>/dev/null || true
+docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '$DB_NAME';" 2>/dev/null || true
 docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid <> pg_backend_pid();" 2>/dev/null || true
+sleep 2
 docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\";"
 docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\";"
 echo "✅ Database recreated empty"
 
 echo ""
-echo "── Phase 2.6: Apply 34 fresh v3.5.0 migrations ──"
-docker exec "$BACKEND_CONTAINER" python manage.py migrate --no-input 2>&1 | tail -30
+echo "── Phase 2.6: $DOCKER_COMPOSE up -d (Backend + Workers) ──"
+# Starting the backend will trigger auto-migration in start.sh
+$DOCKER_COMPOSE up -d backend celery_worker celery_beat 2>&1 | tail -10
+sleep 10  # Give it a head start on migrations
 
 echo ""
-echo "── Phase 2.7: Seed essentials (idempotent) ──"
+echo "── Phase 2.7: Wait for Backend + Migrations to finish ──"
+for i in $(seq 1 120); do
+    if docker exec "$BACKEND_CONTAINER" python manage.py showmigrations erp | grep -q "\[X\]"; then
+        echo "✅ Migrations applied successfully (verified via erp.0001)"
+        break
+    fi
+    echo -n "."
+    sleep 2
+    [ "$i" = "120" ] && { echo "❌ Backend did not complete migrations in 240s"; exit 2; }
+done
+
+echo ""
+echo "── Phase 2.8: Seed essentials (idempotent) ──"
 docker exec "$BACKEND_CONTAINER" python manage.py seed_kernel_version 2>&1 | tail -3 || echo "⚠ seed_kernel_version missing in v3.5.0 — skipping"
 docker exec "$BACKEND_CONTAINER" python manage.py seed_workflows 2>&1 | tail -3 || echo "⚠ seed_workflows missing — skipping"
 docker exec "$BACKEND_CONTAINER" python manage.py seed_core 2>&1 | tail -5 || echo "⚠ seed_core missing — skipping"
 
 echo ""
-echo "── Phase 2.8: Frontend rebuild + pm2 restart ──"
+echo "── Phase 2.9: Frontend rebuild + pm2 restart ──"
 if [ -f package.json ]; then
     npm install --silent --no-audit --no-fund 2>&1 | tail -3
     npm run build 2>&1 | tail -5
