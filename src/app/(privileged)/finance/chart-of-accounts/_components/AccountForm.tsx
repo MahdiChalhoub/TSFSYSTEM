@@ -40,6 +40,14 @@ export function AccountForm({
     const [hasForeignCurrency, setHasForeignCurrency] = useState<boolean>(
         Boolean(initialData?.currency)
     )
+    /** Show the parent's code as a placeholder hint so the user knows the
+     *  prefix to extend — but never auto-fill, since each account class
+     *  (SYSCOHADA / IFRS / custom) has its own numbering philosophy. */
+    const [parentId, setParentId] = useState<string>(
+        String(initialData?.parentId || preselectedParentId || '')
+    )
+    const parentCode = accounts.find(a => String(a.id) === parentId)?.code as string | undefined
+    const codePlaceholder = parentCode ? `${parentCode}…` : '1010'
     return (
         <form action={onSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
             <div className="col-span-full mb-1 flex items-center justify-between">
@@ -48,7 +56,7 @@ export function AccountForm({
                 </h3>
             </div>
             {[
-                { name: 'code', label: t('finance.coa.form_code'), placeholder: '1010', type: 'input', mono: true, defaultValue: initialData?.code },
+                { name: 'code', label: t('finance.coa.form_code'), placeholder: codePlaceholder, type: 'input', mono: true, defaultValue: initialData?.code },
                 { name: 'name', label: t('finance.coa.form_name'), placeholder: t('finance.coa.form_name_placeholder'), type: 'input', defaultValue: initialData?.name },
             ].map(f => (
                 <div key={f.name}>
@@ -81,7 +89,7 @@ export function AccountForm({
             </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" defaultValue={initialData?.parentId || preselectedParentId || ''} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="parentId" value={parentId} onChange={e => setParentId(e.target.value)} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                 </select>

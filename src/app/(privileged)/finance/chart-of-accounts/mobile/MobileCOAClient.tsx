@@ -179,6 +179,25 @@ export function MobileCOAClient({ accounts, orgCurrencies = [] }: {
             if (pid && map[pid]) map[pid].children.push(map[a.id])
             else roots.push(map[a.id])
         })
+        // Recompute parent rollups over the visible subtree only — backend
+        // rolls up across all accounts, so otherwise a parent's balance
+        // would include hidden (inactive / off-scope) descendants.
+        const rollup = (n: any): { balance: number; tenant: number; branch: number | null } => {
+            let bal = Number(n.directBalance ?? n.balance ?? 0)
+            let tenant = n.tenant_balance != null ? Number(n.tenant_balance) : bal
+            let branch: number | null = n.branch_balance != null ? Number(n.branch_balance) : null
+            for (const c of n.children as any[]) {
+                const r = rollup(c)
+                bal += r.balance
+                tenant += r.tenant
+                if (branch != null && r.branch != null) branch += r.branch
+            }
+            n.balance = bal
+            if (n.tenant_balance != null) n.tenant_balance = tenant
+            if (branch != null) n.branch_balance = branch
+            return { balance: bal, tenant, branch }
+        }
+        roots.forEach(rollup)
         return roots
         // eslint-disable-next-line react-hooks/exhaustive-deps -- scopeOf is stable
     }, [accounts, showInactive, typeFilter, scopeFilter])

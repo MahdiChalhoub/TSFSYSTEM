@@ -34,22 +34,33 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
             erpFetch('inventory/categories/'),
             erpFetch(`inventory/products/?brand=${brandId}&page_size=200`),
         ]).then(([brandData, catData, prodData]: any[]) => {
-            const m2mCats: CategoryRow[] = Array.isArray(brandData?.categories) ? brandData.categories : []
+            // BrandSerializer returns `categories` as raw FK ids (numbers)
+            // and parallel `category_names` strings. Build an id→name
+            // lookup from the master list first so we can resolve either.
+            const all = Array.isArray(catData?.results) ? catData.results : (Array.isArray(catData) ? catData : [])
+            const masterCats: CategoryRow[] = all.map((c: any) => ({ id: c.id, name: c.name }))
+            const idToName = new Map<number, string>(masterCats.map(c => [c.id, c.name]))
+            setAllCats(masterCats)
+
+            const m2mRaw = brandData?.categories
+            const m2mIds: number[] = Array.isArray(m2mRaw)
+                ? m2mRaw.map((c: any) => typeof c === 'number' ? c : c?.id).filter((n): n is number => typeof n === 'number')
+                : []
 
             const products = Array.isArray(prodData) ? prodData : (prodData?.results ?? [])
             const fromProducts = new Map<number, string>()
             products.forEach((p: any) => {
-                if (p.category && p.category_name) fromProducts.set(p.category, p.category_name)
+                if (p.category) fromProducts.set(p.category, p.category_name || idToName.get(p.category) || `Category #${p.category}`)
             })
 
             const merged = new Map<number, string>()
-            m2mCats.forEach(c => merged.set(c.id, c.name))
+            m2mIds.forEach(id => {
+                const name = idToName.get(id) || `Category #${id}`
+                merged.set(id, name)
+            })
             fromProducts.forEach((name, id) => { if (!merged.has(id)) merged.set(id, name) })
 
             setLinkedCats([...merged.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)))
-
-            const all = Array.isArray(catData?.results) ? catData.results : (Array.isArray(catData) ? catData : [])
-            setAllCats(all.map((c: any) => ({ id: c.id, name: c.name })))
         }).catch(() => {}).finally(() => setLoading(false))
     }, [brandId])
 
@@ -67,6 +78,9 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
             })
             toast.success('Category linked')
             loadData(); router.refresh()
+            // Close the picker so the user immediately sees the result in
+            // the linked list below — no second click needed.
+            setShowLink(false)
         } catch { toast.error('Failed to link') }
         finally { setLinking(false) }
     }

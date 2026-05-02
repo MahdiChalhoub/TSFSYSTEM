@@ -175,6 +175,26 @@ export function ChartOfAccountsViewer({ accounts, orgCurrencies = [] }: {
                 roots.push(map[a.id])
             }
         })
+        // Recompute rollups over the *visible* subtree only. The backend
+        // rolls up over every account (incl. inactive / off-scope) because
+        // we fetch with include_inactive=true; without this, a parent would
+        // show the sum of children that aren't on screen.
+        const rollup = (n: Record<string, any>): { balance: number; tenant: number; branch: number | null } => {
+            let bal = Number(n.directBalance ?? n.balance ?? 0)
+            let tenant = n.tenant_balance != null ? Number(n.tenant_balance) : bal
+            let branch: number | null = n.branch_balance != null ? Number(n.branch_balance) : null
+            for (const c of n.children) {
+                const r = rollup(c)
+                bal += r.balance
+                tenant += r.tenant
+                if (branch != null && r.branch != null) branch += r.branch
+            }
+            n.balance = bal
+            if (n.tenant_balance != null) n.tenant_balance = tenant
+            if (branch != null) n.branch_balance = branch
+            return { balance: bal, tenant, branch }
+        }
+        roots.forEach(rollup)
         return roots
     }, [accounts, showInactive, searchQuery, typeFilter, scopeFilter])
 
