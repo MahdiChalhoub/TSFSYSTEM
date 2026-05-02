@@ -129,10 +129,17 @@ def get_procurement_status_batch(organization, product_ids):
         logger.error('Procurement status: failed to query OperationalRequest', exc_info=exc)
 
     # ── Phase 1b: Procurement Requests (POS module system) ──
+    # Previously instantiated ConnectorFacade(organization_id=...) — wrong
+    # signature (the facade takes a registry, not an org id). The TypeError
+    # was caught by the outer try/except, so Phase 1b silently produced no
+    # results. Symptom: products with active ProcurementRequests showed up
+    # as "Available" even though the create-PR endpoint correctly blocked
+    # duplicates against the same data. Use the singleton facade instead.
     try:
-        from erp.connector_registry import ConnectorFacade
-        connector = ConnectorFacade(organization_id=organization.id)
-        ProcurementRequest = connector.require('pos.procurement_requests.get_model')
+        from erp.connector_registry import connector
+        ProcurementRequest = connector.require(
+            'pos.procurement_requests.get_model', org_id=organization.id,
+        )
         
         if ProcurementRequest:
             active_reqs = ProcurementRequest.objects.filter(
