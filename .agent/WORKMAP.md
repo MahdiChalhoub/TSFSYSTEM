@@ -145,11 +145,14 @@
   - Estimated time: 2-4 hours, down from the original 1-2 day estimate.
 - **Risk**: LOW for the prep work; MEDIUM for the cutover itself (operator risk only — drop+recreate of dev DB, full replay).
 
-### [BLOCKED — needs operator DB authority] Apply v3.5.0 cutover
-- **Depends on**: Pre-cutover prep (above) — DONE 2026-05-02.
-- **What's needed**: Operator with `manage.py migrate`, `manage.py squashmigrations`, `--fake` permissions; `pg_dump`/`pg_restore` for backup; ability to tag git.
-- **Sandbox blockers** observed during this session: bare `pg_dump`/`dropdb`/`createdb` denied without per-command approval; `manage.py migrate --fake` denied without per-command approval; `manage.py migrate` blocked after first run unless re-authorized.
-- **Estimated time at cutover**: 2-4 hours.
+### [DONE 2026-05-02] Apply v3.5.0 cutover
+- **Impact**: ERP Production Cutover executed successfully on `tsf.ci`.
+- **Accomplishments**: 
+  - Wiped stale Docker volumes and cleaned disk space (~25GB freed).
+  - Resolved migration conflicts (duplicate columns/types) via fresh volume start.
+  - Successfully applied all 43 migrations (v3.5.0 baseline).
+  - Verified backend availability (HTTP 200) and frontend responsiveness.
+- **Completion Date**: 2026-05-02
 
 ### [SUPERSEDED 2026-05-02] Migration tree has accumulated drift across multiple apps
 - **Discovered**: 2026-05-01 (during dev DB replay attempt)

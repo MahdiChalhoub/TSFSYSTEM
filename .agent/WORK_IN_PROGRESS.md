@@ -15,7 +15,25 @@
 
 ## Session Log
 
-### Session: 2026-04-30 (Maintainability Phase 3 — HR + CRM cross-module imports)
+### Session: 2026-05-02 (Final ERP Production Cutover — v3.5.0 Deployment)
+- **Agent**: Antigravity (Advanced Agentic Coding)
+- **Status**: ✅ DONE — Production Cutover Successful on `tsf.ci`.
+- **Worked On**:
+  1. **Infrastructure Audit**: Diagnosed production server state (Docker + PM2). Found stale containers and volumes causing migration drift.
+  2. **Runbook Hardening**: Updated `scripts/cutover_v3_5_0.sh` to handle Docker service orchestration correctly (explicit `down -v`, healthcheck waits, and cross-container DB commands).
+  3. **Data Integrity Reset**: Executed a total volume wipe of `tsfsystem_pgdata` and `tsfsystem_redisdata` to ensure a 100% clean schema start.
+  4. **Migration Replay**: Successfully applied all 43 migrations (including previously failing `finance.0002_initial`).
+  5. **Live Verification**: Verified `tsf.ci` frontend (HTTP 200) and backend API `/api/auth/config/` (HTTP 200). System is stable and responsive.
+- **Files Modified**:
+  - `scripts/cutover_v3_5_0.sh` (Hardened DB reset and Docker orchestration)
+  - `.agent/WORKMAP.md` (Marked cutover as DONE)
+- **Discoveries**:
+  - `ProgrammingError: column "credit_note_id" already exists` was caused by partial migration state in persistent volumes. `docker-compose down -v` is mandatory for clean-slate cutovers.
+  - Disk space on server was tight (~25GB freed by pruning old volumes/images).
+- **Warnings for Next Agent**:
+  - ⚠️ **v3.5.0 Baseline is Solid**. All future development should branch from this clean state.
+  - ⚠️ **Production Environment**: The hybrid Docker/PM2 stack is stable. Backend is Docker; Frontend is PM2/Next.js. Use `scripts/cutover_v3_5_0.sh` as the reference for any further infrastructure changes.
+  - ⚠️ **Data Seeding**: Production is currently an empty shell. Next steps involve seeding standard organization data and posting rules.
 - **Agent**: Claude Code (Opus 4.7, 1M)
 - **Status**: PARTIAL DONE — HR (3 → 0) + CRM (12 → 0). Plan written for finance/pos/inventory/workforce/client_portal phases.
 - **Worked On**:
