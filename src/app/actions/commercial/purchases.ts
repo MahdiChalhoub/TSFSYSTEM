@@ -35,29 +35,36 @@ export type PurchaseFormState = {
 };
 
 export async function createPurchaseInvoice(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
-    // 1. Extract & Parse Complex FormData
-    const rawLines: Record<string, any>[] = [];
-
-    for (const [key, value] of Array.from(formData.entries())) {
-        const match = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
-        if (match) {
-            const index = parseInt(match[1]);
-            const field = match[2];
-            if (!rawLines[index]) rawLines[index] = {};
-            rawLines[index][field] = value;
-        }
+    // The form posts `lines` as a single JSON-stringified hidden input
+    // (see form.tsx: <input name="lines" value={JSON.stringify(lines)} />),
+    // not as repeated `lines[i][field]` keys. Parse the JSON envelope —
+    // matches updatePurchaseInvoice's contract.
+    let rawLines: Record<string, unknown>[] = [];
+    const linesRaw = formData.get('lines');
+    if (typeof linesRaw === 'string' && linesRaw.length) {
+        try {
+            const parsed = JSON.parse(linesRaw);
+            if (Array.isArray(parsed)) rawLines = parsed as Record<string, unknown>[];
+        } catch { /* fall through to []; schema will reject below */ }
     }
+
+    // FormData.get returns null for absent fields, but z.string().optional()
+    // only accepts undefined — coerce null → undefined so optional fields
+    // don't trip the schema. The form also posts the PO ref as `reference`
+    // (legacy name), so accept both.
+    const orUndefined = (v: FormDataEntryValue | null) =>
+        (typeof v === 'string' && v.length > 0) ? v : undefined;
 
     const rawData = {
         supplierId: formData.get('supplierId'),
         warehouseId: formData.get('warehouseId'),
         siteId: formData.get('siteId'),
         scope: formData.get('scope'),
-        invoicePriceType: formData.get('invoicePriceType'),
-        vatRecoverable: formData.get('vatRecoverable') === 'true',
-        refCode: formData.get('refCode'),
-        notes: formData.get('notes'),
-        lines: rawLines.filter(l => l && l.productId)
+        invoicePriceType: orUndefined(formData.get('invoicePriceType')) ?? 'HT',
+        vatRecoverable: formData.get('vatRecoverable') !== 'false',
+        refCode: orUndefined(formData.get('refCode') ?? formData.get('reference')),
+        notes: orUndefined(formData.get('notes')),
+        lines: rawLines.filter((l) => l && (l as Record<string, unknown>).productId),
     };
 
     const validated = purchaseSchema.safeParse(rawData);
