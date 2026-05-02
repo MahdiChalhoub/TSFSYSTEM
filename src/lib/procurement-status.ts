@@ -34,7 +34,11 @@ export interface ProcurementStatusMeta {
     color: string
 }
 
-export const PROCUREMENT_STATUS_CONFIG: Record<ProcurementStatus, ProcurementStatusMeta> = {
+// Permissive `Record<string, ...>` so legacy call sites that index with a
+// raw `string` (e.g. `PROCUREMENT_STATUS_CONFIG[product.procurement_status]`)
+// still type-check. Use `getProcurementStatus()` below for safe lookup with
+// fallback.
+export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = {
     NONE:        { label: '—',           color: 'var(--app-success, #22c55e)' },
     REQUESTED:   { label: 'Requested',   color: 'var(--app-warning, #f59e0b)' },
     PO_SENT:     { label: 'PO Sent',     color: 'var(--app-info, #3b82f6)' },

@@ -67,9 +67,15 @@ export function RequestRow({ r, pending, runAction }: {
                     {pm.label}
                 </span>
             </div>
-            <div className="flex items-center gap-1">
-                <StatusIcon size={11} style={{ color: sm.color }} />
-                <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: sm.color }}>{sm.label}</span>
+            <div>
+                <span className="inline-flex items-center text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border"
+                    style={{
+                        background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+                        color: procurement.color,
+                        borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
+                    }}>
+                    {procurement.label}
+                </span>
             </div>
             <div className="min-w-0">
                 <div className="text-[11px] font-medium text-app-foreground truncate">{dateStr}</div>
