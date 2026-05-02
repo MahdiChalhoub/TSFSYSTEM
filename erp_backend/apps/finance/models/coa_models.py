@@ -321,7 +321,13 @@ class ChartOfAccount(TenantModel):
 
         # 2) SYSCOHADA class signal — class 3 is stocks (inventory),
         # class 6 = charges, class 7 = produits. Catches inventory accounts
-        # that admins haven't tagged with a system_role yet.
+        # that admins haven't tagged with a system_role yet. ONLY for
+        # PCG-family templates: IFRS / GAAP use 3xxx for Equity, so the
+        # class-digit rule would mis-classify equity as inventory.
+        PCG_FAMILY = {'SYSCOHADA_REVISED', 'FRENCH_PCG', 'LEBANESE_PCN'}
+        is_pcg_family = (self.template_origin or '') in PCG_FAMILY
+        # syscohada_code being filled is itself a PCG-family signal, even
+        # when template_origin isn't set (legacy data path).
         sysco = (getattr(self, 'syscohada_code', None) or '').strip()
         if sysco:
             first = sysco[0]
@@ -330,11 +336,12 @@ class ChartOfAccount(TenantModel):
             if first in ('6', '7'):
                 return self.SCOPE_BRANCH_SPLIT
 
-        # 3) Code prefix fallback — SYSCOHADA-styled codes even when
-        # syscohada_code wasn't separately filled.
-        code = (self.code or '').strip()
-        if self.type == 'ASSET' and code and code[:2].isdigit() and code.startswith('3'):
-            return self.SCOPE_BRANCH_LOCATED
+        # 3) Code prefix fallback — only for PCG-family templates whose
+        # account codes ARE the class digits.
+        if is_pcg_family:
+            code = (self.code or '').strip()
+            if self.type == 'ASSET' and code and code[:2].isdigit() and code.startswith('3'):
+                return self.SCOPE_BRANCH_LOCATED
 
         # 4) Name-keyword sniff for inventory-shaped accounts.
         name = (self.name or '').lower()

@@ -17,77 +17,90 @@
             "code": "1000",
             "name": "Assets",
             "type": "ASSET",
+            "scope_mode": "tenant_wide",
             "children": [
                 {
                     "code": "1100",
                     "name": "Current Assets",
                     "type": "ASSET",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "1110",
                             "name": "Cash and Cash Equivalents",
                             "type": "ASSET",
                             "subType": "CASH",
+                            "scope_mode": "tenant_wide",
                             "children": [
                                 {
                                     "code": "1111",
                                     "name": "Petty Cash",
                                     "type": "ASSET",
-                                    "subType": "CASH"
+                                    "subType": "CASH",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1112",
                                     "name": "Cash in Bank — Checking",
                                     "type": "ASSET",
-                                    "subType": "BANK"
+                                    "subType": "BANK",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1113",
                                     "name": "Cash in Bank — Savings",
                                     "type": "ASSET",
-                                    "subType": "BANK"
+                                    "subType": "BANK",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1114",
                                     "name": "Money Market Accounts",
                                     "type": "ASSET",
-                                    "subType": "BANK"
+                                    "subType": "BANK",
+                                    "scope_mode": "tenant_wide"
                                 }
                             ]
                         },
                         {
                             "code": "1120",
                             "name": "Short-term Investments",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1200",
                             "name": "Accounts Receivable",
                             "type": "ASSET",
                             "subType": "RECEIVABLE",
+                            "scope_mode": "tenant_wide",
                             "children": [
                                 {
                                     "code": "1210",
                                     "name": "Trade Receivables",
                                     "type": "ASSET",
-                                    "subType": "RECEIVABLE"
+                                    "subType": "RECEIVABLE",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1220",
                                     "name": "Allowance for Doubtful Accounts",
-                                    "type": "ASSET"
+                                    "type": "ASSET",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1230",
                                     "name": "Notes Receivable",
                                     "type": "ASSET",
-                                    "subType": "RECEIVABLE"
+                                    "subType": "RECEIVABLE",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1240",
                                     "name": "Employee Advances",
                                     "type": "ASSET",
-                                    "subType": "RECEIVABLE"
+                                    "subType": "RECEIVABLE",
+                                    "scope_mode": "tenant_wide"
                                 }
                             ]
                         },
@@ -95,48 +108,57 @@
                             "code": "1300",
                             "name": "Inventory",
                             "type": "ASSET",
+                            "scope_mode": "branch_located",
                             "children": [
                                 {
                                     "code": "1310",
                                     "name": "Raw Materials",
-                                    "type": "ASSET"
+                                    "type": "ASSET",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1320",
                                     "name": "Work in Process",
-                                    "type": "ASSET"
+                                    "type": "ASSET",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1330",
                                     "name": "Finished Goods",
-                                    "type": "ASSET"
+                                    "type": "ASSET",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "1340",
                                     "name": "Merchandise Inventory",
-                                    "type": "ASSET"
+                                    "type": "ASSET",
+                                    "scope_mode": "branch_located"
                                 }
                             ]
                         },
                         {
                             "code": "1400",
                             "name": "Prepaid Expenses",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1410",
                             "name": "Prepaid Insurance",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1420",
                             "name": "Prepaid Rent",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1450",
                             "name": "Other Current Assets",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 },
@@ -144,46 +166,55 @@
                     "code": "1500",
                     "name": "Fixed Assets (Property, Plant & Equipment)",
                     "type": "ASSET",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "1510",
                             "name": "Land",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1520",
                             "name": "Buildings",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1530",
                             "name": "Leasehold Improvements",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1540",
                             "name": "Machinery and Equipment",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1550",
                             "name": "Furniture and Fixtures",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1560",
                             "name": "Vehicles",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1570",
                             "name": "Computer Equipment",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1580",
                             "name": "Construction in Progress",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 },
@@ -191,31 +222,37 @@
                     "code": "1600",
                     "name": "Intangible Assets",
                     "type": "ASSET",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "1610",
                             "name": "Goodwill",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1620",
                             "name": "Patents",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1630",
                             "name": "Trademarks",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1640",
                             "name": "Software",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1650",
                             "name": "Copyrights",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 },
@@ -223,36 +260,43 @@
                     "code": "1700",
                     "name": "Accumulated Depreciation & Amortization",
                     "type": "ASSET",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "1710",
                             "name": "Accum. Deprec. — Buildings",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1720",
                             "name": "Accum. Deprec. — Equipment",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1730",
                             "name": "Accum. Deprec. — Vehicles",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1740",
                             "name": "Accum. Deprec. — Furniture",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1750",
                             "name": "Accum. Amort. — Software",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1760",
                             "name": "Accum. Amort. — Intangibles",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 },
@@ -260,21 +304,25 @@
                     "code": "1800",
                     "name": "Other Non-Current Assets",
                     "type": "ASSET",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "1810",
                             "name": "Long-term Investments",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1820",
                             "name": "Security Deposits",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "1830",
                             "name": "Deferred Tax Asset",
-                            "type": "ASSET"
+                            "type": "ASSET",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 }
@@ -284,75 +332,89 @@
             "code": "2000",
             "name": "Liabilities",
             "type": "LIABILITY",
+            "scope_mode": "tenant_wide",
             "children": [
                 {
                     "code": "2100",
                     "name": "Current Liabilities",
                     "type": "LIABILITY",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "2110",
                             "name": "Accounts Payable",
                             "type": "LIABILITY",
                             "subType": "PAYABLE",
+                            "scope_mode": "tenant_wide",
                             "children": [
                                 {
                                     "code": "2111",
                                     "name": "Trade Payables",
                                     "type": "LIABILITY",
-                                    "subType": "PAYABLE"
+                                    "subType": "PAYABLE",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2112",
                                     "name": "Accrued Liabilities",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 }
                             ]
                         },
                         {
                             "code": "2120",
                             "name": "Notes Payable — Short-term",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2130",
                             "name": "Current Portion of Long-term Debt",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2200",
                             "name": "Accrued Expenses",
                             "type": "LIABILITY",
+                            "scope_mode": "tenant_wide",
                             "children": [
                                 {
                                     "code": "2210",
                                     "name": "Salaries and Wages Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2220",
                                     "name": "Payroll Taxes Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2230",
                                     "name": "Benefits Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2240",
                                     "name": "Interest Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2250",
                                     "name": "Rent Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2260",
                                     "name": "Utilities Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 }
                             ]
                         },
@@ -360,38 +422,45 @@
                             "code": "2300",
                             "name": "Taxes Payable",
                             "type": "LIABILITY",
+                            "scope_mode": "tenant_wide",
                             "children": [
                                 {
                                     "code": "2310",
                                     "name": "Sales Tax Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2320",
                                     "name": "Federal Income Tax Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2330",
                                     "name": "State Income Tax Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 },
                                 {
                                     "code": "2340",
                                     "name": "FICA Payable",
-                                    "type": "LIABILITY"
+                                    "type": "LIABILITY",
+                                    "scope_mode": "tenant_wide"
                                 }
                             ]
                         },
                         {
                             "code": "2400",
                             "name": "Deferred Revenue",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2410",
                             "name": "Customer Deposits",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 },
@@ -399,36 +468,43 @@
                     "code": "2500",
                     "name": "Long-term Liabilities",
                     "type": "LIABILITY",
+                    "scope_mode": "tenant_wide",
                     "children": [
                         {
                             "code": "2510",
                             "name": "Notes Payable — Long-term",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2520",
                             "name": "Mortgage Payable",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2530",
                             "name": "Bonds Payable",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2540",
                             "name": "Capital Lease Obligations",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2550",
                             "name": "Deferred Tax Liability",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         },
                         {
                             "code": "2560",
                             "name": "Pension Obligation",
-                            "type": "LIABILITY"
+                            "type": "LIABILITY",
+                            "scope_mode": "tenant_wide"
                         }
                     ]
                 }
@@ -438,41 +514,49 @@
             "code": "3000",
             "name": "Equity",
             "type": "EQUITY",
+            "scope_mode": "tenant_wide",
             "children": [
                 {
                     "code": "3100",
                     "name": "Common Stock",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3200",
                     "name": "Preferred Stock",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3300",
                     "name": "Additional Paid-in Capital",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3400",
                     "name": "Retained Earnings",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3500",
                     "name": "Treasury Stock",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3600",
                     "name": "Owner's Draws / Distributions",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 },
                 {
                     "code": "3700",
                     "name": "Accumulated Other Comprehensive Income",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "scope_mode": "tenant_wide"
                 }
             ]
         },
@@ -480,26 +564,31 @@
             "code": "4000",
             "name": "Revenue",
             "type": "INCOME",
+            "scope_mode": "branch_split",
             "children": [
                 {
                     "code": "4100",
                     "name": "Sales Revenue",
                     "type": "INCOME",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "4110",
                             "name": "Product Sales",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4120",
                             "name": "Sales Returns and Allowances",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4130",
                             "name": "Sales Discounts",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -507,16 +596,19 @@
                     "code": "4500",
                     "name": "Service Revenue",
                     "type": "INCOME",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "4510",
                             "name": "Consulting Revenue",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4520",
                             "name": "Professional Services Revenue",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -524,31 +616,37 @@
                     "code": "4800",
                     "name": "Other Income",
                     "type": "INCOME",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "4810",
                             "name": "Interest Income",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4820",
                             "name": "Dividend Income",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4830",
                             "name": "Rental Income",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4840",
                             "name": "Gain on Sale of Assets",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "4850",
                             "name": "Foreign Exchange Gain",
-                            "type": "INCOME"
+                            "type": "INCOME",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 }
@@ -558,41 +656,49 @@
             "code": "5000",
             "name": "Cost of Goods Sold",
             "type": "EXPENSE",
+            "scope_mode": "branch_split",
             "children": [
                 {
                     "code": "5100",
                     "name": "Cost of Goods Purchased",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5200",
                     "name": "Direct Labor",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5300",
                     "name": "Manufacturing Overhead",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5400",
                     "name": "Freight In",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5500",
                     "name": "Purchase Discounts",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5600",
                     "name": "Purchase Returns and Allowances",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "5700",
                     "name": "Inventory Adjustments",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 }
             ]
         },
@@ -600,36 +706,43 @@
             "code": "6000",
             "name": "Operating Expenses",
             "type": "EXPENSE",
+            "scope_mode": "branch_split",
             "children": [
                 {
                     "code": "6100",
                     "name": "Payroll Expenses",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6110",
                             "name": "Salaries and Wages",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6120",
                             "name": "Payroll Taxes",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6130",
                             "name": "Employee Benefits",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6140",
                             "name": "Workers' Compensation",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6150",
                             "name": "Retirement Plan Contributions",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -637,31 +750,37 @@
                     "code": "6200",
                     "name": "Occupancy Expenses",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6210",
                             "name": "Rent Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6220",
                             "name": "Utilities",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6230",
                             "name": "Property Taxes",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6240",
                             "name": "Building Maintenance",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6250",
                             "name": "Security",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -669,46 +788,55 @@
                     "code": "6300",
                     "name": "General and Administrative",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6310",
                             "name": "Office Supplies",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6320",
                             "name": "Postage and Shipping",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6330",
                             "name": "Telephone and Internet",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6340",
                             "name": "Software and Subscriptions",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6350",
                             "name": "Professional Fees (Legal, Accounting)",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6360",
                             "name": "Insurance Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6370",
                             "name": "Licenses and Permits",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6380",
                             "name": "Bad Debt Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -716,21 +844,25 @@
                     "code": "6400",
                     "name": "Marketing and Advertising",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6410",
                             "name": "Advertising",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6420",
                             "name": "Marketing Materials",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6430",
                             "name": "Trade Shows and Events",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -738,21 +870,25 @@
                     "code": "6500",
                     "name": "Travel and Entertainment",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6510",
                             "name": "Travel Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6520",
                             "name": "Meals and Entertainment",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6530",
                             "name": "Auto Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -760,16 +896,19 @@
                     "code": "6600",
                     "name": "Depreciation and Amortization",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6610",
                             "name": "Depreciation Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6620",
                             "name": "Amortization Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
@@ -777,38 +916,45 @@
                     "code": "6700",
                     "name": "Financial Expenses",
                     "type": "EXPENSE",
+                    "scope_mode": "branch_split",
                     "children": [
                         {
                             "code": "6710",
                             "name": "Bank Service Charges",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6720",
                             "name": "Interest Expense",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6730",
                             "name": "Foreign Exchange Loss",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         },
                         {
                             "code": "6740",
                             "name": "Credit Card Fees",
-                            "type": "EXPENSE"
+                            "type": "EXPENSE",
+                            "scope_mode": "branch_split"
                         }
                     ]
                 },
                 {
                     "code": "6800",
                     "name": "Miscellaneous Expense",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 },
                 {
                     "code": "6900",
                     "name": "Income Tax Expense",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "scope_mode": "branch_split"
                 }
             ]
         }

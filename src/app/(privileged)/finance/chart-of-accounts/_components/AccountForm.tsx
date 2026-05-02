@@ -171,6 +171,37 @@ export function AccountForm({
      *  never auto-suggest — the existing code is authoritative. */
     const [codeIsAuto, setCodeIsAuto] = useState<boolean>(!isEdit && !initialData?.code)
 
+    /** Map an account's `scope_mode` to the form's scopeOverride value.
+     *  The form dropdown uses upper-case ('TENANT_WIDE'); the live record
+     *  uses lower-case ('tenant_wide'). */
+    const scopeModeToOverride = (mode: string | undefined): string => {
+        switch ((mode || '').toLowerCase()) {
+            case 'tenant_wide': return 'TENANT_WIDE'
+            case 'branch_split': return 'BRANCH_SPLIT'
+            case 'branch_located': return 'BRANCH_LOCATED'
+            default: return 'AUTO'
+        }
+    }
+    /** Initial scope override:
+     *   - Edit: use the account's existing system_role mapping
+     *   - Create with a parent: inherit the parent's scope_mode by default
+     *   - Create at root: AUTO (let backend derive from type/role)
+     */
+    const initialScopeOverride: string = (() => {
+        if (initialData?.id) {
+            const role = String(initialData?.system_role || '').toUpperCase()
+            if (['INVENTORY', 'INVENTORY_ASSET', 'WIP'].includes(role)) return 'BRANCH_LOCATED'
+            if (['REVENUE', 'REVENUE_CONTROL', 'COGS', 'COGS_CONTROL', 'EXPENSE', 'DELIVERY_FEES', 'DEPRECIATION_EXP', 'BAD_DEBT', 'GRNI'].includes(role)) return 'BRANCH_SPLIT'
+            if (['AR_CONTROL', 'AP_CONTROL', 'CASH_ACCOUNT', 'BANK_ACCOUNT', 'RECEIVABLE', 'PAYABLE', 'CAPITAL', 'RETAINED_EARNINGS', 'LOAN', 'TAX_PAYABLE', 'TAX_RECEIVABLE'].includes(role)) return 'TENANT_WIDE'
+            return 'AUTO'
+        }
+        // Creating: inherit the parent's scope when one is selected.
+        const parent = accounts.find(a => String(a.id) === parentId)
+        return scopeModeToOverride(parent?.scope_mode)
+    })()
+    const [scopeOverride, setScopeOverride] = useState<string>(initialScopeOverride)
+    const [scopeIsAuto, setScopeIsAuto] = useState<boolean>(!isEdit)
+
     /** Eligible parents — silent-bug guards:
      *  • Active only (inactive accounts can't accept new children)
      *  • Same type (an ASSET can't sit under an EXPENSE tree)
@@ -260,6 +291,13 @@ export function AccountForm({
                     const next = e.target.value
                     setParentId(next)
                     if (codeIsAuto) setCode(suggestNextCode(next))
+                    // Inherit the parent's branch scope by default. Only when
+                    // the user hasn't manually overridden the dropdown — once
+                    // they click a value, we stop following the parent.
+                    if (scopeIsAuto) {
+                        const parent = accounts.find(a => String(a.id) === next)
+                        setScopeOverride(scopeModeToOverride(parent?.scope_mode))
+                    }
                 }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
                     {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
@@ -401,13 +439,8 @@ export function AccountForm({
                 </label>
                 <select
                     name="scopeOverride"
-                    defaultValue={(() => {
-                        const role = String(initialData?.system_role || '').toUpperCase()
-                        if (['INVENTORY','INVENTORY_ASSET','WIP'].includes(role)) return 'BRANCH_LOCATED'
-                        if (['REVENUE','REVENUE_CONTROL','COGS','COGS_CONTROL','EXPENSE','DELIVERY_FEES','DEPRECIATION_EXP','BAD_DEBT','GRNI'].includes(role)) return 'BRANCH_SPLIT'
-                        if (['AR_CONTROL','AP_CONTROL','CASH_ACCOUNT','BANK_ACCOUNT','RECEIVABLE','PAYABLE','CAPITAL','RETAINED_EARNINGS','LOAN','TAX_PAYABLE','TAX_RECEIVABLE'].includes(role)) return 'TENANT_WIDE'
-                        return 'AUTO'
-                    })()}
+                    value={scopeOverride}
+                    onChange={e => { setScopeOverride(e.target.value); setScopeIsAuto(false) }}
                     className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
                     style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 >

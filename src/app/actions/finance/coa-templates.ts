@@ -230,7 +230,9 @@ export async function importChartOfAccountsTemplate(
 
 export async function getAllTemplates(): Promise<Record<string, any>> {
     const { erpFetch } = await import('@/lib/erp-api')
-    const data = await erpFetch('coa/templates/')
+    // no-store: re-seeding the templates (e.g. after adding scope_mode
+    // annotations) needs to surface immediately on the next page load.
+    const data = await erpFetch('coa/templates/', { cache: 'no-store' })
     const result: Record<string, any> = {}
     for (const template of data) {
         result[template.key] = template.accounts

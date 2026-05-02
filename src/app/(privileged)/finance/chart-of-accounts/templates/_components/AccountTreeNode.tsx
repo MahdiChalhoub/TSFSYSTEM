@@ -20,6 +20,17 @@ export function AccountTreeNode({ item, level, accent, expandAll }: { item: any;
     const reportTag = ['ASSET', 'LIABILITY', 'EQUITY'].includes(item.type) ? 'BS' : 'P&L'
     const rc = reportTag === 'BS' ? 'var(--app-info, #3b82f6)' : 'var(--app-warning, #f59e0b)'
 
+    // Branch-scope chip — surfaces the seeded scope_mode so the user can
+    // see at a glance how each account behaves under a Branch filter.
+    const scopeChip = (() => {
+        switch (item.scope_mode) {
+            case 'tenant_wide': return { icon: '🌐', label: 'TENANT', color: 'var(--app-info, #3b82f6)', title: 'Tenant-wide — one shared balance across branches' }
+            case 'branch_split': return { icon: '🏢', label: 'SPLIT', color: 'var(--app-warning, #f59e0b)', title: 'Branch-split — balance slices per branch' }
+            case 'branch_located': return { icon: '📦', label: 'LOCATED', color: 'var(--app-success, #22c55e)', title: 'Branch-located — physically scoped to one site' }
+            default: return null
+        }
+    })()
+
     return (
         <div>
             <div onClick={() => hasChildren && setOpen(!open)}
@@ -48,6 +59,18 @@ export function AccountTreeNode({ item, level, accent, expandAll }: { item: any;
                         style={{ background: `color-mix(in srgb, ${tc} 10%, transparent)`, color: tc,
                             border: `1px solid color-mix(in srgb, ${tc} 20%, transparent)` }}>
                         {item.type}
+                    </span>
+                )}
+                {scopeChip && (
+                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
+                        title={scopeChip.title}
+                        style={{
+                            background: `color-mix(in srgb, ${scopeChip.color} 10%, transparent)`,
+                            color: scopeChip.color,
+                            border: `1px solid color-mix(in srgb, ${scopeChip.color} 25%, transparent)`,
+                        }}>
+                        <span>{scopeChip.icon}</span>
+                        <span>{scopeChip.label}</span>
                     </span>
                 )}
                 {item.type && (

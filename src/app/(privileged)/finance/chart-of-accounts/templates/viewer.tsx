@@ -224,6 +224,19 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                 {/* Report Mapping Badge */}
                 {item.type && (
                     <div className="flex items-center gap-1.5 mr-2">
+                        {/* Branch-scope chip — surfaces the seeded scope_mode
+                            on every account so the template is self-documenting
+                            here, not just in the JSON. */}
+                        {item.scope_mode === 'tenant_wide' && (
+                            <span className="text-tp-xxs font-bold bg-app-info-bg text-app-info px-1 rounded" title="Tenant-wide — one shared balance across branches">🌐 TENANT</span>
+                        )}
+                        {item.scope_mode === 'branch_split' && (
+                            <span className="text-tp-xxs font-bold bg-app-warning-bg text-app-warning px-1 rounded" title="Branch-split — balance slices per branch">🏢 SPLIT</span>
+                        )}
+                        {item.scope_mode === 'branch_located' && (
+                            <span className="text-tp-xxs font-bold bg-app-success-bg text-app-success px-1 rounded" title="Branch-located — physically scoped to one site">📦 LOCATED</span>
+                        )}
+
                         {['ASSET', 'LIABILITY', 'EQUITY'].includes(item.type) ? (
                             <span className="text-tp-xxs font-bold bg-app-info-bg text-app-info px-1 rounded" title="Goes to Balance Sheet">[BS]</span>
                         ) : (
