@@ -50,38 +50,7 @@ export function AccountForm({
     const parentCode = accounts.find(a => String(a.id) === parentId)?.code as string | undefined
     const codePlaceholder = parentCode ? `${parentCode}…` : '1010'
 
-    /** Suggest the next sibling code for a given parent.
-     *  - No parent → blank (free-form root code).
-     *  - First child → `<parent_code>1` (e.g. parent 41 → 411).
-     *  - Otherwise → max numeric tail of existing siblings + 1, preserving
-     *    the digit width siblings used (so 4101, 4102 → 4103 not 41021).
-     *  Each parent's "philosophy" wins because we extend its actual code
-     *  and only increment within siblings — not a global rule. */
-    const suggestNextCode = (pid: string): string => {
-        if (!pid) return ''
-        const parent = accounts.find(a => String(a.id) === pid)
-        if (!parent?.code) return ''
-        const prefix = String(parent.code)
-        const tails = accounts
-            .filter(a => String(a.parentId) === pid)
-            .map(a => String(a.code || ''))
-            .filter(c => c.startsWith(prefix) && c.length > prefix.length)
-            .map(c => c.slice(prefix.length))
-        if (tails.length === 0) return `${prefix}1`
-        const numeric = tails.map(t => parseInt(t, 10)).filter(n => !isNaN(n))
-        if (numeric.length === 0) return `${prefix}${tails.length + 1}`
-        const next = Math.max(...numeric) + 1
-        const width = tails[0].length
-        return `${prefix}${String(next).padStart(width, '0')}`
-    }
-    const isEdit = Boolean(initialData?.id)
-    const [code, setCode] = useState<string>(
-        initialData?.code || (preselectedParentId ? suggestNextCode(String(preselectedParentId)) : '')
-    )
-    /** While `codeIsAuto` is true the code field tracks parent changes;
-     *  the moment the user types their own code we lock it. On edit we
-     *  never auto-suggest — the existing code is authoritative. */
-    const [codeIsAuto, setCodeIsAuto] = useState<boolean>(!isEdit && !initialData?.code)
+    const [code, setCode] = useState<string>(initialData?.code || '')
 
     /** Eligible parents — silent-bug guards:
      *  • Active only (inactive accounts can't accept new children)
@@ -134,7 +103,7 @@ export function AccountForm({
                     placeholder={codePlaceholder}
                     required
                     value={code}
-                    onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
+                    onChange={e => setCode(e.target.value)}
                     className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all font-mono font-bold"
                     style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
@@ -168,11 +137,7 @@ export function AccountForm({
             </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" value={parentId} onChange={e => {
-                    const next = e.target.value
-                    setParentId(next)
-                    if (codeIsAuto) setCode(suggestNextCode(next))
-                }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="parentId" value={parentId} onChange={e => setParentId(e.target.value)} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
                     {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                 </select>

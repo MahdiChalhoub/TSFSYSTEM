@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import {
     Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag,
     FolderTree, Tag
@@ -14,7 +14,7 @@ import type { Brand, BrandPanelTab, ProductRow } from './types'
  *  Lazy-loads products on first expand, groups by country,
  *  renders inline sub-rows. Replaces flat BrandRow.
  * ═══════════════════════════════════════════════════════════ */
-function BrandRowImpl({
+export function BrandRow({
     brand, onEdit, onDelete, onSelect, compact, selectable, isChecked, onToggleCheck,
     searchQuery, forceExpanded
 }: {
@@ -645,24 +645,6 @@ function BrandRowImpl({
  *  Helper rows — one place for visual structure of the tree
  *  so the three facets stay consistent.
  * ═══════════════════════════════════════════════════════════ */
-
-/**
- * Memoized export. Without memo, clicking ANY brand re-renders every
- * other brand in the list — and each row owns expensive state (lazy
- * fetch, expanded facets) that doesn't need to recompute when its
- * neighbors change. The custom comparator only re-renders when the
- * brand identity, selection state, or compact mode changes.
- */
-export const BrandRow = memo(BrandRowImpl, (prev, next) => {
-    return (
-        prev.brand === next.brand
-        && prev.compact === next.compact
-        && prev.isChecked === next.isChecked
-        && prev.searchQuery === next.searchQuery
-        && prev.forceExpanded === next.forceExpanded
-        && prev.selectable === next.selectable
-    )
-})
 
 /**
  * Facet group header — visual match for the LinkedTree group headers on
