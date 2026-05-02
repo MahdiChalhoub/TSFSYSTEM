@@ -294,8 +294,26 @@ export default function PurchaseForm({
     const canSubmit = !isPending && lines.length > 0 && supplierId !== '' && selectedSiteId !== '' && warehouseId !== ''
 
     useEffect(() => {
-        if (state.message && state.errors && Object.keys(state.errors).length === 0) toast.success(state.message)
-        else if (state.message) toast.error(state.message)
+        if (state.message && state.errors && Object.keys(state.errors).length === 0) {
+            toast.success(state.message)
+        } else if (state.message) {
+            // Surface which fields failed so the user knows what to fix
+            // instead of staring at a generic "Some fields are missing or
+            // invalid." Map a few common keys to human labels.
+            const labelMap: Record<string, string> = {
+                supplierId: 'Supplier',
+                warehouseId: 'Warehouse',
+                siteId: 'Site',
+                scope: 'Scope (Official/Internal)',
+                lines: 'Line items',
+            }
+            const fields = state.errors ? Object.keys(state.errors) : []
+            const human = fields.map(f => labelMap[f] || f).join(', ')
+            toast.error(state.message, {
+                description: human ? `Missing or invalid: ${human}` : undefined,
+                duration: 6000,
+            })
+        }
     }, [state])
 
     useEffect(() => {
