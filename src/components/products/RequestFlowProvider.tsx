@@ -225,10 +225,23 @@ function CartTray({
                 maxHeight: expanded ? 'min(440px, calc(100vh - 5rem))' : 'auto',
             }}
         >
-            <button
-                type="button"
+            {/*
+              * The header is a clickable div (role="button"), not a <button>,
+              * because the collapsed view contains a nested Submit <button>.
+              * Nesting <button> inside <button> is invalid HTML and triggers a
+              * hydration error in React 19.
+              */}
+            <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setExpanded(v => !v)}
-                className="flex items-center gap-2 px-3 py-2.5 hover:bg-app-border/20 transition-colors rounded-2xl"
+                onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setExpanded(v => !v)
+                    }
+                }}
+                className="flex items-center gap-2 px-3 py-2.5 hover:bg-app-border/20 transition-colors rounded-2xl cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-app-primary/50"
                 style={{ borderBottom: expanded ? '1px solid var(--app-border)' : 'none' }}
             >
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-app-primary"
@@ -251,7 +264,7 @@ function CartTray({
                         {pending ? <Loader2 size={11} className="animate-spin inline" /> : `Submit ${cart.length}`}
                     </button>
                 )}
-            </button>
+            </div>
             {expanded && (
                 <>
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
