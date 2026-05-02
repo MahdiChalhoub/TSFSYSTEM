@@ -329,29 +329,41 @@ export function BrandRow({
                         </div>
                     </div>
 
-                    {/* Stat columns */}
-                    {!compact && (
-                        <>
-                            <div className="hidden sm:flex w-12 flex-shrink-0 justify-center">
-                                <span className="text-tp-xs font-semibold tabular-nums"
-                                    style={{ color: cats > 0 ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
-                                    {cats || '–'}
-                                </span>
+                    {/* Stat chips — Products / Categories / Countries / Attributes.
+                        Each chip uses the matching facet color so it lines up
+                        visually with the tree groups below. Counts come from
+                        the brand record where possible (product_count, M2M
+                        sizes); once products are fetched we prefer the
+                        derived counts (real categories the brand operates
+                        in, real countries shipped to, distinct attribute
+                        values used). Chips are hidden when the list is
+                        in compact / split-panel mode. */}
+                    {!compact && (() => {
+                        const productsCount = totalProducts
+                        const categoriesCount = products !== null
+                            ? byCategory.filter(c => c.id !== null).length
+                            : cats
+                        const countriesCount = products !== null
+                            ? byCountry.filter(c => c.id !== null).length
+                            : countries
+                        const attributesCount = products !== null
+                            ? byAttribute.filter(a => a.key !== '__none__').length
+                            : null
+                        return (
+                            <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+                                <StatChip icon={<Package size={11} />} label="products"
+                                    value={productsCount} color="var(--app-success)" />
+                                <StatChip icon={<FolderTree size={11} />} label="categories"
+                                    value={categoriesCount} color="var(--app-info)" />
+                                <StatChip icon={<Globe size={11} />} label="countries"
+                                    value={countriesCount} color="var(--app-warning)" />
+                                <StatChip icon={<Tag size={11} />} label="attrs"
+                                    value={attributesCount} color="var(--app-success)"
+                                    placeholder={attributesCount === null ? '?' : undefined}
+                                    placeholderTitle="Click the row to load attributes" />
                             </div>
-                            <div className="hidden sm:flex w-[72px] flex-shrink-0 justify-center">
-                                <span className="text-tp-xs font-semibold tabular-nums"
-                                    style={{ color: countries > 0 ? 'var(--app-warning)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
-                                    {countries || '–'}
-                                </span>
-                            </div>
-                            <div className="hidden sm:flex w-14 flex-shrink-0 justify-center">
-                                <span className="text-tp-xs font-semibold tabular-nums"
-                                    style={{ color: totalProducts > 0 ? 'var(--app-success)' : 'color-mix(in srgb, var(--app-muted-foreground) 35%, transparent)' }}>
-                                    {totalProducts || '–'}
-                                </span>
-                            </div>
-                        </>
-                    )}
+                        )
+                    })()}
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -649,6 +661,41 @@ export function BrandRow({
  *  Helper rows — one place for visual structure of the tree
  *  so the three facets stay consistent.
  * ═══════════════════════════════════════════════════════════ */
+
+/**
+ * Stat chip used in the brand row card. Colored pill with icon + count
+ * + label. Renders a placeholder ("?") when value is null — i.e. when
+ * the count is only knowable after lazy fetch (attributes).
+ */
+function StatChip({
+    icon, label, value, color, placeholder, placeholderTitle
+}: {
+    icon: React.ReactNode
+    label: string
+    value: number | null
+    color: string
+    placeholder?: string
+    placeholderTitle?: string
+}) {
+    const display = value === null ? (placeholder ?? '?') : value
+    const isEmpty = value === 0
+    return (
+        <span
+            title={placeholderTitle}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-tp-xxs font-bold tabular-nums"
+            style={{
+                background: isEmpty
+                    ? 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)'
+                    : `color-mix(in srgb, ${color} 10%, transparent)`,
+                color: isEmpty ? 'var(--app-text-faint)' : color,
+                border: `1px solid color-mix(in srgb, ${isEmpty ? 'var(--app-muted-foreground)' : color} 18%, transparent)`,
+            }}>
+            {icon}
+            <span className="font-mono">{display}</span>
+            <span className="font-medium opacity-75 hidden lg:inline">{label}</span>
+        </span>
+    )
+}
 
 /**
  * Facet group header — visual match for the LinkedTree group headers on
