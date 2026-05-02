@@ -288,250 +288,202 @@ export function AccountForm({
         })
     })()
     return (
-        <form action={onSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
-            <div className="col-span-full mb-1 flex items-center justify-between">
-                <h3 className="text-tp-md font-bold uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
+        <form action={onSubmit} className="flex flex-col gap-3">
+            {/* Title */}
+            <div className="flex items-center justify-between">
+                <h3 className="text-tp-lg font-bold tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                     {title || (preselectedParentId ? t('finance.coa.form_add_sub') : t('finance.coa.form_add_root'))}
                 </h3>
             </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_code')}</label>
-                <input
-                    name="code"
-                    placeholder={codePlaceholder}
-                    required
-                    value={code}
-                    onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
-                    className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all font-mono font-bold"
-                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                />
-            </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_name')}</label>
-                <input
-                    name="name"
-                    placeholder={t('finance.coa.form_name_placeholder')}
-                    required
-                    defaultValue={initialData?.name}
-                    className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all"
-                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                />
-            </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_type')}</label>
-                <select name="type" value={type} onChange={e => { setType(e.target.value); setParentId('') }} className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
-                    {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-            </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_subtype')}</label>
-                <select name="subType" defaultValue={initialData?.subType || ''} className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
-                    <option value="">{t('finance.coa.form_subtype_none')}</option>
-                    <option value="CASH">{t('finance.coa.form_subtype_cash')}</option>
-                    <option value="BANK">{t('finance.coa.form_subtype_bank')}</option>
-                    <option value="RECEIVABLE">{t('finance.coa.form_subtype_receivable')}</option>
-                    <option value="PAYABLE">{t('finance.coa.form_subtype_payable')}</option>
-                </select>
-            </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" value={parentId} onChange={e => {
-                    const next = e.target.value
-                    setParentId(next)
-                    if (codeIsAuto) setCode(suggestNextCode(next))
-                    // Inherit the parent's branch scope by default. Only when
-                    // the user hasn't manually overridden the dropdown — once
-                    // they click a value, we stop following the parent.
-                    if (scopeIsAuto) {
-                        const parent = accounts.find(a => String(a.id) === next)
-                        setScopeOverride(scopeModeToOverride(parent?.scope_mode))
-                    }
-                }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
-                    <option value="">{t('finance.coa.form_parent_root')}</option>
-                    {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
-                </select>
-            </div>
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_syscohada')}</label>
-                <input name="syscohadaCode" defaultValue={initialData?.syscohadaCode || ''} placeholder={t('finance.coa.form_syscohada_placeholder')} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }} />
-            </div>
-            {/* Internal-only flag is meaningless in OFFICIAL view (you can't see what you mark).
-                Hide it there; preserve the value with a hidden input so editing an existing
-                internal account from OFFICIAL view doesn't silently flip it to public. */}
+
+            {/* ── Identity ── */}
+            <FormSection icon={<Hash size={14} />} title="Identity">
+                <FormField label={t('finance.coa.form_code')}>
+                    <input
+                        name="code"
+                        placeholder={codePlaceholder}
+                        required
+                        value={code}
+                        onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
+                        className={`${inputClass} font-mono font-bold`}
+                        style={inputStyle}
+                    />
+                </FormField>
+                <FormField label={t('finance.coa.form_name')}>
+                    <input
+                        name="name"
+                        placeholder={t('finance.coa.form_name_placeholder')}
+                        required
+                        defaultValue={initialData?.name}
+                        className={inputClass}
+                        style={inputStyle}
+                    />
+                </FormField>
+                <FormField label={t('finance.coa.form_type')}>
+                    <select name="type" value={type} onChange={e => { setType(e.target.value); setParentId('') }} className={inputClass} style={inputStyle}>
+                        {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                </FormField>
+                <FormField label={t('finance.coa.form_subtype')}>
+                    <select name="subType" defaultValue={initialData?.subType || ''} className={inputClass} style={inputStyle}>
+                        <option value="">{t('finance.coa.form_subtype_none')}</option>
+                        <option value="CASH">{t('finance.coa.form_subtype_cash')}</option>
+                        <option value="BANK">{t('finance.coa.form_subtype_bank')}</option>
+                        <option value="RECEIVABLE">{t('finance.coa.form_subtype_receivable')}</option>
+                        <option value="PAYABLE">{t('finance.coa.form_subtype_payable')}</option>
+                    </select>
+                </FormField>
+            </FormSection>
+
+            {/* ── Hierarchy ── */}
+            <FormSection icon={<Layers size={14} />} title="Hierarchy">
+                <FormField label={t('finance.coa.form_parent')} fullSpan>
+                    <select name="parentId" value={parentId} onChange={e => {
+                        const next = e.target.value
+                        setParentId(next)
+                        if (codeIsAuto) setCode(suggestNextCode(next))
+                        if (scopeIsAuto) {
+                            const parent = accounts.find(a => String(a.id) === next)
+                            setScopeOverride(scopeModeToOverride(parent?.scope_mode))
+                        }
+                    }} className={`${inputClass} font-mono`} style={inputStyle}>
+                        <option value="">{t('finance.coa.form_parent_root')}</option>
+                        {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+                    </select>
+                </FormField>
+                <FormField label={t('finance.coa.form_syscohada')}>
+                    <input name="syscohadaCode" defaultValue={initialData?.syscohadaCode || ''} placeholder={t('finance.coa.form_syscohada_placeholder')} className={`${inputClass} font-mono`} style={inputStyle} />
+                </FormField>
+            </FormSection>
+
+            {/* Internal-only flag — hidden in OFFICIAL view */}
             {isOfficial ? (
                 <input type="hidden" name="isInternal" value={initialData?.isInternal ? 'on' : ''} />
             ) : (
-                <div className="col-span-full">
-                    <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
-                        <input
-                            type="checkbox"
-                            name="isInternal"
-                            defaultChecked={!!initialData?.isInternal}
-                            className="w-4 h-4 rounded accent-app-warning"
-                        />
-                        <Lock size={13} style={{ color: 'var(--app-warning, #F59E0B)' }} />
-                        <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.coa.form_internal_only')}</span>
-                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
-                            {t('finance.coa.form_internal_hint')}
-                        </span>
-                    </label>
-                </div>
-            )}
-            {/* ── Multi-currency / Revaluation ─────────────────────────────
-                  Drives FX revaluation behaviour. Most operators leave these
-                  alone; only set them on accounts that actually transact in
-                  a foreign currency. */}
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}
-                    title="Leave on Default (home) if this account uses your tenant's home currency. Pick another currency only when the account holds balances in that currency — then the Monetary class field below appears. The list comes from your enabled currencies in Regional Settings → FX.">
-                    {t('finance.coa.form_currency')}
+                <label className="flex items-center gap-2 cursor-pointer select-none p-3 rounded-xl border"
+                    style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                    <input type="checkbox" name="isInternal" defaultChecked={!!initialData?.isInternal} className="w-4 h-4 rounded accent-app-warning" />
+                    <Lock size={13} style={{ color: 'var(--app-warning, #F59E0B)' }} />
+                    <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.coa.form_internal_only')}</span>
+                    <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                        {t('finance.coa.form_internal_hint')}
+                    </span>
                 </label>
-                {orgCurrencies.length > 0 ? (
-                    // Dropdown sourced from /settings/regional?tab=fx (org-currencies).
-                    // Default option (empty value) means "use the tenant's home /
-                    // default currency" — no explicit currency stored on the account.
-                    <select
-                        name="currency"
-                        defaultValue={initialData?.currency || ''}
-                        onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
-                        className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
-                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
-                        {/* The "Default" option (empty value) IS the tenant's
-                            default currency — selecting it stores no explicit
-                            currency and the account inherits the home currency.
-                            We skip the default in the foreign-currency list
-                            below so it doesn't appear twice. */}
-                        <option value="">
+            )}
+            {/* ── Currency & FX ── */}
+            <FormSection icon={<Coins size={14} />} title="Currency">
+                <FormField
+                    label={t('finance.coa.form_currency')}
+                    hint="Leave on Default (home) if this account uses your tenant's home currency. Pick another to enable FX revaluation."
+                    fullSpan={!hasForeignCurrency}>
+                    {orgCurrencies.length > 0 ? (
+                        <select
+                            name="currency"
+                            defaultValue={initialData?.currency || ''}
+                            onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
+                            className={inputClass}
+                            style={inputStyle}>
+                            <option value="">
+                                {(() => {
+                                    const def = orgCurrencies.find(c => c.is_default)
+                                    return def
+                                        ? `Default — ${def.currency_code || 'home'}${def.currency_symbol ? ` (${def.currency_symbol})` : ''}`
+                                        : 'Default (home currency)'
+                                })()}
+                            </option>
                             {(() => {
-                                const def = orgCurrencies.find(c => c.is_default)
-                                return def
-                                    ? `Default — ${def.currency_code || 'home'}${def.currency_symbol ? ` (${def.currency_symbol})` : ''}`
-                                    : 'Default (home currency)'
+                                const foreign = orgCurrencies.filter(c => c.is_enabled !== false && !c.is_default)
+                                if (foreign.length === 0) return null
+                                return (
+                                    <optgroup label="Foreign currencies">
+                                        {foreign.map(c => (
+                                            <option key={c.id} value={c.currency_code || ''}>
+                                                {c.currency_code}
+                                                {c.currency_symbol ? ` (${c.currency_symbol})` : ''}
+                                                {c.currency_name ? ` — ${c.currency_name}` : ''}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )
                             })()}
-                        </option>
-                        {(() => {
-                            const foreign = orgCurrencies
-                                .filter(c => c.is_enabled !== false && !c.is_default)
-                            if (foreign.length === 0) return null
-                            return (
-                                <optgroup label="Foreign currencies">
-                                    {foreign.map(c => (
-                                        <option key={c.id} value={c.currency_code || ''}>
-                                            {c.currency_code}
-                                            {c.currency_symbol ? ` (${c.currency_symbol})` : ''}
-                                            {c.currency_name ? ` — ${c.currency_name}` : ''}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )
-                        })()}
-                    </select>
-                ) : (
-                    // Fallback for callers that didn't load org-currencies — same
-                    // free-text behavior as before so nothing breaks.
-                    <input
-                        name="currency"
-                        placeholder={t('finance.coa.form_currency_placeholder')}
-                        defaultValue={initialData?.currency || ''}
-                        onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
-                        className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none uppercase"
-                        maxLength={10}
-                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                    />
-                )}
-            </div>
-            {/* Monetary class — IAS 21 / ASC 830 — only relevant when this
-                account holds a NON-home currency. We hide it on home-currency
-                accounts (where it would have zero effect) to remove a source
-                of accountant confusion. The hidden input still ships the
-                default 'MONETARY' so the backend stays happy. */}
-            {hasForeignCurrency ? (
-                <div>
-                    <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: 'var(--app-muted-foreground)' }}
-                        title="IAS 21 / ASC 830 — controls the FX rate used at period-end revaluation:&#10;• Monetary: closing rate (Cash/AR/AP/Loans)&#10;• Non-Monetary: historical rate, no revaluation (Inventory/Fixed Assets/Capital)&#10;• Income/Expense: average rate (Sales/Costs)">
-                        {t('finance.coa.form_monetary_class')}
-                        <Info size={11} className="opacity-60" />
-                    </label>
-                    <select
-                        name="monetaryClassification"
-                        defaultValue={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'}
-                        className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
-                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                    >
-                        <option value="MONETARY">{t('finance.coa.form_monetary')}</option>
-                        <option value="NON_MONETARY">{t('finance.coa.form_non_monetary')}</option>
-                        <option value="INCOME_EXPENSE">{t('finance.coa.form_income_expense')}</option>
-                    </select>
-                </div>
-            ) : (
-                // Hidden submit so we don't break the backend's required field.
-                // Defaults to MONETARY, which is the standard pick anyway.
-                <input type="hidden" name="monetaryClassification"
-                    value={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'} />
-            )}
-
-            {/* ── Branch scope ─────────────────────────────────────────────
-                Auto picks the right behavior from type/system_role/code (the
-                derivation in ChartOfAccount.scope_mode). For accountants who
-                want to override the auto-classification, set explicitly:
-                  • Tenant-wide  — never filtered by branch (AR/AP/Bank/Equity)
-                  • Branch-split — filtered to selected branch (Revenue/Expense)
-                  • Branch-located — physically scoped (Inventory/WIP)
-                Selecting a non-Auto value sets a representative `system_role`
-                that the derivation already recognizes — no schema change. */}
-            <div>
-                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block"
-                    style={{ color: 'var(--app-muted-foreground)' }}
-                    title="Controls how this account's balance reacts to a Branch filter. Auto picks the right answer based on type and code; override only if the auto-classification is wrong.">
-                    Branch Scope
-                </label>
-                <select
-                    name="scopeOverride"
-                    value={scopeOverride}
-                    onChange={e => { setScopeOverride(e.target.value); setScopeIsAuto(false) }}
-                    className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
-                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                >
-                    <option value="AUTO">Auto (recommended)</option>
-                    <option value="TENANT_WIDE">🌐 Tenant-wide</option>
-                    <option value="BRANCH_SPLIT">🏢 Branch-split</option>
-                    <option value="BRANCH_LOCATED">📦 Branch-located</option>
-                </select>
-            </div>
-            {/* "Revalue at period end" — same gating as Monetary class. The
-                FX-revaluation pipeline only touches accounts that hold a
-                non-home currency. Hide on home-currency accounts so the
-                form is shorter; preserve the stored value via hidden input. */}
-            {hasForeignCurrency ? (
-                <div className="col-span-full">
-                    <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                        </select>
+                    ) : (
                         <input
-                            type="checkbox"
-                            name="revaluationRequired"
-                            defaultChecked={!!(initialData?.revaluation_required ?? initialData?.revaluationRequired)}
-                            className="w-4 h-4 rounded accent-app-info"
+                            name="currency"
+                            placeholder={t('finance.coa.form_currency_placeholder')}
+                            defaultValue={initialData?.currency || ''}
+                            onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
+                            className={`${inputClass} font-mono uppercase`}
+                            maxLength={10}
+                            style={inputStyle}
                         />
+                    )}
+                </FormField>
+                {hasForeignCurrency ? (
+                    <FormField label={t('finance.coa.form_monetary_class')}
+                        hint="IAS 21 / ASC 830 — controls the FX rate used at period-end revaluation. Monetary = closing rate; Non-Monetary = historical; Income/Expense = average.">
+                        <select
+                            name="monetaryClassification"
+                            defaultValue={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'}
+                            className={inputClass}
+                            style={inputStyle}>
+                            <option value="MONETARY">{t('finance.coa.form_monetary')}</option>
+                            <option value="NON_MONETARY">{t('finance.coa.form_non_monetary')}</option>
+                            <option value="INCOME_EXPENSE">{t('finance.coa.form_income_expense')}</option>
+                        </select>
+                    </FormField>
+                ) : (
+                    <input type="hidden" name="monetaryClassification"
+                        value={initialData?.monetary_classification || initialData?.monetaryClassification || 'MONETARY'} />
+                )}
+                {hasForeignCurrency && (
+                    <label className="col-span-full flex items-center gap-2 cursor-pointer select-none p-3 rounded-xl border"
+                        style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)', background: 'var(--app-bg, #020617)' }}>
+                        <input type="checkbox" name="revaluationRequired" defaultChecked={!!(initialData?.revaluation_required ?? initialData?.revaluationRequired)} className="w-4 h-4 rounded accent-app-info" />
                         <span className="text-tp-sm font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.coa.form_revalue')}</span>
-                        <span className="text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
+                        <span className="text-tp-xs flex-1" style={{ color: 'var(--app-muted-foreground)' }}>
                             {t('finance.coa.form_revalue_hint')}
                         </span>
                     </label>
-                </div>
-            ) : (
-                <input type="hidden" name="revaluationRequired"
-                    value={(initialData?.revaluation_required ?? initialData?.revaluationRequired) ? 'on' : ''} />
-            )}
+                )}
+                {!hasForeignCurrency && (
+                    <input type="hidden" name="revaluationRequired"
+                        value={(initialData?.revaluation_required ?? initialData?.revaluationRequired) ? 'on' : ''} />
+                )}
+            </FormSection>
 
-            <div className="col-span-full flex gap-2 items-end justify-end">
+            {/* ── Branch scope ── */}
+            <FormSection icon={<Building2 size={14} />} title="Branch Behavior">
+                <FormField label="Branch Scope"
+                    hint="Controls how this account's balance reacts to a Branch filter. Auto picks the right answer based on type and code."
+                    fullSpan>
+                    <select
+                        name="scopeOverride"
+                        value={scopeOverride}
+                        onChange={e => { setScopeOverride(e.target.value); setScopeIsAuto(false) }}
+                        className={inputClass}
+                        style={inputStyle}>
+                        <option value="AUTO">Auto (recommended)</option>
+                        <option value="TENANT_WIDE">🌐 Tenant-wide</option>
+                        <option value="BRANCH_SPLIT">🏢 Branch-split</option>
+                        <option value="BRANCH_LOCATED">📦 Branch-located</option>
+                    </select>
+                </FormField>
+            </FormSection>
+
+            {/* ── Sticky action bar ── */}
+            <div className="sticky bottom-0 -mx-3 sm:mx-0 px-3 sm:px-0 pt-3 pb-1 flex gap-2 justify-end"
+                style={{ background: 'linear-gradient(to top, var(--app-bg) 70%, transparent)' }}>
                 <button
                     type="button"
                     onClick={onCancel}
                     disabled={isPending}
-                    className="px-4 py-2 rounded-xl text-tp-md font-bold transition-all disabled:opacity-50"
+                    className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-tp-md font-bold transition-all disabled:opacity-50 active:scale-95"
                     style={{
                         background: 'transparent',
                         color: 'var(--app-muted-foreground)',
                         border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                        minHeight: '44px',
                     }}
                 >
                     {t('common.cancel')}
@@ -539,8 +491,12 @@ export function AccountForm({
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="px-6 py-2 rounded-xl text-tp-md font-bold text-white transition-all disabled:opacity-50"
-                    style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                    className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-tp-md font-bold text-white transition-all disabled:opacity-50 active:scale-95"
+                    style={{
+                        background: 'var(--app-primary)',
+                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                        minHeight: '44px',
+                    }}
                 >
                     {isPending ? <Loader2 size={14} className="animate-spin mx-auto" /> : t('common.save')}
                 </button>

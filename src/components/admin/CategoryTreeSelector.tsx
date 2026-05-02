@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { ChevronRight, ChevronDown, Folder } from 'lucide-react';
+import { ChevronRight, FolderTree, Check } from 'lucide-react';
 
 type CategoryNode = {
     id: number;
@@ -18,124 +18,180 @@ type Props = {
     maxHeight?: string;
 };
 
-export function CategoryTreeSelector({ categories, selectedIds, onChange, maxHeight = 'max-h-60' }: Props) {
+/* ═══════════════════════════════════════════════════════════
+ *  CategoryTreeSelector — clean tree picker.
+ *  Visual language matches the /countries LinkedTree and the
+ *  brand row faceted tree: theme-color variables, subtle
+ *  branch connectors, no loud accent badges.
+ * ═══════════════════════════════════════════════════════════ */
+export function CategoryTreeSelector({
+    categories, selectedIds, onChange, maxHeight = 'max-h-60'
+}: Props) {
     const handleToggle = (categoryId: number) => {
         if (selectedIds.includes(categoryId)) {
-            // Remove from selection
             onChange(selectedIds.filter(id => id !== categoryId));
         } else {
-            // Add to selection
             onChange([...selectedIds, categoryId]);
         }
     };
 
     return (
-        <div className={`${maxHeight} overflow-y-auto p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-1`}>
+        <div className={`${maxHeight} overflow-y-auto rounded-xl`}
+            style={{
+                background: 'color-mix(in srgb, var(--app-background) 60%, var(--app-surface))',
+                border: '1px solid var(--app-border)',
+            }}>
             {categories.length === 0 ? (
-                <p className="text-sm text-gray-400 italic text-center py-4">No categories available</p>
+                <p className="text-tp-sm text-app-muted-foreground italic text-center py-8">
+                    No categories available
+                </p>
             ) : (
-                categories.map(category => (
-                    <CategoryTreeNode
-                        key={category.id}
-                        category={category}
-                        level={0}
-                        selectedIds={selectedIds}
-                        onToggle={handleToggle}
-                    />
-                ))
+                <div className="py-1">
+                    {categories.map((category, idx) => (
+                        <CategoryTreeNode
+                            key={category.id}
+                            category={category}
+                            level={0}
+                            selectedIds={selectedIds}
+                            onToggle={handleToggle}
+                            isLast={idx === categories.length - 1}
+                        />
+                    ))}
+                </div>
             )}
         </div>
     );
 }
 
 const CategoryTreeNode = memo(function CategoryTreeNode({
-    category,
-    level,
-    selectedIds,
-    onToggle
+    category, level, selectedIds, onToggle, isLast,
 }: {
     category: CategoryNode;
     level: number;
     selectedIds: number[];
     onToggle: (id: number) => void;
+    isLast: boolean;
 }) {
-    const [isExpanded, setIsExpanded] = useState(level === 0); // Expand root categories by default
+    const [isExpanded, setIsExpanded] = useState(level === 0);
 
-    const hasChildren = category.children && category.children.length > 0;
+    const hasChildren = !!category.children && category.children.length > 0;
     const isSelected = selectedIds.includes(category.id);
+    const indent = 12 + level * 20;
 
     return (
         <div>
-            {/* Category Row */}
+            {/* Row */}
             <div
-                className={`
-                    flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all
-                    hover:bg-white
-                    ${level > 0 ? `ml-${level * 4}` : ''}
-                    ${isSelected ? 'bg-purple-50 border border-purple-100' : 'bg-transparent'}
-                `}
-                style={{ marginLeft: `${level * 1.5}rem` }}
-            >
-                {/* Expand Toggle */}
+                onClick={() => onToggle(category.id)}
+                className="group flex items-center gap-2 cursor-pointer transition-colors duration-150 relative"
+                style={{
+                    paddingLeft: `${indent}px`,
+                    paddingRight: '12px',
+                    paddingTop: '6px',
+                    paddingBottom: '6px',
+                    background: isSelected
+                        ? 'color-mix(in srgb, var(--app-primary) 7%, transparent)'
+                        : 'transparent',
+                    borderLeft: isSelected
+                        ? '2px solid var(--app-primary)'
+                        : '2px solid transparent',
+                }}
+                onMouseEnter={e => {
+                    if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)';
+                }}
+                onMouseLeave={e => {
+                    if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent';
+                }}>
+
+                {/* Tree connector — vertical line for non-root + horizontal branch */}
+                {level > 0 && (
+                    <>
+                        <div className="absolute pointer-events-none"
+                            style={{
+                                left: `${12 + (level - 1) * 20 + 8}px`,
+                                top: 0,
+                                bottom: isLast ? '50%' : 0,
+                                width: '1px',
+                                background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                            }} />
+                        <div className="absolute pointer-events-none"
+                            style={{
+                                left: `${12 + (level - 1) * 20 + 8}px`,
+                                top: '50%',
+                                width: '10px',
+                                height: '1px',
+                                background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                            }} />
+                    </>
+                )}
+
+                {/* Chevron — invisible spacer when no children, keeps alignment */}
                 {hasChildren ? (
                     <button
                         type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsExpanded(!isExpanded);
+                        onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                        className="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-all"
+                        style={{
+                            color: 'var(--app-text-faint)',
+                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)',
                         }}
-                        className="p-0.5 hover:bg-gray-200 rounded text-gray-500 transition-colors flex-shrink-0"
-                    >
-                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        title={isExpanded ? 'Collapse' : 'Expand'}>
+                        <ChevronRight size={12} />
                     </button>
                 ) : (
-                    <div className="w-4" /> // Spacer for alignment
+                    <div className="w-4 flex-shrink-0" />
                 )}
 
-                {/* Checkbox */}
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onToggle(category.id)}
-                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 flex-shrink-0 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                />
+                {/* Custom checkbox — matches the row hover/select feel */}
+                <div
+                    onClick={(e) => { e.stopPropagation(); onToggle(category.id); }}
+                    className="w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{
+                        borderColor: isSelected ? 'var(--app-primary)' : 'var(--app-border)',
+                        background: isSelected ? 'var(--app-primary)' : 'transparent',
+                    }}
+                    aria-checked={isSelected}
+                    role="checkbox">
+                    {isSelected && <Check size={10} className="text-white" strokeWidth={3} />}
+                </div>
 
-                {/* Icon */}
-                <Folder
-                    size={16}
-                    className={`flex-shrink-0 ${level === 0 ? 'text-orange-500' : 'text-gray-400'}`}
-                />
+                {/* Folder icon — neutral, only colored when selected */}
+                <FolderTree
+                    size={13}
+                    className="flex-shrink-0"
+                    style={{
+                        color: isSelected ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                    }} />
 
-                {/* Category Name */}
-                <label
-                    onClick={() => onToggle(category.id)}
-                    className="text-sm text-gray-700 cursor-pointer flex-1 select-none flex items-center gap-2"
-                >
-                    <span>{category.name}</span>
-                    {category.code && (
-                        <span className="text-[10px] font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-500">
-                            {category.code}
-                        </span>
-                    )}
-                    {level === 0 && (
-                        <span className="text-[9px] font-bold uppercase bg-orange-50 text-orange-500 px-1.5 py-0.5 rounded-full">
-                            Main
-                        </span>
-                    )}
-                </label>
+                {/* Name */}
+                <span className="text-tp-sm font-semibold truncate flex-1"
+                    style={{ color: isSelected ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
+                    {category.name}
+                </span>
+
+                {/* Code chip */}
+                {category.code && (
+                    <span className="text-tp-xxs font-mono font-bold flex-shrink-0 px-1.5 py-0.5 rounded"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                            color: 'var(--app-text-faint)',
+                        }}>
+                        {category.code}
+                    </span>
+                )}
             </div>
 
             {/* Children */}
             {isExpanded && hasChildren && (
-                <div className="border-l border-gray-200 ml-2 pl-1">
-                    {category.children!.map(child => (
+                <div className="relative">
+                    {category.children!.map((child, idx) => (
                         <CategoryTreeNode
                             key={child.id}
                             category={child}
                             level={level + 1}
                             selectedIds={selectedIds}
                             onToggle={onToggle}
+                            isLast={idx === category.children!.length - 1}
                         />
                     ))}
                 </div>
