@@ -156,21 +156,32 @@ export default function PurchaseForm({
     const [columnsOpen, setColumnsOpen] = useState(false)
 
     // ── Column visibility profiles (backend-persisted, same as Products) ──
-    const [colProfiles, setColProfiles] = useState<POViewProfile[]>(() => loadProfiles())
-    const [activeColProfileId, setActiveColProfileId] = useState(() => loadActiveProfileId())
-    const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(() => {
-        const p = loadProfiles().find(pr => pr.id === loadActiveProfileId())
-        if (p) return new Set(Object.entries(p.columns).filter(([, v]) => v).map(([k]) => k as ColumnKey))
-        return new Set(DEFAULT_VISIBLE)
-    })
-    const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(() => {
-        const p = loadProfiles().find(pr => pr.id === loadActiveProfileId())
-        return p?.columnOrder || [...DEFAULT_ORDER]
-    })
+    // Initialize from DEFAULTS only — reading localStorage in the useState
+    // initializer creates a hydration mismatch because the server renders
+    // with defaults (window undefined → []) while the client reads the
+    // user's saved profile and computes a different column order. The
+    // resulting "Status vs Sales" column-position diff failed React's
+    // hydration check. Load real preferences in useEffect after mount.
+    const [colProfiles, setColProfiles] = useState<POViewProfile[]>([])
+    const [activeColProfileId, setActiveColProfileId] = useState<string>('default')
+    const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(() => new Set(DEFAULT_VISIBLE))
+    const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(() => [...DEFAULT_ORDER])
 
-    // Load from backend on mount
+    // Load preferences after mount (client-only): first localStorage, then
+    // backend-persisted profile.
     useEffect(() => {
-        loadProfileFromBackend(colProfiles, activeColProfileId).then(result => {
+        const profiles = loadProfiles()
+        const activeId = loadActiveProfileId()
+        setColProfiles(profiles)
+        setActiveColProfileId(activeId)
+        const local = profiles.find(pr => pr.id === activeId)
+        if (local) {
+            setVisibleColumns(new Set(
+                Object.entries(local.columns).filter(([, v]) => v).map(([k]) => k as ColumnKey)
+            ))
+            setColumnOrder(local.columnOrder || [...DEFAULT_ORDER])
+        }
+        loadProfileFromBackend(profiles, activeId).then(result => {
             if (!result) return
             setColProfiles(result.profiles)
             setVisibleColumns(new Set(
