@@ -1,0 +1,111 @@
+name: Migration Drift Check
+
+# Runs on every PR that touches migrations, plus on every push to main.
+# Catches drift before it reaches the merged tree — the v3.5.0 release
+# pipeline depends on this gate to prevent re-accumulating drift.
+#
+# Two layers:
+#   1. audit_drift.py — static AST scan for 9 drift categories (A-G + I + J)
+#   2. verify_clean_replay.sh — dynamic test: drop scratch DB, replay from zero
+#
+# See RELEASING.md for the daily workflow this gate enforces.
+
+on:
+  pull_request:
+    paths:
+      - 'erp_backend/**/migrations/**'
+      - 'erp_backend/**/models.py'
+      - 'erp_backend/**/models/**'
+      - 'erp_backend/scripts/release/**'
+      - '.github/workflows/migrations-drift-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'erp_backend/**/migrations/**'
+      - 'erp_backend/**/models.py'
+      - 'erp_backend/**/models/**'
+
+jobs:
+  static-drift-audit:
+    name: Static drift audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run audit_drift.py
+        working-directory: erp_backend
+        run: |
+          python3 scripts/release/audit_drift.py
+          # Exit 0 = no critical drift. Exit 1 fails the job.
+
+      - name: Run audit_drift unit tests
+        working-directory: erp_backend
+        run: python3 scripts/release/test_audit_drift.py
+
+      - name: Verify VERSIONS.md matches tree
+        run: python3 erp_backend/scripts/release/verify_versions_md.py
+
+  clean-replay:
+    name: Clean replay from empty DB
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tsfdb
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        working-directory: erp_backend
+        run: |
+          python3 -m pip install --upgrade pip
+          # Match what your project uses — adjust if the project uses poetry/pip-tools/etc.
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Install postgresql-client (for dropdb/createdb)
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Run verify_clean_replay.sh
+        working-directory: erp_backend
+        run: bash scripts/release/verify_clean_replay.sh
+
+      - name: Confirm makemigrations reports no drift
+        working-directory: erp_backend
+        env:
+          DB_NAME: tsfdb
+        run: |
+          # The replay script already checks this, but a separate step makes the
+          # failure mode explicit in CI logs.
+          PGPASSWORD=postgres createdb -h localhost -U postgres drift_check_$$
+          DB_NAME=drift_check_$$ python3 manage.py migrate --no-input
+          DB_NAME=drift_check_$$ python3 manage.py makemigrations --dry-run > /tmp/dry_run.log 2>&1
+          if ! grep -q "No changes detected" /tmp/dry_run.log; then
+            echo "❌ Models drifted from migration tree:"
+            cat /tmp/dry_run.log
+            exit 1
+          fi
+          PGPASSWORD=postgres dropdb -h localhost -U postgres drift_check_$$
