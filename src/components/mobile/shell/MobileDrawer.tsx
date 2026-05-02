@@ -10,10 +10,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon, Clock } from 'lucide-react'
+import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon, Clock, Eye, EyeOff, Building2, GitBranch as GitBranchIcon, Check, Globe } from 'lucide-react'
 import { motion, PanInfo } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
 import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
+import { useAdmin } from '@/context/AdminContext'
+import { useBranchScope } from '@/context/BranchContext'
+import { getAllWarehouseContextItems } from '@/app/actions/inventory/warehouses'
+import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { logoutAction } from '@/app/actions/auth'
 import { useBackHandler, useEscapeKey } from '@/hooks/use-back-handler'
@@ -41,6 +45,33 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
     const [q, setQ] = useState('')
     const [expanded, setExpanded] = useState<Set<string>>(new Set())
     const { isDark, toggleColorMode } = useAppTheme()
+    const { viewScope, setViewScope, canToggleScope } = useAdmin()
+    const { branchId, locationId, setSelection } = useBranchScope()
+
+    // Resolve the active workspace name from the slug — surfaced next to
+    // the avatar so the user always sees which org they're in.
+    const activeWorkspace = (organizations || []).find(o => o.slug === currentSlug)
+    const workspaceName = activeWorkspace?.name || activeWorkspace?.slug || ''
+
+    // Branch + location lookup. We fetch the warehouse context items so we
+    // can resolve `branchId`/`locationId` to friendly names AND drive the
+    // bottom-sheet picker without needing the desktop dropdown widget.
+    const [warehouses, setWarehouses] = useState<Record<string, any>[]>([])
+    useEffect(() => {
+        if (!open) return
+        getAllWarehouseContextItems().then(setWarehouses).catch(() => { /* offline / 401 */ })
+    }, [open])
+    const branches = warehouses.filter(w => w.location_type === 'BRANCH')
+    const locations = branchId
+        ? warehouses.filter(w => w.location_type !== 'BRANCH' && w.parent === branchId)
+        : warehouses.filter(w => w.location_type !== 'BRANCH')
+    const activeBranch = branches.find(b => b.id === branchId) ?? null
+    const activeLocation = locations.find(l => l.id === locationId) ?? null
+    const branchLabel = activeBranch
+        ? (activeLocation ? `${activeBranch.name} · ${activeLocation.name}` : activeBranch.name)
+        : 'All Branches'
+
+    const [branchSheetOpen, setBranchSheetOpen] = useState(false)
     const recentRoutes = useRecentRoutes()
     // Suppress hydration mismatch on the theme toggle — server renders a
     // default colorMode, client reads the real one from localStorage. The
@@ -283,8 +314,19 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                                 <div className="font-black text-app-foreground truncate" style={{ fontSize: 'var(--tp-lg)' }}>
                                     {user?.username || user?.email || 'User'}
                                 </div>
-                                <div className="font-bold text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-xs)' }}>
-                                    {user?.email || ''}
+                                {/* Workspace name surfaces the active tenant
+                                    next to the avatar so the user instantly
+                                    sees which org they're in. Falls back to
+                                    the email when no org is resolved. */}
+                                <div className="font-bold text-app-muted-foreground truncate flex items-center gap-1" style={{ fontSize: 'var(--tp-xs)' }}>
+                                    {workspaceName ? (
+                                        <>
+                                            <Building2 size={10} />
+                                            <span className="truncate">{workspaceName}</span>
+                                        </>
+                                    ) : (
+                                        user?.email || ''
+                                    )}
                                 </div>
                             </div>
                             <button onClick={onClose} aria-label="Close menu"
@@ -294,9 +336,121 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                             </button>
                         </div>
 
-                        {/* Organization switcher */}
+                        {/* Branch · Location row — full width, shows the
+                            current selection beside the icon. Tap opens a
+                            full-width MobileBottomSheet picker that always
+                            fits the screen (no clipped dropdown). The
+                            scope toggle sits beside it as a compact button. */}
+                        <div className="flex-shrink-0 px-3 pt-2 pb-1 flex items-center gap-1.5">
+                            <button
+                                onClick={() => setBranchSheetOpen(true)}
+                                className="flex-1 min-w-0 flex items-center gap-2 px-3 h-9 rounded-xl active:scale-[0.98] transition-transform"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-surface-2, var(--app-surface)) 50%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                }}>
+                                {activeBranch
+                                    ? <GitBranchIcon size={13} className="flex-shrink-0" style={{ color: 'var(--app-primary)' }} />
+                                    : <Globe size={13} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />}
+                                <span className="flex-1 min-w-0 text-left text-tp-xs font-bold truncate"
+                                    style={{ color: 'var(--app-foreground)' }}>
+                                    {branchLabel}
+                                </span>
+                                <ChevronDown size={12} className="flex-shrink-0 opacity-60" />
+                            </button>
+                            {canToggleScope && (
+                                <button
+                                    onClick={() => { setViewScope(viewScope === 'OFFICIAL' ? 'INTERNAL' : 'OFFICIAL'); onClose() }}
+                                    title={`Currently ${viewScope} — tap to switch`}
+                                    className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl active:scale-90 transition-transform"
+                                    style={{
+                                        background: viewScope === 'OFFICIAL'
+                                            ? 'color-mix(in srgb, var(--app-success, #10b981) 14%, transparent)'
+                                            : 'color-mix(in srgb, var(--app-primary) 14%, transparent)',
+                                        color: viewScope === 'OFFICIAL' ? 'var(--app-success, #10b981)' : 'var(--app-primary)',
+                                        border: `1px solid ${viewScope === 'OFFICIAL'
+                                            ? 'color-mix(in srgb, var(--app-success, #10b981) 30%, transparent)'
+                                            : 'color-mix(in srgb, var(--app-primary) 30%, transparent)'}`,
+                                    }}>
+                                    {viewScope === 'OFFICIAL' ? <Eye size={14} /> : <EyeOff size={14} />}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Branch picker — full-width bottom sheet so the
+                            list is never clipped by the drawer column. */}
+                        <MobileBottomSheet open={branchSheetOpen} onClose={() => setBranchSheetOpen(false)} initialSnap="expanded">
+                            <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-6">
+                                <div className="text-tp-xxs font-bold uppercase tracking-wider px-2 pt-1 pb-2"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>Branch</div>
+                                <button
+                                    onClick={() => { setSelection(null, null); setBranchSheetOpen(false) }}
+                                    className="w-full flex items-center gap-3 px-3 h-12 rounded-xl mb-1 active:scale-[0.98] transition-transform"
+                                    style={{
+                                        background: branchId === null ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                        color: 'var(--app-foreground)',
+                                    }}>
+                                    <Globe size={16} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />
+                                    <span className="flex-1 text-left font-bold">All Branches</span>
+                                    {branchId === null && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
+                                </button>
+                                {branches.map(b => (
+                                    <button
+                                        key={b.id}
+                                        onClick={() => setSelection(b.id, null)}
+                                        className="w-full flex items-center gap-3 px-3 h-12 rounded-xl mb-1 active:scale-[0.98] transition-transform"
+                                        style={{
+                                            background: branchId === b.id ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                            color: 'var(--app-foreground)',
+                                        }}>
+                                        <GitBranchIcon size={16} className="flex-shrink-0" style={{ color: branchId === b.id ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
+                                        <div className="flex-1 text-left min-w-0">
+                                            <div className="font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>{b.name}</div>
+                                            {b.code && <div className="font-bold opacity-60 truncate" style={{ fontSize: 'var(--tp-xxs)' }}>{b.code}</div>}
+                                        </div>
+                                        {branchId === b.id && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
+                                    </button>
+                                ))}
+                                {locations.length > 0 && (
+                                    <>
+                                        <div className="text-tp-xxs font-bold uppercase tracking-wider px-2 pt-3 pb-2"
+                                            style={{ color: 'var(--app-muted-foreground)' }}>Location</div>
+                                        <button
+                                            onClick={() => { setSelection(branchId, null); setBranchSheetOpen(false) }}
+                                            className="w-full flex items-center gap-3 px-3 h-12 rounded-xl mb-1 active:scale-[0.98] transition-transform"
+                                            style={{
+                                                background: locationId === null ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                            }}>
+                                            <Globe size={16} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />
+                                            <span className="flex-1 text-left font-bold">All in branch</span>
+                                            {locationId === null && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
+                                        </button>
+                                        {locations.map(l => (
+                                            <button
+                                                key={l.id}
+                                                onClick={() => { setSelection(branchId, l.id); setBranchSheetOpen(false) }}
+                                                className="w-full flex items-center gap-3 px-3 h-12 rounded-xl mb-1 active:scale-[0.98] transition-transform"
+                                                style={{
+                                                    background: locationId === l.id ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                                }}>
+                                                <Building2 size={16} className="flex-shrink-0" style={{ color: locationId === l.id ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
+                                                <div className="flex-1 text-left min-w-0">
+                                                    <div className="font-bold truncate" style={{ fontSize: 'var(--tp-md)' }}>{l.name}</div>
+                                                    {l.code && <div className="font-bold opacity-60 truncate" style={{ fontSize: 'var(--tp-xxs)' }}>{l.code}</div>}
+                                                </div>
+                                                {locationId === l.id && <Check size={16} style={{ color: 'var(--app-primary)' }} />}
+                                            </button>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                        </MobileBottomSheet>
+
+                        {/* Tenant switcher — kept as-is (its dropdown is
+                            unaffected by drawer width since it renders a
+                            wide panel anchored to the trigger). */}
                         {organizations && organizations.length > 0 && (
-                            <div className="flex-shrink-0 px-3 pt-2 pb-1">
+                            <div className="flex-shrink-0 px-3 pt-1 pb-1">
                                 <TenantSwitcher
                                     organizations={organizations}
                                     forcedSlug={currentSlug}

@@ -312,11 +312,14 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
                         initialSnap="expanded">
                         {/* Sheet body must scroll — the parent container in
                             MobileBottomSheet has overflow-hidden so without
-                            this wrapper the form is clipped. pb-8 is enough
-                            since the Save/Cancel bar is now part of the
-                            scrolling content (no sticky overlay). */}
-                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-2 pb-8"
-                            style={{ WebkitOverflowScrolling: 'touch' }}>
+                            this wrapper the form is clipped. Bottom padding
+                            clears the floating Activity widget + PWA back
+                            arrow + iOS safe-area home-indicator. */}
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pt-2"
+                            style={{
+                                WebkitOverflowScrolling: 'touch',
+                                paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))',
+                            }}>
                             <h2 className="text-tp-lg font-bold text-app-foreground mb-3">
                                 {addParentId ? 'Add sub-account' : 'New account'}
                             </h2>

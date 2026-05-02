@@ -323,6 +323,10 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                                              costPriceHT: item.cost_price_ht,
                                              sellingPriceTTC: item.selling_price,
                                              stockLevel: item.stock,
+                                             // Forward the canonical pipeline state so the line
+                                             // status column shows "Requested · Purchase" (etc.)
+                                             // instead of always "Available".
+                                             pipeline_status: (item as any).pipeline_status,
                                          })}>
                                         {/* Product */}
                                         <div className="w-[40%] px-2 flex items-center gap-2.5">
