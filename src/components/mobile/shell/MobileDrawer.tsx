@@ -13,7 +13,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { X, Search, LogOut, ChevronRight, ChevronDown, Sun, Moon, Clock, Eye, EyeOff, Building2, GitBranch as GitBranchIcon, Check, Globe } from 'lucide-react'
 import { motion, PanInfo } from 'framer-motion'
 import { MENU_ITEMS } from '@/components/admin/Sidebar'
-import { TenantSwitcher } from '@/components/admin/TenantSwitcher'
 import { useAdmin } from '@/context/AdminContext'
 import { useBranchScope } from '@/context/BranchContext'
 import { getAllWarehouseContextItems } from '@/app/actions/inventory/warehouses'
@@ -266,7 +265,11 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                 animate={{ opacity: open ? 1 : 0 }}
                 transition={{ duration: 0.18 }}
                 onClick={onClose}
-                aria-hidden={!open}
+                // Use `inert` instead of aria-hidden — the latter triggers
+                // a11y warnings when focused descendants exist while the
+                // drawer animates out. inert blocks focus + screen readers
+                // in one go (TS doesn't ship the prop yet, hence the cast).
+                {...(open ? {} : { inert: '' as any })}
                 className="fixed inset-0 z-[80]"
                 style={{
                     background: 'rgba(0, 0, 0, 0.5)',
@@ -285,7 +288,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                 onDragEnd={handleDragEnd}
                 role="dialog"
                 aria-modal="true"
-                aria-hidden={!open}
+                {...(open ? {} : { inert: '' as any })}
                 aria-label="Main navigation"
                 className="fixed top-0 left-0 bottom-0 z-[81] flex flex-col"
                 style={{
@@ -446,18 +449,6 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                             </div>
                         </MobileBottomSheet>
 
-                        {/* Tenant switcher — kept as-is (its dropdown is
-                            unaffected by drawer width since it renders a
-                            wide panel anchored to the trigger). */}
-                        {organizations && organizations.length > 0 && (
-                            <div className="flex-shrink-0 px-3 pt-1 pb-1">
-                                <TenantSwitcher
-                                    organizations={organizations}
-                                    forcedSlug={currentSlug}
-                                    user={user}
-                                />
-                            </div>
-                        )}
 
                         {/* Search */}
                         <div className="flex-shrink-0 px-3 pt-3 pb-2">
