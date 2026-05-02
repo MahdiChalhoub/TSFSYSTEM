@@ -170,17 +170,25 @@ class PurchaseService:
 
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None, **kwargs):
-        ProductBatch = connector.require('inventory.advanced.get_product_batch_model', org_id=0, source='pos')
-        InventoryMovement = connector.require('inventory.movements.get_model', org_id=0, source='pos')
+        # Pass the real org id — the connector engine checks
+        # OrganizationModule.is_enabled(<module>, org_id) before delegating
+        # to the capability handler. With org_id=0 (no row for that sentinel
+        # tenant) the check fails as DISABLED and the engine returns the
+        # fallback (None), so even though `inventory` IS installed and
+        # enabled for this user's org, the lookup returned None and
+        # "Inventory module is required for purchases." was raised.
+        org_id = organization.id
+        ProductBatch = connector.require('inventory.advanced.get_product_batch_model', org_id=org_id, source='pos')
+        InventoryMovement = connector.require('inventory.movements.get_model', org_id=org_id, source='pos')
 
         # Gated cross-module imports
-        Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
-        Inventory = connector.require('inventory.inventory.get_model', org_id=0, source='pos')
-        Contact = connector.require('crm.contacts.get_model', org_id=0, source='pos')
-        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=0, source='pos')
-        FinancialAccount = connector.require('finance.accounts.get_financial_account_model', org_id=0, source='pos')
-        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
-        InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
+        Product = connector.require('inventory.products.get_model', org_id=org_id, source='pos')
+        Inventory = connector.require('inventory.inventory.get_model', org_id=org_id, source='pos')
+        Contact = connector.require('crm.contacts.get_model', org_id=org_id, source='pos')
+        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=org_id, source='pos')
+        FinancialAccount = connector.require('finance.accounts.get_financial_account_model', org_id=org_id, source='pos')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=org_id, source='pos')
+        InventoryService = connector.require('inventory.services.get_inventory_service', org_id=org_id, source='pos')
 
         if not Product or not Inventory:
             raise ValidationError("Inventory module is required for purchases.")
@@ -196,9 +204,9 @@ class PurchaseService:
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
 
             # ── New Tax Engine Context (scope guard + OrgTaxPolicy) ───────────
-            TaxEngineContext = connector.require('finance.tax.get_engine_context_class', org_id=0, source='pos.purchase')
-            TaxCalculator = connector.require('finance.tax.get_calculator_class', org_id=0, source='pos.purchase')
-            _SupplierProfile = connector.require('finance.tax.get_supplier_profile_class', org_id=0, source='pos.purchase')
+            TaxEngineContext = connector.require('finance.tax.get_engine_context_class', org_id=org_id, source='pos.purchase')
+            TaxCalculator = connector.require('finance.tax.get_calculator_class', org_id=org_id, source='pos.purchase')
+            _SupplierProfile = connector.require('finance.tax.get_supplier_profile_class', org_id=org_id, source='pos.purchase')
             if not TaxEngineContext or not TaxCalculator or not _SupplierProfile:
                 raise ValidationError("Finance tax engine is required for purchase operations.")
             _is_export = kwargs.get('is_export', False)
@@ -417,7 +425,7 @@ class PurchaseService:
             order.save(force_audit_bypass=True)
 
             rules = ConfigurationService.get_posting_rules(organization)
-            PostingResolver = connector.require('finance.services.get_posting_resolver', org_id=0, source='pos')
+            PostingResolver = connector.require('finance.services.get_posting_resolver', org_id=org_id, source='pos')
 
             ap_account_id = supplier.linked_account_id or (PostingResolver.resolve(organization, 'purchases.payable', required=False) if PostingResolver else None)
             stock_account_id = PostingResolver.resolve(organization, 'purchases.inventory', required=False) if PostingResolver else None
