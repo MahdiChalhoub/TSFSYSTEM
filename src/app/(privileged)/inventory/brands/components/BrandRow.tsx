@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import {
     Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag,
-    FolderTree, Tag
+    FolderTree, Tag, Bookmark
 } from 'lucide-react'
 import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
@@ -208,7 +208,9 @@ export function BrandRow({
                 ═══════════════════════════════════════════════════════════ */}
             <div
                 className="group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover"
-                onClick={() => { handleToggleOpen(); onSelect(brand) }}
+                onClick={() => handleToggleOpen()}
+                onDoubleClick={() => onSelect(brand)}
+                title="Click to expand · double-click for details"
                 style={{
                     borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                 }}>
@@ -358,6 +360,13 @@ export function BrandRow({
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        {/* Details — opens the side panel for this brand. Row
+                            click is reserved for expand/collapse so this is
+                            the dedicated affordance for the panel. */}
+                        <button onClick={(e) => { e.stopPropagation(); onSelect(brand) }}
+                            className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Open side panel">
+                            <Bookmark size={12} />
+                        </button>
                         <Link href={`/inventory/brands/${brand.id}`}
                             onClick={(e) => e.stopPropagation()}
                             className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Open brand page">
