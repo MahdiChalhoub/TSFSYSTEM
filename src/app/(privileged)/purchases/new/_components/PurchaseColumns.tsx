@@ -3,7 +3,7 @@
 import React from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { Shield, Info } from 'lucide-react'
-import { getProcurementStatus } from '@/lib/procurement-status'
+import { getPipelineStatus } from '@/lib/procurement-status'
 
 type Props = {
     line: PurchaseLine
@@ -12,9 +12,9 @@ type Props = {
 }
 
 export function renderPurchaseCell(key: string, line: PurchaseLine, idx: number, onUpdate: (idx: number, updates: Record<string, any>) => void): React.ReactNode {
-    // Single source of truth: product.procurement_status (NONE/REQUESTED/PO_SENT/...)
+    // Single source of truth: product.pipeline_status (NONE/REQUESTED/PO_SENT/...)
     // Same vocabulary as /inventory/products and the request mapping on /inventory/requests.
-    const procurement = getProcurementStatus(line.procurement_status as string | undefined)
+    const procurement = getPipelineStatus(line.pipeline_status as string | undefined)
 
     switch (key) {
         case 'qty':

@@ -11,7 +11,7 @@
 
 import React from 'react'
 import type { Product } from '../_lib/types'
-import { ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS, TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
+import { ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS, TYPE_CONFIG, STATUS_CONFIG, PIPELINE_STATUS_CONFIG, fmt } from '../_lib/constants'
 import { useMemo } from 'react'
 
 interface ProductColumnsProps {
@@ -74,11 +74,11 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
         </span>
       )
     case 'procurement': {
-      const ps = PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE
+      const ps = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
       const tier = qty <= 0 ? 'OUT' : isLow ? 'LOW' : null
       const tierLabel = tier === 'OUT' ? 'Out of Stock' : tier === 'LOW' ? 'Low Stock' : null
       const tierColor = tier === 'OUT' ? 'var(--app-error, #ef4444)' : tier === 'LOW' ? 'var(--app-warning, #f59e0b)' : ps.color
-      const hasLifecycle = product.procurement_status && product.procurement_status !== 'NONE'
+      const hasLifecycle = product.pipeline_status && product.pipeline_status !== 'NONE'
       // Stack: stock tier on the first line (only when not "Available"), lifecycle on the second (only when active).
       // When neither tier nor lifecycle is set, fall back to a single "Available" badge.
       const pill = (label: string, color: string) => {

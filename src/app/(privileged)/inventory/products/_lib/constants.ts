@@ -25,7 +25,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 // keep working unchanged. The single source of truth lives in
 // `@/lib/procurement-status` and is shared across /inventory/products,
 // /inventory/requests, and /purchases/new.
-export { PROCUREMENT_STATUS_CONFIG } from '@/lib/procurement-status'
+export { PIPELINE_STATUS_CONFIG } from '@/lib/procurement-status'
 
 /* ─── Formatters ─── */
 
@@ -84,7 +84,7 @@ export const ALL_COLUMNS: ColumnDef[] = [
   { key: 'reorderQty', label: 'Reorder Qty', defaultVisible: false },
   // ── Status & Governance ──
   { key: 'status', label: 'Status', defaultVisible: true },
-  { key: 'procurement', label: 'Procurement', defaultVisible: true },
+  { key: 'procurement', label: 'Pipeline', defaultVisible: true },
   { key: 'isActive', label: 'Active', defaultVisible: false },
   { key: 'completeness', label: 'Completeness', defaultVisible: false },
   { key: 'completenessLvl', label: 'Completeness Level', defaultVisible: false },

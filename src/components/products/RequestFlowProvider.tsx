@@ -178,7 +178,7 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
         const blocked: RequestableProduct[] = []
         const allowed: RequestableProduct[] = []
         for (const p of products) {
-            if (p.procurement_status && ACTIVE.has(p.procurement_status)) blocked.push(p)
+            if (p.pipeline_status && ACTIVE.has(p.pipeline_status)) blocked.push(p)
             else allowed.push(p)
         }
         if (blocked.length > 0) {

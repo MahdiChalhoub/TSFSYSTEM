@@ -248,10 +248,10 @@ def register_capabilities(registry):
 
     # ─── PROCUREMENT STATUS ──────────────────────────────────────────
 
-    @_cap(registry, 'inventory.services.get_procurement_status',
+    @_cap(registry, 'inventory.services.get_pipeline_status',
           description='Get batch procurement status for product IDs',
           cacheable=False, critical=False)
-    def get_procurement_status(org_id=0, organization=None, product_ids=None, **kw):
+    def get_pipeline_status(org_id=0, organization=None, product_ids=None, **kw):
         from apps.inventory.services.procurement_status_service import get_procurement_status_batch
         if organization is None:
             from erp.models import Organization

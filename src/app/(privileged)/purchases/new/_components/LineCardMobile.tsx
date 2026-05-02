@@ -1,6 +1,6 @@
 import type { PurchaseLine } from '@/types/erp'
 import { Package, Trash2 } from 'lucide-react'
-import { getProcurementStatus } from '@/lib/procurement-status'
+import { getPipelineStatus } from '@/lib/procurement-status'
 
 type Props = {
     line: PurchaseLine
@@ -10,9 +10,9 @@ type Props = {
 }
 
 export function LineCardMobile({ line, idx, onUpdate, onRemove }: Props) {
-    // Canonical procurement_status — same vocabulary as /inventory/products
+    // Canonical pipeline_status — same vocabulary as /inventory/products
     // and the request mapping on /inventory/requests.
-    const procurement = getProcurementStatus(line.procurement_status as string | undefined)
+    const procurement = getPipelineStatus(line.pipeline_status as string | undefined)
     return (
         <div className="p-3 rounded-xl shadow-sm relative"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>

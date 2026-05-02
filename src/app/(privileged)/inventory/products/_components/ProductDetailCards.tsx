@@ -21,7 +21,7 @@ import {
   Package, AlertTriangle, CheckCircle2, Clock,
 } from 'lucide-react'
 import type { Product } from '../_lib/types'
-import { TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
+import { TYPE_CONFIG, STATUS_CONFIG, PIPELINE_STATUS_CONFIG, fmt } from '../_lib/constants'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { useRequestFlow } from '@/components/products/RequestFlowProvider'
 import { ExpiryAlertDialog } from '@/components/products/ExpiryAlertDialog'
@@ -84,7 +84,7 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
   const requestable: RequestableProduct = {
     id: product.id, name: product.name, sku: product.sku,
     reorder_quantity: product.reorder_quantity, min_stock_level: product.min_stock_level,
-    procurement_status: product.procurement_status,
+    pipeline_status: product.pipeline_status,
   }
 
   /* ── Stock health computation ── */
@@ -99,7 +99,7 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
     return { onHand, min, max, tier, tierColor, tierLabel, pct }
   }, [product.on_hand_qty, product.min_stock_level, product.max_stock_level])
 
-  const proc = PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE
+  const proc = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
 
   return (
     <div className="border-b border-app-border/30 animate-in slide-in-from-top-1 duration-200"
@@ -161,10 +161,10 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
             icon={<Package size={14} />}
           />
           <Kpi
-            label="Procurement"
+            label="Pipeline"
             value={proc.label}
             sub={
-              product.procurement_status && product.procurement_status !== 'NONE'
+              product.pipeline_status && product.pipeline_status !== 'NONE'
                 ? <span>Lifecycle in flight</span>
                 : <span className="text-app-muted-foreground/50">Idle</span>
             }

@@ -3,7 +3,7 @@
 import React from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { Package, Trash2, Shield, Info, DollarSign, Layers } from 'lucide-react'
-import { getProcurementStatus } from '@/lib/procurement-status'
+import { getPipelineStatus } from '@/lib/procurement-status'
 
 const fmt = (v: number | string) => {
   const n = typeof v === 'string' ? parseFloat(v) : v
@@ -45,7 +45,7 @@ function LineCard({ line, onUpdate, onRemove }: {
   onUpdate: (updates: Record<string, any>) => void
   onRemove: () => void
 }) {
-  const procurement = getProcurementStatus(line.procurement_status as string | undefined)
+  const procurement = getPipelineStatus(line.pipeline_status as string | undefined)
 
   return (
     <div

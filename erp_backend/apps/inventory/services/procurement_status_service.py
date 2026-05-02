@@ -92,7 +92,7 @@ def get_procurement_status_batch(organization, product_ids):
         # cannot resolve — it raised FieldError silently swallowed by the
         # surrounding try/except, so this entire phase produced no results.
         # Symptom: products with active OperationalRequests showed em-dash
-        # because the request data never reached the procurement_status
+        # because the request data never reached the pipeline_status
         # serializer.
         active_request_lines = OperationalRequestLine.objects.filter(
             product_id__in=product_ids,

@@ -7,21 +7,21 @@
  * /inventory/products) — three different vocabularies for one concept,
  * confusing users.
  *
- * Canonical values come from the backend's `Product.procurement_status`
+ * Canonical values come from the backend's `Product.pipeline_status`
  * SerializerMethodField (apps/inventory). That field aggregates linked
  * ProcurementRequest + PurchaseOrder state into a single product-level
  * lifecycle. This module mirrors that vocabulary exactly.
  *
  * Pages must:
- *   - Import `PROCUREMENT_STATUS_CONFIG` for label + color
- *   - Use `getProcurementStatus(value)` to safely resolve unknown values to NONE
- *   - When showing for a Product: pass `product.procurement_status`
+ *   - Import `PIPELINE_STATUS_CONFIG` for label + color
+ *   - Use `getPipelineStatus(value)` to safely resolve unknown values to NONE
+ *   - When showing for a Product: pass `product.pipeline_status`
  *   - When showing for a ProcurementRequest row: pass
- *     `mapRequestStatusToProcurement(request.status)` so the same vocabulary
+ *     `mapRequestStatusToPipeline(request.status)` so the same vocabulary
  *     renders even though the request's internal status enum is different.
  */
 
-export type ProcurementStatus =
+export type PipelineStatus =
     | 'NONE'                  // no active request or PO
     | 'REQUESTED_PURCHASE'    // purchase request pending or approved, no PO yet
     | 'REQUESTED_TRANSFER'    // transfer request pending or approved
@@ -38,10 +38,10 @@ export interface ProcurementStatusMeta {
 }
 
 // Permissive `Record<string, ...>` so legacy call sites that index with a
-// raw `string` (e.g. `PROCUREMENT_STATUS_CONFIG[product.procurement_status]`)
-// still type-check. Use `getProcurementStatus()` below for safe lookup with
+// raw `string` (e.g. `PIPELINE_STATUS_CONFIG[product.pipeline_status]`)
+// still type-check. Use `getPipelineStatus()` below for safe lookup with
 // fallback.
-export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = {
+export const PIPELINE_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = {
     NONE:               { label: 'Available',           color: 'var(--app-success, #22c55e)' },
     REQUESTED_PURCHASE: { label: 'Requested · Purchase', color: 'var(--app-warning, #f59e0b)' },
     REQUESTED_TRANSFER: { label: 'Requested · Transfer', color: 'var(--app-warning, #f59e0b)' },
@@ -63,7 +63,7 @@ export const PROCUREMENT_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = 
  * labels everywhere. The mapping mirrors the priority chain in the service
  * (request lifecycle → PO lifecycle → received).
  */
-const BACKEND_LABEL_TO_ENUM: Record<string, ProcurementStatus> = {
+const BACKEND_LABEL_TO_ENUM: Record<string, PipelineStatus> = {
     // Operational / Procurement requests
     'Requested to Purchase':  'REQUESTED_PURCHASE',
     'Approved to Purchase':   'REQUESTED_PURCHASE',
@@ -94,15 +94,15 @@ const BACKEND_LABEL_TO_ENUM: Record<string, ProcurementStatus> = {
  *
  * Always returns a valid ProcurementStatusMeta.
  */
-export function getProcurementStatus(value: string | null | undefined): ProcurementStatusMeta {
-    if (!value) return PROCUREMENT_STATUS_CONFIG.NONE
+export function getPipelineStatus(value: string | null | undefined): ProcurementStatusMeta {
+    if (!value) return PIPELINE_STATUS_CONFIG.NONE
     // First try direct enum-key match (frontend-only paths use this)
-    const direct = PROCUREMENT_STATUS_CONFIG[value]
+    const direct = PIPELINE_STATUS_CONFIG[value]
     if (direct) return direct
     // Then try backend-label mapping (most API responses go through this)
     const mapped = BACKEND_LABEL_TO_ENUM[value]
-    if (mapped) return PROCUREMENT_STATUS_CONFIG[mapped]
-    return PROCUREMENT_STATUS_CONFIG.NONE
+    if (mapped) return PIPELINE_STATUS_CONFIG[mapped]
+    return PIPELINE_STATUS_CONFIG.NONE
 }
 
 /**
@@ -120,9 +120,9 @@ export function getProcurementStatus(value: string | null | undefined): Procurem
 export type ProcurementRequestStatus =
     | 'PENDING' | 'APPROVED' | 'EXECUTED' | 'REJECTED' | 'CANCELLED'
 
-export function mapRequestStatusToProcurement(
+export function mapRequestStatusToPipeline(
     requestStatus: ProcurementRequestStatus | string | null | undefined,
-): ProcurementStatus {
+): PipelineStatus {
     switch (requestStatus) {
         case 'PENDING':
         case 'APPROVED':

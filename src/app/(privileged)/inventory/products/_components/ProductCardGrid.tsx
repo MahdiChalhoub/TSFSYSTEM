@@ -14,7 +14,7 @@
 import { memo } from 'react'
 import { Package, Eye, Pencil, Loader2, ShoppingCart, ArrowRightLeft, BellRing, Check } from 'lucide-react'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
-import { TYPE_CONFIG, STATUS_CONFIG, PROCUREMENT_STATUS_CONFIG, fmt } from '../_lib/constants'
+import { TYPE_CONFIG, STATUS_CONFIG, PIPELINE_STATUS_CONFIG, fmt } from '../_lib/constants'
 import type { Product } from '../_lib/types'
 
 interface Props {
@@ -125,8 +125,8 @@ const ProductCard = memo(function ProductCard({
   const stockLabel = isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'
 
   // Procurement Status Config
-  const ps = PROCUREMENT_STATUS_CONFIG[product.procurement_status as string] || PROCUREMENT_STATUS_CONFIG.NONE
-  const hasProcurement = product.procurement_status && product.procurement_status !== 'NONE'
+  const ps = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
+  const hasProcurement = product.pipeline_status && product.pipeline_status !== 'NONE'
 
   return (
     <div

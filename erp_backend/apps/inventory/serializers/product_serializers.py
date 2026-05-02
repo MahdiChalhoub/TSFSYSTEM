@@ -7,7 +7,7 @@ from decimal import Decimal
 # Maps human-readable procurement labels (from
 # apps.inventory.services.procurement_status_service) to the canonical
 # frontend enum keys in src/lib/procurement-status.ts. Module-level so it's
-# defined once and the per-product status loop in get_procurement_status can
+# defined once and the per-product status loop in get_pipeline_status can
 # reference it without re-creating the dict on every call.
 _PROCUREMENT_LABEL_TO_KEY = {
     # Operational / Procurement requests
@@ -143,7 +143,7 @@ class ProductSerializer(serializers.ModelSerializer):
     # ── Product Grouping — governance fields ──
     product_group_name = serializers.CharField(source='product_group.name', read_only=True, default=None)
     # ── Procurement lifecycle (derived from latest ProcurementRequest) ──
-    procurement_status = serializers.SerializerMethodField()
+    pipeline_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -176,7 +176,7 @@ class ProductSerializer(serializers.ModelSerializer):
             # COA Link Fields (Gap 2A.7)
             'revenue_account', 'cogs_account', 'inventory_account',
             # Procurement lifecycle
-            'procurement_status',
+            'pipeline_status',
         ]
         read_only_fields = ['organization', 'data_completeness_level',
                             'completeness_label', 'is_sellable', 'is_complete']
@@ -190,7 +190,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_is_complete(self, obj):
         return obj.is_complete
 
-    def get_procurement_status(self, obj):
+    def get_pipeline_status(self, obj):
         from apps.inventory.services.procurement_status_service import (
             get_procurement_status_batch, get_product_display_status
         )

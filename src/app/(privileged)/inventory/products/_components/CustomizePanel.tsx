@@ -129,7 +129,7 @@ export function CustomizePanel({
                { key: 'view', label: 'View Detail', icon: <Eye size={12} /> },
                { key: 'edit', label: 'Quick Edit', icon: <Edit size={12} /> },
                { key: 'stock', label: 'Stock History', icon: <SlidersHorizontal size={12} /> },
-               { key: 'po', label: 'Procurement', icon: <ShoppingCart size={12} /> },
+               { key: 'po', label: 'Pipeline', icon: <ShoppingCart size={12} /> },
                { key: 'move', label: 'Movements', icon: <ArrowRightLeft size={12} /> },
                { key: 'export', label: 'Export Data', icon: <Download size={12} /> },
              ].map(opt => (

@@ -54,7 +54,7 @@ function toRequestable(p: Product): RequestableProduct {
   return {
     id: p.id, name: p.name, sku: p.sku,
     reorder_quantity: p.reorder_quantity, min_stock_level: p.min_stock_level,
-    procurement_status: p.procurement_status,
+    pipeline_status: p.pipeline_status,
   }
 }
 

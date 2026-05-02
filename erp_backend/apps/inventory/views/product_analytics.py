@@ -416,7 +416,7 @@ class ProductAnalyticsMixin:
                 'stock_in_transit': stock_transit,
                 'product_status': product_status,
                 'status_detail': status_detail,
-                'procurement_status': procurement['status'] if procurement else None,
+                'pipeline_status': procurement['status'] if procurement else None,
                 'procurement_po': procurement['po_number'] if procurement else None,
                 'procurement_qty': procurement['qty_ordered'] if procurement else None,
                 'is_active': p.status == 'ACTIVE',
@@ -597,7 +597,7 @@ class ProductAnalyticsMixin:
                 # Unified procurement status
                 'product_status': display_status,
                 'status_detail': status_detail,
-                'procurement_status': procurement['status'] if procurement else None,
+                'pipeline_status': procurement['status'] if procurement else None,
                 'procurement_detail': procurement.get('detail') if procurement else None,
                 'procurement_po': procurement.get('po_number') if procurement else None,
                 # Legacy request fields (backward compat)
