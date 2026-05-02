@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react'
 import {
     Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag,
     FolderTree, Tag
@@ -14,7 +14,7 @@ import type { Brand, BrandPanelTab, ProductRow } from './types'
  *  Lazy-loads products on first expand, groups by country,
  *  renders inline sub-rows. Replaces flat BrandRow.
  * ═══════════════════════════════════════════════════════════ */
-export function BrandRow({
+function BrandRowImpl({
     brand, onEdit, onDelete, onSelect, compact, selectable, isChecked, onToggleCheck,
     searchQuery, forceExpanded
 }: {
@@ -41,9 +41,16 @@ export function BrandRow({
     const countries = brand.countries?.length || 0
     const totalProducts = brand.product_count || 0
 
-    // Lazy fetch products
+    // Refs mirror state so fetchProducts can stay a stable identity and
+    // the useEffects below don't re-fire on every products/loading change
+    // (which used to cascade re-renders across every brand row).
+    const productsRef = useRef(products)
+    const loadingRef = useRef(loading)
+    productsRef.current = products
+    loadingRef.current = loading
+
     const fetchProducts = useCallback(async () => {
-        if (products !== null || loading) return
+        if (productsRef.current !== null || loadingRef.current) return
         setLoading(true)
         try {
             const res = await erpFetch(`inventory/products/?brand=${brand.id}&page_size=200`)
@@ -54,30 +61,30 @@ export function BrandRow({
         } finally {
             setLoading(false)
         }
-    }, [brand.id, products, loading])
+    }, [brand.id])
 
     const handleToggleOpen = useCallback(() => {
-        if (!isOpen && products === null) fetchProducts()
+        if (productsRef.current === null) fetchProducts()
         setIsOpen(v => !v)
-    }, [isOpen, products, fetchProducts])
+    }, [fetchProducts])
 
     // Auto-expand on search query
     useEffect(() => {
         if (searchQuery && searchQuery.trim().length > 0) {
             setIsOpen(true)
-            if (products === null && !loading) fetchProducts()
+            fetchProducts()
         }
-    }, [searchQuery, products, loading, fetchProducts])
+    }, [searchQuery, fetchProducts])
 
     // Honor Expand-All toggle from TreeMasterPage
     useEffect(() => {
         if (forceExpanded === true) {
             setIsOpen(true)
-            if (products === null && !loading) fetchProducts()
+            fetchProducts()
         } else if (forceExpanded === false) {
             setIsOpen(false)
         }
-    }, [forceExpanded, products, loading, fetchProducts])
+    }, [forceExpanded, fetchProducts])
 
     // Group products by country. Products with no country FK are
     // bucketed under "Universal" — meaning the product is sold across
@@ -638,6 +645,24 @@ export function BrandRow({
  *  Helper rows — one place for visual structure of the tree
  *  so the three facets stay consistent.
  * ═══════════════════════════════════════════════════════════ */
+
+/**
+ * Memoized export. Without memo, clicking ANY brand re-renders every
+ * other brand in the list — and each row owns expensive state (lazy
+ * fetch, expanded facets) that doesn't need to recompute when its
+ * neighbors change. The custom comparator only re-renders when the
+ * brand identity, selection state, or compact mode changes.
+ */
+export const BrandRow = memo(BrandRowImpl, (prev, next) => {
+    return (
+        prev.brand === next.brand
+        && prev.compact === next.compact
+        && prev.isChecked === next.isChecked
+        && prev.searchQuery === next.searchQuery
+        && prev.forceExpanded === next.forceExpanded
+        && prev.selectable === next.selectable
+    )
+})
 
 /**
  * Facet group header — visual match for the LinkedTree group headers on

@@ -300,16 +300,16 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                 )}
             >
                 {(renderProps) => {
-                    const { tree, expandKey, isSelected, openNode, isCompact, selectedIds, toggleSelect, searchQuery, expandAll } = renderProps
+                    const { tree, isSelected, openNode, isCompact, selectedIds, toggleSelect, searchQuery, expandAll } = renderProps
                     selectionRef.current = { selectedIds, clearSelection: renderProps.clearSelection }
 
                     return tree.map((node: Brand) => (
-                        <div key={`${node.id}-${expandKey}`}
-                            className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                        <div key={node.id}
+                            className={`rounded-xl transition-all duration-200 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
                             <BrandRow
                                 brand={node}
                                 onEdit={openEdit}
-                                onDelete={(b) => setDeleteTarget(b)}
+                                onDelete={setDeleteTarget}
                                 onSelect={(b, tab) => openNode(b, tab || 'overview')}
                                 compact={isCompact}
                                 selectable
