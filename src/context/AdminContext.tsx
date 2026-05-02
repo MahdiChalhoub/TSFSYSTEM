@@ -46,7 +46,7 @@ type AdminContextType = {
     setTabLayout: (layout: 'horizontal' | 'vertical') => void;
 };
 
-const AdminContext = createContext<AdminContextType | undefined>(undefined);
+export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children, contextKey = 'default', initialScopeAccess, initialNavLayout, initialTabLayout }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null, initialNavLayout?: 'sidebar' | 'topnav', initialTabLayout?: 'horizontal' | 'vertical' }) {
     // Start open on desktop, closed on mobile — avoids the fixed-overlay blocking content

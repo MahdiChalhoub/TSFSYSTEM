@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAdmin } from '@/context/AdminContext';
+import { AdminContext } from '@/context/AdminContext';
 import { useDev } from '@/context/DevContext';
 import { Info, Bug, ShieldCheck, Database, Settings, X, ChevronRight, Activity, Terminal, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 
@@ -10,7 +10,12 @@ export default function DebugOverlay() {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'logic' | 'ledger' | 'flow'>('logic');
     const pathname = usePathname();
-    const { viewScope } = useAdmin();
+    // Soft-read AdminContext: this overlay can render outside any
+    // AdminProvider (e.g. on the login page or other unauthenticated
+    // routes). useAdmin() throws when the context is null, which crashes
+    // the whole app. Read the raw context and fall back to a default.
+    const adminCtx = useContext(AdminContext);
+    const viewScope = adminCtx?.viewScope ?? 'INTERNAL';
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
     const [recentLedger, setRecentLedger] = useState<Record<string, unknown>[]>([]);
