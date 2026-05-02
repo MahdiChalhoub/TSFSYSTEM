@@ -92,6 +92,40 @@ class COASetupMixin:
             data.append(row)
         return Response(data)
 
+    @action(detail=False, methods=['get'], url_path='coa-numbering-rules')
+    def coa_numbering_rules(self, request):
+        """Return the numbering convention for the org's active template.
+
+        The frontend AccountForm uses this to suggest correct child codes
+        per the standard the org uses (PCG/SYSCOHADA prefix-extension vs.
+        GAAP/IFRS fixed-step). Detection: most common `template_origin`
+        among the org's active accounts. Returns `{}` rules when no
+        template is detected — UI then falls back to placeholder hints.
+        """
+        from collections import Counter
+        from apps.finance.models import ChartOfAccount, COATemplate
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({'template_key': '', 'rules': {}})
+
+        # Pick the dominant template_origin from active accounts.
+        origins = (
+            ChartOfAccount.objects
+            .filter(organization_id=organization_id, is_active=True, template_origin__isnull=False)
+            .exclude(template_origin='')
+            .values_list('template_origin', flat=True)
+        )
+        if not origins:
+            return Response({'template_key': '', 'rules': {}})
+        dominant_key = Counter(origins).most_common(1)[0][0]
+
+        try:
+            tpl = COATemplate.objects.get(key=dominant_key)
+            return Response({'template_key': tpl.key, 'rules': tpl.numbering_rules or {}})
+        except COATemplate.DoesNotExist:
+            return Response({'template_key': dominant_key, 'rules': {}})
+
     @action(detail=False, methods=['get'])
     def coa_status(self, request):
         """Return current COA state with import_case detection.

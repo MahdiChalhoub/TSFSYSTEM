@@ -9,8 +9,7 @@ import {
     bumpProcurementRequest,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META, PRIORITY_META } from '../_lib/meta'
-import { mapRequestStatusToProcurement, getProcurementStatus } from '@/lib/procurement-status'
+import { TYPE_META, PRIORITY_META, STATUS_META } from '../_lib/meta'
 import { runTimed } from '@/lib/perf-timing'
 
 type RunAction = (
@@ -26,10 +25,9 @@ export function RequestRow({ r, pending, runAction }: {
 }) {
     const tm = TYPE_META[r.request_type]
     const pm = PRIORITY_META[r.priority]
+    const sm = STATUS_META[r.status]
     const TypeIcon = tm.icon
-    // Canonical procurement vocabulary — same labels as /inventory/products
-    // and /purchases/new. Mapped from this request's internal status.
-    const procurement = getProcurementStatus(mapRequestStatusToProcurement(r.status))
+    const StatusIcon = sm.icon
     const requestedAt = new Date(r.requested_at)
     const dateStr = requestedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
         requestedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
@@ -67,15 +65,9 @@ export function RequestRow({ r, pending, runAction }: {
                     {pm.label}
                 </span>
             </div>
-            <div>
-                <span className="inline-flex items-center text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border"
-                    style={{
-                        background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
-                        color: procurement.color,
-                        borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
-                    }}>
-                    {procurement.label}
-                </span>
+            <div className="flex items-center gap-1">
+                <StatusIcon size={11} style={{ color: sm.color }} />
+                <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: sm.color }}>{sm.label}</span>
             </div>
             <div className="min-w-0">
                 <div className="text-[11px] font-medium text-app-foreground truncate">{dateStr}</div>

@@ -80,6 +80,22 @@ export async function getInactiveAccounts() {
     return getChartOfAccounts(true)
 }
 
+/** Numbering convention for the org's active COA template.
+ *  Drives the AccountForm child-code suggestion. Returns:
+ *    { template_key: 'USA_GAAP', rules: { scheme: 'FIXED_STEP', steps: [1000,100,10,1] } }
+ *  Falls back to `{ template_key: '', rules: {} }` when no template is set. */
+export async function getCoaNumberingRules(): Promise<{ template_key: string; rules: Record<string, any> }> {
+    try {
+        const result = await erpFetch('coa/coa-numbering-rules/', { cache: 'no-store' })
+        return result || { template_key: '', rules: {} }
+    } catch (error) {
+        if (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) {
+            redirect('/login?error=session_expired')
+        }
+        return { template_key: '', rules: {} }
+    }
+}
+
 export async function createFinancialAccount(data: unknown) {
     const parsed = FinancialAccountSchema.parse(data)
     try {

@@ -86,9 +86,17 @@ def get_procurement_status_batch(organization, product_ids):
     # ── Phase 1: Operational Requests ──
     try:
         OperationalRequestLine = django_apps.get_model('inventory', 'OperationalRequestLine')
+        # `request__organization=...` is the actual Django field on
+        # TenantOwnedModel. The previous `request__tenant=...` matched a
+        # Python @property (TenantOwnedModel.tenant), which Django ORM
+        # cannot resolve — it raised FieldError silently swallowed by the
+        # surrounding try/except, so this entire phase produced no results.
+        # Symptom: products with active OperationalRequests showed em-dash
+        # because the request data never reached the procurement_status
+        # serializer.
         active_request_lines = OperationalRequestLine.objects.filter(
             product_id__in=product_ids,
-            request__tenant=organization,
+            request__organization=organization,
             request__status__in=['PENDING', 'APPROVED', 'REJECTED']
         ).select_related('request').order_by('product_id', '-request__created_at')
 

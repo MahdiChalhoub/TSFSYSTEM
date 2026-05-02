@@ -52,8 +52,11 @@ class Command(BaseCommand):
                     'name': data['name'],
                     'description': data.get('description', ''),
                     'accounts': data['accounts'],
-                    'account_count': account_count,
-                    'root_count': root_count,
+                    # Per-template code-numbering convention (drives the
+                    # AccountForm's child-code suggestion). Empty dict when
+                    # the seed didn't specify a rule — UI falls back to a
+                    # placeholder hint only.
+                    'numbering_rules': data.get('numbering_rules', {}),
                 }
             )
 

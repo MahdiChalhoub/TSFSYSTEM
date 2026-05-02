@@ -29,9 +29,9 @@ function GatewaySkeleton() {
     )
 }
 
-export function COAGateway({ accounts, orgCurrencies = [] }: { accounts: any[]; orgCurrencies?: any[] }) {
+export function COAGateway({ accounts, orgCurrencies = [], numberingRules }: { accounts: any[]; orgCurrencies?: any[]; numberingRules?: { template_key: string; rules: Record<string, any> } }) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileErrorBoundary><MobileClient accounts={accounts} orgCurrencies={orgCurrencies} /></MobileErrorBoundary>
-        : <DesktopClient accounts={accounts} orgCurrencies={orgCurrencies} />
+        ? <MobileErrorBoundary><MobileClient accounts={accounts} orgCurrencies={orgCurrencies} numberingRules={numberingRules} /></MobileErrorBoundary>
+        : <DesktopClient accounts={accounts} orgCurrencies={orgCurrencies} numberingRules={numberingRules} />
 }

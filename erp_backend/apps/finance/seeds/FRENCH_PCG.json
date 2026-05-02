@@ -2,6 +2,17 @@
     "key": "FRENCH_PCG",
     "name": "French PCG",
     "description": "Plan Comptable General (France) — Full professional chart with 7 root classes",
+    "numbering_rules": {
+        "scheme": "PREFIX_EXTEND",
+        "min_digits": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "notes": "PCG hierarchy: same as SYSCOHADA — 1-digit class then digit-extension at each depth."
+    },
     "accounts": [
         {
             "code": "1",

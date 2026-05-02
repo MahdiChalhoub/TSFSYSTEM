@@ -2,6 +2,16 @@
     "key": "USA_GAAP",
     "name": "USA GAAP",
     "description": "Generally Accepted Accounting Principles (United States) — Full professional chart with 6 root classes",
+    "numbering_rules": {
+        "scheme": "FIXED_STEP",
+        "steps": [
+            1000,
+            100,
+            10,
+            1
+        ],
+        "notes": "GAAP industry convention: 4-digit base, depth steps 1000/100/10/1."
+    },
     "accounts": [
         {
             "code": "1000",

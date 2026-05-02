@@ -2,6 +2,16 @@
     "key": "IFRS_COA",
     "name": "IFRS COA",
     "description": "International Financial Reporting Standards — Full professional chart with 7 root classes",
+    "numbering_rules": {
+        "scheme": "FIXED_STEP",
+        "steps": [
+            1000,
+            100,
+            10,
+            1
+        ],
+        "notes": "IFRS does not prescribe codes — uses common 4-digit step convention."
+    },
     "accounts": [
         {
             "code": "1000",

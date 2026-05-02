@@ -13,6 +13,11 @@ interface AccountFormProps {
      *  currencies + "Default (home)". Empty array → falls back to a
      *  free-text input so legacy callers still work. */
     orgCurrencies?: Record<string, any>[]
+    /** Numbering convention for the org's active COA template — drives
+     *  child-code suggestion. PCG/SYSCOHADA = `PREFIX_EXTEND` (append
+     *  digit); GAAP/IFRS = `FIXED_STEP` with per-depth steps. Empty rules
+     *  → no auto-suggest, just a placeholder hint. */
+    numberingRules?: { template_key: string; rules: Record<string, any> }
     isPending: boolean
     onSubmit: (formData: FormData) => void
     initialData?: Record<string, any>
@@ -24,6 +29,7 @@ interface AccountFormProps {
 export function AccountForm({
     accounts,
     orgCurrencies = [],
+    numberingRules,
     isPending,
     onSubmit,
     initialData,
@@ -50,7 +56,120 @@ export function AccountForm({
     const parentCode = accounts.find(a => String(a.id) === parentId)?.code as string | undefined
     const codePlaceholder = parentCode ? `${parentCode}…` : '1010'
 
-    const [code, setCode] = useState<string>(initialData?.code || '')
+    /** Suggest the next child code per the org's COA template numbering
+     *  convention. Reads `numberingRules.rules.scheme`:
+     *
+     *    PREFIX_EXTEND  (PCG / SYSCOHADA / Lebanese PCN)
+     *      - First child of `41` → `411`; next sibling of `4111` → `4112`.
+     *      - Children always extend the parent's code by one digit.
+     *
+     *    FIXED_STEP    (GAAP / IFRS)
+     *      - Each depth has its own step: depth 0=1000, 1=100, 2=10, 3=1.
+     *      - First child of `1100` → `1110`; next sibling of `1170` → `1180`.
+     *
+     *  No rule + no siblings → blank (we can't guess across templates).
+     *  No rule but ≥2 siblings → infer step from observed gap.
+     */
+    const suggestNextCode = (pid: string): string => {
+        if (!pid) return ''
+        const parent = accounts.find(a => String(a.id) === pid)
+        if (!parent?.code) return ''
+        const parentCodeStr = String(parent.code)
+
+        // Existing children of this parent — used for "next sibling" mode.
+        const sibCodes = accounts
+            .filter(a => String(a.parentId) === pid)
+            .map(a => String(a.code || ''))
+            .filter(Boolean)
+
+        const scheme = numberingRules?.rules?.scheme
+        const steps: number[] = numberingRules?.rules?.steps || []
+
+        // ── PREFIX_EXTEND ─────────────────────────────────────────────
+        if (scheme === 'PREFIX_EXTEND') {
+            if (sibCodes.length === 0) {
+                // First child: append "1" to the parent prefix (411 from 41).
+                return `${parentCodeStr}1`
+            }
+            // Next sibling: max numeric tail + 1, preserving width.
+            const tails = sibCodes
+                .filter(c => c.startsWith(parentCodeStr) && c.length > parentCodeStr.length)
+                .map(c => c.slice(parentCodeStr.length))
+            const numeric = tails.map(t => parseInt(t, 10)).filter(n => !isNaN(n))
+            if (numeric.length === 0) return `${parentCodeStr}${sibCodes.length + 1}`
+            const next = Math.max(...numeric) + 1
+            const width = tails[0]?.length || 1
+            return `${parentCodeStr}${String(next).padStart(width, '0')}`
+        }
+
+        // ── FIXED_STEP ────────────────────────────────────────────────
+        if (scheme === 'FIXED_STEP' && steps.length > 0) {
+            // Compute the parent's depth from the parent chain. depth = 0
+            // for a root, 1 for child of root, etc.
+            let depth = 1
+            let cur = parent
+            while (cur?.parentId) {
+                const p = accounts.find(a => String(a.id) === String(cur!.parentId))
+                if (!p) break
+                cur = p
+                depth++
+            }
+            // Past the deepest declared step, FIXED_STEP templates (GAAP/
+            // IFRS) switch to decimal sub-accounts: 1111 → 1111.01 → 1111.02.
+            // Otherwise +step would produce 1112, which is a SIBLING of 1111
+            // at the same level — wrong for sub-accounting.
+            if (depth >= steps.length) {
+                if (sibCodes.length === 0) return `${parentCodeStr}.01`
+                // Find existing decimal subs and pick the next .NN.
+                const subs = sibCodes
+                    .filter(c => c.startsWith(`${parentCodeStr}.`))
+                    .map(c => c.slice(parentCodeStr.length + 1))
+                const nums = subs.map(t => parseInt(t, 10)).filter(n => !isNaN(n))
+                if (nums.length === 0) return `${parentCodeStr}.01`
+                const next = Math.max(...nums) + 1
+                return `${parentCodeStr}.${String(next).padStart(2, '0')}`
+            }
+            const step = steps[depth]
+            const parentNum = parseFloat(parentCodeStr)
+            if (isNaN(parentNum) || step <= 0) return ''
+            if (sibCodes.length === 0) {
+                // First child: parent + one step (1100 → 1110).
+                return String(Math.round(parentNum + step))
+            }
+            // Next sibling: max sibling + step (1170 → 1180).
+            const sibNums = sibCodes.map(c => parseFloat(c)).filter(n => !isNaN(n))
+            if (sibNums.length === 0) return ''
+            return String(Math.round(Math.max(...sibNums) + step))
+        }
+
+        // ── No template rule — fall back to observed-pattern inference ─
+        // Only suggests when there are 2+ siblings (we have a real signal).
+        if (sibCodes.length >= 2) {
+            const sibs = sibCodes
+                .map(c => ({ raw: c, num: parseFloat(c) }))
+                .filter(s => !isNaN(s.num))
+                .sort((a, b) => a.num - b.num)
+            if (sibs.length >= 2) {
+                const last = sibs[sibs.length - 1]
+                const step = last.num - sibs[sibs.length - 2].num
+                if (step > 0) {
+                    const dotIdx = last.raw.indexOf('.')
+                    const decimals = dotIdx >= 0 ? last.raw.length - dotIdx - 1 : 0
+                    const next = last.num + step
+                    return decimals > 0 ? next.toFixed(decimals) : String(Math.round(next))
+                }
+            }
+        }
+        return ''
+    }
+    const isEdit = Boolean(initialData?.id)
+    const [code, setCode] = useState<string>(
+        initialData?.code || (preselectedParentId ? suggestNextCode(String(preselectedParentId)) : '')
+    )
+    /** While `codeIsAuto` is true the code field tracks parent changes;
+     *  the moment the user types their own code we lock it. On edit we
+     *  never auto-suggest — the existing code is authoritative. */
+    const [codeIsAuto, setCodeIsAuto] = useState<boolean>(!isEdit && !initialData?.code)
 
     /** Eligible parents — silent-bug guards:
      *  • Active only (inactive accounts can't accept new children)
@@ -103,7 +222,7 @@ export function AccountForm({
                     placeholder={codePlaceholder}
                     required
                     value={code}
-                    onChange={e => setCode(e.target.value)}
+                    onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
                     className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all font-mono font-bold"
                     style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
                 />
@@ -137,7 +256,11 @@ export function AccountForm({
             </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" value={parentId} onChange={e => setParentId(e.target.value)} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="parentId" value={parentId} onChange={e => {
+                    const next = e.target.value
+                    setParentId(next)
+                    if (codeIsAuto) setCode(suggestNextCode(next))
+                }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
                     {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                 </select>

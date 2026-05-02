@@ -34,14 +34,16 @@ type COAAccount = {
 };
 type COATreeNode = COAAccount & { children: COATreeNode[] };
 
-export function MobileCOAClient({ accounts, orgCurrencies = [] }: {
+export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }: {
     accounts: COAAccount[]
     /** Forwarded from the page → COAGateway → here. Currently unused on
      *  mobile (account create/edit happens on the desktop form), but
      *  accepted so the prop signature lines up between desktop + mobile. */
     orgCurrencies?: Record<string, any>[]
+    numberingRules?: { template_key: string; rules: Record<string, any> }
 }) {
     void orgCurrencies // reserved for future mobile create/edit form
+    void numberingRules // reserved for future mobile create/edit form
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [sheetNode, setSheetNode] = useState<COATreeNode | COAAccount | null>(null)

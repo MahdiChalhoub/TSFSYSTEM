@@ -20,12 +20,16 @@ import { AccountForm } from './_components/AccountForm'
 import { RecalculateBalancesDialog } from './_components/RecalculateBalancesDialog'
 import { useBranchScope } from '@/context/BranchContext'
 
-export function ChartOfAccountsViewer({ accounts, orgCurrencies = [] }: {
+export function ChartOfAccountsViewer({ accounts, orgCurrencies = [], numberingRules }: {
     accounts: Record<string, any>[]
     /** Tenant's enabled currencies (from /settings/regional?tab=fx). Powers
      *  the Currency picker in the AccountForm. Pre-fetched server-side so
      *  the dropdown shows the same list on first render. */
     orgCurrencies?: Record<string, any>[]
+    /** Numbering convention for the org's active COA template — drives the
+     *  AccountForm's child-code suggestion (PCG/SYSCOHADA prefix-extend vs
+     *  GAAP/IFRS fixed-step). Empty rules → UI uses placeholder hints only. */
+    numberingRules?: { template_key: string; rules: Record<string, any> }
 }) {
     const router = useRouter()
     const { t } = useTranslation()
@@ -458,7 +462,7 @@ export function ChartOfAccountsViewer({ accounts, orgCurrencies = [] }: {
 
             {isAdding && (
                 <div className="animate-in slide-in-from-top-2 duration-200 mb-3 mx-4 md:mx-6 p-4 border border-app-border bg-app-primary/5 rounded-2xl border-l-[3px] border-l-app-primary">
-                    <AccountForm accounts={accounts} orgCurrencies={orgCurrencies} isPending={isPending} onSubmit={handleCreate} preselectedParentId={preselectedParentId} onCancel={() => setIsAdding(false)} />
+                    <AccountForm accounts={accounts} orgCurrencies={orgCurrencies} numberingRules={numberingRules} isPending={isPending} onSubmit={handleCreate} preselectedParentId={preselectedParentId} onCancel={() => setIsAdding(false)} />
                 </div>
             )}
 
@@ -505,7 +509,7 @@ export function ChartOfAccountsViewer({ accounts, orgCurrencies = [] }: {
             {editingAccount && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={e => e.target === e.currentTarget && setEditingAccount(null)}>
                     <div className="w-full max-w-xl mx-4 rounded-2xl overflow-hidden bg-app-surface border border-app-border p-5 shadow-2xl animate-in zoom-in-95 duration-200">
-                        <AccountForm accounts={accounts} orgCurrencies={orgCurrencies} isPending={isPending} onSubmit={handleUpdate} initialData={editingAccount} onCancel={() => setEditingAccount(null)} title={t('finance.coa.edit_account')} />
+                        <AccountForm accounts={accounts} orgCurrencies={orgCurrencies} numberingRules={numberingRules} isPending={isPending} onSubmit={handleUpdate} initialData={editingAccount} onCancel={() => setEditingAccount(null)} title={t('finance.coa.edit_account')} />
                     </div>
                 </div>
             )}
