@@ -94,7 +94,15 @@ def get_procurement_status_batch(organization, product_ids):
         # Symptom: products with active OperationalRequests showed em-dash
         # because the request data never reached the pipeline_status
         # serializer.
-        active_request_lines = OperationalRequestLine.objects.filter(
+        # Use `all_objects` (the unfiltered manager) instead of the
+        # default tenant-scoped manager — the operational_request_line table
+        # in the dev DB is missing the `tenant_id` column the default
+        # manager expects (TenantOwnedModel writes db_column='tenant_id'),
+        # and the resulting ProgrammingError aborts the surrounding
+        # transaction, which then poisons Phase 1b and Phase 2 queries
+        # too. We don't need the auto tenant scope on the line because we
+        # already filter by request__organization through the FK.
+        active_request_lines = OperationalRequestLine.all_objects.filter(
             product_id__in=product_ids,
             request__organization=organization,
             request__status__in=['PENDING', 'APPROVED', 'REJECTED']
