@@ -70,6 +70,12 @@ for arg in "$@"; do
     esac
 done
 
+# Detect docker-compose command
+DOCKER_COMPOSE="docker-compose"
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+fi
+
 # ── Logging ──────────────────────────────────────────────────────────────────
 mkdir -p "$(dirname "$LOG_FILE")" "$ARCHIVE_DIR"
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -188,16 +194,16 @@ trap '
 cd "$APP_ROOT"
 
 echo ""
-echo "── Phase 2.1: docker compose down (stop + remove old containers) ──"
-docker compose down 2>&1 | tail -10
+echo "── Phase 2.1: $DOCKER_COMPOSE down (stop + remove old containers) ──"
+$DOCKER_COMPOSE down 2>&1 | tail -10
 
 echo ""
-echo "── Phase 2.2: docker compose build (with v3.5.0 code) ──"
-docker compose build 2>&1 | tail -20
+echo "── Phase 2.2: $DOCKER_COMPOSE build (with v3.5.0 code) ──"
+$DOCKER_COMPOSE build 2>&1 | tail -20
 
 echo ""
-echo "── Phase 2.3: docker compose up -d ──"
-docker compose up -d 2>&1 | tail -10
+echo "── Phase 2.3: $DOCKER_COMPOSE up -d ──"
+$DOCKER_COMPOSE up -d 2>&1 | tail -10
 
 echo ""
 echo "── Phase 2.4: Wait for postgres healthcheck ──"
@@ -266,10 +272,10 @@ if [[ "$FRONT_HTTP" =~ ^(2|3) ]] && [[ "$BACK_HTTP" =~ ^(2|3) ]]; then
 else
     echo ""
     echo "❌ Health check failed. Containers up but endpoints not 2xx/3xx."
-    echo "   Diagnose:  docker compose logs --tail=50"
+    echo "   Diagnose:  $DOCKER_COMPOSE logs --tail=50"
     echo "   Rollback:"
     [ -n "$DB_DUMP" ] && echo "     cat $DB_DUMP | docker exec -i $DB_CONTAINER pg_restore -U $DB_USER -d $DB_NAME -c --if-exists"
     [ -n "$CODE_TGZ" ] && echo "     tar -xzf $CODE_TGZ -C $(dirname "$APP_ROOT")"
-    echo "     cd $APP_ROOT && docker compose up -d && pm2 restart nextjs"
+    echo "     cd $APP_ROOT && $DOCKER_COMPOSE up -d && pm2 restart nextjs"
     exit 3
 fi
