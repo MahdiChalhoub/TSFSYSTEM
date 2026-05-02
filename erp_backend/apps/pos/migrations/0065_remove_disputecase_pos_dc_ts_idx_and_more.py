@@ -17,77 +17,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveIndex(
-            model_name='disputecase',
-            name='pos_dc_ts_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='disputecase',
-            name='pos_dc_toa_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='disputecase',
-            name='pos_dc_po_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='disputecase',
-            name='pos_dc_tdts_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='procurementbudget',
-            name='pos_pb_tpspe_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='procurementbudget',
-            name='pos_pb_ta_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='purchaserequisition',
-            name='pos_pr_ts_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='purchaserequisition',
-            name='pos_pr_tca_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='purchaserequisition',
-            name='pos_pr_tps_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='supplierperformancesnapshot',
-            name='pos_sps_tsps_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='supplierperformancesnapshot',
-            name='pos_sps_tscore_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='supplierquotation',
-            name='pos_sq_ts_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='supplierquotation',
-            name='pos_sq_tca_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='supplierquotation',
-            name='pos_sq_req_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='threewaymatchresult',
-            name='pos_twmr_ts_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='threewaymatchresult',
-            name='pos_twmr_tma_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='threewaymatchresult',
-            name='pos_twmr_po_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='threewaymatchresult',
-            name='pos_twmr_tpb_idx',
+        # v3.5.0 cleanup: the 18 RemoveIndex operations below originally targeted
+        # indexes that no earlier migration ever created (DisputeCase /
+        # ProcurementBudget / PurchaseRequisition / SupplierPerformanceSnapshot /
+        # SupplierQuotation / ThreeWayMatchResult — created in 0060 with no
+        # Meta.indexes). Replaced with idempotent DROP INDEX IF EXISTS so a
+        # fresh DB no longer crashes on `relation "<idx>" does not exist`.
+        migrations.RunSQL(
+            sql=(
+                "DROP INDEX IF EXISTS pos_dc_ts_idx;"
+                "DROP INDEX IF EXISTS pos_dc_toa_idx;"
+                "DROP INDEX IF EXISTS pos_dc_po_idx;"
+                "DROP INDEX IF EXISTS pos_dc_tdts_idx;"
+                "DROP INDEX IF EXISTS pos_pb_tpspe_idx;"
+                "DROP INDEX IF EXISTS pos_pb_ta_idx;"
+                "DROP INDEX IF EXISTS pos_pr_ts_idx;"
+                "DROP INDEX IF EXISTS pos_pr_tca_idx;"
+                "DROP INDEX IF EXISTS pos_pr_tps_idx;"
+                "DROP INDEX IF EXISTS pos_sps_tsps_idx;"
+                "DROP INDEX IF EXISTS pos_sps_tscore_idx;"
+                "DROP INDEX IF EXISTS pos_sq_ts_idx;"
+                "DROP INDEX IF EXISTS pos_sq_tca_idx;"
+                "DROP INDEX IF EXISTS pos_sq_req_idx;"
+                "DROP INDEX IF EXISTS pos_twmr_ts_idx;"
+                "DROP INDEX IF EXISTS pos_twmr_tma_idx;"
+                "DROP INDEX IF EXISTS pos_twmr_po_idx;"
+                "DROP INDEX IF EXISTS pos_twmr_tpb_idx;"
+            ),
+            reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RenameIndex(
             model_name='disputecase',
@@ -99,15 +56,25 @@ class Migration(migrations.Migration):
             new_name='procurement_organization__38d42e_idx',
             old_name='procurement_organiz_0b885f_idx',
         ),
-        migrations.RenameIndex(
-            model_name='procurementbudget',
-            new_name='procurement_site_id_f55af4_idx',
-            old_name='pos_pb_sps_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='procurementbudget',
-            new_name='procurement_categor_457d07_idx',
-            old_name='pos_pb_cps_idx',
+        # v3.5.0 cleanup: source indexes pos_pb_sps_idx / pos_pb_cps_idx were
+        # never created (no Meta.indexes on ProcurementBudget in 0060). Rewritten
+        # as state-only RenameIndex via SeparateDatabaseAndState so the migration
+        # graph is consistent without re-attempting an ALTER INDEX that would
+        # crash on a fresh DB.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='procurementbudget',
+                    new_name='procurement_site_id_f55af4_idx',
+                    old_name='pos_pb_sps_idx',
+                ),
+                migrations.RenameIndex(
+                    model_name='procurementbudget',
+                    new_name='procurement_categor_457d07_idx',
+                    old_name='pos_pb_cps_idx',
+                ),
+            ],
         ),
         migrations.RenameIndex(
             model_name='procurementrequest',
@@ -134,10 +101,16 @@ class Migration(migrations.Migration):
             new_name='purchase_re_organization__99d105_idx',
             old_name='purchase_re_organiz_2b6047_idx',
         ),
-        migrations.RenameIndex(
-            model_name='purchaserequisition',
-            new_name='purchase_re_site_id_c18581_idx',
-            old_name='pos_pr_ss_idx',
+        # v3.5.0 cleanup: pos_pr_ss_idx was never created — state-only rename.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='purchaserequisition',
+                    new_name='purchase_re_site_id_c18581_idx',
+                    old_name='pos_pr_ss_idx',
+                ),
+            ],
         ),
         migrations.RenameIndex(
             model_name='salespaymentleg',
@@ -149,30 +122,48 @@ class Migration(migrations.Migration):
             new_name='supplier_pe_organization__1d73be_idx',
             old_name='supplier_pe_organiz_170c37_idx',
         ),
-        migrations.RenameIndex(
-            model_name='supplierperformancesnapshot',
-            new_name='supplier_pe_supplie_a483d9_idx',
-            old_name='pos_sps_spe_idx',
+        # v3.5.0 cleanup: pos_sps_spe_idx was never created — state-only rename.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='supplierperformancesnapshot',
+                    new_name='supplier_pe_supplie_a483d9_idx',
+                    old_name='pos_sps_spe_idx',
+                ),
+            ],
         ),
         migrations.RenameIndex(
             model_name='supplierquotation',
             new_name='supplier_qu_organization__046ab6_idx',
             old_name='supplier_qu_organiz_5fc0b3_idx',
         ),
-        migrations.RenameIndex(
-            model_name='supplierquotation',
-            new_name='supplier_qu_supplie_cf2919_idx',
-            old_name='pos_sq_ss_idx',
+        # v3.5.0 cleanup: pos_sq_ss_idx was never created — state-only rename.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='supplierquotation',
+                    new_name='supplier_qu_supplie_cf2919_idx',
+                    old_name='pos_sq_ss_idx',
+                ),
+            ],
         ),
         migrations.RenameIndex(
             model_name='threewaymatchresult',
             new_name='three_way_m_organization__a63391_idx',
             old_name='three_way_m_organiz_3451ac_idx',
         ),
-        migrations.RenameIndex(
-            model_name='threewaymatchresult',
-            new_name='three_way_m_invoice_e49f52_idx',
-            old_name='pos_twmr_inv_idx',
+        # v3.5.0 cleanup: pos_twmr_inv_idx was never created — state-only rename.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name='threewaymatchresult',
+                    new_name='three_way_m_invoice_e49f52_idx',
+                    old_name='pos_twmr_inv_idx',
+                ),
+            ],
         ),
         migrations.AlterField(
             model_name='budgetcommitment',

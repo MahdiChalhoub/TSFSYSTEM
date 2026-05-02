@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.SeparateDatabaseAndState(
             database_operations=[],
             state_operations=[
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='assign_to_user',
                     field=models.ForeignKey(
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                         help_text='Assign generated task to this specific user (overrides role)',
                     ),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='broadcast_to_role',
                     field=models.BooleanField(
@@ -46,27 +46,27 @@ class Migration(migrations.Migration):
                         help_text='If True, create a task for EVERY user in the assigned role',
                     ),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='recurrence_time',
                     field=models.TimeField(blank=True, null=True),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='recurrence_day_of_week',
                     field=models.IntegerField(blank=True, null=True),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='recurrence_day_of_month',
                     field=models.IntegerField(blank=True, null=True),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='last_fired_at',
                     field=models.DateTimeField(blank=True, null=True),
                 ),
-                migrations.AddField(
+                migrations.AlterField(
                     model_name='autotaskrule',
                     name='chain_delay_minutes',
                     field=models.IntegerField(default=0),

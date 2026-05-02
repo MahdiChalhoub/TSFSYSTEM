@@ -1,59 +1,70 @@
 'use client'
 
-import { useState, useMemo, useTransition, useEffect } from 'react'
+import { useState, useMemo, useTransition, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
-    CreditCard, Search, ArrowLeft, X, Check,
-    Globe, Filter, Layers, MapPin, Plus, LayoutGrid, MapPinned,
+    CreditCard, Plus, Layers, Check, Globe, MapPin, Filter,
+    LayoutGrid, MapPinned, Building2, AlertTriangle,
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+import { runTimed } from '@/lib/perf-timing'
 import {
     deleteRefPaymentGateway, toggleRefPaymentGateway,
 } from '@/app/actions/reference'
-import { runTimed } from '@/lib/perf-timing'
 import { GatewayEditorDialog } from './GatewayEditorDialog'
-import ViewByGateway from './view-by-gateway'
-import ViewByCountry from './view-by-country'
-import type { RefGateway, RefCountryLite } from './shared'
+import {
+    type RefGateway, type RefCountryLite, type GatewayTreeNode, type ViewMode,
+    buildGatewayTreeData, buildCountryTreeData,
+} from './components/types'
+import { GatewayTreeRow } from './components/GatewayTreeRow'
+import { CountryTreeRow } from './components/CountryTreeRow'
+import { DetailPanel } from './components/DetailPanel'
 
-const inputCls = "w-full text-[12px] font-bold px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary focus:ring-2 focus:ring-app-primary/10 transition-all"
-
-type ViewMode = 'gateway' | 'country'
-
-export default function PaymentGatewaysClient({ allGateways, initialOrgGateways, countries }: {
+interface Props {
     allGateways: RefGateway[]
     initialOrgGateways: Array<Record<string, unknown>>
     countries: RefCountryLite[]
-}) {
+}
+
+export default function PaymentGatewaysClient({ allGateways, initialOrgGateways, countries }: Props) {
     const router = useRouter()
     const [, startTransition] = useTransition()
 
-    const [viewMode, setViewMode] = useState<ViewMode>('gateway')
-    const [search, setSearch] = useState('')
-    const [familyFilter, setFamilyFilter] = useState('')
-    const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('')
-    const [regionFilter, setRegionFilter] = useState('')
-
-    const [expanded, setExpanded] = useState<number | null>(null)
+    const [mode, setMode] = useState<ViewMode>('gateway')
     const [editorOpen, setEditorOpen] = useState(false)
     const [editorTarget, setEditorTarget] = useState<RefGateway | null>(null)
     const [pendingDelete, setPendingDelete] = useState<RefGateway | null>(null)
 
-    // Cross-navigation focus state — set when user pivots from one view to the other
-    const [focusGatewayId, setFocusGatewayId] = useState<number | null>(null)
-    const [focusCountryIso2, setFocusCountryIso2] = useState<string | null>(null)
+    /* ── Lookups ────────────────────────────────── */
+    const countriesByIso2 = useMemo(() => {
+        const m: Record<string, RefCountryLite> = {}
+        countries.forEach(c => { m[c.iso2.toUpperCase()] = c })
+        return m
+    }, [countries])
 
-    function openCreate() {
-        setEditorTarget(null)
-        setEditorOpen(true)
-    }
-    function openEdit(gw: RefGateway) {
-        setEditorTarget(gw)
-        setEditorOpen(true)
-    }
-    async function handleToggle(gw: RefGateway) {
+    /* ── Synthetic tree data per mode ───────────── */
+    const gatewayTreeData = useMemo(() => buildGatewayTreeData(allGateways), [allGateways])
+    const countryTreeData = useMemo(
+        () => buildCountryTreeData(countries, allGateways),
+        [countries, allGateways],
+    )
+    const treeData = mode === 'gateway' ? gatewayTreeData : countryTreeData
+    const globalGateways = useMemo(() => allGateways.filter(g => g.is_global), [allGateways])
+    const hasRegionalCoverage = useMemo(
+        () => allGateways.some(g => !g.is_global && (g.country_codes || []).length > 0),
+        [allGateways],
+    )
+
+    /* ── Action handlers ──────────────────────── */
+    const openCreate = useCallback(() => { setEditorTarget(null); setEditorOpen(true) }, [])
+    const openEdit = useCallback((n: GatewayTreeNode) => {
+        if (n._gw) { setEditorTarget(n._gw); setEditorOpen(true) }
+    }, [])
+    const handleToggle = useCallback(async (n: GatewayTreeNode) => {
+        const gw = n._gw
+        if (!gw) return
         const res = await runTimed(
             'saas.payment-gateways:toggle-active',
             () => toggleRefPaymentGateway(gw.id),
@@ -61,11 +72,18 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways,
         if (res.success) {
             toast.success(`${gw.name} ${gw.is_active ? 'deactivated' : 'activated'}`)
             startTransition(() => router.refresh())
-        } else {
-            toast.error(res.error || 'Failed to toggle')
+        } else toast.error(res.error || 'Failed to toggle')
+    }, [router, startTransition])
+    const askDelete = useCallback((n: GatewayTreeNode) => {
+        const gw = n._gw
+        if (!gw) return
+        if (initialOrgGateways.some(og => og.gateway === gw.id)) {
+            toast.error('In use by one or more orgs — deactivate instead.')
+            return
         }
-    }
-    async function handleConfirmDelete() {
+        setPendingDelete(gw)
+    }, [initialOrgGateways])
+    const handleConfirmDelete = useCallback(async () => {
         if (!pendingDelete) return
         const target = pendingDelete
         setPendingDelete(null)
@@ -76,305 +94,278 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways,
         if (res.success) {
             toast.success(`${target.name} removed`)
             startTransition(() => router.refresh())
-        } else {
-            toast.error(res.error || 'Failed to delete')
-        }
-    }
-    function askDelete(gw: RefGateway) {
-        const inUse = initialOrgGateways.some(og => og.gateway === gw.id)
-        if (inUse) {
-            toast.error('In use by one or more orgs — deactivate instead.')
-            return
-        }
-        setPendingDelete(gw)
-    }
+        } else toast.error(res.error || 'Failed to delete')
+    }, [pendingDelete, router, startTransition])
 
-    // Pivot: gateway-card flag → country view
-    function gotoCountry(iso2: string) {
+    /* ── Cross-pivot navigation ───────────────── */
+    // Render-prop ref so we can drive the template's selection state on pivot.
+    type TreeRenderRef = {
+        setSidebarNode?: (n: GatewayTreeNode | null) => void
+        setSidebarTab?: (tab: string) => void
+    }
+    const renderRef = useRef<TreeRenderRef | null>(null)
+
+    const gotoCountry = useCallback((iso2: string) => {
         const code = iso2.toUpperCase()
-        setViewMode('country')
-        setFocusCountryIso2(code)
-        setFocusGatewayId(null)
-    }
-    // Pivot: country chip → gateway view
-    function gotoGateway(gatewayId: number) {
-        setViewMode('gateway')
-        setFocusGatewayId(gatewayId)
-        setFocusCountryIso2(null)
-        setExpanded(gatewayId)
-    }
+        setMode('country')
+        // Defer until after the mode-driven tree rebuild commits.
+        setTimeout(() => {
+            const node = countryTreeData.find(n => n.id === `cty:${code}`)
+            if (node) renderRef.current?.setSidebarNode?.(node)
+            const el = document.querySelector(`[data-row-id="cty:${code}"]`)
+            ;(el as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 60)
+    }, [countryTreeData])
 
-    // Scroll-to-focused-card after pivot
-    useEffect(() => {
-        if (viewMode === 'gateway' && focusGatewayId != null) {
-            const el = document.getElementById(`gw-card-${focusGatewayId}`)
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-        if (viewMode === 'country' && focusCountryIso2) {
-            const el = document.getElementById(`country-card-${focusCountryIso2.toUpperCase()}`)
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
-    }, [viewMode, focusGatewayId, focusCountryIso2])
+    const gotoGateway = useCallback((gatewayId: number) => {
+        setMode('gateway')
+        setTimeout(() => {
+            const node = gatewayTreeData.find(n => n.id === `gw:${gatewayId}`)
+            if (node) renderRef.current?.setSidebarNode?.(node)
+            const el = document.querySelector(`[data-row-id="gw:${gatewayId}"]`)
+            ;(el as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 60)
+    }, [gatewayTreeData])
 
-    /* ── Derived data ── */
-    const families = useMemo(
-        () => [...new Set(allGateways.map(g => g.provider_family).filter(Boolean))].sort() as string[],
-        [allGateways],
-    )
-
-    const regions = useMemo(
-        () => [...new Set(countries.map(c => c.region).filter(Boolean))].sort() as string[],
-        [countries],
-    )
-
-    const countriesByIso2 = useMemo(() => {
-        const map: Record<string, RefCountryLite> = {}
-        countries.forEach(c => { map[c.iso2.toUpperCase()] = c })
-        return map
-    }, [countries])
-
-    // Filter gateways for "By Gateway" view (search/family/status)
-    const filteredGateways = useMemo(() => {
-        let list = allGateways
-        if (search) {
-            const q = search.toLowerCase()
-            list = list.filter(g =>
-                g.name.toLowerCase().includes(q) ||
-                g.code.toLowerCase().includes(q) ||
-                (g.provider_family || '').toLowerCase().includes(q) ||
-                (g.description || '').toLowerCase().includes(q) ||
-                (g.country_codes || []).some(cc => {
-                    if (cc.toLowerCase().includes(q)) return true
-                    const c = countriesByIso2[cc.toUpperCase()]
-                    return c?.name.toLowerCase().includes(q) || false
-                }),
-            )
-        }
-        if (familyFilter) list = list.filter(g => g.provider_family === familyFilter)
-        if (statusFilter === 'active') list = list.filter(g => g.is_active)
-        if (statusFilter === 'inactive') list = list.filter(g => !g.is_active)
-        return list
-    }, [allGateways, search, familyFilter, statusFilter, countriesByIso2])
-
-    // Filter for "By Country" view: same gateway-level filters apply, plus a country search.
-    const filteredCountries = useMemo(() => {
-        if (!search) return countries
-        const q = search.toLowerCase()
-        return countries.filter(c =>
-            c.name.toLowerCase().includes(q) ||
-            c.iso2.toLowerCase().includes(q) ||
-            (c.iso3 || '').toLowerCase().includes(q) ||
-            (c.region || '').toLowerCase().includes(q) ||
-            (c.subregion || '').toString().toLowerCase().includes(q),
-        )
-    }, [countries, search])
-
-    // KPIs
+    /* ── Counters used by the segmented toggle and KPIs ─── */
     const activeCount = allGateways.filter(g => g.is_active).length
     const globalCount = allGateways.filter(g => g.is_global).length
-    const regionalCount = allGateways.length - globalCount
-    const familyCount = families.length
+    const familiesCount = useMemo(
+        () => new Set(allGateways.map(g => g.provider_family || 'Other')).size,
+        [allGateways],
+    )
     const countriesCovered = useMemo(() => {
-        const set = new Set<string>()
-        allGateways.forEach(g => (g.country_codes || []).forEach(cc => set.add(cc.toUpperCase())))
-        return set.size
+        const s = new Set<string>()
+        allGateways.forEach(g => (g.country_codes || []).forEach(cc => s.add(cc.toUpperCase())))
+        return s.size
     }, [allGateways])
+    const regionsCount = useMemo(
+        () => new Set(countries.map(c => c.region || 'Other').filter(Boolean)).size,
+        [countries],
+    )
+    const usedCount = useMemo(
+        () => allGateways.filter(g => initialOrgGateways.some(og => og.gateway === g.id)).length,
+        [allGateways, initialOrgGateways],
+    )
 
-    const hasActiveFilters = !!(search || familyFilter || statusFilter || regionFilter)
+    /* ── KPI predicates per mode ────────────────── */
+    const gatewayKpiPredicates = useMemo(() => ({
+        active: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            if (item._kind === 'family') {
+                return all.some(g => (g as GatewayTreeNode).parent === item.id && (g as GatewayTreeNode)._gw?.is_active === true)
+            }
+            return (item as GatewayTreeNode)._gw?.is_active === true
+        },
+        global: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            if (item._kind === 'family') {
+                return all.some(g => (g as GatewayTreeNode).parent === item.id && (g as GatewayTreeNode)._gw?.is_global === true)
+            }
+            return (item as GatewayTreeNode)._gw?.is_global === true
+        },
+        regional: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            if (item._kind === 'family') {
+                return all.some(g => (g as GatewayTreeNode).parent === item.id && (g as GatewayTreeNode)._gw?.is_global === false)
+            }
+            const n = item as GatewayTreeNode
+            return n._kind === 'gateway' && n._gw?.is_global === false
+        },
+        used: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            const isUsed = (gid: number) => initialOrgGateways.some(og => og.gateway === gid)
+            if (item._kind === 'family') {
+                return all.some(g => (g as GatewayTreeNode).parent === item.id && (g as GatewayTreeNode)._gw && isUsed((g as GatewayTreeNode)._gw!.id))
+            }
+            const n = item as GatewayTreeNode
+            return !!n._gw && isUsed(n._gw.id)
+        },
+    }), [initialOrgGateways])
 
-    function clearFilters() {
-        setSearch(''); setFamilyFilter(''); setStatusFilter(''); setRegionFilter('')
-        setFocusGatewayId(null); setFocusCountryIso2(null)
-    }
+    const countryKpiPredicates = useMemo(() => ({
+        // "Has regional" — country has at least one country-specific gateway listed
+        regional: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            const n = item as GatewayTreeNode
+            if (n._kind === 'region') {
+                return all.some(x => (x as GatewayTreeNode).parent === n.id && ((x as GatewayTreeNode)._gateways?.length || 0) > 0)
+            }
+            return n._kind === 'country' && (n._gateways?.length || 0) > 0
+        },
+        // "Worldwide-only" — country has zero country-specific gateways (worldwide still apply via banner)
+        worldwide: (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => {
+            const n = item as GatewayTreeNode
+            if (n._kind === 'region') {
+                return all.some(x => (x as GatewayTreeNode).parent === n.id && ((x as GatewayTreeNode)._gateways?.length || 0) === 0)
+            }
+            return n._kind === 'country' && (n._gateways?.length || 0) === 0
+        },
+    }), [])
+
+    /* ── Mode toggle (rendered as a secondary action button) ─── */
+    const ModeToggle = () => (
+        <div className="inline-flex items-center gap-0.5 p-0.5 rounded-xl"
+            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+            <button
+                onClick={() => setMode('gateway')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-tp-xs font-black rounded-lg transition-all"
+                style={{
+                    background: mode === 'gateway' ? 'var(--app-primary)' : 'transparent',
+                    color: mode === 'gateway' ? '#fff' : 'var(--app-muted-foreground)',
+                }}>
+                <LayoutGrid size={11} /> By Gateway
+            </button>
+            <button
+                onClick={() => setMode('country')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-tp-xs font-black rounded-lg transition-all"
+                style={{
+                    background: mode === 'country' ? 'var(--app-primary)' : 'transparent',
+                    color: mode === 'country' ? '#fff' : 'var(--app-muted-foreground)',
+                }}>
+                <MapPinned size={11} /> By Country
+            </button>
+        </div>
+    )
 
     return (
-        <div className="app-page max-w-6xl mx-auto space-y-6 animate-in fade-in duration-300">
-            {/* ═══ Header ═══ */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2 fade-in-up">
-                <div className="flex items-center gap-4">
-                    <Link href="/saas-home">
-                        <button className="w-9 h-9 rounded-xl border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all">
-                            <ArrowLeft size={16} />
-                        </button>
-                    </Link>
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                        style={{ background: 'var(--app-primary-bg)', border: '1px solid var(--app-primary-border)' }}>
-                        <CreditCard size={26} style={{ color: 'var(--app-primary)' }} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
-                            SaaS · Reference Data
-                        </p>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
-                            Payment Gateway Catalog
-                        </h1>
-                        <p className="text-[11px] text-app-muted-foreground mt-0.5">
-                            Browse the catalog from either side: by gateway brand or by country coverage.
-                        </p>
-                    </div>
-                </div>
-                <button onClick={openCreate}
-                        className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl text-white transition-all hover:shadow-md"
-                        style={{ background: 'var(--app-primary)' }}>
-                    <Plus size={12} /> Add Gateway
-                </button>
-            </header>
-
-            {/* ═══ KPI Strip ═══ */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
-                {[
-                    { label: 'Total Gateways', value: allGateways.length, color: 'var(--app-primary)', icon: <Layers size={14} /> },
-                    { label: 'Active', value: activeCount, color: 'var(--app-success, #22c55e)', icon: <Check size={14} /> },
-                    { label: 'Global', value: globalCount, color: 'var(--app-info, #3b82f6)', icon: <Globe size={14} /> },
-                    { label: 'Regional', value: regionalCount, color: 'var(--app-accent)', icon: <MapPin size={14} /> },
-                    { label: 'Families', value: familyCount, color: 'var(--app-warning)', icon: <Filter size={14} /> },
-                    { label: 'Countries Covered', value: countriesCovered, color: 'var(--app-info, #3b82f6)', icon: <Globe size={14} /> },
-                ].map(s => (
-                    <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
-                        style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ background: `color-mix(in srgb, ${s.color} 12%, transparent)`, color: s.color }}>{s.icon}</div>
-                        <div>
-                            <div className="text-[9px] font-bold uppercase tracking-widest text-app-muted-foreground">{s.label}</div>
-                            <div className="text-lg font-black text-app-foreground tabular-nums leading-none">{s.value}</div>
+        <>
+            <TreeMasterPage
+                key={mode}
+                config={{
+                    title: 'Payment Gateways',
+                    subtitle: (filtered: Array<Record<string, unknown>>, all: Array<Record<string, unknown>>) => {
+                        if (mode === 'gateway') {
+                            const gw = filtered.filter(n => (n as GatewayTreeNode)._kind === 'gateway').length
+                            const totalGw = all.filter(n => (n as GatewayTreeNode)._kind === 'gateway').length
+                            return `${gw === totalGw ? totalGw : `${gw}/${totalGw}`} Gateways · ${familiesCount} Families · SaaS Reference`
+                        }
+                        const c = filtered.filter(n => (n as GatewayTreeNode)._kind === 'country').length
+                        const totalC = all.filter(n => (n as GatewayTreeNode)._kind === 'country').length
+                        return `${c === totalC ? totalC : `${c}/${totalC}`} Countries · ${regionsCount} Regions · SaaS Coverage Map`
+                    },
+                    icon: <CreditCard size={20} />,
+                    iconColor: 'var(--app-primary)',
+                    searchPlaceholder: mode === 'gateway'
+                        ? 'Search by gateway name, code, family, country... (Ctrl+K)'
+                        : 'Search by country, ISO, region... (Ctrl+K)',
+                    primaryAction: { label: 'New Gateway', icon: <Plus size={14} />, onClick: openCreate },
+                    secondaryActions: [
+                        { label: 'mode-toggle', icon: <Filter size={11} />, render: () => <ModeToggle /> },
+                    ],
+                    data: treeData as unknown as Array<Record<string, unknown>>,
+                    searchFields: mode === 'gateway'
+                        ? ['name', 'code', 'description']
+                        : ['name', 'iso2', 'iso3', 'region', 'subregion'],
+                    treeParentKey: 'parent',
+                    kpiPredicates: (mode === 'gateway' ? gatewayKpiPredicates : countryKpiPredicates) as unknown as Record<string, (item: Record<string, unknown>, all: Array<Record<string, unknown>>) => boolean>,
+                    kpis: mode === 'gateway' ? [
+                        { label: 'Total', icon: <Layers size={11} />, color: 'var(--app-primary)', filterKey: 'all', value: () => allGateways.length, hint: 'Show all gateways (clear filters)' },
+                        { label: 'Active', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'active', value: activeCount, hint: 'Show only live gateways' },
+                        { label: 'Global', icon: <Globe size={11} />, color: 'var(--app-info, #3b82f6)', filterKey: 'global', value: globalCount, hint: 'Show worldwide gateways' },
+                        { label: 'Regional', icon: <MapPin size={11} />, color: 'var(--app-accent)', filterKey: 'regional', value: allGateways.length - globalCount, hint: 'Show country-specific gateways' },
+                        { label: 'Used', icon: <Building2 size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'used', value: usedCount, hint: 'Show gateways activated by at least one org' },
+                        { label: 'Countries', icon: <Globe size={11} />, color: 'var(--app-info, #3b82f6)', value: countriesCovered, hint: 'Distinct ISO2 codes referenced across the catalog' },
+                    ] : [
+                        { label: 'Total', icon: <MapPinned size={11} />, color: 'var(--app-primary)', filterKey: 'all', value: () => countries.length, hint: 'Show all countries' },
+                        { label: 'Has Regional', icon: <MapPin size={11} />, color: 'var(--app-accent)', filterKey: 'regional', value: countriesCovered, hint: 'Countries with at least one country-specific gateway' },
+                        { label: 'Worldwide-Only', icon: <Globe size={11} />, color: 'var(--app-info, #3b82f6)', filterKey: 'worldwide', value: () => Math.max(0, countries.length - countriesCovered), hint: 'Countries with no country-specific gateway — only worldwide gateways apply' },
+                        { label: 'Regions', icon: <Layers size={11} />, color: 'var(--app-warning)', value: regionsCount, hint: 'Number of geographic regions' },
+                        { label: 'Worldwide GW', icon: <Globe size={11} />, color: 'var(--app-info, #3b82f6)', value: globalCount, hint: 'Number of is_global gateways (apply to every country)' },
+                    ],
+                    columnHeaders: mode === 'gateway' ? [
+                        { label: 'Gateway', width: 'auto' },
+                        { label: 'Code', width: '90px', hideOnMobile: true },
+                        { label: 'Family', width: '120px', color: 'var(--app-warning)', hideOnMobile: true },
+                        { label: 'Countries', width: '110px', color: 'var(--app-info, #3b82f6)', hideOnMobile: true },
+                        { label: 'Fields', width: '70px', color: 'var(--app-accent)', hideOnMobile: true },
+                        { label: 'Status', width: '80px', color: 'var(--app-success, #22c55e)', hideOnMobile: true },
+                    ] : [
+                        { label: 'Country', width: 'auto' },
+                        { label: 'ISO', width: '90px', hideOnMobile: true },
+                        { label: 'Region', width: '110px', color: 'var(--app-warning)', hideOnMobile: true },
+                        { label: 'Gateways', width: '80px', color: 'var(--app-success, #22c55e)', hideOnMobile: true },
+                    ],
+                    emptyState: {
+                        icon: <CreditCard size={36} />,
+                        title: (hasSearch: boolean) => hasSearch
+                            ? (mode === 'gateway' ? 'No matching gateways' : 'No matching countries')
+                            : (mode === 'gateway' ? 'No payment gateways in the catalog' : 'No countries with gateway coverage'),
+                        subtitle: (hasSearch: boolean) => hasSearch
+                            ? 'Try a different search term or clear filters.'
+                            : (mode === 'gateway' ? 'Click "New Gateway" or run seed_payment_gateways.' : 'Add gateways with country_codes, or mark some as global.'),
+                        actionLabel: mode === 'gateway' ? 'Add First Gateway' : undefined,
+                    },
+                    footerLeft: () => (
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <span>{allGateways.length} gateways</span>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span>{countriesCovered} countries covered</span>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span>{initialOrgGateways.length} org activations</span>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* ═══ View Toggle + Filters ═══ */}
-            <div className="flex flex-col gap-3">
-                {/* Segmented view toggle */}
-                <div className="inline-flex items-center gap-1 p-1 rounded-xl self-start"
-                    style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                    <button
-                        onClick={() => { setViewMode('gateway'); setFocusCountryIso2(null) }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black rounded-lg transition-all"
-                        style={{
-                            background: viewMode === 'gateway' ? 'var(--app-primary)' : 'transparent',
-                            color: viewMode === 'gateway' ? '#fff' : 'var(--app-muted-foreground)',
-                        }}>
-                        <LayoutGrid size={12} /> By Gateway
-                    </button>
-                    <button
-                        onClick={() => { setViewMode('country'); setFocusGatewayId(null) }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-black rounded-lg transition-all"
-                        style={{
-                            background: viewMode === 'country' ? 'var(--app-primary)' : 'transparent',
-                            color: viewMode === 'country' ? '#fff' : 'var(--app-muted-foreground)',
-                        }}>
-                        <MapPinned size={12} /> By Country
-                    </button>
-                </div>
-
-                {/* Filter row */}
-                <div className="flex items-center gap-3 flex-wrap">
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
-                        <input value={search} onChange={e => setSearch(e.target.value)}
-                            placeholder={viewMode === 'gateway' ? 'Search by gateway name, code, family, country…' : 'Search countries by name, ISO, region…'}
-                            className={`${inputCls} pl-9`} />
-                    </div>
-
-                    {viewMode === 'gateway' ? (
-                        <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)}
-                            className={`${inputCls} w-[160px] appearance-none pr-7`}
-                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                            <option value="">All Families</option>
-                            {families.map(f => <option key={f} value={f}>{f}</option>)}
-                        </select>
-                    ) : (
-                        <select value={regionFilter} onChange={e => setRegionFilter(e.target.value)}
-                            className={`${inputCls} w-[160px] appearance-none pr-7`}
-                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                            <option value="">All Regions</option>
-                            {regions.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                    )}
-
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as '' | 'active' | 'inactive')}
-                        className={`${inputCls} w-[120px] appearance-none pr-7`}
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-
-                    {hasActiveFilters && (
-                        <button onClick={clearFilters}
-                            className="text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground px-2 py-1.5 rounded-lg hover:bg-app-surface transition-all flex items-center gap-1">
-                            <X size={10} /> Clear
-                        </button>
-                    )}
-
-                    <div className="ml-auto text-[10px] font-bold text-app-muted-foreground">
-                        {viewMode === 'gateway'
-                            ? `${filteredGateways.length} of ${allGateways.length} gateways`
-                            : `${countries.length} countries · ${allGateways.length} gateways`}
-                    </div>
-                </div>
-
-                {/* Cross-pivot focus banner */}
-                {viewMode === 'country' && focusCountryIso2 && (
-                    <PivotBanner
-                        text={`Showing payment gateways in ${countriesByIso2[focusCountryIso2.toUpperCase()]?.name || focusCountryIso2.toUpperCase()}`}
-                        onClear={() => setFocusCountryIso2(null)}
+                    ),
+                }}
+                aboveTree={mode === 'country' ? (
+                    <WorldwideBanner
+                        globalGateways={globalGateways}
+                        onGotoGateway={gotoGateway}
+                        hasRegionalCoverage={hasRegionalCoverage}
+                    />
+                ) : undefined}
+                detailPanel={(node, { onClose, onPin }) => (
+                    <DetailPanel
+                        node={node as GatewayTreeNode}
+                        countriesByIso2={countriesByIso2}
+                        orgGateways={initialOrgGateways}
+                        globalGateways={globalGateways}
+                        onClose={onClose}
+                        onPin={onPin ? (n) => onPin(n) : undefined}
+                        onEdit={openEdit}
+                        onToggle={handleToggle}
+                        onAskDelete={askDelete}
+                        onGotoCountry={gotoCountry}
+                        onGotoGateway={gotoGateway}
                     />
                 )}
-                {viewMode === 'gateway' && focusGatewayId != null && (
-                    <PivotBanner
-                        text={`Focused on ${allGateways.find(g => g.id === focusGatewayId)?.name || 'gateway'} — click another card or clear to reset.`}
-                        onClear={() => { setFocusGatewayId(null); setExpanded(null) }}
-                    />
-                )}
-            </div>
+            >
+                {(renderProps) => {
+                    renderRef.current = {
+                        setSidebarNode: renderProps.setSidebarNode,
+                        setSidebarTab: renderProps.setSidebarTab,
+                    }
+                    const tree = renderProps.tree as GatewayTreeNode[]
+                    const { searchQuery, expandAll, expandKey, isCompact, openNode, isSelected } = renderProps
 
-            {/* ═══ Active View ═══ */}
-            {viewMode === 'gateway' ? (
-                <ViewByGateway
-                    gateways={filteredGateways}
-                    orgGateways={initialOrgGateways}
-                    countriesByIso2={countriesByIso2}
-                    expanded={expanded}
-                    setExpanded={setExpanded}
-                    focusGatewayId={focusGatewayId}
-                    onGotoCountry={gotoCountry}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                    onAskDelete={askDelete}
-                />
-            ) : (
-                <ViewByCountry
-                    gateways={filteredGateways}
-                    countries={filteredCountries}
-                    orgGateways={initialOrgGateways}
-                    regionFilter={regionFilter}
-                    onGotoGateway={gotoGateway}
-                    focusCountryIso2={focusCountryIso2}
-                />
-            )}
-
-            {/* Empty states */}
-            {viewMode === 'gateway' && filteredGateways.length === 0 && (
-                <div className="text-center py-16 rounded-2xl border-2 border-dashed border-app-border">
-                    <CreditCard size={40} className="mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-bold text-app-muted-foreground">
-                        {hasActiveFilters ? 'No gateways match your filters' : 'No payment gateways in the catalog'}
-                    </p>
-                    <p className="text-[11px] text-app-muted-foreground mt-1">
-                        {hasActiveFilters
-                            ? 'Try adjusting your search or filter.'
-                            : 'Click "Add Gateway" above, or run the seed_payment_gateways command.'}
-                    </p>
-                    {!hasActiveFilters && (
-                        <button onClick={openCreate}
-                                className="mt-4 inline-flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl text-white"
-                                style={{ background: 'var(--app-primary)' }}>
-                            <Plus size={12} /> Add First Gateway
-                        </button>
-                    )}
-                </div>
-            )}
+                    return tree.map((node) => (
+                        <div
+                            key={`${node.id}-${expandKey}`}
+                            data-row-id={node.id}
+                            className={`rounded-xl transition-all duration-300 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}
+                        >
+                            {mode === 'gateway' ? (
+                                <GatewayTreeRow
+                                    node={node}
+                                    level={0}
+                                    searchQuery={searchQuery}
+                                    forceExpanded={expandAll}
+                                    compact={isCompact}
+                                    onSelect={(n) => openNode(n)}
+                                    onEdit={openEdit}
+                                    onToggle={handleToggle}
+                                    onAskDelete={askDelete}
+                                    onGotoCountry={gotoCountry}
+                                />
+                            ) : (
+                                <CountryTreeRow
+                                    node={node}
+                                    level={0}
+                                    searchQuery={searchQuery}
+                                    forceExpanded={expandAll}
+                                    compact={isCompact}
+                                    onSelect={(n) => openNode(n)}
+                                    onGotoGateway={gotoGateway}
+                                />
+                            )}
+                        </div>
+                    ))
+                }}
+            </TreeMasterPage>
 
             <GatewayEditorDialog
                 open={editorOpen}
@@ -392,24 +383,87 @@ export default function PaymentGatewaysClient({ allGateways, initialOrgGateways,
                 variant="danger"
                 onConfirm={handleConfirmDelete}
             />
-        </div>
+        </>
     )
 }
 
-function PivotBanner({ text, onClear }: { text: string; onClear: () => void }) {
+/* ═══════════════════════════════════════════════════════════
+ *  WorldwideBanner — sits above the country tree.
+ *
+ *  Worldwide gateways apply to every country, so we surface them
+ *  ONCE here instead of stamping them onto every country row.
+ *  When no regional gateways exist anywhere, this also explains
+ *  why the country list looks "empty" — there's nothing to
+ *  differentiate countries by.
+ * ═══════════════════════════════════════════════════════════ */
+function WorldwideBanner({ globalGateways, hasRegionalCoverage, onGotoGateway }: {
+    globalGateways: import('./components/types').RefGateway[]
+    hasRegionalCoverage: boolean
+    onGotoGateway: (id: number) => void
+}) {
+    if (globalGateways.length === 0 && hasRegionalCoverage) return null
+
+    if (globalGateways.length === 0) {
+        return (
+            <div className="rounded-2xl p-3 mb-3 flex items-center gap-2"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-warning) 25%, transparent)',
+                }}>
+                <AlertTriangle size={14} style={{ color: 'var(--app-warning)' }} />
+                <span className="text-tp-xs font-bold" style={{ color: 'var(--app-warning)' }}>
+                    No worldwide gateways and no country coverage configured.
+                </span>
+                <span className="text-tp-xs text-app-muted-foreground">
+                    Edit a gateway and set <span className="font-mono font-bold">is_global</span> or add ISO codes to <span className="font-mono font-bold">country_codes</span>.
+                </span>
+            </div>
+        )
+    }
+
     return (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-bold animate-in fade-in slide-in-from-top-2 duration-200"
+        <div className="rounded-2xl p-3 mb-3 flex flex-col gap-2"
             style={{
-                background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
-                border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
-                color: 'var(--app-primary)',
+                background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 25%, transparent)',
             }}>
-            <Filter size={11} />
-            <span className="flex-1">{text}</span>
-            <button onClick={onClear}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black hover:bg-app-surface transition-all">
-                <X size={10} /> Clear pivot
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+                <Globe size={14} style={{ color: 'var(--app-info, #3b82f6)' }} />
+                <span className="text-tp-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                    Worldwide Gateways · apply to every country below
+                </span>
+                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                    {globalGateways.length}
+                </span>
+                {!hasRegionalCoverage && (
+                    <span className="text-tp-xxs font-medium text-app-muted-foreground italic ml-auto">
+                        No country-specific gateways exist — every country shows only these.
+                    </span>
+                )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+                {globalGateways.map(gw => (
+                    <button
+                        key={gw.id}
+                        onClick={() => onGotoGateway(gw.id)}
+                        title={gw.name}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-tp-xs font-bold transition-all hover:scale-[1.03]"
+                        style={{
+                            background: `color-mix(in srgb, ${gw.color || '#6366f1'} 10%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${gw.color || '#6366f1'} 30%, transparent)`,
+                            color: gw.is_active ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                            opacity: gw.is_active ? 1 : 0.55,
+                        }}>
+                        <span className="text-[14px] leading-none">{gw.logo_emoji || '💳'}</span>
+                        <span>{gw.name}</span>
+                        {!gw.is_active && (
+                            <span className="text-[8px] font-black px-1 rounded"
+                                style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)' }}>DRAFT</span>
+                        )}
+                    </button>
+                ))}
+            </div>
         </div>
     )
 }

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
-import { POLifecycle } from './POLifecycle'
+import { POLifecycle, type POStatus } from './POLifecycle'
 
 type Props = {
     suppliers: Record<string, any>[]
@@ -38,6 +38,12 @@ type Props = {
     expectedDelivery: string
     onExpectedDeliveryChange: (val: string) => void
     onClose?: () => void
+    /** Current PO lifecycle status — defaults to 'DRAFT' for new POs. */
+    poStatus?: POStatus
+    /** Callback to transition status — enables interactive lifecycle in edit mode. */
+    onStatusChange?: (next: POStatus) => void
+    /** True while a status transition is in flight. */
+    statusTransitioning?: boolean
 }
 
 /* ── Field vocabulary ─────────────────────────────────────────
@@ -83,6 +89,9 @@ export function AdminSidebar({
     date, onDateChange,
     expectedDelivery, onExpectedDeliveryChange,
     onClose,
+    poStatus = 'DRAFT',
+    onStatusChange,
+    statusTransitioning = false,
 }: Props) {
     const warehouses = useMemo(() => {
         const site = sites.find(s => Number(s.id) === Number(siteId))
@@ -222,9 +231,11 @@ export function AdminSidebar({
              *  yet); when this panel is reused for editing an
              *  existing PO, swap `current` for `po.status`. */}
             <div className="flex-shrink-0 px-4 pb-2">
-                <POLifecycle current="DRAFT" variant="full"
+                <POLifecycle current={poStatus} variant="full"
+                             onStageChange={onStatusChange}
+                             transitioning={statusTransitioning}
                              collapsible
-                             defaultCollapsed />
+                             defaultCollapsed={poStatus === 'DRAFT'} />
             </div>
 
             {/* BODY ─────────────────────────────────────────────── */}

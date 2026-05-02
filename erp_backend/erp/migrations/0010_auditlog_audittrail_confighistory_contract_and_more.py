@@ -354,7 +354,9 @@ class Migration(migrations.Migration):
             name='parent_role',
             field=models.ForeignKey(blank=True, help_text='Inherit permissions from parent role', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='child_roles', to='erp.role'),
         ),
-        migrations.AddField(
+        # v3.5.0 cleanup: was AddField — Role.organization already added by erp/0002_initial.
+        # Switched to AlterField to apply the new blank/null/related_name without crashing.
+        migrations.AlterField(
             model_name='role',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

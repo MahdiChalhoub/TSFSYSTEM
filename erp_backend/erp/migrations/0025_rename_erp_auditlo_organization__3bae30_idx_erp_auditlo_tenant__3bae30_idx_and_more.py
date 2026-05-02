@@ -12,70 +12,382 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='erp_auditlo_tenant__3bae30_idx',
-            old_name='erp_auditlo_organization__3bae30_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='auditlog',
+
+                    new_name='erp_auditlo_tenant__3bae30_idx',
+
+                    old_name='erp_auditlo_organization__3bae30_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_auditlo_organization__3bae30_idx RENAME TO erp_auditlo_tenant__3bae30_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_auditlo_tenant__3bae30_idx RENAME TO erp_auditlo_organization__3bae30_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='erp_auditlo_tenant__7aa361_idx',
-            old_name='erp_auditlo_organization__7aa361_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='auditlog',
+
+                    new_name='erp_auditlo_tenant__7aa361_idx',
+
+                    old_name='erp_auditlo_organization__7aa361_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_auditlo_organization__7aa361_idx RENAME TO erp_auditlo_tenant__7aa361_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_auditlo_tenant__7aa361_idx RENAME TO erp_auditlo_organization__7aa361_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='erp_auditlo_tenant__5422cf_idx',
-            old_name='erp_auditlo_organization__5422cf_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='auditlog',
+
+                    new_name='erp_auditlo_tenant__5422cf_idx',
+
+                    old_name='erp_auditlo_organization__5422cf_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_auditlo_organization__5422cf_idx RENAME TO erp_auditlo_tenant__5422cf_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_auditlo_tenant__5422cf_idx RENAME TO erp_auditlo_organization__5422cf_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='auditlog',
-            new_name='erp_auditlo_tenant__2245f0_idx',
-            old_name='erp_auditlo_organization__2245f0_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='auditlog',
+
+                    new_name='erp_auditlo_tenant__2245f0_idx',
+
+                    old_name='erp_auditlo_organization__2245f0_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_auditlo_organization__2245f0_idx RENAME TO erp_auditlo_tenant__2245f0_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_auditlo_tenant__2245f0_idx RENAME TO erp_auditlo_organization__2245f0_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='audittrail',
-            new_name='erp_audittr_tenant__cab6d8_idx',
-            old_name='erp_audittr_organization__cab6d8_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='audittrail',
+
+                    new_name='erp_audittr_tenant__cab6d8_idx',
+
+                    old_name='erp_audittr_organization__cab6d8_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_audittr_organization__cab6d8_idx RENAME TO erp_audittr_tenant__cab6d8_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_audittr_tenant__cab6d8_idx RENAME TO erp_audittr_organization__cab6d8_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='domainevent',
-            new_name='erp_domaine_tenant__ff3bb3_idx',
-            old_name='erp_domaine_organization__ff3bb3_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='domainevent',
+
+                    new_name='erp_domaine_tenant__ff3bb3_idx',
+
+                    old_name='erp_domaine_organization__ff3bb3_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_domaine_organization__ff3bb3_idx RENAME TO erp_domaine_tenant__ff3bb3_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_domaine_tenant__ff3bb3_idx RENAME TO erp_domaine_organization__ff3bb3_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='domainevent',
-            new_name='erp_domaine_tenant__c286e5_idx',
-            old_name='erp_domaine_organization__c286e5_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='domainevent',
+
+                    new_name='erp_domaine_tenant__c286e5_idx',
+
+                    old_name='erp_domaine_organization__c286e5_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_domaine_organization__c286e5_idx RENAME TO erp_domaine_tenant__c286e5_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_domaine_tenant__c286e5_idx RENAME TO erp_domaine_organization__c286e5_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='featureflag',
-            new_name='erp_feature_tenant__6b9fe1_idx',
-            old_name='erp_feature_organization__6b9fe1_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='featureflag',
+
+                    new_name='erp_feature_tenant__6b9fe1_idx',
+
+                    old_name='erp_feature_organization__6b9fe1_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_feature_organization__6b9fe1_idx RENAME TO erp_feature_tenant__6b9fe1_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_feature_tenant__6b9fe1_idx RENAME TO erp_feature_organization__6b9fe1_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='orgmodule',
-            new_name='erp_orgmodu_tenant__e71a63_idx',
-            old_name='erp_orgmodu_organization__e71a63_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='orgmodule',
+
+                    new_name='erp_orgmodu_tenant__e71a63_idx',
+
+                    old_name='erp_orgmodu_organization__e71a63_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_orgmodu_organization__e71a63_idx RENAME TO erp_orgmodu_tenant__e71a63_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_orgmodu_tenant__e71a63_idx RENAME TO erp_orgmodu_organization__e71a63_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='resourcepermission',
-            new_name='kernel_reso_tenant__63236d_idx',
-            old_name='kernel_reso_organization__63236d_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='resourcepermission',
+
+                    new_name='kernel_reso_tenant__63236d_idx',
+
+                    old_name='kernel_reso_organization__63236d_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS kernel_reso_organization__63236d_idx RENAME TO kernel_reso_tenant__63236d_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS kernel_reso_tenant__63236d_idx RENAME TO kernel_reso_organization__63236d_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='role',
-            new_name='kernel_role_tenant__7d80c1_idx',
-            old_name='kernel_role_organization__7d80c1_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='role',
+
+                    new_name='kernel_role_tenant__7d80c1_idx',
+
+                    old_name='kernel_role_organization__7d80c1_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS kernel_role_organization__7d80c1_idx RENAME TO kernel_role_tenant__7d80c1_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS kernel_role_tenant__7d80c1_idx RENAME TO kernel_role_organization__7d80c1_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='tenantconfig',
-            new_name='erp_tenantc_tenant__a104e6_idx',
-            old_name='erp_tenantc_organization__a104e6_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='tenantconfig',
+
+                    new_name='erp_tenantc_tenant__a104e6_idx',
+
+                    old_name='erp_tenantc_organization__a104e6_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS erp_tenantc_organization__a104e6_idx RENAME TO erp_tenantc_tenant__a104e6_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS erp_tenantc_tenant__a104e6_idx RENAME TO erp_tenantc_organization__a104e6_idx;",
+
+                ),
+
+            ],
+
         ),
-        migrations.RenameIndex(
-            model_name='userrole',
-            new_name='kernel_user_tenant__e61c89_idx',
-            old_name='kernel_user_organization__e61c89_idx',
+        migrations.SeparateDatabaseAndState(
+
+            state_operations=[
+
+                migrations.RenameIndex(
+
+                    model_name='userrole',
+
+                    new_name='kernel_user_tenant__e61c89_idx',
+
+                    old_name='kernel_user_organization__e61c89_idx',
+
+                ),
+
+            ],
+
+            database_operations=[
+
+                migrations.RunSQL(
+
+                    sql="ALTER INDEX IF EXISTS kernel_user_organization__e61c89_idx RENAME TO kernel_user_tenant__e61c89_idx;",
+
+                    reverse_sql="ALTER INDEX IF EXISTS kernel_user_tenant__e61c89_idx RENAME TO kernel_user_organization__e61c89_idx;",
+
+                ),
+
+            ],
+
         ),
         migrations.AddField(
             model_name='organization',

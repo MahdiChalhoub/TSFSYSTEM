@@ -32,17 +32,20 @@ class Migration(migrations.Migration):
             model_name='productgroup',
             name='organization',
         ),
-        migrations.AddField(
+        # v3.5.0 cleanup: were AddField — Brand/Category/Parfum.organization already
+        # added by 0001_initial. Switched to AlterField to apply the new
+        # blank/null/related_name without crashing on duplicate column.
+        migrations.AlterField(
             model_name='brand',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='category',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='parfum',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -72,7 +75,9 @@ class Migration(migrations.Migration):
             name='required_levels_frozen',
             field=models.IntegerField(default=0, help_text='Required levels frozen at LOCK time (immutable)'),
         ),
-        migrations.AddField(
+        # v3.5.0 cleanup: was AddField — Unit.organization already added by 0002_initial.
+        # Switched to AlterField to apply the new shape without crashing on duplicate column.
+        migrations.AlterField(
             model_name='unit',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

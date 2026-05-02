@@ -64,13 +64,28 @@ type TreeNode = {
   id: number | string
   parent?: number | null
   /** Discriminator for the row renderer. */
-  kind: 'country' | 'currency' | 'gateway' | 'einvoice' | 'tax'
+  kind: 'country' | 'currency' | 'gateway' | 'einvoice' | 'tax' | 'tenant'
   /** Unified search/display field. */
   name: string
   /** Optional secondary line. */
   subtitle?: string
   /** Type-specific payload (only the originating type knows the shape). */
   data?: any
+  /**
+   * Pre-computed lowercase blob covering every searchable token for THIS
+   * node + its parent country. TreeMasterPage's search does a flat
+   * `item[field].includes(q)` check — without this, deep fields like
+   * iso2 / phone_code / currency_code wouldn't match. Carrying the parent's
+   * blob on each child also keeps children visible when the user searches
+   * for the country (e.g. "USA" → US row + all its children).
+   */
+  searchBlob?: string
+}
+
+type TenantUsage = {
+  org_id: number
+  org_name: string
+  is_default?: boolean
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -266,6 +281,7 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
       const payload = {
         ...form,
         default_currency: form.default_currency || null,
+        is_active: true, // Force-on; per-tenant gate lives in OrgCountry.
       }
       if (isNew) {
         await erpFetch('reference/countries/', { method: 'POST', body: JSON.stringify(payload) })
@@ -392,13 +408,10 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
             </div>
           </div>
 
-          {/* Active */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.is_active}
-              onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-              className="w-4 h-4 rounded border-app-border accent-[var(--app-primary)]" />
-            <span className="text-[12px] font-bold text-app-foreground">Active</span>
-          </label>
+          {/* Note: `is_active` is NOT exposed here — country availability
+              is managed per-tenant via OrgCountry (see /organizations).
+              We always submit is_active:true so legacy false rows in the
+              global registry don't keep cascading. */}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
@@ -434,52 +447,195 @@ function CountryEditModal({ country, currencies, onClose, onSaved, onCurrenciesC
 }
 
 /* ═══════════════════════════════════════════════════════
-   Linked Entity Row — currency / gateway / e-invoice / tax
-   children rendered under their country in the tree.
-   Click navigates to the matching admin page so the user
-   can manage that entity directly.
+   Linked Entity Tree — children grouped by kind with
+   connector lines. Renders inside an expanded country.
+   ─────────────────────────────────────────────────────────
+   Layout per country:
+       [country row]
+        │
+        ├── 💵  Currency
+        │       └── USD — US Dollar         →
+        ├── 🛡️   Tax Templates
+        │       └── US Federal Tax          →
+        ├── 💳  Payment Gateways
+        │       ├── Stripe                  →
+        │       └── PayPal (global)         →
+        └── 📄  E-Invoice Standards
+                └── PEPPOL (XML)            →
    ═══════════════════════════════════════════════════════ */
 
-const LINKED_KIND_META: Record<TreeNode['kind'], { color: string; href: string; icon: React.ReactNode; label: string }> = {
-  country: { color: 'var(--app-primary)', href: '', icon: <Globe size={11} />, label: 'Country' },
-  currency: { color: 'var(--app-info, #3b82f6)', href: '/currencies', icon: <DollarSign size={11} />, label: 'Currency' },
-  gateway: { color: 'var(--app-accent)', href: '/payment-gateways', icon: <CreditCard size={11} />, label: 'Payment Gateway' },
-  einvoice: { color: 'var(--app-warning, #f59e0b)', href: '/e-invoice-standards', icon: <FileText size={11} />, label: 'E-invoice' },
-  tax: { color: 'var(--app-success, #22c55e)', href: '/country-tax-templates', icon: <Shield size={11} />, label: 'Tax Template' },
+const LINKED_KIND_META: Record<Exclude<TreeNode['kind'], 'country'>, { color: string; href: string; icon: React.ReactNode; label: string; group: string }> = {
+  currency:  { color: 'var(--app-info, #3b82f6)',    href: '/currencies',             icon: <DollarSign size={11} />, label: 'Currency',        group: 'Currency' },
+  tax:       { color: 'var(--app-success, #22c55e)', href: '/country-tax-templates',  icon: <Shield size={11} />,     label: 'Tax Template',    group: 'Tax Templates' },
+  gateway:   { color: 'var(--app-accent)',           href: '/payment-gateways',       icon: <CreditCard size={11} />, label: 'Payment Gateway', group: 'Payment Gateways' },
+  einvoice:  { color: 'var(--app-warning, #f59e0b)', href: '/e-invoice-standards',    icon: <FileText size={11} />,   label: 'E-invoice',       group: 'E-Invoice Standards' },
+  tenant:    { color: 'var(--app-primary)',          href: '/organizations',          icon: <Globe size={11} />,      label: 'Tenant',          group: 'Tenants Using' },
 }
 
-function LinkedRow({ node, depth }: { node: TreeNode; depth: number }) {
-  const meta = LINKED_KIND_META[node.kind]
+const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'tax', 'gateway', 'einvoice', 'tenant']
+
+function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
+  const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'country'>]
   return (
-    <a
-      href={meta.href}
-      onClick={e => { if (!meta.href) e.preventDefault() }}
-      className="group flex items-center gap-2 transition-all duration-150 rounded-lg no-underline"
-      style={{
-        paddingLeft: `${24 + depth * 16}px`,
-        paddingRight: '10px',
-        paddingTop: '4px',
-        paddingBottom: '4px',
-        color: 'inherit',
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-    >
-      <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
-        style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
-        {meta.icon}
+    <div className="relative" style={{ paddingLeft: '20px' }}>
+      {/* Vertical connector segment for this row (extends only to mid-row if last) */}
+      <div className="absolute pointer-events-none"
+        style={{
+          left: '4px',
+          top: 0,
+          bottom: isLast ? '50%' : 0,
+          width: '1px',
+          background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+        }} />
+      {/* Horizontal branch into the row */}
+      <div className="absolute pointer-events-none"
+        style={{
+          left: '4px',
+          top: '50%',
+          width: '12px',
+          height: '1px',
+          background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+        }} />
+      <a
+        href={meta.href}
+        className="group flex items-center gap-2 transition-all duration-150 rounded-md no-underline"
+        style={{
+          padding: '4px 8px',
+          color: 'inherit',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+      >
+        <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+          style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+          {meta.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[12px] font-bold text-app-foreground truncate">{node.name}</div>
+          {node.subtitle && (
+            <div className="text-[10px] text-app-muted-foreground truncate">{node.subtitle}</div>
+          )}
+        </div>
+      </a>
+    </div>
+  )
+}
+
+/**
+ * Render the linked entities for a single country, grouped by kind.
+ * Groups sit at the same level (sibling sections) and each can be
+ * expanded / collapsed independently. Default = collapsed so the
+ * country row stays compact; user clicks a group to reveal leaves.
+ */
+function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
+  // Bucket by kind once
+  const buckets: Record<string, TreeNode[]> = {}
+  for (const n of nodes) {
+    if (n.kind === 'country') continue
+    const k = n.kind
+    if (!buckets[k]) buckets[k] = []
+    buckets[k].push(n)
+  }
+  const visibleKinds = KIND_ORDER.filter(k => buckets[k]?.length)
+
+  // Per-group expand/collapse — local to this country's expanded view.
+  // Defaulting to collapsed keeps the surface scannable when a country has
+  // many gateways or templates; clicking a group's chevron expands just it.
+  const [openKinds, setOpenKinds] = useState<Record<string, boolean>>({})
+  const toggleKind = (k: string) => setOpenKinds(prev => ({ ...prev, [k]: !prev[k] }))
+
+  if (visibleKinds.length === 0) {
+    return (
+      <div className="px-12 py-2 text-[11px] text-app-muted-foreground italic">
+        No linked currency, tax template, payment gateway, or e-invoice standard.
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-[12px] font-bold text-app-foreground truncate">{node.name}</div>
-        {node.subtitle && (
-          <div className="text-[10px] text-app-muted-foreground truncate">{node.subtitle}</div>
-        )}
-      </div>
-      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-        style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
-        {meta.label}
-      </span>
-    </a>
+    )
+  }
+
+  return (
+    <div className="relative ml-9 mr-2 mb-2 mt-1">
+      {/* Trunk vertical line — runs through the column of group headers. */}
+      <div className="absolute pointer-events-none"
+        style={{
+          left: '11px',
+          top: 0,
+          bottom: '14px',
+          width: '1px',
+          background: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+        }} />
+      {visibleKinds.map((kind, gIdx) => {
+        const meta = LINKED_KIND_META[kind]
+        const items = buckets[kind]
+        const isOpen = !!openKinds[kind]
+        return (
+          <div key={kind} className="relative" style={{ paddingLeft: '24px', marginTop: gIdx === 0 ? 0 : 2 }}>
+            {/* Horizontal branch from trunk into this group's chevron row. */}
+            <div className="absolute pointer-events-none"
+              style={{
+                left: '11px',
+                top: '14px',
+                width: '12px',
+                height: '1px',
+                background: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+              }} />
+
+            {/* Group header — clickable, with chevron and count. */}
+            <button
+              type="button"
+              onClick={() => toggleKind(kind)}
+              className="w-full flex items-center gap-1.5 py-1 px-1.5 rounded-md transition-all text-left"
+              style={{ background: 'transparent' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              {/* Chevron */}
+              <span className="w-4 h-4 flex items-center justify-center text-app-muted-foreground flex-shrink-0"
+                style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 150ms' }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2 L8 6 L4 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              {/* Kind icon */}
+              <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                style={{ background: `color-mix(in srgb, ${meta.color} 10%, transparent)`, color: meta.color }}>
+                {meta.icon}
+              </div>
+              {/* Label */}
+              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: meta.color }}>
+                {meta.group}
+              </span>
+              {/* Count badge */}
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
+                  color: meta.color,
+                }}>
+                {items.length}
+              </span>
+            </button>
+
+            {/* Leaf list — only when this group is expanded */}
+            {isOpen && (
+              <div className="relative ml-3 mt-0.5 pb-1">
+                {items.length > 1 && (
+                  <div className="absolute pointer-events-none"
+                    style={{
+                      left: '4px',
+                      top: 0,
+                      bottom: '50%',
+                      width: '1px',
+                      background: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                    }} />
+                )}
+                {items.map((n, idx) => (
+                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -557,12 +713,8 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-app-foreground truncate">{item.name}</span>
-          {!item.is_active && (
-            <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
-              style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
-              Inactive
-            </span>
-          )}
+          {/* Note: per-row activate intentionally removed — see comment in
+              parent component. Activation is a tenant-level concern. */}
           {hasTaxTemplate && (
             <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
@@ -624,14 +776,10 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
       </div>
     </div>
 
-    {/* Linked entities — currency, gateways, e-invoice, tax — rendered as
-        nested rows when this country is expanded. */}
+    {/* Linked entities — grouped by kind with tree connectors so the
+        relationship hierarchy reads naturally instead of as a flat list. */}
     {hasChildren && isOpen && (
-      <div className="pb-1">
-        {children!.map(child => (
-          <LinkedRow key={String(child.id)} node={child} depth={1} />
-        ))}
-      </div>
+      <LinkedTree>{children!}</LinkedTree>
     )}
     </div>
   )
@@ -752,6 +900,10 @@ export default function SaaSCountriesPage() {
   const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([])
   const [eInvoiceStandards, setEInvoiceStandards] = useState<EInvoiceStandard[]>([])
   const [taxTemplates, setTaxTemplates] = useState<TaxTemplate[]>([])
+  /** Map of country_id → tenants that have this country enabled. Populated
+   *  via the SU-only `reference/countries/tenants/` endpoint. Empty {} when
+   *  the call fails (older backend) — UI falls back to no Tenants group. */
+  const [tenantsByCountry, setTenantsByCountry] = useState<Record<number, TenantUsage[]>>({})
   const [loading, setLoading] = useState(true)
   const [editingCountry, setEditingCountry] = useState<Country | null | 'new'>(null)
   const [editingCurrency, setEditingCurrency] = useState<Currency | null | 'new'>(null)
@@ -767,12 +919,14 @@ export default function SaaSCountriesPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [countriesData, _curr, templatesData, gatewaysData, eiData] = await Promise.all([
+      const [countriesData, _curr, templatesData, gatewaysData, eiData, tenantsData] = await Promise.all([
         erpFetch('reference/countries/?limit=300'),
         fetchCurrencies(),
         erpFetch('finance/country-tax-templates/').catch(() => []),
         erpFetch('reference/payment-gateways/?limit=200').catch(() => []),
         erpFetch('reference/e-invoice-standards/?limit=200').catch(() => []),
+        // SU-only tenants endpoint — returns {} on older backends.
+        erpFetch('reference/countries/tenants/').catch(() => ({})),
       ])
       const cList = Array.isArray(countriesData) ? countriesData : countriesData?.results || []
       const tList = Array.isArray(templatesData) ? templatesData : templatesData?.results || []
@@ -782,6 +936,7 @@ export default function SaaSCountriesPage() {
       setTaxTemplates(tList)
       setPaymentGateways(gList)
       setEInvoiceStandards(eList)
+      setTenantsByCountry(typeof tenantsData === 'object' && tenantsData !== null && !Array.isArray(tenantsData) ? tenantsData : {})
     } catch {
       toast.error('Failed to load data')
     }
@@ -798,6 +953,12 @@ export default function SaaSCountriesPage() {
       fetchAll()
     } catch { toast.error('Failed to delete') }
   }
+
+  // Note: country activation is intentionally NOT exposed here. The global
+  // ref-country list is fixed (every ISO country exists, period). What
+  // changes per-tenant is whether the tenant has *enabled* it in their
+  // OrgCountry table — that's done from each tenant's own admin, not from
+  // this SaaS-wide registry.
 
   // Quick-lookup sets
   const taxTemplateCountries = useMemo(() => new Set(taxTemplates.map(t => t.country_code)), [taxTemplates])
@@ -837,37 +998,55 @@ export default function SaaSCountriesPage() {
     }
 
     for (const c of countries) {
+      // Searchable blob for the country itself — every token a user might
+      // type to find this country: names, ISO codes, phone, currency, region.
+      const countryBlob = [
+        c.name, c.official_name, c.iso2, c.iso3, c.numeric_code,
+        c.phone_code, c.region, c.subregion, c.default_currency_code,
+      ].filter(Boolean).join(' ').toLowerCase()
+
       out.push({
         id: c.id,
         kind: 'country',
         name: c.name,
         subtitle: c.official_name || undefined,
         data: c,
+        searchBlob: countryBlob,
       })
 
-      // 1) Currency
-      if (c.default_currency != null) {
-        const curr = currencyById.get(c.default_currency)
+      // 1) Currency — try FK first, fall back to default_currency_code so
+      //    countries whose FK is null but code is set (legacy seed data, e.g.
+      //    Côte d'Ivoire / XOF) still get a currency child.
+      const currByFk = c.default_currency != null ? currencyById.get(c.default_currency) : undefined
+      const currByCode = !currByFk && c.default_currency_code
+        ? currencies.find(cc => cc.code === c.default_currency_code)
+        : undefined
+      const curr = currByFk || currByCode
+      if (curr || c.default_currency_code) {
+        const childName = curr ? `${curr.code} — ${curr.name}` : (c.default_currency_code || 'Currency')
         out.push({
           id: `c${c.id}-cur`,
           parent: c.id,
           kind: 'currency',
-          name: curr ? `${curr.code} — ${curr.name}` : (c.default_currency_code || 'Currency'),
+          name: childName,
           subtitle: curr?.symbol ? `Symbol ${curr.symbol}` : undefined,
           data: curr,
+          searchBlob: `${countryBlob} ${childName} ${curr?.code || ''} ${curr?.name || ''}`.toLowerCase(),
         })
       }
 
       // 2) Tax templates
       const taxes = taxByCountry.get(c.iso2) || []
       for (const tx of taxes) {
+        const childName = tx.name || `Tax template ${tx.country_code}`
         out.push({
           id: `c${c.id}-tax-${tx.id}`,
           parent: c.id,
           kind: 'tax',
-          name: tx.name || `Tax template ${tx.country_code}`,
+          name: childName,
           subtitle: 'Country tax profile',
           data: tx,
+          searchBlob: `${countryBlob} ${childName} tax`.toLowerCase(),
         })
       }
 
@@ -884,6 +1063,7 @@ export default function SaaSCountriesPage() {
           name: g.name,
           subtitle: isGlobal ? 'Global gateway' : (g.family || g.code),
           data: g,
+          searchBlob: `${countryBlob} ${g.name} ${g.code} ${g.family || ''}`.toLowerCase(),
         })
       }
 
@@ -899,13 +1079,28 @@ export default function SaaSCountriesPage() {
               name: ei.name,
               subtitle: ei.invoice_format ? `${ei.code} · ${ei.invoice_format}` : ei.code,
               data: ei,
+              searchBlob: `${countryBlob} ${ei.name} ${ei.code} ${ei.invoice_format || ''}`.toLowerCase(),
             })
           }
         }
       }
+
+      // 5) Tenants that have enabled this country (cross-tenant view)
+      const tenants = tenantsByCountry[c.id] || []
+      for (const t of tenants) {
+        out.push({
+          id: `c${c.id}-org-${t.org_id}`,
+          parent: c.id,
+          kind: 'tenant',
+          name: t.org_name,
+          subtitle: t.is_default ? 'Default for this tenant' : `Org #${t.org_id}`,
+          data: t,
+          searchBlob: `${countryBlob} ${t.org_name}`.toLowerCase(),
+        })
+      }
     }
     return out
-  }, [countries, currencies, paymentGateways, eInvoiceStandards, taxTemplates])
+  }, [countries, currencies, paymentGateways, eInvoiceStandards, taxTemplates, tenantsByCountry])
 
   // Loading splash — TreeMasterPage handles empty-state but not initial spinner.
   if (loading && countries.length === 0) {
@@ -930,8 +1125,9 @@ export default function SaaSCountriesPage() {
             icon: <Plus size={14} />,
             onClick: () => setEditingCountry('new' as any),
           },
-          // Manage currencies as a secondary action — still part of this
-          // master-data surface, just not the primary CTA.
+          // Currencies are manageable here; activation is tenant-level so
+          // there's no global "Activate All" — see the per-tenant org-
+          // countries admin for that.
           secondaryActions: [
             {
               label: 'New Currency',
@@ -989,20 +1185,23 @@ export default function SaaSCountriesPage() {
           // (kind: currency/gateway/einvoice/tax). buildTree groups children
           // under their country via the synthetic `parent` field.
           data: treeData as unknown as Record<string, unknown>[],
-          searchFields: ['name', 'subtitle'],
+          // `searchBlob` is the pre-flattened lowercase-concat of every
+          // searchable token for this node + its parent country. Searching
+          // by ISO2/ISO3/phone/currency/region all hit this single field.
+          searchFields: ['searchBlob'],
           kpiPredicates: {
             // Predicates only inspect TREE NODES; we route on `kind` so KPI
             // counts measure countries, not linked-row noise.
-            active: (n: any) => n.kind === 'country' && Boolean(n.data?.is_active),
             withCurrency: (n: any) => n.kind === 'country' && Boolean(n.data?.default_currency_code),
             withTaxTemplate: (n: any) => n.kind === 'country' && taxTemplateCountries.has(String(n.data?.iso2)),
+            inUse: (n: any) => n.kind === 'country' && (tenantsByCountry[Number(n.data?.id)]?.length || 0) > 0,
           },
           kpis: [
             { label: 'Total', icon: <Globe size={11} />, color: 'var(--app-primary)', filterKey: 'all', value: (_, all) => all.filter((n: any) => n.kind === 'country').length },
-            { label: 'Active', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'active', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && n.data?.is_active).length },
             { label: 'Regions', icon: <MapPin size={11} />, color: 'var(--app-info, #3b82f6)', value: () => stats.regions },
             { label: 'With Currency', icon: <DollarSign size={11} />, color: 'var(--app-accent)', filterKey: 'withCurrency', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && n.data?.default_currency_code).length },
             { label: 'Tax Templates', icon: <Shield size={11} />, color: 'var(--app-warning, #f59e0b)', filterKey: 'withTaxTemplate', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && taxTemplateCountries.has(n.data?.iso2)).length },
+            { label: 'In Use', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'inUse', value: (filtered) => filtered.filter((n: any) => n.kind === 'country' && (tenantsByCountry[Number(n.data?.id)]?.length || 0) > 0).length },
           ],
           emptyState: {
             icon: <Globe size={36} />,

@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * POLifecycle — horizontal stage visualization for a Purchase Order.
+ * POLifecycle — vertical stage visualization for a Purchase Order.
  *
  * Two presentations:
  *   - `variant="full"`   → labelled stepper, used inside the configuration
@@ -9,23 +9,33 @@
  *   - `variant="compact"` → dot row + current-state label, used in the page
  *                          header alongside the summary chips.
  *
- * Stages mirror `PurchaseOrder.STATUS_CHOICES` on the backend; the
- * "happy path" sits on the main timeline and FAILED is rendered as an
- * alternate terminal branch so it's discoverable but never visually
- * competes with the forward direction.
+ * Stages mirror `PurchaseOrder.STATUS_CHOICES` on the backend (13-state
+ * lifecycle). The "happy path" sits on the main timeline; CANCELLED and
+ * REJECTED are rendered as alternate terminal branches.
+ *
+ * Backend state machine (purchase_order_models.py):
+ *   DRAFT → SUBMITTED → APPROVED → SENT → CONFIRMED → IN_TRANSIT →
+ *   PARTIALLY_RECEIVED → RECEIVED → PARTIALLY_INVOICED → INVOICED → COMPLETED
+ *   (+ REJECTED from SUBMITTED, + CANCELLED from most states)
  */
 
 import { useState } from 'react'
-import { Check, AlertTriangle, ChevronDown } from 'lucide-react'
+import { Check, AlertTriangle, ChevronDown, Loader2, Ban } from 'lucide-react'
 
 export type POStatus =
     | 'DRAFT'
+    | 'SUBMITTED'
     | 'APPROVED'
+    | 'REJECTED'
     | 'SENT'
+    | 'CONFIRMED'
     | 'IN_TRANSIT'
-    | 'PARTIAL'
-    | 'DELIVERED'
-    | 'FAILED'
+    | 'PARTIALLY_RECEIVED'
+    | 'RECEIVED'
+    | 'PARTIALLY_INVOICED'
+    | 'INVOICED'
+    | 'COMPLETED'
+    | 'CANCELLED'
 
 interface Stage {
     key: POStatus
@@ -33,15 +43,22 @@ interface Stage {
     short: string
 }
 
-/* Main-line stages. Order is the natural progression. */
+/* Main-line stages. Order is the natural progression (happy path). */
 const STAGES: Stage[] = [
     { key: 'DRAFT', label: 'Draft', short: 'DR' },
+    { key: 'SUBMITTED', label: 'Submitted', short: 'SB' },
     { key: 'APPROVED', label: 'Approved', short: 'AP' },
     { key: 'SENT', label: 'Sent', short: 'SE' },
+    { key: 'CONFIRMED', label: 'Confirmed', short: 'CF' },
     { key: 'IN_TRANSIT', label: 'In transit', short: 'IT' },
-    { key: 'PARTIAL', label: 'Partial', short: 'PT' },
-    { key: 'DELIVERED', label: 'Delivered', short: 'DL' },
+    { key: 'PARTIALLY_RECEIVED', label: 'Partial receipt', short: 'PR' },
+    { key: 'RECEIVED', label: 'Received', short: 'RC' },
+    { key: 'INVOICED', label: 'Invoiced', short: 'IV' },
+    { key: 'COMPLETED', label: 'Completed', short: 'CP' },
 ]
+
+/** Terminal / alternate-path statuses shown separately. */
+const TERMINAL_STATUSES: POStatus[] = ['REJECTED', 'CANCELLED']
 
 const indexOfStatus = (s: POStatus) => STAGES.findIndex(stage => stage.key === s)
 
@@ -62,6 +79,8 @@ interface Props {
      *  undefined on read-only views (e.g. the New PO form, which is
      *  always DRAFT). */
     onStageChange?: (next: POStatus) => void
+    /** True while a transition request is in flight. */
+    transitioning?: boolean
     /** When true on the `full` variant, the timeline is collapsible
      *  via the header. Defaults to true. */
     collapsible?: boolean
@@ -73,24 +92,21 @@ export function POLifecycle({
     current,
     variant = 'full',
     onStageChange,
+    transitioning = false,
     collapsible = true,
     defaultCollapsed = false,
 }: Props) {
-    const isFailed = current === 'FAILED'
-    const currentIdx = isFailed ? -1 : indexOfStatus(current)
+    const isTerminal = TERMINAL_STATUSES.includes(current)
+    const currentIdx = isTerminal ? -1 : indexOfStatus(current)
 
     if (variant === 'compact') {
-        /* Chip-style wrapper so the lifecycle visually belongs in the same
-         * row as the other summary chips (Reference / Supplier / Site).
-         * Uses the active stage's color as the tint so the current state
-         * is the chip's identity, not just a label inside it. */
-        const activeColor = isFailed
+        const activeColor = isTerminal
             ? PALETTE.failed
             : currentIdx >= 0
                 ? PALETTE.current
                 : PALETTE.future
-        const activeLabel = isFailed
-            ? 'Failed'
+        const activeLabel = isTerminal
+            ? (current === 'CANCELLED' ? 'Cancelled' : 'Rejected')
             : STAGES[Math.max(0, currentIdx)]?.label || ''
         return (
             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-bold"
@@ -101,11 +117,12 @@ export function POLifecycle({
                      color: activeColor,
                      border: `1px solid color-mix(in srgb, ${activeColor} 22%, transparent)`,
                  }}>
-                {isFailed && <AlertTriangle size={9} className="flex-shrink-0" />}
+                {isTerminal && <AlertTriangle size={9} className="flex-shrink-0" />}
+                {transitioning && <Loader2 size={9} className="flex-shrink-0 animate-spin" />}
                 <span className="flex items-center gap-1 flex-shrink-0">
                     {STAGES.map((s, i) => {
-                        const past = !isFailed && i < currentIdx
-                        const active = !isFailed && i === currentIdx
+                        const past = !isTerminal && i < currentIdx
+                        const active = !isTerminal && i === currentIdx
                         const dotColor = active ? activeColor : past ? PALETTE.past : activeColor
                         return (
                             <span key={s.key}
@@ -130,37 +147,29 @@ export function POLifecycle({
     return (<FullTimeline
         current={current}
         currentIdx={currentIdx}
-        isFailed={isFailed}
+        isTerminal={isTerminal}
         onStageChange={onStageChange}
+        transitioning={transitioning}
         collapsible={collapsible}
         defaultCollapsed={defaultCollapsed}
     />)
 }
 
 function FullTimeline({
-    current, currentIdx, isFailed,
-    onStageChange, collapsible, defaultCollapsed,
+    current, currentIdx, isTerminal,
+    onStageChange, transitioning, collapsible, defaultCollapsed,
 }: {
     current: POStatus
     currentIdx: number
-    isFailed: boolean
+    isTerminal: boolean
     onStageChange?: (next: POStatus) => void
+    transitioning: boolean
     collapsible: boolean
     defaultCollapsed: boolean
 }) {
     const [collapsed, setCollapsed] = useState(defaultCollapsed)
-    const interactive = !!onStageChange
+    const interactive = !!onStageChange && !transitioning
 
-    /* Full variant — VERTICAL timeline.
-     *
-     *  The horizontal stepper required 2-letter abbreviations (DR/AP/SE/IT…)
-     *  to fit a narrow sidebar — unreadable at a glance. Vertical gives
-     *  every stage a full label, turns the connector into a clear rail,
-     *  and lets the FAILED branch sit at the end as a proper "or this"
-     *  alternate without dangling visually.
-     */
-    /* Header is a clickable region when collapsible; renders a chevron that
-     *  rotates with state. */
     return (
         <div className="rounded-xl p-3"
              style={{
@@ -183,12 +192,15 @@ function FullTimeline({
                             click to switch
                         </span>
                     )}
+                    {transitioning && (
+                        <Loader2 size={10} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+                    )}
                 </span>
                 <span className="flex items-center gap-1.5">
                     <span className="text-tp-xxs font-bold tabular-nums"
-                          style={{ color: isFailed ? PALETTE.failed : PALETTE.current }}>
-                        {isFailed
-                            ? 'Failed'
+                          style={{ color: isTerminal ? PALETTE.failed : PALETTE.current }}>
+                        {isTerminal
+                            ? (current === 'CANCELLED' ? 'Cancelled' : 'Rejected')
                             : `${current === 'DRAFT' && currentIdx === 0 ? 'Draft' : (currentIdx + 1) + ' of ' + STAGES.length}`}
                     </span>
                     {collapsible && (
@@ -203,18 +215,13 @@ function FullTimeline({
             <>
             <ol className="relative">
                 {STAGES.map((s, i) => {
-                    const past = !isFailed && i < currentIdx
-                    const active = !isFailed && i === currentIdx
+                    const past = !isTerminal && i < currentIdx
+                    const active = !isTerminal && i === currentIdx
                     const dotColor = active ? PALETTE.current : past ? PALETTE.past : PALETTE.future
                     const isLast = i === STAGES.length - 1
-                    /* When `interactive`, render the row as a button so
-                     *  operators can click any stage to switch. The current
-                     *  stage isn't switchable (already there). */
                     const Row: React.ElementType = interactive && !active ? 'button' : 'div'
                     return (
                         <li key={s.key} className="relative" style={{ minHeight: '24px' }}>
-                            {/* Vertical rail — connects this dot to the next.
-                             *  Hidden on the last item. */}
                             {!isLast && (
                                 <div className="absolute left-[7px] top-4 w-px h-full"
                                      style={{
@@ -234,7 +241,6 @@ function FullTimeline({
                                     : {})}
                                 className={`flex items-start w-full text-left rounded-md transition-all ${interactive && !active ? 'hover:bg-app-surface-hover active:scale-[0.99] -mx-1 px-1' : ''}`}
                             >
-                                {/* Dot — slightly larger when active for visual anchor. */}
                                 <div className="relative z-10 flex-shrink-0 flex items-center justify-center transition-all"
                                      style={{
                                          width: 15,
@@ -251,7 +257,6 @@ function FullTimeline({
                                     {past && <Check size={9} strokeWidth={3} />}
                                 </div>
 
-                                {/* Label */}
                                 <div className="ml-2.5 pb-2 leading-tight">
                                     <div className="text-tp-sm font-bold"
                                          style={{
@@ -273,33 +278,30 @@ function FullTimeline({
                 })}
             </ol>
 
-            {/* Failed alternate-path — sits below the main timeline as
-             *  a separate "exit door". Lights up when the PO actually
-             *  reaches FAILED, otherwise stays dim as a "this can also
-             *  happen" hint. */}
+            {/* Terminal alternate-path — REJECTED / CANCELLED */}
             <div className="flex items-center gap-2 mt-2 pt-2"
                  style={{ borderTop: `1px dashed color-mix(in srgb, ${PALETTE.failed} 30%, transparent)` }}
-                 title="A PO can exit the main path to FAILED at any stage (rejected, cancelled, returned).">
+                 title="A PO can exit the main path to Cancelled at any stage.">
                 <div className="flex items-center justify-center flex-shrink-0"
                      style={{
                          width: 15,
                          height: 15,
                          borderRadius: '50%',
-                         background: isFailed ? PALETTE.failed : 'var(--app-bg)',
-                         border: isFailed ? 'none' : `1.5px solid ${PALETTE.failed}`,
-                         opacity: isFailed ? 1 : 0.5,
+                         background: isTerminal ? PALETTE.failed : 'var(--app-bg)',
+                         border: isTerminal ? 'none' : `1.5px solid ${PALETTE.failed}`,
+                         opacity: isTerminal ? 1 : 0.5,
                      }}>
-                    {isFailed && <AlertTriangle size={9} className="text-white" />}
+                    {isTerminal && <Ban size={9} className="text-white" />}
                 </div>
                 <span className="text-tp-xs font-bold"
-                      style={{ color: PALETTE.failed, opacity: isFailed ? 1 : 0.7 }}>
-                    Failed
+                      style={{ color: PALETTE.failed, opacity: isTerminal ? 1 : 0.7 }}>
+                    {current === 'REJECTED' ? 'Rejected' : current === 'CANCELLED' ? 'Cancelled' : 'Cancelled / Rejected'}
                 </span>
-                {interactive && !isFailed ? (
-                    <button type="button" onClick={() => onStageChange?.('FAILED')}
+                {interactive && !isTerminal ? (
+                    <button type="button" onClick={() => onStageChange?.('CANCELLED')}
                             className="text-tp-xxs font-bold ml-auto px-1.5 py-px rounded transition-all hover:bg-app-error/10"
                             style={{ color: PALETTE.failed }}>
-                        Mark failed →
+                        Cancel →
                     </button>
                 ) : (
                     <span className="text-tp-xxs font-medium ml-auto"

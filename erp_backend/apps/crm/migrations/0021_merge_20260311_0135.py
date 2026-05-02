@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
 
     operations = [
         # ── Contact new fields ───────────────────────────────────
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='assigned_owner',
             field=models.ForeignKey(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='followup_status',
             field=models.CharField(
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
                 max_length=20,
             ),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='interaction_score',
             field=models.IntegerField(
@@ -77,38 +77,38 @@ class Migration(migrations.Migration):
                 help_text='Computed score based on interaction frequency and outcome',
             ),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='last_call_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='last_interaction_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='last_order_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='last_visit_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='next_scheduled_activity_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='next_scheduled_activity_type',
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
         # ── ContactComplianceDocument new fields ─────────────────
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='file_hash',
             field=models.CharField(
@@ -118,7 +118,7 @@ class Migration(migrations.Migration):
                 null=True,
             ),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='is_immutable',
             field=models.BooleanField(

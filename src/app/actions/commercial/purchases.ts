@@ -219,6 +219,43 @@ export async function invoicePurchaseOrder(id: string, formData: FormData) {
     }
 }
 
+/**
+ * Transition a PurchaseOrder through its lifecycle state machine.
+ *
+ * Calls `purchase-orders/{id}/transition/` which routes through the
+ * model's `VALID_TRANSITIONS` map and fires per-stage side-effects
+ * (timestamps, actor fields, number promotion).
+ *
+ * Returns `{ status }` on success or `{ error, current_status }` on
+ * failure (invalid transition or backend validation error).
+ */
+export async function transitionPurchaseOrderStatus(
+    poId: number | string,
+    toStatus: string,
+    reason?: string,
+): Promise<{ status?: string; error?: string; current_status?: string }> {
+    try {
+        const body: Record<string, string> = { to: toStatus }
+        if (reason) body.reason = reason
+
+        const result = await erpFetch(`purchase-orders/${String(poId)}/transition/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        })
+
+        revalidatePath('/purchases')
+        revalidatePath(`/purchases/${String(poId)}`)
+
+        const data = result as Record<string, unknown>
+        return { status: (data?.status as string) || toStatus }
+    } catch (e: unknown) {
+        console.error('PO Transition Error:', e)
+        const msg = e instanceof Error ? e.message : String(e)
+        return { error: msg || 'Failed to transition PO status.' }
+    }
+}
+
 export async function createFormalPurchaseOrder(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
     const rawLines: Record<string, any>[] = [];
     for (const [key, value] of Array.from(formData.entries())) {

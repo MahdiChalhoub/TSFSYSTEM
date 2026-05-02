@@ -18,57 +18,57 @@ class Migration(migrations.Migration):
 
     operations = [
         # 1. Add 'organization' field to all models first
-        migrations.AddField(
+        migrations.AlterField(
             model_name='amortizationschedule',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='asset',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='customerbalance',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='deferredexpense',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='directexpense',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='invoice',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='invoiceline',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='payment',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='paymentallocation',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='supplierbalance',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='voucher',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

@@ -15,87 +15,87 @@ class Migration(migrations.Migration):
 
     operations = [
         # 1. Add 'organization' field to all models first
-        migrations.AddField(
+        migrations.AlterField(
             model_name='autotaskrule',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='checklistinstance',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='checklistitemresponse',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='checklisttemplate',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='checklisttemplateitem',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='employeeperformance',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='employeerequest',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='questionnaire',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='questionnaireanswer',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='questionnairequestion',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='questionnaireresponse',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='task',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='taskattachment',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='taskcategory',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='taskcomment',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='tasktemplate',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='workspaceconfig',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

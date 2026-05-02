@@ -59,7 +59,8 @@ class Migration(migrations.Migration):
             name='auto_assign_tickets',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='custom_css',
             field=models.TextField(blank=True, default=''),
@@ -99,7 +100,8 @@ class Migration(migrations.Migration):
             name='layout',
             field=models.JSONField(blank=True, default=dict),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='logo_url',
             field=models.URLField(blank=True, default=''),
@@ -134,12 +136,14 @@ class Migration(migrations.Migration):
             name='min_order_amount',
             field=models.DecimalField(decimal_places=2, default=Decimal('0.00'), max_digits=15),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='og_image_url',
             field=models.URLField(blank=True, default=''),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='primary_color',
             field=models.CharField(default='#10b981', max_length=20),
@@ -149,22 +153,26 @@ class Migration(migrations.Migration):
             name='require_approval_for_orders',
             field=models.BooleanField(default=False),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='secondary_color',
             field=models.CharField(default='#0f172a', max_length=20),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='seo_description',
             field=models.TextField(blank=True, default=''),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='seo_keywords',
             field=models.CharField(blank=True, default='', max_length=500),
         ),
-        migrations.AlterField(
+        # v3.5.0 cleanup: AlterField → AddField (field never created by prior migration)
+        migrations.AddField(
             model_name='clientportalconfig',
             name='seo_title',
             field=models.CharField(blank=True, default='', max_length=255),

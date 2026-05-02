@@ -1,246 +1,518 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
-import { getCurrencies, createCurrency, updateCurrency, deleteCurrency, type Currency } from '@/app/actions/currencies'
-import { Coins, Plus, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  Coins, Loader2, Plus, Pencil, Trash2, X, DollarSign, Save, Check, Hash,
+} from 'lucide-react'
 import { toast } from 'sonner'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { erpFetch } from '@/lib/erp-api'
+import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
+
+/* ═══════════════════════════════════════════════════════
+   Types — full Currency model from `reference/currencies/`
+   ═══════════════════════════════════════════════════════ */
+
+type Currency = {
+  id: number
+  code: string
+  numeric_code: string
+  name: string
+  symbol: string
+  minor_unit: number
+  is_active: boolean
+}
+
+/* ═══════════════════════════════════════════════════════
+   Theme tokens — same shape as the countries page
+   ═══════════════════════════════════════════════════════ */
+
+const fieldClass = "w-full px-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+const labelClass = "text-[10px] font-black uppercase tracking-wider text-app-muted-foreground mb-1 block"
+
+/* ═══════════════════════════════════════════════════════
+   Currency Edit Modal — opens for create + edit
+   ═══════════════════════════════════════════════════════ */
+
+function CurrencyEditModal({ currency, onClose, onSaved }: {
+  currency: Currency | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const isNew = !currency
+  const [form, setForm] = useState({
+    code: currency?.code || '',
+    numeric_code: currency?.numeric_code || '',
+    name: currency?.name || '',
+    symbol: currency?.symbol || '',
+    minor_unit: currency?.minor_unit ?? 2,
+    is_active: currency?.is_active ?? true,
+  })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const payload = { ...form, code: form.code.toUpperCase() }
+      if (isNew) {
+        await erpFetch('reference/currencies/', { method: 'POST', body: JSON.stringify(payload) })
+        toast.success(`Currency ${payload.code} created`)
+      } else {
+        await erpFetch(`reference/currencies/${currency!.id}/`, { method: 'PUT', body: JSON.stringify(payload) })
+        toast.success(`Currency ${payload.code} updated`)
+      }
+      onSaved()
+      onClose()
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl animate-in zoom-in-95 duration-200"
+        style={{
+          background: 'var(--app-surface)',
+          border: '1px solid var(--app-border)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.25)',
+        }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4"
+          style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' }}>
+            <DollarSign size={16} style={{ color: 'var(--app-info, #3b82f6)' }} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[14px] font-black text-app-foreground">
+              {isNew ? 'New Currency' : `Edit ${form.code}`}
+            </h3>
+            <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
+              {isNew ? 'Add to global reference' : form.name}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all">
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div>
+              <label className={labelClass}>Code (ISO 4217)</label>
+              <input className={fieldClass} value={form.code} maxLength={3} placeholder="USD"
+                onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required />
+            </div>
+            <div>
+              <label className={labelClass}>Numeric</label>
+              <input className={fieldClass} value={form.numeric_code} maxLength={3} placeholder="840"
+                onChange={e => setForm(f => ({ ...f, numeric_code: e.target.value }))} />
+            </div>
+            <div>
+              <label className={labelClass}>Symbol</label>
+              <input className={fieldClass} value={form.symbol} maxLength={5} placeholder="$"
+                onChange={e => setForm(f => ({ ...f, symbol: e.target.value }))} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Name</label>
+            <input className={fieldClass} value={form.name} placeholder="US Dollar"
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+          </div>
+
+          <div>
+            <label className={labelClass}>Minor Unit (decimal places)</label>
+            <input className={fieldClass} type="number" min={0} max={6} value={form.minor_unit}
+              onChange={e => setForm(f => ({ ...f, minor_unit: Number(e.target.value) }))} />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.is_active}
+              onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+              className="w-4 h-4 rounded border-app-border accent-[var(--app-primary)]" />
+            <span className="text-[12px] font-bold text-app-foreground">Active</span>
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-[11px] font-bold text-app-muted-foreground border border-app-border rounded-lg hover:bg-app-surface transition-all">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+              style={{ background: 'var(--app-info, #3b82f6)', boxShadow: '0 2px 6px color-mix(in srgb, var(--app-info, #3b82f6) 25%, transparent)' }}>
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+              {isNew ? 'Create' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Currency Row — flat (no hierarchy), TreeMasterPage-shaped
+   ═══════════════════════════════════════════════════════ */
+
+function CurrencyRow({ item, isSelected, onSelect, onEdit, onDelete, compact }: {
+  item: Currency
+  isSelected: boolean
+  onSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
+  compact?: boolean
+}) {
+  return (
+    <div
+      className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer rounded-lg"
+      style={{
+        background: isSelected ? 'color-mix(in srgb, var(--app-info, #3b82f6) 6%, transparent)' : 'transparent',
+        border: isSelected ? '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)' : '1px solid transparent',
+        padding: '8px 10px',
+      }}
+      onClick={onSelect}
+      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}
+      onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+    >
+      {/* Symbol badge */}
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[14px] font-black flex-shrink-0"
+        style={{
+          background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)',
+          color: 'var(--app-info, #3b82f6)',
+        }}>
+        {item.symbol || item.code.slice(0, 2)}
+      </div>
+
+      {/* Code + Name */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[13px] font-black text-app-foreground tracking-tight">{item.code}</span>
+          <span className="text-[12px] font-bold text-app-muted-foreground truncate">{item.name}</span>
+          {!item.is_active && (
+            <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+              style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
+              Inactive
+            </span>
+          )}
+        </div>
+        {!compact && (
+          <p className="text-[10px] text-app-muted-foreground truncate">
+            {item.numeric_code ? `Numeric ${item.numeric_code} · ` : ''}
+            {item.minor_unit} decimal {item.minor_unit === 1 ? 'place' : 'places'}
+          </p>
+        )}
+      </div>
+
+      {!compact && (
+        <>
+          {/* Numeric */}
+          <div className="hidden sm:flex items-center gap-1 w-16 flex-shrink-0">
+            <Hash size={10} className="text-app-muted-foreground" />
+            <span className="font-mono text-[11px] font-bold text-app-muted-foreground">{item.numeric_code || '—'}</span>
+          </div>
+
+          {/* Minor unit */}
+          <div className="hidden md:flex items-center gap-1 w-16 flex-shrink-0">
+            <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">DP</span>
+            <span className="font-mono text-[11px] font-bold text-app-foreground">{item.minor_unit}</span>
+          </div>
+
+          {/* Symbol */}
+          <div className="hidden sm:flex items-center justify-center w-12 flex-shrink-0">
+            <span className="text-[14px] font-bold text-app-foreground">{item.symbol || '—'}</span>
+          </div>
+        </>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={e => { e.stopPropagation(); onEdit() }} title="Edit"
+          className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors">
+          <Pencil size={12} />
+        </button>
+        <button onClick={e => { e.stopPropagation(); onDelete() }} title="Delete"
+          className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+          style={{ color: 'var(--app-error, #ef4444)' }}>
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Detail Panel
+   ═══════════════════════════════════════════════════════ */
+
+function CurrencyDetailPanel({ currency, onEdit, onDelete, onClose }: {
+  currency: Currency
+  onEdit: () => void
+  onDelete: () => void
+  onClose: () => void
+}) {
+  const Stat = ({ label, value, icon, color }: { label: string; value: React.ReactNode; icon: React.ReactNode; color?: string }) => (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+      style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+      <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+        style={{ background: `color-mix(in srgb, ${color || 'var(--app-muted-foreground)'} 10%, transparent)`, color: color || 'var(--app-muted-foreground)' }}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{label}</div>
+        <div className="text-[12px] font-black text-app-foreground truncate">{value}</div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-start gap-3 px-4 py-3" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black flex-shrink-0"
+          style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+          {currency.symbol || currency.code.slice(0, 2)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h2 className="text-[15px] font-black text-app-foreground truncate font-mono">{currency.code}</h2>
+            {!currency.is_active && (
+              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
+                Inactive
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-app-muted-foreground truncate mt-0.5">{currency.name}</p>
+        </div>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all flex-shrink-0">
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+        <Stat label="ISO 4217 Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
+        <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+        <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+        <Stat label="Minor Unit" value={`${currency.minor_unit} decimal ${currency.minor_unit === 1 ? 'place' : 'places'}`} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+        <Stat label="Status" value={currency.is_active ? 'Active' : 'Inactive'} icon={<Check size={12} />} color={currency.is_active ? 'var(--app-success, #22c55e)' : 'var(--app-error)'} />
+      </div>
+
+      {/* Actions */}
+      <div className="flex-shrink-0 flex gap-2 px-4 py-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+        <button onClick={onEdit}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-white rounded-lg transition-all hover:brightness-110"
+          style={{ background: 'var(--app-info, #3b82f6)' }}>
+          <Pencil size={12} /> Edit
+        </button>
+        <button onClick={onDelete}
+          className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-lg border transition-all"
+          style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 25%, transparent)' }}>
+          <Trash2 size={12} /> Delete
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Main Page
+   ═══════════════════════════════════════════════════════ */
 
 export default function CurrenciesPage() {
-    const [currencies, setCurrencies] = useState<Currency[]>([])
-    const [loading, setLoading] = useState(true)
-    const [isPending, startTransition] = useTransition()
+  const [currencies, setCurrencies] = useState<Currency[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState<Currency | null | 'new'>(null)
 
-    // Form state
-    const [showForm, setShowForm] = useState(false)
-    const [editingId, setEditingId] = useState<number | null>(null)
-    const [formData, setFormData] = useState({ name: '', code: '', symbol: '' })
-    const [error, setError] = useState('')
-    const [pendingDelete, setPendingDelete] = useState<{ id: number; code: string } | null>(null)
-
-    const loadCurrencies = async () => {
-        setLoading(true)
-        const data = await getCurrencies()
-        setCurrencies(data)
-        setLoading(false)
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await erpFetch('reference/currencies/?limit=300')
+      const list = Array.isArray(data) ? data : data?.results || []
+      setCurrencies(list)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to load currencies')
     }
+    setLoading(false)
+  }, [])
 
-    useEffect(() => { loadCurrencies() }, [])
+  useEffect(() => { fetchAll() }, [fetchAll])
 
-    const resetForm = () => {
-        setShowForm(false)
-        setEditingId(null)
-        setFormData({ name: '', code: '', symbol: '' })
-        setError('')
+  const handleDelete = async (c: Currency) => {
+    if (!confirm(`Delete currency ${c.code} (${c.name})?\n\nThis cannot be undone.`)) return
+    try {
+      await erpFetch(`reference/currencies/${c.id}/`, { method: 'DELETE' })
+      toast.success(`${c.code} deleted`)
+      fetchAll()
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete')
     }
+  }
 
-    const handleEdit = (c: Currency) => {
-        setEditingId(c.id)
-        setFormData({ name: c.name, code: c.code, symbol: c.symbol })
-        setShowForm(true)
-        setError('')
-    }
+  const stats = useMemo(() => {
+    const active = currencies.filter(c => c.is_active).length
+    const inactive = currencies.length - active
+    const withSymbol = currencies.filter(c => c.symbol).length
+    return { total: currencies.length, active, inactive, withSymbol }
+  }, [currencies])
 
-    const handleSubmit = () => {
-        if (!formData.name || !formData.code || !formData.symbol) {
-            setError('All fields are required')
-            return
-        }
-        startTransition(async () => {
-            const res = editingId
-                ? await updateCurrency(editingId, formData)
-                : await createCurrency(formData)
-
-            if (res.success) {
-                resetForm()
-                await loadCurrencies()
-            } else {
-                setError(res.error || 'Operation failed')
-            }
-        })
-    }
-
-    const handleDelete = (id: number, code: string) => {
-        startTransition(async () => {
-            const res = await deleteCurrency(id)
-            if (res.success) {
-                await loadCurrencies()
-            } else {
-                toast.error(res.error || 'Failed to delete currency')
-            }
-        })
-    }
-
+  if (loading && currencies.length === 0) {
     return (
-        <div className="p-6 max-w-4xl">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-app-gradient-warning rounded-xl text-white shadow-lg">
-                        <Coins size={22} />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-app-foreground font-serif">Currency Management</h1>
-                        <p className="text-sm text-app-muted-foreground">Manage available currencies across the platform</p>
-                    </div>
-                </div>
-                <button
-                    onClick={() => { resetForm(); setShowForm(true) }}
-                    className="flex items-center gap-2 bg-app-foreground text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-app-surface transition-colors shadow-sm"
-                >
-                    <Plus size={16} />
-                    Add Currency
-                </button>
-            </div>
-
-            {/* Add/Edit Form */}
-            {showForm && (
-                <div className="mb-6 bg-app-surface border border-app-border rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-app-foreground">
-                            {editingId ? 'Edit Currency' : 'Add New Currency'}
-                        </h3>
-                        <button onClick={resetForm} className="text-app-muted-foreground hover:text-app-muted-foreground">
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    {error && (
-                        <div className="mb-3 p-2.5 bg-app-error-bg border border-app-error rounded-lg text-xs text-app-error font-medium">
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div>
-                            <label className="block text-xs font-medium text-app-muted-foreground mb-1">Currency Name</label>
-                            <input
-                                value={formData.name}
-                                onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                                placeholder="e.g. US Dollar"
-                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-app-muted-foreground mb-1">Code (ISO 4217)</label>
-                            <input
-                                value={formData.code}
-                                onChange={e => setFormData(p => ({ ...p, code: e.target.value.toUpperCase() }))}
-                                placeholder="e.g. USD"
-                                maxLength={10}
-                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm uppercase focus:ring-2 focus:ring-black focus:border-black outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-app-muted-foreground mb-1">Symbol</label>
-                            <input
-                                value={formData.symbol}
-                                onChange={e => setFormData(p => ({ ...p, symbol: e.target.value }))}
-                                placeholder="e.g. $"
-                                maxLength={10}
-                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2 justify-end">
-                        <button
-                            onClick={resetForm}
-                            className="px-4 py-2 text-sm font-medium text-app-muted-foreground bg-app-surface-2 rounded-lg hover:bg-app-surface-2 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            disabled={isPending}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-app-foreground rounded-lg hover:bg-app-surface transition-colors disabled:opacity-50"
-                        >
-                            {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                            {editingId ? 'Update' : 'Create'}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Currency Table */}
-            <div className="bg-app-surface border border-app-border rounded-xl shadow-sm overflow-hidden">
-                <table className="w-full">
-                    <thead>
-                        <tr className="bg-app-surface border-b border-app-border">
-                            <th className="text-left px-5 py-3 text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Code</th>
-                            <th className="text-left px-5 py-3 text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Name</th>
-                            <th className="text-left px-5 py-3 text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Symbol</th>
-                            <th className="text-right px-5 py-3 text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-app-border">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={4} className="text-center py-12 text-app-muted-foreground">
-                                    <Loader2 size={20} className="animate-spin mx-auto mb-2" />
-                                    Loading currencies...
-                                </td>
-                            </tr>
-                        ) : currencies.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="text-center py-12 text-app-muted-foreground">
-                                    <Coins size={24} className="mx-auto mb-2 opacity-40" />
-                                    <p className="text-sm font-medium">No currencies configured</p>
-                                    <p className="text-xs mt-1">Click &quot;Add Currency&quot; to get started</p>
-                                </td>
-                            </tr>
-                        ) : currencies.map(c => (
-                            <tr key={c.id} className="hover:bg-app-surface transition-colors">
-                                <td className="px-5 py-3.5">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-app-warning-bg text-app-warning text-xs font-bold">
-                                        {c.code}
-                                    </span>
-                                </td>
-                                <td className="px-5 py-3.5 text-sm text-app-foreground font-medium">{c.name}</td>
-                                <td className="px-5 py-3.5 text-sm text-app-muted-foreground font-semibold">{c.symbol}</td>
-                                <td className="px-5 py-3.5 text-right">
-                                    <div className="flex items-center justify-end gap-1.5">
-                                        <button
-                                            onClick={() => handleEdit(c)}
-                                            className="p-1.5 text-app-muted-foreground hover:text-app-info hover:bg-app-info-bg rounded-lg transition-colors"
-                                            title="Edit"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        <button
-                                            onClick={() => setPendingDelete({ id: c.id, code: c.code })}
-                                            className="p-1.5 text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg rounded-lg transition-colors"
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Stats Footer */}
-            {!loading && currencies.length > 0 && (
-                <div className="mt-4 text-xs text-app-muted-foreground text-right">
-                    {currencies.length} {currencies.length === 1 ? 'currency' : 'currencies'} configured
-                </div>
-            )}
-
-            <ConfirmDialog
-                open={pendingDelete !== null}
-                onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
-                onConfirm={() => {
-                    if (pendingDelete) handleDelete(pendingDelete.id, pendingDelete.code)
-                    setPendingDelete(null)
-                }}
-                title="Delete Currency"
-                description={`Delete currency ${pendingDelete?.code || ''}? This cannot be undone.`}
-                confirmText="Delete"
-                variant="danger"
-            />
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin" style={{ color: 'var(--app-info, #3b82f6)' }} />
+      </div>
     )
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <TreeMasterPage
+        config={{
+          title: 'Currencies',
+          subtitle: (_filtered, all) => `${all.length} Currencies · ${stats.active} Active · ISO 4217 Registry`,
+          icon: <Coins size={20} />,
+          iconColor: 'var(--app-info, #3b82f6)',
+          searchPlaceholder: 'Search by code, name, symbol... (Ctrl+K)',
+          primaryAction: {
+            label: 'New Currency',
+            icon: <Plus size={14} />,
+            onClick: () => setEditing('new' as any),
+          },
+          dataTools: {
+            title: 'Currency Data',
+            exportFilename: 'currencies',
+            exportColumns: [
+              { key: 'code', label: 'Code' },
+              { key: 'numeric_code', label: 'Numeric' },
+              { key: 'name', label: 'Name' },
+              { key: 'symbol', label: 'Symbol' },
+              { key: 'minor_unit', label: 'Minor Unit' },
+              { key: 'is_active', label: 'Active', format: (c: any) => c.is_active ? 'Yes' : 'No' },
+            ],
+            print: {
+              title: 'Currencies',
+              subtitle: 'ISO 4217 Registry',
+              prefKey: 'print.saas-currencies',
+              sortBy: 'code',
+              columns: [
+                { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '70px' },
+                { key: 'numeric', label: 'Numeric', mono: true, defaultOn: true, width: '70px' },
+                { key: 'name', label: 'Name', defaultOn: true },
+                { key: 'symbol', label: 'Symbol', defaultOn: true, width: '60px' },
+                { key: 'minor_unit', label: 'Decimals', align: 'right', defaultOn: true, width: '70px' },
+                { key: 'active', label: 'Status', defaultOn: false, width: '70px' },
+              ],
+              rowMapper: (c: any) => ({
+                code: c.code,
+                numeric: c.numeric_code || '',
+                name: c.name,
+                symbol: c.symbol || '',
+                minor_unit: c.minor_unit ?? 2,
+                active: c.is_active ? 'Active' : 'Inactive',
+              }),
+            },
+            import: {
+              entity: 'currency',
+              entityPlural: 'currencies',
+              endpoint: 'reference/currencies/',
+              columns: [
+                { name: 'code', required: true, desc: 'ISO 4217 alpha', example: 'USD' },
+                { name: 'numeric_code', required: false, desc: 'ISO numeric', example: '840' },
+                { name: 'name', required: true, desc: 'Currency name', example: 'US Dollar' },
+                { name: 'symbol', required: false, desc: 'Display symbol', example: '$' },
+                { name: 'minor_unit', required: false, desc: 'Decimal places (default 2)', example: '2' },
+                { name: 'is_active', required: false, desc: 'true/false (default true)', example: 'true' },
+              ],
+              sampleCsv:
+                'code,numeric_code,name,symbol,minor_unit,is_active\n' +
+                'USD,840,US Dollar,$,2,true\n' +
+                'EUR,978,Euro,€,2,true\n' +
+                'JPY,392,Japanese Yen,¥,0,true\n',
+              previewColumns: [
+                { key: 'code', label: 'Code' },
+                { key: 'name', label: 'Name' },
+                { key: 'symbol', label: 'Symbol' },
+                { key: 'minor_unit', label: 'Decimals' },
+              ],
+              buildPayload: (row) => ({
+                code: (row.code || '').toUpperCase(),
+                numeric_code: row.numeric_code || '',
+                name: row.name || '',
+                symbol: row.symbol || '',
+                minor_unit: row.minor_unit ? Number(row.minor_unit) : 2,
+                is_active: row.is_active ? row.is_active.toString().toLowerCase() !== 'false' : true,
+              }),
+            },
+          },
+          columnHeaders: [
+            { label: 'Currency', width: 'auto' },
+            { label: 'Numeric', width: '64px', hideOnMobile: true },
+            { label: 'DP', width: '64px', hideOnMobile: true },
+            { label: 'Symbol', width: '48px', hideOnMobile: true },
+          ],
+          // Single source of truth — TreeMasterPage owns search + KPI filters.
+          data: currencies as unknown as Record<string, unknown>[],
+          searchFields: ['code', 'name', 'symbol', 'numeric_code'],
+          kpiPredicates: {
+            active: (c: any) => Boolean(c.is_active),
+            inactive: (c: any) => !c.is_active,
+            withSymbol: (c: any) => Boolean(c.symbol),
+          },
+          kpis: [
+            { label: 'Total', icon: <Coins size={11} />, color: 'var(--app-info, #3b82f6)', filterKey: 'all', value: (_, all) => all.length },
+            { label: 'Active', icon: <Check size={11} />, color: 'var(--app-success, #22c55e)', filterKey: 'active', value: (filtered) => filtered.filter((c: any) => c.is_active).length },
+            { label: 'Inactive', icon: <X size={11} />, color: 'var(--app-error)', filterKey: 'inactive', value: (filtered) => filtered.filter((c: any) => !c.is_active).length },
+            { label: 'With Symbol', icon: <DollarSign size={11} />, color: 'var(--app-accent)', filterKey: 'withSymbol', value: (filtered) => filtered.filter((c: any) => c.symbol).length },
+          ],
+          emptyState: {
+            icon: <Coins size={36} />,
+            title: (hasSearch) => hasSearch ? 'No matching currencies' : 'No currencies defined yet',
+            subtitle: (hasSearch) => hasSearch
+              ? 'Try a different search term or clear filters.'
+              : 'Click "New Currency" to add one.',
+            actionLabel: 'Add First Currency',
+          },
+          onRefresh: fetchAll,
+        }}
+        detailPanel={(node, { onClose }) => (
+          <CurrencyDetailPanel
+            currency={node as Currency}
+            onEdit={() => { setEditing(node as Currency); onClose() }}
+            onDelete={() => { handleDelete(node as Currency); onClose() }}
+            onClose={onClose}
+          />
+        )}
+      >
+        {(renderProps) => {
+          const { tree, isSelected, openNode, isCompact } = renderProps
+          return tree.map((c: Currency) => (
+            <CurrencyRow
+              key={c.id}
+              item={c}
+              isSelected={isSelected(c)}
+              onSelect={() => openNode(c, 'overview')}
+              onEdit={() => setEditing(c)}
+              onDelete={() => handleDelete(c)}
+              compact={isCompact}
+            />
+          ))
+        }}
+      </TreeMasterPage>
+
+      {editing !== null && (
+        <CurrencyEditModal
+          currency={editing === 'new' ? null : editing as Currency}
+          onClose={() => setEditing(null)}
+          onSaved={fetchAll}
+        />
+      )}
+    </div>
+  )
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useState, useEffect, useRef, useMemo } from 'react'
+import { useActionState, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { PurchaseLine } from '@/types/erp'
-import { createPurchaseInvoice, updatePurchaseInvoice } from '@/app/actions/commercial/purchases'
+import { createPurchaseInvoice, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
 import {
     ShoppingCart, ArrowLeft, Settings2,
     ListFilter, BookOpen, Plus, ArrowRight,
@@ -16,7 +16,7 @@ import { ProductSearch } from './_components/ProductSearch'
 import { LineColumnHeaders } from './_components/LineColumnHeaders'
 import { LineRowDesktop } from './_components/LineRowDesktop'
 import { AdminSidebar } from './_components/AdminSidebar'
-import { POLifecycle } from './_components/POLifecycle'
+import { POLifecycle, type POStatus } from './_components/POLifecycle'
 import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-profiles'
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 
@@ -128,6 +128,43 @@ export default function PurchaseForm({
     )
     const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+
+    // ── Lifecycle status (edit mode only) ─────────────────────────────
+    // On new POs this is always DRAFT (hardcoded). On edit mode it reads
+    // from the backend's `status` field. When the operator clicks a stage
+    // in the sidebar's lifecycle widget, we fire the transition server
+    // action and optimistically update the local state.
+    const [poStatus, setPoStatus] = useState<POStatus>(() => {
+        if (!isEdit) return 'DRAFT'
+        const s = (initialPO?.status as string || 'DRAFT').toUpperCase()
+        return s as POStatus
+    })
+    const [statusTransitioning, setStatusTransitioning] = useState(false)
+
+    const handleStatusChange = useCallback(async (next: POStatus) => {
+        if (!isEdit || !editId) return
+        if (next === poStatus) return
+
+        setStatusTransitioning(true)
+        try {
+            const result = await transitionPurchaseOrderStatus(editId, next)
+            if (result.error) {
+                toast.error(result.error)
+                // If the backend tells us the actual status, sync to it
+                if (result.current_status) {
+                    setPoStatus(result.current_status as POStatus)
+                }
+            } else {
+                const newStatus = (result.status || next) as POStatus
+                setPoStatus(newStatus)
+                toast.success(`PO transitioned to ${newStatus.replace(/_/g, ' ').toLowerCase()}`)
+            }
+        } catch (e) {
+            toast.error('Failed to transition PO status')
+        } finally {
+            setStatusTransitioning(false)
+        }
+    }, [isEdit, editId, poStatus])
 
     const selectedSupplier = useMemo(() => suppliers.find(s => Number(s.id) === Number(supplierId)), [suppliers, supplierId])
     const selectedSite = useMemo(() => sites.find(s => Number(s.id) === Number(selectedSiteId)), [sites, selectedSiteId])
@@ -265,7 +302,11 @@ export default function PurchaseForm({
                                     {/* Compact lifecycle chip — same data
                                      *  source as the sidebar's full version,
                                      *  so the two stay in sync. */}
-                                    <POLifecycle current="DRAFT" variant="compact" />
+                                    <POLifecycle
+                                        current={poStatus}
+                                        variant="compact"
+                                        transitioning={statusTransitioning}
+                                    />
                                 </div>
                             ) : (
                                 <p className="font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5"
@@ -465,6 +506,9 @@ export default function PurchaseForm({
                                 date={date} onDateChange={setDate}
                                 expectedDelivery={deliveryDate} onExpectedDeliveryChange={setDeliveryDate}
                                 onClose={() => setSidebarOpen(false)}
+                                poStatus={poStatus}
+                                onStatusChange={isEdit ? handleStatusChange : undefined}
+                                statusTransitioning={statusTransitioning}
                             />
                         </div>
                     </div>

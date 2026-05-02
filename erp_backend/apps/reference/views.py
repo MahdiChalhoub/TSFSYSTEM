@@ -111,6 +111,30 @@ class RefCountryViewSet(viewsets.ModelViewSet):
         country = self.get_object()
         return Response(CountrySerializer(country).data)
 
+    @action(detail=False, methods=['get'], url_path='tenants', permission_classes=[permissions.IsAuthenticated])
+    def tenants(self, request):
+        """
+        SU-only: return a map of country_id → list of tenants that have
+        enabled this country (via OrgCountry). Lets the SaaS-admin /countries
+        page show "which tenants are using this country" without going
+        per-row. Tenant scoping is intentionally bypassed here — the data
+        is global by definition, and this endpoint is gated by is_superuser.
+        """
+        if not request.user.is_superuser:
+            return Response({'detail': 'Superuser only.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Bypass the tenant filter — OrgCountry uses tenant-scoped manager,
+        # so reach into the unscoped manager to get all tenants' rows.
+        rows = OrgCountry.all_objects.select_related('country', 'organization').filter(is_enabled=True)
+        out: dict[int, list[dict]] = {}
+        for r in rows:
+            out.setdefault(r.country_id, []).append({
+                'org_id': r.organization_id,
+                'org_name': getattr(r.organization, 'name', None) or getattr(r.organization, 'slug', None) or f'Org #{r.organization_id}',
+                'is_default': r.is_default,
+            })
+        return Response(out)
+
 
 class RefCurrencyViewSet(viewsets.ModelViewSet):
     """

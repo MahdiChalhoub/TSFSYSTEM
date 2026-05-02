@@ -168,7 +168,7 @@ class Migration(migrations.Migration):
             name='submitted_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(app_label)s_%(class)s_submitted', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='stockmove',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

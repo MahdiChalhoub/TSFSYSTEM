@@ -19,117 +19,117 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientorder',
             name='pos_order',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='client_orders', to='pos.order'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientorderline',
             name='order',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lines', to='client_portal.clientorder'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientorderline',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientorderline',
             name='product',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.product'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalaccess',
             name='contact',
             field=models.OneToOneField(limit_choices_to={'type': 'CUSTOMER'}, on_delete=django.db.models.deletion.CASCADE, related_name='client_portal_access', to='crm.contact'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalaccess',
             name='granted_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='client_accesses_granted', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalaccess',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalaccess',
             name='user',
             field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='client_access', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalconfig',
             name='default_ticket_assignee',
             field=models.ForeignKey(blank=True, help_text='Default agent for auto-assigned tickets', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientportalconfig',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientticket',
             name='assigned_to',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_tickets', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientticket',
             name='contact',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='support_tickets', to='crm.contact'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientticket',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientticket',
             name='related_order',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tickets', to='client_portal.clientorder'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientwallet',
             name='contact',
             field=models.OneToOneField(limit_choices_to={'type': 'CUSTOMER'}, on_delete=django.db.models.deletion.CASCADE, related_name='wallet', to='crm.contact'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='clientwallet',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='quoteitem',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='quoteitem',
             name='product',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.product'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='quoterequest',
             name='contact',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='quote_requests', to='crm.contact'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='quoterequest',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='quoteitem',
             name='quote_request',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='client_portal.quoterequest'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='wallettransaction',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='wallettransaction',
             name='wallet',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions', to='client_portal.clientwallet'),

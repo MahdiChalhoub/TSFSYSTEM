@@ -192,7 +192,7 @@ class Migration(migrations.Migration):
             name='warehousezone',
             unique_together={('warehouse', 'code', 'organization')},
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='combocomponent',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -207,7 +207,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='inventory',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -237,12 +237,12 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='productattributevalue',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='productbatch',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -257,7 +257,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='productserial',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -287,7 +287,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='warehouse',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -312,7 +312,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='warehousezone',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

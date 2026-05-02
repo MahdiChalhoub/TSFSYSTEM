@@ -17,12 +17,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='migrationjob',
             name='created_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='migrationjob',
             name='organization',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization'),
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             name='stored_file',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='migration_jobs', to='storage.storedfile'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='migrationmapping',
             name='job',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='data_migration.migrationjob'),

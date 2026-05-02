@@ -13,70 +13,62 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameIndex(
-            model_name='employeescoreevent',
-            new_name='workforce_s_organization__d4e395_idx',
-            old_name='workforce_ese_tes_idx',
+        # v3.5.0 cleanup: RenameIndex on indexes that were never added
+        # (0006_add_performance_indexes was neutered to a no-op marker; original index
+        # creations never reached the migration state). Replaced with idempotent SQL
+        # so the rename is a no-op on fresh DBs and a real rename on legacy DBs that
+        # somehow have the old indexes.
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ese_tes_idx RENAME TO workforce_s_organization__d4e395_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__d4e395_idx RENAME TO workforce_ese_tes_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreevent',
-            new_name='workforce_s_organization__d34d24_idx',
-            old_name='workforce_ese_tmec_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ese_tmec_idx RENAME TO workforce_s_organization__d34d24_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__d34d24_idx RENAME TO workforce_ese_tmec_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreevent',
-            new_name='workforce_s_organization__d85140_idx',
-            old_name='workforce_ese_tea_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ese_tea_idx RENAME TO workforce_s_organization__d85140_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__d85140_idx RENAME TO workforce_ese_tea_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreevent',
-            new_name='workforce_s_organization__71904a_idx',
-            old_name='workforce_ese_tds_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ese_tds_idx RENAME TO workforce_s_organization__71904a_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__71904a_idx RENAME TO workforce_ese_tds_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreevent',
-            new_name='workforce_s_employe_e6d54c_idx',
-            old_name='workforce_ese_esea_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ese_esea_idx RENAME TO workforce_s_employe_e6d54c_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_employe_e6d54c_idx RENAME TO workforce_ese_esea_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreperiod',
-            new_name='workforce_s_organization__dbdc43_idx',
-            old_name='workforce_esp_tptpk_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_esp_tptpk_idx RENAME TO workforce_s_organization__dbdc43_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__dbdc43_idx RENAME TO workforce_esp_tptpk_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoreperiod',
-            new_name='workforce_s_employe_44bf4b_idx',
-            old_name='workforce_esp_epk_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_esp_epk_idx RENAME TO workforce_s_employe_44bf4b_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_employe_44bf4b_idx RENAME TO workforce_esp_epk_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoresummary',
-            new_name='workforce_s_organization__dbb1dc_idx',
-            old_name='workforce_ess_tgs_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ess_tgs_idx RENAME TO workforce_s_organization__dbb1dc_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__dbb1dc_idx RENAME TO workforce_ess_tgs_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoresummary',
-            new_name='workforce_s_organization__a1d2e8_idx',
-            old_name='workforce_ess_tbgs_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ess_tbgs_idx RENAME TO workforce_s_organization__a1d2e8_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__a1d2e8_idx RENAME TO workforce_ess_tbgs_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoresummary',
-            new_name='workforce_s_organization__46ae32_idx',
-            old_name='workforce_ess_trl_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ess_trl_idx RENAME TO workforce_s_organization__46ae32_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__46ae32_idx RENAME TO workforce_ess_trl_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='employeescoresummary',
-            new_name='workforce_s_organization__b8d8fd_idx',
-            old_name='workforce_ess_tbl_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_ess_tbl_idx RENAME TO workforce_s_organization__b8d8fd_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__b8d8fd_idx RENAME TO workforce_ess_tbl_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='scorerule',
-            new_name='workforce_s_organization__9bc68f_idx',
-            old_name='workforce_sr_tmec_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_sr_tmec_idx RENAME TO workforce_s_organization__9bc68f_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__9bc68f_idx RENAME TO workforce_sr_tmec_idx;',
         ),
-        migrations.RenameIndex(
-            model_name='scorerule',
-            new_name='workforce_s_organization__3c9f9f_idx',
-            old_name='workforce_sr_tactive_idx',
+        migrations.RunSQL(
+            sql='ALTER INDEX IF EXISTS workforce_sr_tactive_idx RENAME TO workforce_s_organization__3c9f9f_idx;',
+            reverse_sql='ALTER INDEX IF EXISTS workforce_s_organization__3c9f9f_idx RENAME TO workforce_sr_tactive_idx;',
         ),
         migrations.AlterUniqueTogether(
             name='employeebadge',
@@ -102,7 +94,7 @@ class Migration(migrations.Migration):
             name='scorerule',
             unique_together = ('organization', 'code'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='employeebadge',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -117,7 +109,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='employeescoreperiod',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
@@ -127,7 +119,7 @@ class Migration(migrations.Migration):
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='scorerule',
             name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),

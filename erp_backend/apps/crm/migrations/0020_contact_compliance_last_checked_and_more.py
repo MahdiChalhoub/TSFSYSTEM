@@ -15,47 +15,47 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='compliance_last_checked',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='compliance_next_expiry',
             field=models.DateField(blank=True, null=True),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='compliance_risk_level',
             field=models.CharField(choices=[('LOW', 'Low'), ('MEDIUM', 'Medium'), ('HIGH', 'High'), ('CRITICAL', 'Critical')], default='LOW', max_length=20),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='compliance_score',
             field=models.DecimalField(decimal_places=2, default=Decimal('100.00'), help_text='Overall compliance health score (0-100)', max_digits=5),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contact',
             name='compliance_status',
             field=models.CharField(choices=[('COMPLIANT', 'Compliant'), ('MISSING_DOC', 'Missing Required Documents'), ('EXPIRED_DOC', 'Expired Documents'), ('EXPIRING_SOON', 'Expiring Soon (Warning)'), ('BLOCKED', 'Manually Blocked'), ('UNVERIFIED', 'Unverified Documents')], default='COMPLIANT', max_length=30),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='is_active',
             field=models.BooleanField(default=True, help_text='Only the latest active version is used for compliance checks'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='replaced_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='previous_versions', to='crm.contactcompliancedocument'),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='review_status',
             field=models.CharField(choices=[('UPLOADED', 'Uploaded (Pending Review)'), ('UNDER_REVIEW', 'Under Review'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected (Action Required)'), ('SUPERSEDED', 'Superseded by New Version'), ('REVOKED', 'Revoked / Invalidated')], default='UPLOADED', max_length=20),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='contactcompliancedocument',
             name='version',
             field=models.IntegerField(default=1),
