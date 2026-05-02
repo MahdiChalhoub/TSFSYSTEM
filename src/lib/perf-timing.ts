@@ -183,6 +183,12 @@ function emit(sample: PerfSample) {
         sample.durationMs >= SLOW_THRESHOLD_MS || Math.random() < PROD_SAMPLE_RATE
     if (!shouldShip) return
 
+    // Self-disable after the first 4xx — when the reverse proxy routes
+    // /api/* to Django (which doesn't own /api/perf-log), every emit
+    // would 404 and clutter the console with red network entries.
+    // We back off for the rest of the session so the first failure is
+    // the only one the user sees.
+    if (perfShipDisabled) return
     try {
         if (typeof fetch !== 'undefined') {
             fetch(PERF_ENDPOINT, {
@@ -190,7 +196,15 @@ function emit(sample: PerfSample) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sample),
                 keepalive: true,
+            }).then(res => {
+                if (res.status >= 400 && res.status < 500) {
+                    perfShipDisabled = true
+                }
             }).catch(() => { })
         }
     } catch { /* never throw */ }
 }
+
+// Module-scoped — reset only on a full page reload. Keeps emit() cheap
+// after the endpoint has been confirmed unreachable.
+let perfShipDisabled = false
