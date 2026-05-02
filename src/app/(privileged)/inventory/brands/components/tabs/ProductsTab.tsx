@@ -85,7 +85,8 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                 ) : (
                     <div className="divide-y divide-app-border/30">
                         {filtered.map(p => (
-                            <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
+                            <Link key={p.id} href={`/inventory/products/${p.id}`}
+                                className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover cursor-pointer">
                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                                     style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
                                     <Package size={13} />
@@ -107,12 +108,8 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                                         {Number(p.sell_price).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                     </span>
                                 )}
-                                <Link href={`/inventory/products/${p.id}`}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground"
-                                    title="Open product">
-                                    <ExternalLink size={11} />
-                                </Link>
-                            </div>
+                                <ExternalLink size={11} className="text-app-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            </Link>
                         ))}
                     </div>
                 )}

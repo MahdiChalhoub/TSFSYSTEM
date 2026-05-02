@@ -24,11 +24,30 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
 
     const loadData = useCallback(() => {
         setLoading(true)
+        // Pull the M2M-linked categories AND every category that the
+        // brand's products actually use. The user wants to see the
+        // *real* categories the brand operates in — the M2M field is
+        // rarely populated in this tenant; it's the products that carry
+        // the category FK. Merge both into one display list, deduped.
         Promise.all([
             erpFetch(`inventory/brands/${brandId}/`),
             erpFetch('inventory/categories/'),
-        ]).then(([brandData, catData]: any[]) => {
-            setLinkedCats(Array.isArray(brandData?.categories) ? brandData.categories : [])
+            erpFetch(`inventory/products/?brand=${brandId}&page_size=200`),
+        ]).then(([brandData, catData, prodData]: any[]) => {
+            const m2mCats: CategoryRow[] = Array.isArray(brandData?.categories) ? brandData.categories : []
+
+            const products = Array.isArray(prodData) ? prodData : (prodData?.results ?? [])
+            const fromProducts = new Map<number, string>()
+            products.forEach((p: any) => {
+                if (p.category && p.category_name) fromProducts.set(p.category, p.category_name)
+            })
+
+            const merged = new Map<number, string>()
+            m2mCats.forEach(c => merged.set(c.id, c.name))
+            fromProducts.forEach((name, id) => { if (!merged.has(id)) merged.set(id, name) })
+
+            setLinkedCats([...merged.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)))
+
             const all = Array.isArray(catData?.results) ? catData.results : (Array.isArray(catData) ? catData : [])
             setAllCats(all.map((c: any) => ({ id: c.id, name: c.name })))
         }).catch(() => {}).finally(() => setLoading(false))

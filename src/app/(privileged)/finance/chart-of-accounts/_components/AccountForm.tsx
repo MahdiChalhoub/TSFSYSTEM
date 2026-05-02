@@ -131,6 +131,11 @@ export function AccountForm({
                         onChange={(e) => setHasForeignCurrency(Boolean(e.currentTarget.value.trim()))}
                         className="w-full text-tp-sm px-2.5 py-2 rounded-xl outline-none"
                         style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                        {/* The "Default" option (empty value) IS the tenant's
+                            default currency — selecting it stores no explicit
+                            currency and the account inherits the home currency.
+                            We skip the default in the foreign-currency list
+                            below so it doesn't appear twice. */}
                         <option value="">
                             {(() => {
                                 const def = orgCurrencies.find(c => c.is_default)
@@ -139,18 +144,22 @@ export function AccountForm({
                                     : 'Default (home currency)'
                             })()}
                         </option>
-                        {/* List enabled currencies, default first if any. */}
-                        {[...orgCurrencies]
-                            .filter(c => c.is_enabled !== false)
-                            .sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0))
-                            .map(c => (
-                                <option key={c.id} value={c.currency_code || ''}>
-                                    {c.currency_code}
-                                    {c.currency_symbol ? ` (${c.currency_symbol})` : ''}
-                                    {c.currency_name ? ` — ${c.currency_name}` : ''}
-                                    {c.is_default ? '  · default' : ''}
-                                </option>
-                            ))}
+                        {(() => {
+                            const foreign = orgCurrencies
+                                .filter(c => c.is_enabled !== false && !c.is_default)
+                            if (foreign.length === 0) return null
+                            return (
+                                <optgroup label="Foreign currencies">
+                                    {foreign.map(c => (
+                                        <option key={c.id} value={c.currency_code || ''}>
+                                            {c.currency_code}
+                                            {c.currency_symbol ? ` (${c.currency_symbol})` : ''}
+                                            {c.currency_name ? ` — ${c.currency_name}` : ''}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )
+                        })()}
                     </select>
                 ) : (
                     // Fallback for callers that didn't load org-currencies — same
