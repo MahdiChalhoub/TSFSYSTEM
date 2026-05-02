@@ -263,17 +263,40 @@ class ProductSerializer(serializers.ModelSerializer):
                     pass
         return None
 
+    def _sibling_ids(self):
+        """Return all product ids in the parent ListSerializer instance, or None."""
+        parent = getattr(self, 'parent', None)
+        if parent is None or not hasattr(parent, 'instance') or parent.instance is None:
+            return None
+        instances = parent.instance
+        if not hasattr(instances, '__iter__'):
+            return None
+        return [getattr(p, 'id', None) for p in instances if getattr(p, 'id', None) is not None]
+
     def get_on_hand_qty(self, obj):
+        # Batch-resolve across the page on first call to avoid N queries.
+        request = self.context.get('request')
         warehouse = self._resolve_warehouse(obj)
+        cache_key = f'_inv_on_hand_{warehouse.id if warehouse else "all"}'
+        if request is not None:
+            cache = getattr(request, cache_key, None)
+            if cache is None:
+                ids = self._sibling_ids() or [obj.id]
+                qs = Inventory.objects.filter(product_id__in=ids, organization=obj.organization)
+                if warehouse:
+                    qs = qs.filter(warehouse=warehouse)
+                # Sum per product (handles multiple warehouse rows when warehouse is unset)
+                cache = {}
+                for row in qs.values('product_id').annotate(t=Sum('quantity')):
+                    cache[row['product_id']] = float(row['t'] or 0)
+                setattr(request, cache_key, cache)
+            return cache.get(obj.id, 0.0)
+        # No request context — fall back to direct query
         if warehouse:
-            inv = Inventory.objects.filter(
-                product=obj, warehouse=warehouse, organization=obj.organization
-            ).first()
+            inv = Inventory.objects.filter(product=obj, warehouse=warehouse, organization=obj.organization).first()
             return float(inv.quantity if inv else Decimal('0'))
-        # Fallback: sum across all warehouses
         return float(
-            Inventory.objects.filter(product=obj, organization=obj.organization)
-            .aggregate(t=Sum('quantity'))['t'] or 0
+            Inventory.objects.filter(product=obj, organization=obj.organization).aggregate(t=Sum('quantity'))['t'] or 0
         )
 
     def get_reserved_qty(self, obj):
@@ -299,29 +322,48 @@ class ProductSerializer(serializers.ModelSerializer):
         except Exception:
             return self.get_on_hand_qty(obj)
 
-    def get_incoming_transfer_qty(self, obj):
-        warehouse = self._resolve_warehouse(obj)
+    def _transfer_qty_batch(self, obj, direction):
+        """direction: 'in' (move__to_warehouse) or 'out' (move__from_warehouse)."""
         from apps.inventory.models import StockMoveLine
+        request = self.context.get('request')
+        warehouse = self._resolve_warehouse(obj)
+        cache_key = f'_xfer_{direction}_{warehouse.id if warehouse else "all"}'
+        if request is not None:
+            cache = getattr(request, cache_key, None)
+            if cache is None:
+                ids = self._sibling_ids() or [obj.id]
+                qs = StockMoveLine.objects.filter(
+                    product_id__in=ids,
+                    organization=obj.organization,
+                    move__status__in=['PENDING', 'IN_TRANSIT'],
+                )
+                if warehouse:
+                    if direction == 'in':
+                        qs = qs.filter(move__to_warehouse=warehouse)
+                    else:
+                        qs = qs.filter(move__from_warehouse=warehouse)
+                cache = {}
+                for row in qs.values('product_id').annotate(t=Sum('quantity')):
+                    cache[row['product_id']] = float(row['t'] or 0)
+                setattr(request, cache_key, cache)
+            return cache.get(obj.id, 0.0)
+        # No request — direct query
         qs = StockMoveLine.objects.filter(
-            product=obj,
-            organization=obj.organization,
-            move__status__in=['PENDING', 'IN_TRANSIT']
+            product=obj, organization=obj.organization,
+            move__status__in=['PENDING', 'IN_TRANSIT'],
         )
         if warehouse:
-            qs = qs.filter(move__to_warehouse=warehouse)
+            if direction == 'in':
+                qs = qs.filter(move__to_warehouse=warehouse)
+            else:
+                qs = qs.filter(move__from_warehouse=warehouse)
         return float(qs.aggregate(t=Sum('quantity'))['t'] or 0)
 
+    def get_incoming_transfer_qty(self, obj):
+        return self._transfer_qty_batch(obj, 'in')
+
     def get_outgoing_transfer_qty(self, obj):
-        warehouse = self._resolve_warehouse(obj)
-        from apps.inventory.models import StockMoveLine
-        qs = StockMoveLine.objects.filter(
-            product=obj,
-            organization=obj.organization,
-            move__status__in=['PENDING', 'IN_TRANSIT']
-        )
-        if warehouse:
-            qs = qs.filter(move__from_warehouse=warehouse)
-        return float(qs.aggregate(t=Sum('quantity'))['t'] or 0)
+        return self._transfer_qty_batch(obj, 'out')
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
