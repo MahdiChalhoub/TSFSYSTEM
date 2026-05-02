@@ -90,6 +90,7 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
     const instantCreate = useCallback((type: RequestType, products: RequestableProduct[]) => {
         startTransition(async () => {
             let created = 0
+            let bumped = 0
             const failures: string[] = []
             for (const product of products) {
                 try {
@@ -100,7 +101,13 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
                     })
                     created++
                 } catch (e: any) {
-                    failures.push(`${product.name}: ${e?.message || 'failed'}`)
+                    if (isAlreadyActiveError(e)) {
+                        const r = await bumpProcurementRequest({ productId: product.id })
+                        if (r.success) bumped++
+                        else failures.push(`${product.name}: ${r.message || 'bump failed'}`)
+                    } else {
+                        failures.push(`${product.name}: ${e?.message || 'failed'}`)
+                    }
                 }
             }
             if (created > 0) {
@@ -108,6 +115,12 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
                     `${created} ${type === 'PURCHASE' ? 'purchase' : 'transfer'} request${created === 1 ? '' : 's'} created`,
                     { description: 'Open requests list', action: { label: 'View →', onClick: () => { window.location.href = '/inventory/requests' } } },
                 )
+            }
+            if (bumped > 0) {
+                toast.success(`Bumped ${bumped} existing request${bumped === 1 ? '' : 's'}`, {
+                    description: 'Already in flight — priority escalated.',
+                    action: { label: 'View →', onClick: () => { window.location.href = '/inventory/requests' } },
+                })
             }
             if (failures.length > 0) {
                 toast.error(`${failures.length} failed`, { description: failures.slice(0, 3).join('\n') })
@@ -119,6 +132,7 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
         if (cart.length === 0) return
         startTransition(async () => {
             let created = 0
+            let bumped = 0
             const failures: string[] = []
             for (const line of cart) {
                 try {
@@ -129,15 +143,27 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
                     })
                     created++
                 } catch (e: any) {
-                    failures.push(`${line.product.name}: ${e?.message || 'failed'}`)
+                    if (isAlreadyActiveError(e)) {
+                        const r = await bumpProcurementRequest({ productId: line.product.id })
+                        if (r.success) bumped++
+                        else failures.push(`${line.product.name}: ${r.message || 'bump failed'}`)
+                    } else {
+                        failures.push(`${line.product.name}: ${e?.message || 'failed'}`)
+                    }
                 }
             }
+            if (created > 0 || bumped > 0) setCart([])
             if (created > 0) {
                 toast.success(
                     `${created} request${created === 1 ? '' : 's'} created`,
                     { description: 'Open requests list', action: { label: 'View →', onClick: () => { window.location.href = '/inventory/requests' } } },
                 )
-                setCart([])
+            }
+            if (bumped > 0) {
+                toast.success(`Bumped ${bumped} existing request${bumped === 1 ? '' : 's'}`, {
+                    description: 'Already in flight — priority escalated.',
+                    action: { label: 'View →', onClick: () => { window.location.href = '/inventory/requests' } },
+                })
             }
             if (failures.length > 0) {
                 toast.error(`${failures.length} failed`, { description: failures.slice(0, 3).join('\n') })
@@ -202,6 +228,15 @@ export function RequestFlowProvider({ children }: { children: React.ReactNode })
             {cart.length > 0 && <CartTray cart={cart} pending={pending} onRemove={removeFromCart} onClear={clearCart} onSubmit={submitCart} />}
         </RequestFlowContext.Provider>
     )
+}
+
+// Backend returns HTTP 409 with "already has an active purchase request" /
+// "already has an active request" when single-source duplicate-block kicks in.
+// Match on the message body since the server action throws an Error wrapping
+// the response body — we don't get the status code directly.
+function isAlreadyActiveError(e: any): boolean {
+    const msg = (e?.message || '').toLowerCase()
+    return msg.includes('already has an active') || msg.includes('existing_request_id')
 }
 
 function CartTray({
