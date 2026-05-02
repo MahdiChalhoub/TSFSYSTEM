@@ -46,8 +46,80 @@ export function AccountForm({
     const [parentId, setParentId] = useState<string>(
         String(initialData?.parentId || preselectedParentId || '')
     )
+    const [type, setType] = useState<string>(initialData?.type || 'ASSET')
     const parentCode = accounts.find(a => String(a.id) === parentId)?.code as string | undefined
     const codePlaceholder = parentCode ? `${parentCode}…` : '1010'
+
+    /** Suggest the next sibling code for a given parent.
+     *  - No parent → blank (free-form root code).
+     *  - First child → `<parent_code>1` (e.g. parent 41 → 411).
+     *  - Otherwise → max numeric tail of existing siblings + 1, preserving
+     *    the digit width siblings used (so 4101, 4102 → 4103 not 41021).
+     *  Each parent's "philosophy" wins because we extend its actual code
+     *  and only increment within siblings — not a global rule. */
+    const suggestNextCode = (pid: string): string => {
+        if (!pid) return ''
+        const parent = accounts.find(a => String(a.id) === pid)
+        if (!parent?.code) return ''
+        const prefix = String(parent.code)
+        const tails = accounts
+            .filter(a => String(a.parentId) === pid)
+            .map(a => String(a.code || ''))
+            .filter(c => c.startsWith(prefix) && c.length > prefix.length)
+            .map(c => c.slice(prefix.length))
+        if (tails.length === 0) return `${prefix}1`
+        const numeric = tails.map(t => parseInt(t, 10)).filter(n => !isNaN(n))
+        if (numeric.length === 0) return `${prefix}${tails.length + 1}`
+        const next = Math.max(...numeric) + 1
+        const width = tails[0].length
+        return `${prefix}${String(next).padStart(width, '0')}`
+    }
+    const isEdit = Boolean(initialData?.id)
+    const [code, setCode] = useState<string>(
+        initialData?.code || (preselectedParentId ? suggestNextCode(String(preselectedParentId)) : '')
+    )
+    /** While `codeIsAuto` is true the code field tracks parent changes;
+     *  the moment the user types their own code we lock it. On edit we
+     *  never auto-suggest — the existing code is authoritative. */
+    const [codeIsAuto, setCodeIsAuto] = useState<boolean>(!isEdit && !initialData?.code)
+
+    /** Eligible parents — silent-bug guards:
+     *  • Active only (inactive accounts can't accept new children)
+     *  • Same type (an ASSET can't sit under an EXPENSE tree)
+     *  • Not self, not any descendant of self (would create a cycle)
+     *  • No direct ledger balance (leaf accounts hold transactions; if a
+     *    leaf with a balance becomes a parent, the parent's rollup would
+     *    silently double-count its own posted entries against children).
+     *  Re-evaluates whenever the user changes type — and on edit, the
+     *  current account's own subtree is computed once. */
+    const eligibleParents = (() => {
+        const selfId = initialData?.id
+        const blocked = new Set<string | number>()
+        if (selfId) {
+            // BFS the descendant subtree to block cycles.
+            blocked.add(selfId)
+            const queue = [selfId]
+            while (queue.length) {
+                const current = queue.shift()
+                accounts.forEach(a => {
+                    if (String(a.parentId) === String(current) && !blocked.has(a.id)) {
+                        blocked.add(a.id)
+                        queue.push(a.id)
+                    }
+                })
+            }
+        }
+        return accounts.filter(a => {
+            if (a.isActive === false) return false
+            if (blocked.has(a.id)) return false
+            if (a.type && a.type !== type) return false
+            // A leaf with posted entries can't host children — mixing direct
+            // ledger balance with child rollups breaks the parent total.
+            const direct = Number(a.directBalance ?? 0)
+            if (direct !== 0) return false
+            return true
+        })
+    })()
     return (
         <form action={onSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
             <div className="col-span-full mb-1 flex items-center justify-between">
@@ -55,25 +127,32 @@ export function AccountForm({
                     {title || (preselectedParentId ? t('finance.coa.form_add_sub') : t('finance.coa.form_add_root'))}
                 </h3>
             </div>
-            {[
-                { name: 'code', label: t('finance.coa.form_code'), placeholder: codePlaceholder, type: 'input', mono: true, defaultValue: initialData?.code },
-                { name: 'name', label: t('finance.coa.form_name'), placeholder: t('finance.coa.form_name_placeholder'), type: 'input', defaultValue: initialData?.name },
-            ].map(f => (
-                <div key={f.name}>
-                    <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{f.label}</label>
-                    <input
-                        name={f.name}
-                        placeholder={f.placeholder}
-                        required
-                        defaultValue={f.defaultValue}
-                        className={`w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all ${f.mono ? 'font-mono font-bold' : ''}`}
-                        style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
-                    />
-                </div>
-            ))}
+            <div>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_code')}</label>
+                <input
+                    name="code"
+                    placeholder={codePlaceholder}
+                    required
+                    value={code}
+                    onChange={e => { setCode(e.target.value); setCodeIsAuto(false) }}
+                    className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all font-mono font-bold"
+                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                />
+            </div>
+            <div>
+                <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_name')}</label>
+                <input
+                    name="name"
+                    placeholder={t('finance.coa.form_name_placeholder')}
+                    required
+                    defaultValue={initialData?.name}
+                    className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none transition-all"
+                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                />
+            </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_type')}</label>
-                <select name="type" defaultValue={initialData?.type || 'ASSET'} className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="type" value={type} onChange={e => { setType(e.target.value); setParentId('') }} className="w-full text-tp-md px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
             </div>
@@ -89,9 +168,13 @@ export function AccountForm({
             </div>
             <div>
                 <label className="text-tp-xxs font-bold uppercase tracking-wide mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.coa.form_parent')}</label>
-                <select name="parentId" value={parentId} onChange={e => setParentId(e.target.value)} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                <select name="parentId" value={parentId} onChange={e => {
+                    const next = e.target.value
+                    setParentId(next)
+                    if (codeIsAuto) setCode(suggestNextCode(next))
+                }} className="w-full text-tp-sm font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                     <option value="">{t('finance.coa.form_parent_root')}</option>
-                    {accounts.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+                    {eligibleParents.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                 </select>
             </div>
             <div>
