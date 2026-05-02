@@ -3,7 +3,7 @@
 import React from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { Package, Trash2, Shield, Info, DollarSign, Layers } from 'lucide-react'
-import { getStatusStyle } from '../_lib/status-styles'
+import { getProcurementStatus } from '@/lib/procurement-status'
 
 const fmt = (v: number | string) => {
   const n = typeof v === 'string' ? parseFloat(v) : v
@@ -45,8 +45,8 @@ function LineCard({ line, onUpdate, onRemove }: {
   onUpdate: (updates: Record<string, any>) => void
   onRemove: () => void
 }) {
-  const statusStyle = getStatusStyle(line.statusText as string)
-  
+  const procurement = getProcurementStatus(line.procurement_status as string | undefined)
+
   return (
     <div
       className="group rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
@@ -71,16 +71,16 @@ function LineCard({ line, onUpdate, onRemove }: {
           <Package size={28} />
         </div>
 
-        {/* Status Badge */}
+        {/* Procurement Status Badge — canonical vocabulary (NONE/REQUESTED/PO_SENT/...). */}
         <span
           className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border"
           style={{
-            background: `color-mix(in srgb, ${statusStyle.bg} 15%, transparent)`,
-            color: statusStyle.text,
-            borderColor: `color-mix(in srgb, ${statusStyle.text} 30%, transparent)`,
+            background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+            color: procurement.color,
+            borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
           }}
         >
-          {String(line.statusText || 'DRAFT')}
+          {procurement.label}
         </span>
 
         {/* Expiry Badge */}

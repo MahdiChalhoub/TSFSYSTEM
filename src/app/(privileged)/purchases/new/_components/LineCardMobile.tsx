@@ -1,6 +1,6 @@
 import type { PurchaseLine } from '@/types/erp'
 import { Package, Trash2 } from 'lucide-react'
-import { getStatusStyle } from '../_lib/status-styles'
+import { getProcurementStatus } from '@/lib/procurement-status'
 
 type Props = {
     line: PurchaseLine
@@ -10,7 +10,9 @@ type Props = {
 }
 
 export function LineCardMobile({ line, idx, onUpdate, onRemove }: Props) {
-    const statusStyle = getStatusStyle(line.statusText as string)
+    // Canonical procurement_status — same vocabulary as /inventory/products
+    // and the request mapping on /inventory/requests.
+    const procurement = getProcurementStatus(line.procurement_status as string | undefined)
     return (
         <div className="p-3 rounded-xl shadow-sm relative"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
@@ -22,8 +24,12 @@ export function LineCardMobile({ line, idx, onUpdate, onRemove }: Props) {
                 <div className="flex-1 min-w-0">
                     <span className="truncate text-[13px] font-bold block" style={{ color: 'var(--app-foreground)' }}>{line.productName as string}</span>
                     <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider inline-block mt-0.5"
-                        style={{ background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
-                        {line.statusText as string}
+                        style={{
+                            background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+                            color: procurement.color,
+                            border: `1px solid color-mix(in srgb, ${procurement.color} 30%, transparent)`,
+                        }}>
+                        {procurement.label}
                     </span>
                 </div>
                 <button type="button" onClick={() => onRemove(idx)}

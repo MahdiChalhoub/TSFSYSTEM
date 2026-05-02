@@ -11,7 +11,19 @@ export interface Brand {
     translations?: Record<string, { name?: string; short_name?: string }>
     countries?: Array<{ id: number; name: string; code?: string }>
     categories?: Array<{ id: number; name: string; code?: string }>
+    /** Distinct product count (FK products → this brand). */
     product_count?: number
+    /** Distinct categories the brand's products belong to. Derived
+     *  server-side from product.category FK; may differ from the M2M
+     *  brand.categories length when products use categories the brand
+     *  isn't explicitly linked to. */
+    category_count?: number
+    /** Distinct countries the brand's products are sourced from /
+     *  sold in. Derived from product.country FK. */
+    country_count?: number
+    /** Distinct attribute values across all of the brand's products.
+     *  Derived from the Product.attribute_values M2M through-table. */
+    attribute_count?: number
     created_at?: string
     parent?: null // Brands are flat — always null, needed for TreeMasterPage
 }

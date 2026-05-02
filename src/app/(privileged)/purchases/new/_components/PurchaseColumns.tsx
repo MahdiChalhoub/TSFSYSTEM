@@ -3,7 +3,7 @@
 import React from 'react'
 import type { PurchaseLine } from '@/types/erp'
 import { Shield, Info } from 'lucide-react'
-import { getStatusStyle } from '../_lib/status-styles'
+import { getProcurementStatus } from '@/lib/procurement-status'
 
 type Props = {
     line: PurchaseLine
@@ -12,7 +12,9 @@ type Props = {
 }
 
 export function renderPurchaseCell(key: string, line: PurchaseLine, idx: number, onUpdate: (idx: number, updates: Record<string, any>) => void): React.ReactNode {
-    const statusStyle = getStatusStyle(line.statusText as string)
+    // Single source of truth: product.procurement_status (NONE/REQUESTED/PO_SENT/...)
+    // Same vocabulary as /inventory/products and the request mapping on /inventory/requests.
+    const procurement = getProcurementStatus(line.procurement_status as string | undefined)
 
     switch (key) {
         case 'qty':
@@ -45,8 +47,12 @@ export function renderPurchaseCell(key: string, line: PurchaseLine, idx: number,
         case 'status':
             return (
                 <span className="px-1.5 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border"
-                    style={{ background: `color-mix(in srgb, ${statusStyle.bg} 15%, transparent)`, color: statusStyle.text, borderColor: `color-mix(in srgb, ${statusStyle.text} 30%, transparent)` }}>
-                    {String(line.statusText || 'OPTIONAL')}
+                    style={{
+                        background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+                        color: procurement.color,
+                        borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
+                    }}>
+                    {procurement.label}
                 </span>
             )
         case 'sales':

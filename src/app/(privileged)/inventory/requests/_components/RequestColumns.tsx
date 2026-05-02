@@ -3,13 +3,19 @@
 import React from 'react'
 import { ExternalLink, RefreshCcw } from 'lucide-react'
 import type { ProcurementRequestRecord } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META, STATUS_META, PRIORITY_META } from '../_lib/meta'
+import { TYPE_META, PRIORITY_META } from '../_lib/meta'
 import { formatRelative, formatDateTime, fmtQty } from '../_lib/format'
+import { mapRequestStatusToProcurement, getProcurementStatus } from '@/lib/procurement-status'
 
 export function renderRequestCell(key: string, r: ProcurementRequestRecord): React.ReactNode {
     const tm = TYPE_META[r.request_type]
-    const sm = STATUS_META[r.status]
     const pm = PRIORITY_META[r.priority]
+    // Single source of truth: same procurement vocabulary as
+    // /inventory/products and /purchases/new. The request's internal status
+    // (PENDING/APPROVED/EXECUTED/...) maps to the canonical product-level
+    // procurement state (NONE/REQUESTED/PO_SENT/...) so the user sees
+    // consistent labels everywhere.
+    const procurement = getProcurementStatus(mapRequestStatusToProcurement(r.status))
 
     switch (key) {
         case 'type': {
@@ -78,11 +84,14 @@ export function renderRequestCell(key: string, r: ProcurementRequestRecord): Rea
             )
 
         case 'status': {
-            const Icon = sm.icon
             return (
-                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider"
-                    style={{ color: sm.color }}>
-                    <Icon size={10} /> {sm.label}
+                <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border"
+                    style={{
+                        background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+                        color: procurement.color,
+                        borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
+                    }}>
+                    {procurement.label}
                 </span>
             )
         }

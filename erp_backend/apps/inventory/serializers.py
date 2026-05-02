@@ -57,8 +57,23 @@ class CategorySerializer(serializers.ModelSerializer):
 # =============================================================================
 
 class BrandSerializer(serializers.ModelSerializer):
-    """List serializer — includes counts and country/category names."""
+    """List serializer — derived counts the brands UI surfaces as chips.
+
+    The four *_count fields are derived from the brand's products
+    (not from the M2M tables, which are sparsely populated in many
+    tenants — so a brand may have 0 M2M categories but its products
+    still cover several categories via Product.category FK).
+      • product_count   — distinct products
+      • category_count  — distinct categories the brand's products belong to
+      • country_count   — distinct countries those products are sold in
+      • attribute_count — distinct attribute values those products use
+
+    Computing them server-side avoids N+1 client fetches.
+    """
     product_count = serializers.SerializerMethodField()
+    category_count = serializers.SerializerMethodField()
+    country_count = serializers.SerializerMethodField()
+    attribute_count = serializers.SerializerMethodField()
     country_names = serializers.SerializerMethodField()
     category_names = serializers.SerializerMethodField()
 
@@ -67,13 +82,29 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'short_name', 'logo',
             'countries', 'categories',
-            'product_count', 'country_names', 'category_names',
+            'product_count', 'category_count', 'country_count', 'attribute_count',
+            'country_names', 'category_names',
             'created_at', 'organization',
         ]
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
+
+    def get_category_count(self, obj):
+        return obj.products.exclude(category__isnull=True).values('category').distinct().count()
+
+    def get_country_count(self, obj):
+        return obj.products.exclude(country__isnull=True).values('country').distinct().count()
+
+    def get_attribute_count(self, obj):
+        # Reaches through Product → attribute_values M2M (related_name on
+        # ProductAttribute is 'products_with_attribute') to count distinct
+        # attribute leaf nodes used by any of this brand's products.
+        from .models import ProductAttribute
+        return ProductAttribute.objects.filter(
+            products_with_attribute__brand=obj
+        ).distinct().count()
 
     def get_country_names(self, obj):
         return list(obj.countries.values_list('name', flat=True))

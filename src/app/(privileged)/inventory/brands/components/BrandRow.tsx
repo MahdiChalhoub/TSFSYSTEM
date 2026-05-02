@@ -329,45 +329,23 @@ export function BrandRow({
                         </div>
                     </div>
 
-                    {/* Stat chips — Products / Categories / Countries / Attributes.
-                        Each chip uses the matching facet color so it lines up
-                        visually with the tree groups below. Counts come from
-                        the brand record where possible (product_count, M2M
-                        sizes); once products are fetched we prefer the
-                        derived counts (real categories the brand operates
-                        in, real countries shipped to, distinct attribute
-                        values used). Chips are hidden when the list is
-                        in compact / split-panel mode. */}
-                    {!compact && (() => {
-                        const productsCount = totalProducts
-                        const categoriesCount = products !== null
-                            ? byCategory.filter(c => c.id !== null).length
-                            : cats
-                        const countriesCount = products !== null
-                            ? byCountry.filter(c => c.id !== null).length
-                            : countries
-                        const attributesCount = products !== null
-                            ? byAttribute.filter(a => a.key !== '__none__').length
-                            : null
-                        return (
-                            <div className="hidden md:flex items-center gap-1 flex-shrink-0">
-                                <StatChip icon={<Package size={11} />} label="products"
-                                    value={productsCount} color="var(--app-success)" />
-                                <StatChip icon={<FolderTree size={11} />} label="categories"
-                                    value={categoriesCount} color="var(--app-info)" />
-                                <StatChip icon={<Globe size={11} />} label="countries"
-                                    value={countriesCount} color="var(--app-warning)" />
-                                {/* Attributes only show after products load — there's
-                                    no per-brand attribute count without scanning the
-                                    product list. Hidden when null instead of showing
-                                    "?" which read as broken/missing data. */}
-                                {attributesCount !== null && (
-                                    <StatChip icon={<Tag size={11} />} label="attrs"
-                                        value={attributesCount} color="var(--app-success)" />
-                                )}
-                            </div>
-                        )
-                    })()}
+                    {/* Stat chips — counts come from the brand serializer,
+                        which derives them server-side from the brand's
+                        products (avoids the N+1 fetch that would happen if
+                        the frontend computed them). The colors match the
+                        in-tree facet groups below. */}
+                    {!compact && (
+                        <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+                            <StatChip icon={<Package size={11} />} label="products"
+                                value={brand.product_count ?? 0} color="var(--app-success)" />
+                            <StatChip icon={<FolderTree size={11} />} label="categories"
+                                value={brand.category_count ?? 0} color="var(--app-info)" />
+                            <StatChip icon={<Globe size={11} />} label="countries"
+                                value={brand.country_count ?? 0} color="var(--app-warning)" />
+                            <StatChip icon={<Tag size={11} />} label="attrs"
+                                value={brand.attribute_count ?? 0} color="var(--app-success)" />
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">

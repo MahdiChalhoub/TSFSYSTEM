@@ -9,7 +9,8 @@ import {
     bumpProcurementRequest,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
-import { STATUS_META, TYPE_META, PRIORITY_META } from '../_lib/meta'
+import { TYPE_META, PRIORITY_META } from '../_lib/meta'
+import { mapRequestStatusToProcurement, getProcurementStatus } from '@/lib/procurement-status'
 import { runTimed } from '@/lib/perf-timing'
 
 type RunAction = (
@@ -24,10 +25,11 @@ export function RequestRow({ r, pending, runAction }: {
     runAction: RunAction
 }) {
     const tm = TYPE_META[r.request_type]
-    const sm = STATUS_META[r.status]
     const pm = PRIORITY_META[r.priority]
     const TypeIcon = tm.icon
-    const StatusIcon = sm.icon
+    // Canonical procurement vocabulary — same labels as /inventory/products
+    // and /purchases/new. Mapped from this request's internal status.
+    const procurement = getProcurementStatus(mapRequestStatusToProcurement(r.status))
     const requestedAt = new Date(r.requested_at)
     const dateStr = requestedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
         requestedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })

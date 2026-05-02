@@ -326,7 +326,12 @@ export default function PurchaseForm({
             ...product, productId: product.id, productName: product.name, quantity: 1,
             unitCostHT, unitCostTTC: unitCostHT * (1 + taxRate),
             sellingPriceHT, sellingPriceTTC: sellingPriceHT * (1 + taxRate),
-            expiryDate: '', taxRate, statusText: 'OPTIONAL', poCount: 0,
+            expiryDate: '', taxRate, poCount: 0,
+            // Canonical procurement_status from the product (source of truth,
+            // same vocabulary as /inventory/products and the request mapping
+            // on /inventory/requests). Defaults to NONE for products without
+            // active procurement activity.
+            procurement_status: product.procurement_status || 'NONE',
             stockTotal: product.stockTotal || 0, stockTransit: 0, requiredProposed: 0,
         }, ...prev])
     }
