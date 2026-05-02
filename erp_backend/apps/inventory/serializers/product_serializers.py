@@ -4,6 +4,38 @@ from django.db.models import Sum
 from decimal import Decimal
 
 
+# Maps human-readable procurement labels (from
+# apps.inventory.services.procurement_status_service) to the canonical
+# frontend enum keys in src/lib/procurement-status.ts. Module-level so it's
+# defined once and the per-product status loop in get_procurement_status can
+# reference it without re-creating the dict on every call.
+_PROCUREMENT_LABEL_TO_KEY = {
+    # Operational / Procurement requests
+    'Requested to Purchase': 'REQUESTED_PURCHASE',
+    'Requested to Transfer': 'REQUESTED_TRANSFER',
+    'Approved to Purchase':  'REQUESTED_PURCHASE',
+    'Approved to Transfer':  'REQUESTED_TRANSFER',
+    'Requested · P+T':       'REQUESTED_BOTH',
+    'Adjustment Pending':    'REQUESTED',
+    'Adjustment Approved':   'REQUESTED',
+    # PO lifecycle
+    'Pending PO':            'PO_SENT',
+    'Pending Approval':      'PO_SENT',
+    'PO Approved':           'PO_ACCEPTED',
+    'Ordered':               'PO_SENT',
+    'In Transit':            'IN_TRANSIT',
+    'Partially Received':    'IN_TRANSIT',
+    # Terminal states
+    'Received':              'NONE',
+    'Failed':                'FAILED',
+    'PO Rejected':           'FAILED',
+    # Stock tiers (no active procurement; baseline state)
+    'Available':             'NONE',
+    'Out of Stock':          'NONE',
+    'Low Stock':             'NONE',
+}
+
+
 class ProductPackagingSerializer(serializers.ModelSerializer):
     """Full serializer for ProductPackaging as a first-class object."""
     display_name = serializers.CharField(read_only=True)
@@ -162,67 +194,57 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.inventory.services.procurement_status_service import (
             get_procurement_status_batch, get_product_display_status
         )
-        # Use request-level cache if available to avoid N+1 in list views
+        # Use request-level cache if available to avoid N+1 in list views.
+        # Previously this called get_procurement_status_batch with [obj.id]
+        # PER PRODUCT — 3 SQL queries × N products = 300+ queries on a 100-
+        # product page. Now: on first call we batch-resolve every product in
+        # the parent ListSerializer instance and seed the cache, so we run
+        # 3 queries total regardless of page size.
         cache_key = '_procurement_status_cache'
         request = self.context.get('request')
-        
+
         if request:
             if not hasattr(request, cache_key):
                 setattr(request, cache_key, {})
-            
+
             cache = getattr(request, cache_key)
             if obj.id in cache:
                 return cache[obj.id]
 
-            # Resolve for this single product (batch of 1)
-            batch_res = get_procurement_status_batch(obj.organization, [obj.id])
-            entry = batch_res.get(obj.id)
-            
-            # Use display status resolver (handles stock tiers too)
-            status, detail = get_product_display_status(
-                entry, 
-                float(getattr(obj, 'on_hand_qty', 0) or 0),
-                float(getattr(obj, 'incoming_transfer_qty', 0) or 0),
-                getattr(obj, 'min_stock_level', 0)
-            )
-            
-            # Map back to canonical frontend enum keys.
-            # Mirror the priority chain in
-            # apps/inventory/services/procurement_status_service.py and the
-            # frontend's src/lib/procurement-status.ts so all values from
-            # get_product_display_status() resolve to a known key — previously
-            # 8 labels (Pending PO, Pending Approval, PO Approved, Partially
-            # Received, Adjustment Pending/Approved, Out of Stock, Low Stock)
-            # fell through to NONE and showed an em-dash even when the
-            # product was actively being procured.
-            LABEL_TO_KEY = {
-                # Operational / Procurement requests
-                'Requested to Purchase': 'REQUESTED_PURCHASE',
-                'Requested to Transfer': 'REQUESTED_TRANSFER',
-                'Approved to Purchase':  'REQUESTED_PURCHASE',
-                'Approved to Transfer':  'REQUESTED_TRANSFER',
-                'Requested · P+T':       'REQUESTED_BOTH',
-                'Adjustment Pending':    'REQUESTED',
-                'Adjustment Approved':   'REQUESTED',
-                # PO lifecycle
-                'Pending PO':            'PO_SENT',
-                'Pending Approval':      'PO_SENT',
-                'PO Approved':           'PO_ACCEPTED',
-                'Ordered':               'PO_SENT',
-                'In Transit':            'IN_TRANSIT',
-                'Partially Received':    'IN_TRANSIT',
-                # Terminal states
-                'Received':              'NONE',     # cycle complete — back to baseline
-                'Failed':                'FAILED',
-                'PO Rejected':           'FAILED',
-                # Stock tiers (no active procurement; baseline state)
-                'Available':             'NONE',
-                'Out of Stock':          'NONE',
-                'Low Stock':             'NONE',
-            }
-            final_status = LABEL_TO_KEY.get(status, 'NONE')
-            cache[obj.id] = final_status
-            return final_status
+            # Pre-warm: gather ids from the parent ListSerializer if we're
+            # serializing a queryset (list view). Falls back to single-product
+            # batch when called from detail view.
+            sibling_ids = [obj.id]
+            parent = getattr(self, 'parent', None)
+            if parent is not None and hasattr(parent, 'instance'):
+                instances = parent.instance
+                if instances is not None and hasattr(instances, '__iter__'):
+                    sibling_ids = [getattr(p, 'id', None) for p in instances]
+                    sibling_ids = [pid for pid in sibling_ids if pid is not None]
+
+            batch_res = get_procurement_status_batch(obj.organization, sibling_ids)
+
+            # Resolve & cache every sibling so the remaining N-1 calls are
+            # cache hits. Stock tier inputs (on_hand, in_transit, min_stock)
+            # are resolved from each sibling's product instance.
+            id_to_product = {}
+            if parent is not None and hasattr(parent, 'instance') and parent.instance is not None and hasattr(parent.instance, '__iter__'):
+                for p in parent.instance:
+                    if getattr(p, 'id', None) is not None:
+                        id_to_product[p.id] = p
+            id_to_product[obj.id] = obj  # always include current
+
+            for pid, p in id_to_product.items():
+                entry = batch_res.get(pid)
+                status, _detail = get_product_display_status(
+                    entry,
+                    float(getattr(p, 'on_hand_qty', 0) or 0),
+                    float(getattr(p, 'incoming_transfer_qty', 0) or 0),
+                    getattr(p, 'min_stock_level', 0)
+                )
+                cache[pid] = _PROCUREMENT_LABEL_TO_KEY.get(status, 'NONE')
+
+            return cache.get(obj.id, 'NONE')
 
         return 'NONE'
 
