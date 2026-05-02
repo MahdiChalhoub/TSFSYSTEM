@@ -17,8 +17,22 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart } from 'lucide-react'
+import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart, RotateCcw } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
+import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
+
+const TYPE_OPTIONS = [
+    { value: 'STOCKABLE', label: 'Stockable' },
+    { value: 'COMBO', label: 'Combo' },
+    { value: 'STANDARD', label: 'Standard' },
+]
+
+const STATUS_OPTIONS = [
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'INACTIVE', label: 'Inactive' },
+    { value: 'DRAFT', label: 'Draft' },
+    { value: 'ARCHIVED', label: 'Archived' },
+]
 
 type CatalogueItem = {
     id: number
@@ -65,7 +79,8 @@ function mapProductToCatalogueItem(p: Record<string, any>): CatalogueItem {
 type FilterDimensions = {
     categories: { id: number; name: string }[]
     brands: { id: number; name: string }[]
-    types: string[]
+    units: { id: number; name: string }[]
+    types: { value: string; label: string }[]
 }
 
 type Props = {
@@ -85,6 +100,9 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
     const [query, setQuery] = useState('')
     const [category, setCategory] = useState('')
     const [brand, setBrand] = useState('')
+    const [unit, setUnit] = useState('')
+    const [productType, setProductType] = useState('')
+    const [status, setStatus] = useState('')
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(false)
     const [filtersOpen, setFiltersOpen] = useState(false)
@@ -104,7 +122,8 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         Promise.all([
             erpFetch('categories/').catch(() => []),
             erpFetch('brands/').catch(() => []),
-        ]).then(([catsRaw, brandsRaw]) => {
+            erpFetch('units/').catch(() => []),
+        ]).then(([catsRaw, brandsRaw, unitsRaw]) => {
             if (cancelled) return
             const toList = (raw: unknown): Array<Record<string, unknown>> => {
                 if (Array.isArray(raw)) return raw
@@ -114,7 +133,8 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             setFilters({
                 categories: toList(catsRaw).map(c => ({ id: Number(c.id), name: String(c.name || '') })),
                 brands: toList(brandsRaw).map(b => ({ id: Number(b.id), name: String(b.name || '') })),
-                types: [],
+                units: toList(unitsRaw).map(u => ({ id: Number(u.id), name: String(u.name || '') })),
+                types: TYPE_OPTIONS,
             })
         })
         return () => { cancelled = true }
@@ -132,8 +152,11 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 page_size: '30',
             })
             if (query) params.set('search', query)
-            if (category) params.set('category', category)
-            if (brand) params.set('brand', brand)
+            if (category) params.set('category', category.startsWith('!') ? `!${category.slice(1)}` : category)
+            if (brand) params.set('brand', brand.startsWith('!') ? `!${brand.slice(1)}` : brand)
+            if (unit) params.set('unit', unit.startsWith('!') ? `!${unit.slice(1)}` : unit)
+            if (productType) params.set('product_type', productType.startsWith('!') ? `!${productType.slice(1)}` : productType)
+            if (status) params.set('status', status.startsWith('!') ? `!${status.slice(1)}` : status)
             if (showSupplierOnly && supplierId) params.set('supplier', String(supplierId))
 
             const data = await erpFetch(`products/?${params}`) as
@@ -164,7 +187,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         if (!open) return
         const timer = setTimeout(() => fetchItems(1), 300)
         return () => clearTimeout(timer)
-    }, [open, query, category, brand, showSupplierOnly, fetchItems])
+    }, [open, query, category, brand, unit, productType, status, showSupplierOnly, fetchItems])
 
     // Focus search on open
     useEffect(() => {
@@ -226,25 +249,37 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                     </button>
                 </div>
 
-                {/* Filters row */}
+                {/* Filters grid */}
                 {filtersOpen && filters && (
-                    <div className="px-5 py-2.5 flex items-center gap-3 border-b flex-wrap" style={{ borderColor: 'var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-background))' }}>
-                        <select className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-app-border bg-app-surface text-app-foreground outline-none"
-                                value={category} onChange={(e) => setCategory(e.target.value)}>
-                            <option value="">All Categories</option>
-                            {filters.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <select className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-app-border bg-app-surface text-app-foreground outline-none"
-                                value={brand} onChange={(e) => setBrand(e.target.value)}>
-                            <option value="">All Brands</option>
-                            {filters.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                        </select>
-                        {(category || brand || (supplierId && !showSupplierOnly)) && (
-                            <button type="button" onClick={() => { setCategory(''); setBrand(''); setShowSupplierOnly(true) }}
-                                    className="text-[10px] font-bold text-app-error hover:underline">
-                                Clear filters
-                            </button>
-                        )}
+                    <div className="px-5 py-4 border-b border-app-border" 
+                         style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-background))' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                            <SearchableDropdown label="Category" value={category} onChange={setCategory}
+                                options={filters.categories.map(c => ({ value: String(c.id), label: c.name }))} placeholder="All Categories" />
+                            
+                            <SearchableDropdown label="Brand" value={brand} onChange={setBrand}
+                                options={filters.brands.map(b => ({ value: String(b.id), label: b.name }))} placeholder="All Brands" />
+                            
+                            <SearchableDropdown label="Unit" value={unit} onChange={setUnit}
+                                options={filters.units.map(u => ({ value: String(u.id), label: u.name }))} placeholder="All Units" />
+                            
+                            <SearchableDropdown label="Type" value={productType} onChange={setProductType}
+                                options={filters.types} placeholder="All Types" />
+                            
+                            <SearchableDropdown label="Status" value={status} onChange={setStatus}
+                                options={STATUS_OPTIONS} placeholder="All Statuses" />
+
+                            <div className="flex items-end pb-1.5">
+                                {(category || brand || unit || productType || status) && (
+                                    <button type="button" 
+                                            onClick={() => { setCategory(''); setBrand(''); setUnit(''); setProductType(''); setStatus('') }}
+                                            className="flex items-center gap-1 text-[10px] font-black uppercase text-app-error hover:opacity-80 transition-all">
+                                        <RotateCcw size={10} />
+                                        Clear All
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
 

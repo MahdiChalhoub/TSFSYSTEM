@@ -72,7 +72,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             return ProductLiteSerializer
         return super().get_serializer_class()
 
-    filterset_fields = ['category', 'brand', 'product_type', 'is_active', 'tracks_serials',
+    filterset_fields = ['category', 'brand', 'unit', 'product_type', 'is_active', 'tracks_serials',
                         'data_completeness_level', 'is_verified', 'status']
 
     search_fields = ['name', 'sku', 'barcode', 'description']

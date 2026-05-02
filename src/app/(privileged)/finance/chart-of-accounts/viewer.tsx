@@ -277,37 +277,40 @@ export function ChartOfAccountsViewer({ accounts }: {
 
             {!focusMode && <KPIStrip stats={stats} typeFilter={typeFilter} setTypeFilter={setTypeFilter} />}
 
-            {/* Search row + inline scope filter chips. Chips share the row
-                with the search input so the toolbar stays one line.
-                Focus mode keeps the row but the chips are hidden — ditto
-                the inactive button — so the page is maximally compact. */}
-            <div data-tour="search-bar" className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6 flex-wrap">
-                <div className="flex-1 relative min-w-[200px]">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t('finance.coa.search_placeholder')} className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none" />
+            {/* Toolbar — every control is exactly h-9 (36px) so the search
+                box, scope chips, and Inactive toggle line up perfectly. */}
+            <div data-tour="search-bar" className="flex items-center gap-1.5 mb-3 flex-shrink-0 px-4 md:px-6 flex-wrap">
+                <div className="flex-1 relative min-w-[220px] h-9">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
+                    <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={t('finance.coa.search_placeholder')}
+                        className="w-full h-9 pl-9 pr-3 text-sm rounded-xl border border-app-border bg-app-surface/50 outline-none focus:border-app-primary/40 focus:ring-2 focus:ring-app-primary/10 transition-all" />
                 </div>
 
-                {/* Scope filter chips — same line as search. Visible in
-                    focus mode too, since filtering is the whole point of
-                    focus mode (you want to drill into a subset). */}
+                {/* Scope filter chips — h-9 to match search. `activeColor`
+                    is what's visible in selected state. For neutral chips
+                    (All, Tenant) we use `--app-foreground` so the active
+                    state is clearly visible — a 14% mix of muted-foreground
+                    was nearly invisible against the surface. */}
                 {([
-                    { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-muted-foreground)', emoji: null },
-                    { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-muted-foreground)', emoji: '🌐' },
-                    { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    emoji: '🏢' },
-                    { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', emoji: '📦' },
+                    { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-muted-foreground)', activeColor: 'var(--app-foreground)',          emoji: null },
+                    { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-muted-foreground)', activeColor: 'var(--app-foreground)',          emoji: '🌐' },
+                    { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    activeColor: 'var(--app-info, #3b82f6)',       emoji: '🏢' },
+                    { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', activeColor: 'var(--app-warning, #f59e0b)',    emoji: '📦' },
                 ] as const).map(chip => {
                     const active = scopeFilter === chip.key
+                    const ac = chip.activeColor
                     return (
                         <button
                             key={chip.key ?? 'all'}
                             onClick={() => setScopeFilter(chip.key as any)}
-                            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-tp-xs font-bold transition-all flex-shrink-0"
+                            className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl text-tp-xs font-semibold transition-all flex-shrink-0"
                             style={{
-                                background: active ? `color-mix(in srgb, ${chip.color} 12%, transparent)` : 'transparent',
+                                background: active ? `color-mix(in srgb, ${ac} 14%, transparent)` : 'var(--app-surface, transparent)',
                                 border: `1px solid ${active
-                                    ? `color-mix(in srgb, ${chip.color} 35%, transparent)`
-                                    : 'color-mix(in srgb, var(--app-border) 50%, transparent)'}`,
-                                color: active ? chip.color : 'var(--app-muted-foreground)',
+                                    ? `color-mix(in srgb, ${ac} 45%, transparent)`
+                                    : 'var(--app-border)'}`,
+                                color: active ? ac : 'var(--app-muted-foreground)',
+                                boxShadow: active ? `0 1px 0 color-mix(in srgb, ${ac} 18%, transparent)` : 'none',
                             }}
                             title={
                                 chip.key === 'tenant_wide' ? 'Tenant-wide — Balances do NOT change with branch filter (AR/AP/Bank/Equity).'
@@ -316,13 +319,14 @@ export function ChartOfAccountsViewer({ accounts }: {
                                 : 'Show every account regardless of scope behavior.'
                             }
                         >
-                            {chip.emoji && <span className="leading-none">{chip.emoji}</span>}
+                            {chip.emoji && <span className="text-[13px] leading-none">{chip.emoji}</span>}
                             <span>{chip.label}</span>
-                            <span className="text-tp-xxs font-bold tabular-nums px-1 rounded"
+                            <span className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md leading-none"
                                 style={{
                                     background: active
-                                        ? `color-mix(in srgb, ${chip.color} 18%, transparent)`
-                                        : 'color-mix(in srgb, var(--app-border) 35%, transparent)',
+                                        ? `color-mix(in srgb, ${ac} 22%, transparent)`
+                                        : 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    color: active ? ac : 'var(--app-muted-foreground)',
                                 }}>
                                 {chip.count}
                             </span>
@@ -330,23 +334,35 @@ export function ChartOfAccountsViewer({ accounts }: {
                     )
                 })}
 
-                <button onClick={() => setShowInactive(p => !p)} className={`toolbar-btn ${showInactive ? 'text-app-warning border-app-warning/30 bg-app-warning/10' : 'text-app-muted-foreground'}`}>
-                    {showInactive ? <Eye size={13} /> : <EyeOff size={13} />} <span className="hidden sm:inline">{t('finance.coa.inactive')}</span>
+                <button onClick={() => setShowInactive(p => !p)}
+                    title={t('finance.coa.inactive')}
+                    className="h-9 inline-flex items-center gap-1.5 px-3 rounded-xl text-tp-xs font-semibold transition-all flex-shrink-0"
+                    style={{
+                        background: showInactive
+                            ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)'
+                            : 'var(--app-surface, transparent)',
+                        border: `1px solid ${showInactive
+                            ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 40%, transparent)'
+                            : 'var(--app-border)'}`,
+                        color: showInactive ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)',
+                    }}>
+                    {showInactive ? <Eye size={13} /> : <EyeOff size={13} />}
+                    <span className="hidden sm:inline">{t('finance.coa.inactive')}</span>
                 </button>
 
-                {/* Exit-focus-mode button — icon-only. Tooltip names the
-                    shortcut (Esc) so the user can discover it on hover. */}
+                {/* Exit-focus-mode button — icon-only, h-9 / w-9 to match
+                    the rest of the toolbar. Tooltip surfaces the Esc shortcut. */}
                 {focusMode && (
                     <button
                         onClick={() => setFocusMode(false)}
                         title="Exit focus mode (Esc)"
-                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all flex-shrink-0"
+                        className="h-9 w-9 inline-flex items-center justify-center rounded-xl transition-all flex-shrink-0"
                         style={{
-                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                            border: '1px solid color-mix(in srgb, var(--app-primary) 35%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-primary) 40%, transparent)',
                             color: 'var(--app-primary)',
                         }}>
-                        <Minimize2 size={13} />
+                        <Minimize2 size={14} />
                     </button>
                 )}
             </div>
@@ -393,9 +409,9 @@ export function ChartOfAccountsViewer({ accounts }: {
                 }}
             />
             <style jsx>{`
-                .toolbar-btn { display: flex; items-center: centerbox; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; border: 1px solid var(--app-border); padding: 0.375rem 0.625rem; border-radius: 0.75rem; transition: all 0.2s; }
+                .toolbar-btn { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; border: 1px solid var(--app-border); padding: 0.375rem 0.625rem; border-radius: 0.75rem; transition: all 0.2s; height: 2.25rem; }
                 .toolbar-btn:hover { background: var(--app-surface); color: var(--app-foreground); }
-                .toolbar-btn-primary { display: flex; items-center: centerbox; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; padding: 0.375rem 0.75rem; border-radius: 0.75rem; background: var(--app-primary); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent); transition: all 0.2s; }
+                .toolbar-btn-primary { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; font-weight: 700; padding: 0.375rem 0.75rem; border-radius: 0.75rem; background: var(--app-primary); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent); transition: all 0.2s; height: 2.25rem; }
                 .toolbar-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
             `}</style>
         </div>
