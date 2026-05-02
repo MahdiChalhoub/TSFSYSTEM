@@ -117,7 +117,7 @@
                                     "code": "1121",
                                     "name": "Raw Materials",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide",
+                                    "scope_mode": "branch_located",
                                     "syscohadaCode": "31",
                                     "syscohadaClass": "Class 3"
                                 },
@@ -133,7 +133,7 @@
                                     "code": "1123",
                                     "name": "Finished Goods",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide",
+                                    "scope_mode": "branch_located",
                                     "syscohadaCode": "35",
                                     "syscohadaClass": "Class 3"
                                 },
@@ -149,7 +149,7 @@
                                     "code": "1125",
                                     "name": "Goods in Transit",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide",
+                                    "scope_mode": "branch_located",
                                     "syscohadaCode": "38",
                                     "syscohadaClass": "Class 3"
                                 }

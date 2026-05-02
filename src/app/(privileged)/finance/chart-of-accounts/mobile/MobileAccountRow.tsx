@@ -81,6 +81,17 @@ export function MobileAccountRow({
     const typeConf = TYPE_CONFIG[node.type ?? 'ASSET'] ?? TYPE_CONFIG.ASSET
     const TypeIcon = typeConf.icon
     const balance = Number(node.rollupBalance ?? node.rollup_balance ?? node.balance ?? 0)
+    // Compact scope chip — same icon vocabulary as desktop. Shown on
+    // every row so the user can see at a glance what scope each account
+    // belongs to (tenant_wide = 🌐, branch_split = 🏢, branch_located = 📦).
+    const scopeChip = (() => {
+        switch (node.scope_mode as string | undefined) {
+            case 'branch_split': return { icon: '🏢', color: 'var(--app-warning, #F59E0B)', label: 'SPLIT' }
+            case 'branch_located': return { icon: '📦', color: 'var(--app-success, #10B981)', label: 'LOCATED' }
+            case 'tenant_wide': return { icon: '🌐', color: 'var(--app-info, #3B82F6)', label: 'TENANT' }
+            default: return null
+        }
+    })()
 
     return (
         <div style={{
@@ -189,6 +200,17 @@ export function MobileAccountRow({
 
                 {/* Line 2 */}
                 <div className="flex items-center gap-2 mt-1.5" style={{ paddingLeft: 62 }}>
+                    {scopeChip && (
+                        <span className="flex items-center gap-0.5 flex-shrink-0 rounded-md px-1.5 py-0.5 font-bold uppercase tracking-wide"
+                            style={{
+                                fontSize: 'var(--tp-xxs)',
+                                color: scopeChip.color,
+                                background: `color-mix(in srgb, ${scopeChip.color} 12%, transparent)`,
+                            }}>
+                            <span>{scopeChip.icon}</span>
+                            <span>{scopeChip.label}</span>
+                        </span>
+                    )}
                     <span className="flex-1 font-mono font-bold tabular-nums truncate"
                         style={{
                             fontSize: 'var(--tp-md)',

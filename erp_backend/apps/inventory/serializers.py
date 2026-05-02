@@ -91,20 +91,38 @@ class BrandSerializer(serializers.ModelSerializer):
     def get_product_count(self, obj):
         return obj.products.count()
 
+    # The category/country counts include a "Universal/Uncategorized"
+    # bucket when at least one product has the FK unset, so the chip
+    # number matches the facet-group count the user sees inside the
+    # expanded tree (e.g. tree shows "By Country: 1 (Universal)" → chip
+    # shows "1 country"). Brand with zero products still shows 0.
     def get_category_count(self, obj):
-        return obj.products.exclude(category__isnull=True).values('category').distinct().count()
+        if not obj.products.exists():
+            return 0
+        real = obj.products.exclude(category__isnull=True).values('category').distinct().count()
+        has_uncategorized = obj.products.filter(category__isnull=True).exists()
+        return real + (1 if has_uncategorized else 0)
 
     def get_country_count(self, obj):
-        return obj.products.exclude(country__isnull=True).values('country').distinct().count()
+        if not obj.products.exists():
+            return 0
+        real = obj.products.exclude(country__isnull=True).values('country').distinct().count()
+        has_universal = obj.products.filter(country__isnull=True).exists()
+        return real + (1 if has_universal else 0)
 
     def get_attribute_count(self, obj):
-        # Reaches through Product → attribute_values M2M (related_name on
-        # ProductAttribute is 'products_with_attribute') to count distinct
-        # attribute leaf nodes used by any of this brand's products.
+        # Distinct ProductAttribute leaf nodes used by this brand's
+        # products, plus a "no attributes" bucket when at least one
+        # product has zero attribute_values. Mirrors the tree's
+        # By Attribute group count exactly.
+        if not obj.products.exists():
+            return 0
         from .models import ProductAttribute
-        return ProductAttribute.objects.filter(
+        real = ProductAttribute.objects.filter(
             products_with_attribute__brand=obj
         ).distinct().count()
+        has_unattributed = obj.products.filter(attribute_values__isnull=True).exists()
+        return real + (1 if has_unattributed else 0)
 
     def get_country_names(self, obj):
         return list(obj.countries.values_list('name', flat=True))

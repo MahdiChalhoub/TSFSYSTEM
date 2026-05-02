@@ -23,19 +23,23 @@
             {
               "code": "101",
               "name": "Capital social",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "105",
               "name": "Primes liées au capital social",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "109",
               "name": "Actionnaires, capital souscrit non appelé",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "11",
@@ -45,39 +49,47 @@
             {
               "code": "111",
               "name": "Réserve légale",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "112",
               "name": "Réserves statutaires ou contractuelles",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "118",
               "name": "Autres réserves",
-              "type": "EQUITY"
+              "type": "EQUITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "12",
           "name": "Report à nouveau",
-          "type": "EQUITY"
+          "type": "EQUITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "13",
           "name": "Résultat net de l'exercice",
-          "type": "EQUITY"
+          "type": "EQUITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "14",
           "name": "Subventions d'investissement",
-          "type": "EQUITY"
+          "type": "EQUITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "15",
           "name": "Provisions réglementées et fonds assimilés",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "16",
@@ -87,24 +99,29 @@
             {
               "code": "161",
               "name": "Emprunts obligataires",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "162",
               "name": "Emprunts et dettes auprès des établissements de crédit",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "165",
               "name": "Dépôts et cautionnements reçus",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "17",
           "name": "Dettes de crédit-bail et contrats assimilés",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "19",
@@ -114,21 +131,26 @@
             {
               "code": "191",
               "name": "Provisions pour litiges",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "194",
               "name": "Provisions pour pertes de change",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "195",
               "name": "Provisions pour impôts",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "2",
@@ -143,24 +165,29 @@
             {
               "code": "211",
               "name": "Frais de développement",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "212",
               "name": "Brevets, licences, logiciels",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "213",
               "name": "Fonds commercial et droit au bail",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "22",
           "name": "Terrains",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "23",
@@ -170,19 +197,23 @@
             {
               "code": "231",
               "name": "Bâtiments",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "232",
               "name": "Installations techniques",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "233",
               "name": "Agencements et aménagements",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "24",
@@ -192,24 +223,29 @@
             {
               "code": "241",
               "name": "Matériel et outillage industriel",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "244",
               "name": "Matériel et mobilier de bureau",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "245",
               "name": "Matériel informatique",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "25",
           "name": "Matériel de transport",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "27",
@@ -219,14 +255,17 @@
             {
               "code": "271",
               "name": "Prêts et créances non commerciales",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "275",
               "name": "Dépôts et cautionnements versés",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "28",
@@ -236,31 +275,38 @@
             {
               "code": "281",
               "name": "Amortissements des immobilisations incorporelles",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "283",
               "name": "Amortissements des bâtiments",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "284",
               "name": "Amortissements du matériel",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "285",
               "name": "Amortissements du matériel de transport",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "29",
           "name": "Provisions pour dépréciation",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "3",
@@ -271,44 +317,53 @@
           "code": "31",
           "name": "Marchandises",
           "type": "ASSET",
-          "subType": "INVENTORY"
+          "subType": "INVENTORY",
+          "scope_mode": "branch_located"
         },
         {
           "code": "32",
           "name": "Matières premières et fournitures liées",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "33",
           "name": "Autres approvisionnements",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "34",
           "name": "Produits en cours",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "35",
           "name": "Services en cours",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "36",
           "name": "Produits finis",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "37",
           "name": "Produits intermédiaires et résiduels",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         },
         {
           "code": "39",
           "name": "Dépréciations des stocks",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "branch_located"
         }
-      ]
+      ],
+      "scope_mode": "branch_located"
     },
     {
       "code": "4",
@@ -324,24 +379,29 @@
             {
               "code": "401",
               "name": "Fournisseurs, dettes en compte",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "402",
               "name": "Fournisseurs, effets à payer",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "408",
               "name": "Fournisseurs, factures non parvenues",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "409",
               "name": "Fournisseurs débiteurs",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "41",
@@ -352,24 +412,29 @@
             {
               "code": "411",
               "name": "Clients",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "412",
               "name": "Clients, effets à recevoir",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "416",
               "name": "Créances clients litigieuses",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "419",
               "name": "Clients créditeurs (avances reçues)",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "42",
@@ -379,19 +444,23 @@
             {
               "code": "421",
               "name": "Personnel, rémunérations dues",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "422",
               "name": "Personnel, avances et acomptes",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "43",
           "name": "Organismes sociaux",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "44",
@@ -401,51 +470,62 @@
             {
               "code": "441",
               "name": "État, impôts sur les bénéfices",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "443",
               "name": "État, TVA facturée",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "445",
               "name": "État, TVA récupérable",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "447",
               "name": "État, impôts retenus à la source",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "449",
               "name": "État, créances et dettes diverses",
-              "type": "LIABILITY"
+              "type": "LIABILITY",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "46",
           "name": "Débiteurs et créditeurs divers",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "47",
           "name": "Débiteurs et créditeurs divers – Compte d'attente",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "48",
           "name": "Créances et dettes hors activités ordinaires (HAO)",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "49",
           "name": "Dépréciations et risques provisionnés (Tiers)",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "5",
@@ -461,29 +541,35 @@
             {
               "code": "521",
               "name": "Banques locales",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "522",
               "name": "Banques autres États OHADA",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "524",
               "name": "Banques hors zone OHADA",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "53",
           "name": "Établissements financiers et assimilés",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "56",
           "name": "Banques, crédits de trésorerie et d'escompte",
-          "type": "LIABILITY"
+          "type": "LIABILITY",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "57",
@@ -494,26 +580,32 @@
             {
               "code": "571",
               "name": "Caisse siège social",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "572",
               "name": "Caisse succursale",
-              "type": "ASSET"
+              "type": "ASSET",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "58",
           "name": "Régies d'avances, accréditifs et virements internes",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "59",
           "name": "Dépréciations de trésorerie",
-          "type": "ASSET"
+          "type": "ASSET",
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "6",
@@ -528,29 +620,35 @@
             {
               "code": "601",
               "name": "Achats de marchandises",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "602",
               "name": "Achats de matières premières",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "604",
               "name": "Achats stockés de matières et fournitures consommables",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "605",
               "name": "Autres achats",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "608",
               "name": "Frais accessoires d'achats",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "61",
@@ -560,19 +658,23 @@
             {
               "code": "611",
               "name": "Transports sur achats",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "612",
               "name": "Transports sur ventes",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "613",
               "name": "Transports pour le compte de tiers",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "62",
@@ -582,29 +684,35 @@
             {
               "code": "621",
               "name": "Sous-traitance générale",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "622",
               "name": "Locations et charges locatives",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "623",
               "name": "Redevances de crédit-bail",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "624",
               "name": "Entretien, réparations et maintenance",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "625",
               "name": "Primes d'assurance",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "63",
@@ -614,34 +722,41 @@
             {
               "code": "631",
               "name": "Frais bancaires",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "632",
               "name": "Rémunérations d'intermédiaires et de conseils",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "633",
               "name": "Frais de formation du personnel",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "634",
               "name": "Publicité et publications",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "635",
               "name": "Frais de télécommunications",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "638",
               "name": "Autres charges externes",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "64",
@@ -651,19 +766,23 @@
             {
               "code": "641",
               "name": "Impôts et taxes directs",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "646",
               "name": "Droits d'enregistrement",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "648",
               "name": "Autres impôts et taxes",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "66",
@@ -673,24 +792,29 @@
             {
               "code": "661",
               "name": "Rémunérations du personnel national",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "662",
               "name": "Rémunérations du personnel non national",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "663",
               "name": "Indemnités forfaitaires versées au personnel",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "664",
               "name": "Charges sociales",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "67",
@@ -700,19 +824,23 @@
             {
               "code": "671",
               "name": "Intérêts des emprunts",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "674",
               "name": "Pertes de change",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "676",
               "name": "Pertes sur cessions de titres de placement",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "68",
@@ -722,21 +850,26 @@
             {
               "code": "681",
               "name": "Dotations aux amortissements d'exploitation",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             },
             {
               "code": "687",
               "name": "Dotations aux amortissements à caractère financier",
-              "type": "EXPENSE"
+              "type": "EXPENSE",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "69",
           "name": "Dotations aux provisions",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     },
     {
       "code": "7",
@@ -751,44 +884,53 @@
             {
               "code": "701",
               "name": "Ventes de marchandises",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             },
             {
               "code": "702",
               "name": "Ventes de produits finis",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             },
             {
               "code": "704",
               "name": "Ventes de prestations de services",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             },
             {
               "code": "706",
               "name": "Produits des activités annexes",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "71",
           "name": "Subventions d'exploitation",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "72",
           "name": "Production immobilisée",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "73",
           "name": "Variations de stocks de produits et en-cours",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "75",
           "name": "Autres produits",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "77",
@@ -798,31 +940,38 @@
             {
               "code": "771",
               "name": "Intérêts de prêts",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             },
             {
               "code": "774",
               "name": "Gains de change",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             },
             {
               "code": "776",
               "name": "Gains de cessions de titres de placement",
-              "type": "INCOME"
+              "type": "INCOME",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "78",
           "name": "Reprises d'amortissements et provisions",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "79",
           "name": "Reprises de provisions financières",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     },
     {
       "code": "8",
@@ -832,44 +981,53 @@
         {
           "code": "81",
           "name": "Valeurs comptables des cessions d'immobilisations",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         },
         {
           "code": "82",
           "name": "Produits des cessions d'immobilisations",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "83",
           "name": "Charges hors activités ordinaires",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         },
         {
           "code": "84",
           "name": "Produits hors activités ordinaires",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "85",
           "name": "Dotations HAO",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         },
         {
           "code": "86",
           "name": "Reprises HAO",
-          "type": "INCOME"
+          "type": "INCOME",
+          "scope_mode": "branch_split"
         },
         {
           "code": "87",
           "name": "Participation des travailleurs",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         },
         {
           "code": "89",
           "name": "Impôts sur le résultat",
-          "type": "EXPENSE"
+          "type": "EXPENSE",
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     }
   ],
   "posting_rules": [

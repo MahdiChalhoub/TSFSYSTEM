@@ -131,9 +131,11 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 tourStepActions={tourStepActions}
             />
 
-            {/* ── Content (stretches to fill all space between toolbar and footer) ── */}
-            <div data-tour="templates-content" className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl"
-                style={{ border: '1px solid var(--app-border)' }}>
+            {/* ── Content (stretches to fill all space between toolbar and footer).
+                Only round the top corners — the footer rounds its own bottom
+                corners, and rounding both produces a visible gap at the seam. */}
+            <div data-tour="templates-content" className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-t-2xl"
+                style={{ borderTop: '1px solid var(--app-border)', borderLeft: '1px solid var(--app-border)', borderRight: '1px solid var(--app-border)' }}>
                 {activeView === 'gallery' && (
                     <GalleryView templates={filteredTemplates} templatesMap={templatesMap}
                         selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate}

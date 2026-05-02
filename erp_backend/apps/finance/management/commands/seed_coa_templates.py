@@ -45,6 +45,11 @@ class Command(BaseCommand):
     INVENTORY_NAME_KEYWORDS = (
         'stock', 'inventory', 'inventaire', 'marchandise',
         'matiere', 'matière', 'wip', 'work in progress', 'en cours',
+        # Common GAAP/IFRS inventory line items by English name.
+        'raw material', 'raw materials',
+        'finished good', 'finished goods',
+        'goods in transit', 'in transit',
+        'work-in-process', 'work in process',
     )
 
     # PCG-family templates use SYSCOHADA-style code classes where digit 3 =

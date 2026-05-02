@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import { useState, useMemo, useCallback, useTransition, useEffect } from 'react'
 import {
     BookOpen, Plus, Wallet, TrendingDown, TrendingUp, BarChart3, Scale,
     Eye, EyeOff, RefreshCcw, Settings2, Library, FileText,
     Pencil, Power, Copy, Eye as EyeIcon, X,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
-import { reactivateChartOfAccount } from '@/app/actions/finance/accounts'
+import { reactivateChartOfAccount, createAccount } from '@/app/actions/finance/accounts'
+import { AccountForm } from '../_components/AccountForm'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
@@ -42,9 +43,27 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
     orgCurrencies?: Record<string, any>[]
     numberingRules?: { template_key: string; rules: Record<string, any> }
 }) {
-    void orgCurrencies // reserved for future mobile create/edit form
-    void numberingRules // reserved for future mobile create/edit form
     const router = useRouter()
+    const searchParams = useSearchParams()
+    /** Add-form bottom sheet — opens when ?add=1 is in the URL (set by the
+     *  page header's "+ New Account" button or by Add-sub on a row). When
+     *  ?parent=ID is also set, the form pre-fills that parent. */
+    const [addOpen, setAddOpen] = useState(false)
+    const [addParentId, setAddParentId] = useState<number | undefined>(undefined)
+    useEffect(() => {
+        if (searchParams.get('add') === '1') {
+            const p = searchParams.get('parent')
+            setAddParentId(p ? Number(p) : undefined)
+            setAddOpen(true)
+        } else {
+            setAddOpen(false)
+        }
+    }, [searchParams])
+    const closeAddSheet = useCallback(() => {
+        setAddOpen(false)
+        // Clean the URL so a refresh doesn't re-open the sheet.
+        router.replace('/finance/chart-of-accounts')
+    }, [router])
     const [isPending, startTransition] = useTransition()
     const [sheetNode, setSheetNode] = useState<COATreeNode | COAAccount | null>(null)
     const [actionNode, setActionNode] = useState<COATreeNode | COAAccount | null>(null)
@@ -280,6 +299,48 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
                         onOpenChange={setRecalcOpen}
                         onConfirm={runRecalc}
                     />
+                    {/* Create-account bottom sheet — desktop AccountForm
+                        rendered in a sheet so mobile users get the same
+                        full-featured create flow (currency picker, scope
+                        override, code suggestion, parent guards). */}
+                    <MobileBottomSheet
+                        open={addOpen}
+                        onClose={closeAddSheet}
+                        initialSnap="expanded">
+                        <div className="px-4 pt-2 pb-6">
+                            <h2 className="text-tp-lg font-bold text-app-foreground mb-3">
+                                {addParentId ? 'Add sub-account' : 'New account'}
+                            </h2>
+                            <AccountForm
+                                accounts={accounts as any}
+                                orgCurrencies={orgCurrencies}
+                                numberingRules={numberingRules}
+                                preselectedParentId={addParentId}
+                                isPending={isPending}
+                                onSubmit={(formData) => {
+                                    startTransition(async () => {
+                                        try {
+                                            const data: Record<string, any> = {}
+                                            formData.forEach((v, k) => { data[k] = v })
+                                            // Coerce numeric/boolean fields to match the
+                                            // server-action zod schema.
+                                            if (data.parentId) data.parentId = Number(data.parentId)
+                                            data.isInternal = data.isInternal === 'on'
+                                            data.revaluationRequired = data.revaluationRequired === 'on'
+                                            await createAccount(data)
+                                            toast.success('Account created')
+                                            closeAddSheet()
+                                            router.refresh()
+                                        } catch (e: unknown) {
+                                            const msg = e instanceof Error ? e.message : null
+                                            toast.error(msg || 'Failed to create account')
+                                        }
+                                    })
+                                }}
+                                onCancel={closeAddSheet}
+                            />
+                        </div>
+                    </MobileBottomSheet>
                 </>
             }
             sheet={
@@ -370,9 +431,14 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
                         <div data-tour="scope-filter-rail" className="flex gap-1.5 overflow-x-auto mb-2 pb-1" style={{ scrollbarWidth: 'none' }}>
                             {([
                                 { key: null,             label: 'All',      count: scopeCounts.all,            color: 'var(--app-primary)',          emoji: null },
-                                { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-foreground)',       emoji: '🌐' },
-                                { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-info, #3b82f6)',    emoji: '🏢' },
-                                { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-warning, #f59e0b)', emoji: '📦' },
+                                // Match the desktop chip palette so users
+                                // recognize the same scope on either device.
+                                // app-foreground was unusable: 14% mix of a
+                                // text color with transparent → near-invisible
+                                // active state.
+                                { key: 'tenant_wide',    label: 'Tenant',   count: scopeCounts.tenant_wide,    color: 'var(--app-info, #3b82f6)',    emoji: '🌐' },
+                                { key: 'branch_split',   label: 'Split',    count: scopeCounts.branch_split,   color: 'var(--app-warning, #f59e0b)', emoji: '🏢' },
+                                { key: 'branch_located', label: 'Located',  count: scopeCounts.branch_located, color: 'var(--app-success, #10b981)', emoji: '📦' },
                             ] as const).map(f => {
                                 const active = scopeFilter === f.key
                                 return (

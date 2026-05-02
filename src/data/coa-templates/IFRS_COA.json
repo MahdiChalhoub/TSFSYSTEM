@@ -31,7 +31,8 @@
                   "type": "ASSET",
                   "subType": "CASH",
                   "syscohadaCode": "57",
-                  "syscohadaClass": "Class 5"
+                  "syscohadaClass": "Class 5",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "1101.02",
@@ -39,7 +40,8 @@
                   "type": "ASSET",
                   "subType": "CASH",
                   "syscohadaCode": "57",
-                  "syscohadaClass": "Class 5"
+                  "syscohadaClass": "Class 5",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "1101.03",
@@ -47,9 +49,11 @@
                   "type": "ASSET",
                   "subType": "BANK",
                   "syscohadaCode": "52",
-                  "syscohadaClass": "Class 5"
+                  "syscohadaClass": "Class 5",
+                  "scope_mode": "tenant_wide"
                 }
-              ]
+              ],
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1110",
@@ -57,7 +61,8 @@
               "type": "ASSET",
               "subType": "RECEIVABLE",
               "syscohadaCode": "41",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1120",
@@ -72,7 +77,8 @@
                   "type": "ASSET",
                   "subType": "INVENTORY",
                   "syscohadaCode": "31",
-                  "syscohadaClass": "Class 3"
+                  "syscohadaClass": "Class 3",
+                  "scope_mode": "branch_located"
                 },
                 {
                   "code": "1122",
@@ -80,7 +86,8 @@
                   "type": "ASSET",
                   "subType": "INVENTORY",
                   "syscohadaCode": "31",
-                  "syscohadaClass": "Class 3"
+                  "syscohadaClass": "Class 3",
+                  "scope_mode": "branch_located"
                 },
                 {
                   "code": "1123",
@@ -88,7 +95,8 @@
                   "type": "ASSET",
                   "subType": "INVENTORY",
                   "syscohadaCode": "31",
-                  "syscohadaClass": "Class 3"
+                  "syscohadaClass": "Class 3",
+                  "scope_mode": "branch_located"
                 },
                 {
                   "code": "1124",
@@ -96,9 +104,11 @@
                   "type": "ASSET",
                   "subType": "INVENTORY",
                   "syscohadaCode": "31",
-                  "syscohadaClass": "Class 3"
+                  "syscohadaClass": "Class 3",
+                  "scope_mode": "branch_located"
                 }
-              ]
+              ],
+              "scope_mode": "branch_located"
             },
             {
               "code": "1130",
@@ -112,16 +122,19 @@
                   "name": "Prepaid Insurance",
                   "type": "ASSET",
                   "syscohadaCode": "47",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "1132",
                   "name": "Prepaid Rent",
                   "type": "ASSET",
                   "syscohadaCode": "47",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 }
-              ]
+              ],
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1140",
@@ -129,23 +142,27 @@
               "type": "ASSET",
               "subType": "RECEIVABLE",
               "syscohadaCode": "42",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1150",
               "name": "Deposits & Guarantees",
               "type": "ASSET",
               "syscohadaCode": "27",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1160",
               "name": "Short-Term Investments",
               "type": "ASSET",
               "syscohadaCode": "50",
-              "syscohadaClass": "Class 5"
+              "syscohadaClass": "Class 5",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "1200",
@@ -157,51 +174,59 @@
               "name": "Land",
               "type": "ASSET",
               "syscohadaCode": "21",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1202",
               "name": "Buildings",
               "type": "ASSET",
               "syscohadaCode": "23",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1203",
               "name": "Furniture & Fixtures",
               "type": "ASSET",
               "syscohadaCode": "24",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1204",
               "name": "Equipment",
               "type": "ASSET",
               "syscohadaCode": "24",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1205",
               "name": "Vehicles",
               "type": "ASSET",
               "syscohadaCode": "25",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1206",
               "name": "Software / Intangible Assets",
               "type": "ASSET",
               "syscohadaCode": "21",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1207",
               "name": "Leasehold Improvements",
               "type": "ASSET",
               "syscohadaCode": "23",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "1210",
@@ -213,25 +238,30 @@
               "name": "Accumulated Depreciation – Equipment",
               "type": "ASSET",
               "syscohadaCode": "28",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1212",
               "name": "Accumulated Depreciation – Vehicles",
               "type": "ASSET",
               "syscohadaCode": "28",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "1213",
               "name": "Accumulated Amortization – Software",
               "type": "ASSET",
               "syscohadaCode": "28",
-              "syscohadaClass": "Class 2"
+              "syscohadaClass": "Class 2",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "2000",
@@ -249,28 +279,32 @@
               "type": "LIABILITY",
               "subType": "PAYABLE",
               "syscohadaCode": "40",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2102",
               "name": "Accrued Liabilities",
               "type": "LIABILITY",
               "syscohadaCode": "40",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2103",
               "name": "Customer Deposits",
               "type": "LIABILITY",
               "syscohadaCode": "41",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2104",
               "name": "Goods Received Not Invoiced",
               "type": "LIABILITY",
               "syscohadaCode": "40",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2110",
@@ -282,42 +316,48 @@
                   "name": "VAT Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2112",
                   "name": "Income Tax Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2113",
                   "name": "Payroll Tax Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2114",
                   "name": "Reverse Charge VAT",
                   "type": "LIABILITY",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2115",
                   "name": "VAT Refund Receivable",
                   "type": "ASSET",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2116",
                   "name": "VAT Suspense (Cash-Basis)",
                   "type": "LIABILITY",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2117",
@@ -325,7 +365,8 @@
                   "type": "LIABILITY",
                   "subType": "TAX",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2118",
@@ -333,7 +374,8 @@
                   "type": "ASSET",
                   "subType": "TAX",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2119",
@@ -341,9 +383,11 @@
                   "type": "LIABILITY",
                   "subType": "TAX",
                   "syscohadaCode": "44",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 }
-              ]
+              ],
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2120",
@@ -355,67 +399,78 @@
                   "name": "Salaries Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "42",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2122",
                   "name": "Rent Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "40",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2123",
                   "name": "Utilities Payable",
                   "type": "LIABILITY",
                   "syscohadaCode": "40",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 },
                 {
                   "code": "2124",
                   "name": "Accrued Interest",
                   "type": "LIABILITY",
                   "syscohadaCode": "40",
-                  "syscohadaClass": "Class 4"
+                  "syscohadaClass": "Class 4",
+                  "scope_mode": "tenant_wide"
                 }
-              ]
+              ],
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2106",
               "name": "Customer Advances & Deposits",
               "type": "LIABILITY",
               "syscohadaCode": "41",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2107",
               "name": "Deferred Revenue (Unearned)",
               "type": "LIABILITY",
               "syscohadaCode": "47",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2108",
               "name": "Loyalty Points Liability",
               "type": "LIABILITY",
               "syscohadaCode": "47",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2109",
               "name": "Provision for Liabilities",
               "type": "LIABILITY",
               "syscohadaCode": "15",
-              "syscohadaClass": "Class 1"
+              "syscohadaClass": "Class 1",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2130",
               "name": "Deferred Revenue",
               "type": "LIABILITY",
               "syscohadaCode": "47",
-              "syscohadaClass": "Class 4"
+              "syscohadaClass": "Class 4",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "2200",
@@ -427,18 +482,22 @@
               "name": "Bank Loan",
               "type": "LIABILITY",
               "syscohadaCode": "16",
-              "syscohadaClass": "Class 1"
+              "syscohadaClass": "Class 1",
+              "scope_mode": "tenant_wide"
             },
             {
               "code": "2202",
               "name": "Lease Liability",
               "type": "LIABILITY",
               "syscohadaCode": "16",
-              "syscohadaClass": "Class 1"
+              "syscohadaClass": "Class 1",
+              "scope_mode": "tenant_wide"
             }
-          ]
+          ],
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "3000",
@@ -450,72 +509,83 @@
           "name": "Owner Capital",
           "type": "EQUITY",
           "syscohadaCode": "10",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3002",
           "name": "Additional Capital",
           "type": "EQUITY",
           "syscohadaCode": "10",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3003",
           "name": "Retained Earnings",
           "type": "EQUITY",
           "syscohadaCode": "11",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3004",
           "name": "Current Year Profit / Loss",
           "type": "EQUITY",
           "syscohadaCode": "13",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3005",
           "name": "Owner Draws / Withdrawals",
           "type": "EQUITY",
           "syscohadaCode": "10",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3006",
           "name": "Reserves",
           "type": "EQUITY",
           "syscohadaCode": "11",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3100",
           "name": "Share Capital",
           "type": "EQUITY",
           "syscohadaCode": "10",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3200",
           "name": "Owner Draws",
           "type": "EQUITY",
           "syscohadaCode": "10",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3300",
           "name": "Dividends Declared",
           "type": "EQUITY",
           "syscohadaCode": "12",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         },
         {
           "code": "3400",
           "name": "Retained Earnings Transfer",
           "type": "EQUITY",
           "syscohadaCode": "11",
-          "syscohadaClass": "Class 1"
+          "syscohadaClass": "Class 1",
+          "scope_mode": "tenant_wide"
         }
-      ]
+      ],
+      "scope_mode": "tenant_wide"
     },
     {
       "code": "4000",
@@ -532,44 +602,51 @@
               "name": "Sales – Cash",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4102",
               "name": "Sales – Credit",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4103",
               "name": "Sales – Online",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4104",
               "name": "Sales Returns & Allowances",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4105",
               "name": "Shipping & Delivery Revenue",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4110",
               "name": "Sales Discounts",
               "type": "INCOME",
               "syscohadaCode": "70",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "4200",
@@ -581,53 +658,62 @@
               "name": "Discount Received",
               "type": "INCOME",
               "syscohadaCode": "77",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4202",
               "name": "Interest Income",
               "type": "INCOME",
               "syscohadaCode": "77",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4203",
               "name": "Inventory Adjustment Gain",
               "type": "INCOME",
               "syscohadaCode": "75",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4204",
               "name": "Foreign Exchange Gain",
               "type": "INCOME",
               "syscohadaCode": "76",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4205",
               "name": "Commission Income",
               "type": "INCOME",
               "syscohadaCode": "75",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4800",
               "name": "Gain on Disposal / FX Gain",
               "type": "INCOME",
               "syscohadaCode": "77",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             },
             {
               "code": "4900",
               "name": "Other Revenue & Adjustments",
               "type": "INCOME",
               "syscohadaCode": "75",
-              "syscohadaClass": "Class 7"
+              "syscohadaClass": "Class 7",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     },
     {
       "code": "5000",
@@ -644,44 +730,51 @@
               "name": "Cost of Goods Purchased",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5102",
               "name": "Freight In",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5103",
               "name": "Import Duties",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5104",
               "name": "Inventory Adjustment",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5105",
               "name": "Packaging & Materials",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5110",
               "name": "Purchase Discounts",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "5200",
@@ -693,81 +786,94 @@
               "name": "Inventory Write-off & Loss",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5230",
               "name": "Production Variance",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5240",
               "name": "Commission Expense",
               "type": "EXPENSE",
               "syscohadaCode": "63",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5250",
               "name": "Bad Debt Expense",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5260",
               "name": "Bank Charges",
               "type": "EXPENSE",
               "syscohadaCode": "63",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5261",
               "name": "Payment Processor Fees",
               "type": "EXPENSE",
               "syscohadaCode": "63",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5270",
               "name": "FX Loss / Loss on Disposal",
               "type": "EXPENSE",
               "syscohadaCode": "66",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5291",
               "name": "AIRSI Tax Expense",
               "type": "EXPENSE",
               "syscohadaCode": "64",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5295",
               "name": "Accrued Expense",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5296",
               "name": "Provision Expense",
               "type": "EXPENSE",
               "syscohadaCode": "69",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "5299",
               "name": "Rounding & Miscellaneous Adjustments",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     },
     {
       "code": "6000",
@@ -784,58 +890,67 @@
               "name": "Salaries & Wages",
               "type": "EXPENSE",
               "syscohadaCode": "64",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6102",
               "name": "Transport Allowance",
               "type": "EXPENSE",
               "syscohadaCode": "64",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6103",
               "name": "Rent Expense",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6104",
               "name": "Utilities Expense",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6105",
               "name": "Internet & Phone",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6106",
               "name": "Maintenance",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6107",
               "name": "Cleaning",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6108",
               "name": "Security",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "6200",
@@ -847,44 +962,51 @@
               "name": "Office Supplies",
               "type": "EXPENSE",
               "syscohadaCode": "60",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6202",
               "name": "Software / POS Subscription",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6203",
               "name": "Professional Fees",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6204",
               "name": "Travel & Entertainment",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6205",
               "name": "Marketing & Advertising",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6206",
               "name": "Legal Fees",
               "type": "EXPENSE",
               "syscohadaCode": "62",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         },
         {
           "code": "6300",
@@ -896,46 +1018,54 @@
               "name": "Bank Charges",
               "type": "EXPENSE",
               "syscohadaCode": "67",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6302",
               "name": "Interest Expense",
               "type": "EXPENSE",
               "syscohadaCode": "67",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6303",
               "name": "Depreciation & Amortization Expense",
               "type": "EXPENSE",
               "syscohadaCode": "68",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6304",
               "name": "Bad Debt Expense",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6305",
               "name": "Foreign Exchange Loss",
               "type": "EXPENSE",
               "syscohadaCode": "66",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             },
             {
               "code": "6306",
               "name": "Discount Given",
               "type": "EXPENSE",
               "syscohadaCode": "65",
-              "syscohadaClass": "Class 6"
+              "syscohadaClass": "Class 6",
+              "scope_mode": "branch_split"
             }
-          ]
+          ],
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     },
     {
       "code": "9000",
@@ -950,7 +1080,8 @@
           "syscohadaClass": "Class 6",
           "isSystemOnly": true,
           "isHidden": true,
-          "requiresZeroBalance": true
+          "requiresZeroBalance": true,
+          "scope_mode": "branch_split"
         },
         {
           "code": "9002",
@@ -959,7 +1090,8 @@
           "syscohadaCode": "77",
           "syscohadaClass": "Class 7",
           "isSystemOnly": true,
-          "isHidden": true
+          "isHidden": true,
+          "scope_mode": "branch_split"
         },
         {
           "code": "9003",
@@ -968,9 +1100,11 @@
           "syscohadaCode": "76",
           "syscohadaClass": "Class 7",
           "isSystemOnly": true,
-          "isHidden": true
+          "isHidden": true,
+          "scope_mode": "branch_split"
         }
-      ]
+      ],
+      "scope_mode": "branch_split"
     }
   ],
   "posting_rules": [

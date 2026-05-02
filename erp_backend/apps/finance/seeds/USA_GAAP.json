@@ -114,19 +114,19 @@
                                     "code": "1310",
                                     "name": "Raw Materials",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide"
+                                    "scope_mode": "branch_located"
                                 },
                                 {
                                     "code": "1320",
                                     "name": "Work in Process",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide"
+                                    "scope_mode": "branch_located"
                                 },
                                 {
                                     "code": "1330",
                                     "name": "Finished Goods",
                                     "type": "ASSET",
-                                    "scope_mode": "tenant_wide"
+                                    "scope_mode": "branch_located"
                                 },
                                 {
                                     "code": "1340",

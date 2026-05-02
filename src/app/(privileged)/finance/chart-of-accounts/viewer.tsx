@@ -68,6 +68,15 @@ export function ChartOfAccountsViewer({ accounts, orgCurrencies = [], numberingR
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            // Ctrl+Q toggles focus mode. The browser claims this in some
+            // configs (Firefox quits, Chrome on Linux may close the window),
+            // so this only works when the browser doesn't intercept first.
+            if ((e.metaKey || e.ctrlKey) && (e.key === 'q' || e.key === 'Q')) {
+                e.preventDefault()
+                setFocusMode(p => !p)
+                ;(document.activeElement as HTMLElement | null)?.blur?.()
+                return
+            }
             if (e.key === 'Escape') {
                 // First Esc with a search query → clear it (keep focus mode).
                 if (searchQuery) {

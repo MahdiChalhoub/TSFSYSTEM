@@ -342,6 +342,29 @@ function AccountTreeRow({ node, level, accent, defaultOpen }: {
                     style={{ fontSize: 'var(--tp-md)' }}>
                     {node.name}
                 </span>
+                {/* Branch-scope chip — show on every row so the user can
+                    see at a glance what scope each account belongs to. */}
+                {(() => {
+                    const c = node.scope_mode === 'branch_split'
+                        ? { icon: '🏢', color: 'var(--app-warning, #F59E0B)' }
+                        : node.scope_mode === 'branch_located'
+                            ? { icon: '📦', color: 'var(--app-success, #10B981)' }
+                            : node.scope_mode === 'tenant_wide'
+                                ? { icon: '🌐', color: 'var(--app-info, #3B82F6)' }
+                                : null
+                    if (!c) return null
+                    return (
+                        <span className="flex-shrink-0 rounded-md font-bold"
+                            style={{
+                                fontSize: 'var(--tp-xxs)',
+                                padding: '1px 4px',
+                                color: c.color,
+                                background: `color-mix(in srgb, ${c.color} 12%, transparent)`,
+                            }}>
+                            {c.icon}
+                        </span>
+                    )
+                })()}
                 {/* Type badge (only root) */}
                 {level === 0 && node.type && (
                     <span className="font-bold uppercase tracking-wide text-app-muted-foreground flex-shrink-0"

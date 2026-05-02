@@ -347,7 +347,9 @@ class ChartOfAccount(TenantModel):
         name = (self.name or '').lower()
         if self.type == 'ASSET':
             for kw in ('stock', 'inventory', 'inventaire', 'marchandise',
-                       'matiere', 'matière', 'wip', 'work in progress', 'en cours'):
+                       'matiere', 'matière', 'wip', 'work in progress', 'en cours',
+                       'raw material', 'raw materials', 'finished good', 'finished goods',
+                       'goods in transit', 'in transit', 'work-in-process', 'work in process'):
                 if kw in name:
                     return self.SCOPE_BRANCH_LOCATED
 
