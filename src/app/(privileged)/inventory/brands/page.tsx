@@ -1,5 +1,6 @@
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, getTenantContext } from "@/lib/erp-api";
 import { BrandsGateway } from "./BrandsGateway";
+import { NoTenantNotice } from "./NoTenantNotice";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,18 @@ async function getCategories() {
 }
 
 export default async function BrandsPage() {
+    // Brands are tenant-scoped — without a tenant context (e.g. on saas.* root)
+    // every backend call 404s. Detect that upfront and render a clear notice
+    // instead of the misleading "No brands yet" empty state.
+    const tenant = await getTenantContext();
+    if (!tenant) {
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <NoTenantNotice />
+            </div>
+        );
+    }
+
     const [brands, countries, categories] = await Promise.all([
         getBrands(),
         getCountries(),

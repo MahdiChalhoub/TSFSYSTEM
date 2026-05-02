@@ -4,8 +4,13 @@
  * CatalogueModal — full-screen product browser for the PO Intelligence Grid.
  *
  * Wired to backend endpoints:
- *   - `dashboard/catalogue_list/` — paginated products with stock/sales annotations
- *   - `dashboard/catalogue_filters/` — available categories, brands for filtering
+ *   - `products/`     — paginated products (same source as /inventory/products)
+ *   - `categories/`   — filter dimension
+ *   - `brands/`       — filter dimension
+ *
+ * The previous endpoints (`dashboard/catalogue_list/`, `dashboard/catalogue_filters/`)
+ * 500'd on this deployment, so the modal now reads from the canonical
+ * inventory product master used by the rest of the app.
  *
  * The operator can browse, filter, search, and click products to add them
  * to the PO line list. Already-added products are visually marked.
@@ -29,6 +34,32 @@ type CatalogueItem = {
     selling_price: number
     margin_pct: number
     safety_tag: string
+}
+
+/** Map a raw `products/` row to the CatalogueItem shape used by this modal. */
+function mapProductToCatalogueItem(p: Record<string, any>): CatalogueItem {
+    const num = (v: unknown) => {
+        const n = typeof v === 'string' ? parseFloat(v) : Number(v)
+        return Number.isFinite(n) ? n : 0
+    }
+    const cost = num(p.cost_price ?? p.cost_price_ttc ?? p.cost_price_ht)
+    const sell = num(p.selling_price_ttc ?? p.selling_price_ht)
+    const marginPct = sell > 0 ? ((sell - cost) / sell) * 100 : 0
+    return {
+        id: Number(p.id),
+        name: String(p.name || ''),
+        sku: String(p.sku || p.code || ''),
+        barcode: String(p.barcode || ''),
+        category_name: String(p.category_name || ''),
+        stock: num(p.on_hand_qty ?? p.available_qty ?? p.stock_qty ?? 0),
+        daily_sales: num(p.daily_sales ?? 0),
+        cost_price: cost,
+        effective_cost: num(p.effective_cost ?? cost),
+        cost_price_ht: num(p.cost_price_ht ?? cost),
+        selling_price: sell,
+        margin_pct: marginPct,
+        safety_tag: String(p.safety_tag || ''),
+    }
 }
 
 type FilterDimensions = {
@@ -65,15 +96,34 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         if (supplierId) setShowSupplierOnly(true)
     }, [supplierId])
 
-    // Fetch filters once
+    // Fetch filter dimensions once — pull categories + brands directly from
+    // the inventory master endpoints (same source as /inventory/products).
     useEffect(() => {
         if (!open) return
-        erpFetch('dashboard/catalogue_filters/')
-            .then((data: any) => setFilters(data || { categories: [], brands: [], types: [] }))
-            .catch(() => setFilters({ categories: [], brands: [], types: [] }))
+        let cancelled = false
+        Promise.all([
+            erpFetch('categories/').catch(() => []),
+            erpFetch('brands/').catch(() => []),
+        ]).then(([catsRaw, brandsRaw]) => {
+            if (cancelled) return
+            const toList = (raw: unknown): Array<Record<string, unknown>> => {
+                if (Array.isArray(raw)) return raw
+                const r = raw as { results?: unknown } | null
+                return Array.isArray(r?.results) ? (r!.results as Array<Record<string, unknown>>) : []
+            }
+            setFilters({
+                categories: toList(catsRaw).map(c => ({ id: Number(c.id), name: String(c.name || '') })),
+                brands: toList(brandsRaw).map(b => ({ id: Number(b.id), name: String(b.name || '') })),
+                types: [],
+            })
+        })
+        return () => { cancelled = true }
     }, [open])
 
-    // Fetch catalogue items
+    // Fetch catalogue items from `products/` — the same DRF endpoint that
+    // /inventory/products uses. Server-side pagination + DRF SearchFilter
+    // (`?search=`) covers SKU / barcode / name. Filters are passed as
+    // `?category=` / `?brand=` (DRF FK filter names).
     const fetchItems = useCallback(async (pageNum: number, append = false) => {
         setLoading(true)
         try {
@@ -81,15 +131,26 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 page: String(pageNum),
                 page_size: '30',
             })
-            if (query) params.set('query', query)
+            if (query) params.set('search', query)
             if (category) params.set('category', category)
             if (brand) params.set('brand', brand)
             if (showSupplierOnly && supplierId) params.set('supplier', String(supplierId))
 
-            const data: any = await erpFetch(`dashboard/catalogue_list/?${params}`)
-            const newItems = data?.items || []
+            const data = await erpFetch(`products/?${params}`) as
+                | Array<Record<string, unknown>>
+                | { results?: Array<Record<string, unknown>>; count?: number; next?: string | null }
+                | null
+            const rawList: Array<Record<string, unknown>> = Array.isArray(data)
+                ? data
+                : (data?.results || [])
+            const newItems = rawList.map(mapProductToCatalogueItem)
+            // DRF returns a `next` URL when more pages exist; fall back to
+            // count-based check for compatibility with custom paginators.
+            const next = !Array.isArray(data) && data?.next
+            const total = !Array.isArray(data) && typeof data?.count === 'number' ? data.count : undefined
+            const hasMoreFlag = !!next || (typeof total === 'number' && pageNum * 30 < total)
             setItems(prev => append ? [...prev, ...newItems] : newItems)
-            setHasMore(!!data?.has_more)
+            setHasMore(hasMoreFlag)
             setPage(pageNum)
         } catch {
             if (!append) setItems([])

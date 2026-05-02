@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useAdmin } from '@/context/AdminContext'
 
 /* ═══════════════════════════════════════════════════════
    Types — full Currency model from `reference/currencies/`
@@ -308,16 +309,20 @@ function getFlagEmoji(code: string): string {
 function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'currency'>]
   const flag = node.kind === 'country' && node.data?.iso2 ? getFlagEmoji(node.data.iso2) : null
+  // In-app tab navigation — opens (or focuses) a tab in the navigator
+  // instead of doing a full reload.
+  const { openTab } = useAdmin()
   return (
     <div className="relative" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-      <a
-        href={meta.href}
-        className="group flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg no-underline"
-        style={{ padding: '6px 10px', color: 'inherit' }}
+      <button
+        type="button"
+        onClick={() => openTab(meta.group, meta.href)}
+        className="group w-full text-left flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg cursor-pointer"
+        style={{ padding: '6px 10px', color: 'inherit', background: 'transparent' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
@@ -337,7 +342,7 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
             <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
           )}
         </div>
-      </a>
+      </button>
     </div>
   )
 }
@@ -580,8 +585,10 @@ function getFlagEmojiForLeaf(code: string): string {
   return String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
 }
 
-function CurrencyDetailPanel({ currency, countriesUsing, tenantsUsing, onEdit, onDelete, onClose, onPin, onUnlinkCountry }: {
+function CurrencyDetailPanel({ currency, allCountries, countriesUsing, tenantsUsing, onEdit, onDelete, onClose, onPin, onUnlinkCountry, onLinkCountry }: {
   currency: Currency
+  /** Full country list — used by the "Link a country" picker. */
+  allCountries: RelatedCountry[]
   countriesUsing: RelatedCountry[]
   tenantsUsing: TenantUsage[]
   onEdit: () => void
@@ -589,6 +596,7 @@ function CurrencyDetailPanel({ currency, countriesUsing, tenantsUsing, onEdit, o
   onClose: () => void
   onPin?: () => void
   onUnlinkCountry?: (ct: RelatedCountry) => void
+  onLinkCountry?: (ct: RelatedCountry) => void
 }) {
   const [tab, setTab] = useState<CurrencyPanelTab>('overview')
 
@@ -711,35 +719,66 @@ function CurrencyDetailPanel({ currency, countriesUsing, tenantsUsing, onEdit, o
           </>
         )}
         {tab === 'countries' && (
-          countriesUsing.length === 0 ? (
-            <EmptyTab icon={<Globe size={24} />} title="No countries linked" subtitle="Edit a country and set this as its default currency to link them." />
-          ) : (
-            countriesUsing.map(c => (
-              <div key={c.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-tp-md"
-                  style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)' }}>
-                  {getFlagEmojiForLeaf(c.iso2)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
-                    {c.region || c.iso2}
+          <>
+            {countriesUsing.length === 0 ? (
+              <EmptyTab icon={<Globe size={24} />} title="No countries linked" subtitle="Pick one below to link, or edit a country and set its default currency." />
+            ) : (
+              countriesUsing.map(c => (
+                <div key={c.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                  style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-tp-md"
+                    style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)' }}>
+                    {getFlagEmojiForLeaf(c.iso2)}
                   </div>
-                  <div className="text-tp-sm font-bold text-app-foreground truncate">{c.name}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
+                      {c.region || c.iso2}
+                    </div>
+                    <div className="text-tp-sm font-bold text-app-foreground truncate">{c.name}</div>
+                  </div>
+                  {onUnlinkCountry && (
+                    <button onClick={() => onUnlinkCountry(c)}
+                      title={`Unlink ${c.name}`}
+                      className="p-1.5 rounded-lg transition-all flex-shrink-0"
+                      style={{ color: 'var(--app-warning, #f59e0b)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                      <Unlink size={12} />
+                    </button>
+                  )}
                 </div>
-                {onUnlinkCountry && (
-                  <button onClick={() => onUnlinkCountry(c)}
-                    title={`Unlink ${c.name}`}
-                    className="p-1.5 rounded-lg transition-all flex-shrink-0"
-                    style={{ color: 'var(--app-warning, #f59e0b)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                    <Unlink size={12} />
-                  </button>
-                )}
-              </div>
-            ))
-          )
+              ))
+            )}
+            {/* Link picker — shows countries NOT currently using this
+                currency. Picking one fires the link confirm dialog. */}
+            {onLinkCountry && (() => {
+              const linkedIds = new Set(countriesUsing.map(c => c.id))
+              const available = allCountries.filter(c => !linkedIds.has(c.id))
+              if (available.length === 0) return null
+              return (
+                <div className="pt-2 mt-2" style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                  <label className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">
+                    Link another country
+                  </label>
+                  <select className={fieldClass}
+                    value=""
+                    onChange={e => {
+                      const id = Number(e.target.value)
+                      const ct = allCountries.find(c => c.id === id)
+                      if (ct) onLinkCountry(ct)
+                      e.target.value = ''
+                    }}>
+                    <option value="">Pick a country to link...</option>
+                    {available.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.iso2}){c.default_currency_code ? ` — currently ${c.default_currency_code}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
+            })()}
+          </>
         )}
         {tab === 'tenants' && (
           tenantsUsing.length === 0 ? (
@@ -866,6 +905,30 @@ export default function CurrenciesPage() {
     run: () => Promise<void>
   }
   const [linkAction, setLinkAction] = useState<LinkAction | null>(null)
+
+  /** Link a country to this currency. If the country already has a different
+   *  default currency, warn before overwriting. */
+  const promptLinkCountry = (currency: Currency, ct: RelatedCountry) => {
+    const previous = ct.default_currency_code
+    setLinkAction({
+      title: previous && previous !== currency.code
+        ? `Change ${ct.name}'s currency from ${previous} to ${currency.code}?`
+        : `Link ${ct.name} to ${currency.code}?`,
+      description: previous && previous !== currency.code
+        ? `${ct.name} currently uses ${previous} as its default currency. After this change, new transactions in ${ct.name} will default to ${currency.code} (${currency.name}). Existing records keep their currency.`
+        : `${ct.name} will use ${currency.code} (${currency.name}) as its default currency for new transactions.`,
+      confirmText: previous && previous !== currency.code ? 'Change currency' : 'Link country',
+      variant: previous && previous !== currency.code ? 'warning' : 'info',
+      run: async () => {
+        await erpFetch(`reference/countries/${ct.id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ default_currency: currency.id }),
+        })
+        toast.success(`${ct.name} ${previous && previous !== currency.code ? 'switched to' : 'linked to'} ${currency.code}`)
+        await fetchAll()
+      },
+    })
+  }
 
   /** Unlink a country from this currency (set country.default_currency = null). */
   const promptUnlinkCountry = (currency: Currency, ct: RelatedCountry) => {
@@ -1205,6 +1268,7 @@ export default function CurrenciesPage() {
           return (
             <CurrencyDetailPanel
               currency={currency}
+              allCountries={relatedCountries}
               countriesUsing={countriesUsing}
               tenantsUsing={tenantsByCurrency[currency.id] || []}
               onEdit={() => { setEditing(currency); onClose() }}
@@ -1212,6 +1276,7 @@ export default function CurrenciesPage() {
               onClose={onClose}
               onPin={onPin ? () => onPin(node) : undefined}
               onUnlinkCountry={(ct) => promptUnlinkCountry(currency, ct)}
+              onLinkCountry={(ct) => promptLinkCountry(currency, ct)}
             />
           )
         }}

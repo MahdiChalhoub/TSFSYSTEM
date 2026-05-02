@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useAdmin } from '@/context/AdminContext'
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -566,16 +567,21 @@ const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'ta
  */
 function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'country'>]
+  // Use the in-app tab navigator (categories pattern) instead of <a href>
+  // so clicking opens (or focuses) a tab in the navigator without a full
+  // page reload. Falls back to a normal link if no admin context exists.
+  const { openTab } = useAdmin()
   return (
     <div className="relative" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-      <a
-        href={meta.href}
-        className="group flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg no-underline"
-        style={{ padding: '6px 10px', color: 'inherit' }}
+      <button
+        type="button"
+        onClick={() => openTab(meta.group, meta.href)}
+        className="group w-full text-left flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg cursor-pointer"
+        style={{ padding: '6px 10px', color: 'inherit', background: 'transparent' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
@@ -595,7 +601,7 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
             <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
           )}
         </div>
-      </a>
+      </button>
     </div>
   )
 }
@@ -859,7 +865,7 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
 
 type CountryPanelTab = 'overview' | 'currency' | 'tax' | 'gateways' | 'tenants'
 
-function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates, eInvoiceStandards, paymentGateways, tenantsForCountry, onEdit, onDelete, onClose, onPin, onUnlinkCurrency, onToggleGateway, onUnlinkEInvoice }: {
+function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates, eInvoiceStandards, paymentGateways, tenantsForCountry, onEdit, onDelete, onClose, onPin, onUnlinkCurrency, onLinkCurrency, onToggleGateway, onUnlinkEInvoice, onLinkEInvoice }: {
   country: Country
   hasTaxTemplate: boolean
   currencies: Currency[]
@@ -873,10 +879,14 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates,
   onPin?: () => void
   /** Open the unlink-currency confirm dialog. */
   onUnlinkCurrency?: () => void
+  /** Open the link/change-currency confirm dialog with a chosen currency id. */
+  onLinkCurrency?: (currencyId: number) => void
   /** Open the toggle-gateway confirm dialog. */
   onToggleGateway?: (gateway: PaymentGateway) => void
   /** Open the unlink-e-invoice confirm dialog. */
   onUnlinkEInvoice?: (tpl: TaxTemplate, eiName: string) => void
+  /** Open the link/change e-invoice confirm dialog with a chosen standard id. */
+  onLinkEInvoice?: (eiId: number) => void
 }) {
   const [tab, setTab] = useState<CountryPanelTab>('overview')
   const regionColor = REGION_COLORS[country.region] || 'var(--app-muted-foreground)'
@@ -1024,85 +1034,161 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates,
           </>
         )}
         {tab === 'currency' && (
-          currency ? (
-            <>
-              <Stat label="Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
-              <Stat label="Name" value={currency.name} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
-              <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
-              <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
-              <Stat label="Decimal Places" value={String(currency.minor_unit ?? 2)} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
-              {onUnlinkCurrency && (
-                <button onClick={onUnlinkCurrency}
-                  className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
-                  style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                  <Unlink size={12} /> Unlink currency from {country.iso2}
-                </button>
-              )}
-            </>
-          ) : (
-            <EmptyTab icon={<DollarSign size={24} />} title="No currency linked" subtitle="Edit this country to set its default currency." />
-          )
+          <>
+            {currency ? (
+              <>
+                <Stat label="Code" value={currency.code} icon={<DollarSign size={12} />} color="var(--app-info, #3b82f6)" />
+                <Stat label="Name" value={currency.name} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+                <Stat label="Symbol" value={currency.symbol || '—'} icon={<DollarSign size={12} />} color="var(--app-muted-foreground)" />
+                <Stat label="Numeric Code" value={currency.numeric_code || '—'} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+                <Stat label="Decimal Places" value={String(currency.minor_unit ?? 2)} icon={<Hash size={12} />} color="var(--app-muted-foreground)" />
+                {onUnlinkCurrency && (
+                  <button onClick={onUnlinkCurrency}
+                    className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
+                    style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                    <Unlink size={12} /> Unlink currency from {country.iso2}
+                  </button>
+                )}
+              </>
+            ) : (
+              <EmptyTab icon={<DollarSign size={24} />} title="No currency linked" subtitle="Pick one below to link, or edit this country." />
+            )}
+            {/* Link-picker — present whether linked or not. Picking another
+                currency fires the link/change confirm dialog. */}
+            {onLinkCurrency && (
+              <div className="pt-2 mt-2" style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                <label className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">
+                  {currency ? 'Change currency' : 'Link currency'}
+                </label>
+                <select className={fieldClass}
+                  value=""
+                  onChange={e => {
+                    const id = Number(e.target.value)
+                    if (id) onLinkCurrency(id)
+                    e.target.value = ''
+                  }}>
+                  <option value="">{currency ? `Pick a different currency...` : 'Pick a currency...'}</option>
+                  {currencies.filter(c => c.is_active !== false && c.id !== currency?.id).map(c => (
+                    <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </>
         )}
         {tab === 'tax' && (
-          taxTpl ? (
-            <>
-              <Stat label="Template Country" value={taxTpl.country_code} icon={<Shield size={12} />} color="var(--app-success, #22c55e)" />
-              {taxTpl.country_name && (
-                <Stat label="Template Name" value={taxTpl.country_name} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
-              )}
-              <Stat label="E-Invoice Standard"
-                value={eiStandard ? `${eiStandard.code} — ${eiStandard.name}` : '—'}
-                icon={<FileText size={12} />} color="var(--app-warning, #f59e0b)" />
-              {taxTpl.einvoice_enforcement && (
-                <Stat label="Enforcement" value={taxTpl.einvoice_enforcement} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
-              )}
-              {eiStandard && onUnlinkEInvoice && (
-                <button onClick={() => onUnlinkEInvoice(taxTpl, eiStandard.name)}
-                  className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
-                  style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
-                  <Unlink size={12} /> Unlink {eiStandard.code}
-                </button>
-              )}
-            </>
-          ) : (
-            <EmptyTab icon={<Shield size={24} />} title="No tax template" subtitle="Edit this country to attach a tax template + e-invoice standard." />
-          )
+          <>
+            {taxTpl ? (
+              <>
+                <Stat label="Template Country" value={taxTpl.country_code} icon={<Shield size={12} />} color="var(--app-success, #22c55e)" />
+                {taxTpl.country_name && (
+                  <Stat label="Template Name" value={taxTpl.country_name} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
+                )}
+                <Stat label="E-Invoice Standard"
+                  value={eiStandard ? `${eiStandard.code} — ${eiStandard.name}` : '—'}
+                  icon={<FileText size={12} />} color="var(--app-warning, #f59e0b)" />
+                {taxTpl.einvoice_enforcement && (
+                  <Stat label="Enforcement" value={taxTpl.einvoice_enforcement} icon={<Shield size={12} />} color="var(--app-muted-foreground)" />
+                )}
+                {eiStandard && onUnlinkEInvoice && (
+                  <button onClick={() => onUnlinkEInvoice(taxTpl, eiStandard.name)}
+                    className="w-full flex items-center justify-center gap-1.5 mt-1 px-3 py-2 text-tp-xs font-bold rounded-lg border transition-all"
+                    style={{ color: 'var(--app-warning, #f59e0b)', borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                    <Unlink size={12} /> Unlink {eiStandard.code}
+                  </button>
+                )}
+              </>
+            ) : (
+              <EmptyTab icon={<Shield size={24} />} title="No tax template" subtitle="Pick an e-invoice standard below — a tax template will be auto-created." />
+            )}
+            {/* Link/change e-invoice picker — works whether a tax template
+                exists or not (it'll be auto-created on first link). */}
+            {onLinkEInvoice && eInvoiceStandards.length > 0 && (
+              <div className="pt-2 mt-2" style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                <label className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">
+                  {eiStandard ? 'Change e-invoice standard' : 'Link e-invoice standard'}
+                </label>
+                <select className={fieldClass}
+                  value=""
+                  onChange={e => {
+                    const id = Number(e.target.value)
+                    if (id) onLinkEInvoice(id)
+                    e.target.value = ''
+                  }}>
+                  <option value="">{eiStandard ? 'Pick a different standard...' : 'Pick a standard...'}</option>
+                  {eInvoiceStandards.filter(s => s.is_active !== false && s.id !== eiStandard?.id).map(s => (
+                    <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </>
         )}
         {tab === 'gateways' && (
-          matchingGateways.length === 0 ? (
-            <EmptyTab icon={<CreditCard size={24} />} title="No payment gateways available" subtitle="No global gateways exist, and none target this country's ISO2 code." />
-          ) : (
-            matchingGateways.map(g => {
-              const codes = g.country_codes || []
-              const isGlobal = codes.length === 0
-              const isLinked = codes.includes(country.iso2)
-              return (
-                <div key={g.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                  style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
-                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
-                    <CreditCard size={12} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
-                      {isGlobal ? 'Global gateway' : (g.family || g.code)}
+          <>
+            {matchingGateways.length === 0 ? (
+              <EmptyTab icon={<CreditCard size={24} />} title="No payment gateways available" subtitle="Pick one below to link, or none exist yet." />
+            ) : (
+              matchingGateways.map(g => {
+                const codes = g.country_codes || []
+                const isGlobal = codes.length === 0
+                const isLinked = codes.includes(country.iso2)
+                return (
+                  <div key={g.id} className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                    <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'color-mix(in srgb, var(--app-accent) 10%, transparent)', color: 'var(--app-accent)' }}>
+                      <CreditCard size={12} />
                     </div>
-                    <div className="text-tp-sm font-bold text-app-foreground truncate">{g.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground">
+                        {isGlobal ? 'Global gateway' : (g.family || g.code)}
+                      </div>
+                      <div className="text-tp-sm font-bold text-app-foreground truncate">{g.name}</div>
+                    </div>
+                    {onToggleGateway && (
+                      <button onClick={() => onToggleGateway(g)}
+                        title={isLinked ? `Unlink from ${country.iso2}` : `Link to ${country.iso2}`}
+                        className="p-1.5 rounded-lg transition-all flex-shrink-0"
+                        style={{ color: isLinked ? 'var(--app-warning, #f59e0b)' : 'var(--app-info, #3b82f6)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+                        {isLinked ? <Unlink size={12} /> : <Link2 size={12} />}
+                      </button>
+                    )}
                   </div>
-                  {onToggleGateway && (
-                    <button onClick={() => onToggleGateway(g)}
-                      title={isLinked ? `Unlink from ${country.iso2}` : `Link to ${country.iso2}`}
-                      className="p-1.5 rounded-lg transition-all flex-shrink-0"
-                      style={{ color: isLinked ? 'var(--app-warning, #f59e0b)' : 'var(--app-info, #3b82f6)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                      {isLinked ? <Unlink size={12} /> : <Link2 size={12} />}
-                    </button>
-                  )}
+                )
+              })
+            )}
+            {/* Link picker for gateways NOT currently in the matched list. */}
+            {onToggleGateway && (() => {
+              const unlinkedGateways = paymentGateways.filter(g => {
+                const codes = g.country_codes || []
+                return codes.length > 0 && !codes.includes(country.iso2)
+              })
+              if (unlinkedGateways.length === 0) return null
+              return (
+                <div className="pt-2 mt-2" style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                  <label className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">
+                    Add another gateway
+                  </label>
+                  <select className={fieldClass}
+                    value=""
+                    onChange={e => {
+                      const id = Number(e.target.value)
+                      const g = paymentGateways.find(p => p.id === id)
+                      if (g) onToggleGateway(g)
+                      e.target.value = ''
+                    }}>
+                    <option value="">Pick a gateway to link...</option>
+                    {unlinkedGateways.map(g => (
+                      <option key={g.id} value={g.id}>{g.name} ({g.code})</option>
+                    ))}
+                  </select>
                 </div>
               )
-            })
-          )
+            })()}
+          </>
         )}
         {tab === 'tenants' && (
           tenantsForCountry.length === 0 ? (
@@ -1380,6 +1466,75 @@ export default function SaaSCountriesPage() {
         },
       })
     }
+  }
+
+  /** Link / change a country's default currency. */
+  const promptLinkCurrency = (country: Country, newCurrencyId: number) => {
+    const next = currencies.find(c => c.id === newCurrencyId)
+    if (!next) return
+    const previousCode = country.default_currency_code || 'none'
+    setLinkAction({
+      title: previousCode === 'none'
+        ? `Link ${next.code} as default currency for ${country.name}?`
+        : `Change ${country.name}'s currency from ${previousCode} to ${next.code}?`,
+      description: previousCode === 'none'
+        ? `${country.name} will use ${next.code} (${next.name}) as its default currency. Tenants enabled in this country will get ${next.code} as the default for new transactions.`
+        : `${country.name} currently uses ${previousCode}. After this change, new transactions will default to ${next.code} (${next.name}). Existing records keep their currency.`,
+      confirmText: previousCode === 'none' ? 'Link currency' : 'Change currency',
+      variant: previousCode === 'none' ? 'info' : 'warning',
+      run: async () => {
+        await erpFetch(`reference/countries/${country.id}/`, {
+          method: 'PATCH',
+          body: JSON.stringify({ default_currency: newCurrencyId }),
+        })
+        toast.success(`${next.code} ${previousCode === 'none' ? 'linked to' : 'set as default for'} ${country.name}`)
+        await fetchAll()
+      },
+    })
+  }
+
+  /** Link / change a country's e-invoice standard (creates tax template if needed). */
+  const promptLinkEInvoice = (country: Country, newEiId: number) => {
+    const ei = eInvoiceStandards.find(s => s.id === newEiId)
+    if (!ei) return
+    const tpl = taxTemplates.find(t => t.country_code === country.iso2 || t.country_code === country.iso3)
+    const previousEi = tpl?.e_invoice_standard
+      ? eInvoiceStandards.find(s => s.id === tpl.e_invoice_standard)
+      : null
+    setLinkAction({
+      title: previousEi
+        ? `Change ${country.name}'s e-invoice standard from ${previousEi.code} to ${ei.code}?`
+        : `Link ${ei.code} as e-invoice standard for ${country.name}?`,
+      description: previousEi
+        ? `${country.name} currently uses ${previousEi.code} (${previousEi.name}). Switching to ${ei.code} (${ei.name}) means tenants in ${country.name} will configure credentials for the new standard. Existing submitted invoices keep their original standard.`
+        : `${country.name} will use ${ei.code} (${ei.name}) for e-invoicing. Tenants in ${country.name} will be prompted to configure ${ei.code} credentials. ${tpl ? '' : 'A tax template will be auto-created for this country.'}`,
+      confirmText: previousEi ? 'Change standard' : 'Link standard',
+      variant: previousEi ? 'warning' : 'info',
+      run: async () => {
+        const currCode = currencies.find(c => c.id === country.default_currency)?.code
+          || country.default_currency_code
+          || 'USD'
+        if (tpl) {
+          await erpFetch(`finance/country-tax-templates/${tpl.id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ e_invoice_standard: newEiId }),
+          })
+        } else {
+          await erpFetch('finance/country-tax-templates/', {
+            method: 'POST',
+            body: JSON.stringify({
+              country_code: country.iso2,
+              country_name: country.name,
+              currency_code: currCode,
+              e_invoice_standard: newEiId,
+              einvoice_enforcement: 'OPTIONAL',
+            }),
+          })
+        }
+        toast.success(`${ei.code} linked to ${country.name}`)
+        await fetchAll()
+      },
+    })
   }
 
   /** Unlink the e-invoice standard from a country's tax template. */
@@ -1714,8 +1869,10 @@ export default function SaaSCountriesPage() {
               onClose={onClose}
               onPin={onPin ? () => onPin(node) : undefined}
               onUnlinkCurrency={() => promptUnlinkCurrency(country)}
+              onLinkCurrency={(id) => promptLinkCurrency(country, id)}
               onToggleGateway={(g) => promptToggleGateway(country, g)}
               onUnlinkEInvoice={(tpl, eiName) => promptUnlinkEInvoice(country, tpl, eiName)}
+              onLinkEInvoice={(id) => promptLinkEInvoice(country, id)}
             />
           )
         }}

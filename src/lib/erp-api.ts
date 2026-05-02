@@ -329,11 +329,24 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             // - 404s on tenant-scoped endpoints (organizations/me, inventory/warehouses, modules, etc.)
             const isContextError = errorText.includes("No organization context") || errorText.includes("No tenant context");
             const isSaaS = !context;
+            // Tenant-scoped path prefixes — every endpoint behind these requires a
+            // tenant context, so a 404 on the SaaS root domain is expected and
+            // shouldn't pollute the console.
+            const tenantScopedPrefixes = [
+                'inventory/',
+                'crm/',
+                'purchases/',
+                'finance/',
+                'sales/',
+                'pos/',
+                'ecommerce/',
+                'hr/',
+            ];
             const isExpectedSaaS404 = isSaaS && response.status === 404 && (
                 path.includes('organizations/me') ||
-                path.includes('inventory/warehouses') ||
                 path.includes('business-types') ||
-                path.includes('modules/')
+                path.includes('modules/') ||
+                tenantScopedPrefixes.some(p => path.startsWith(p))
             );
 
             if (response.status !== 401 && response.status !== 403) {
