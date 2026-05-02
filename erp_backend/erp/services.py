@@ -277,6 +277,111 @@ class ConfigurationService:
         organization.save(update_fields=['settings'])
         return True
 
+    # ──────────────────────────────────────────────────────────────────
+    # Analytics Profiles — per-page configuration overrides.
+    # Stored in Organization.settings under two keys:
+    #   - 'analytics_profiles': list[profile dict]
+    #   - 'active_analytics_profile_per_page': {page_context: profile_id|None}
+    # ──────────────────────────────────────────────────────────────────
+    @staticmethod
+    def _load_analytics_profiles(organization):
+        profiles = organization.settings.get('analytics_profiles') or []
+        active = organization.settings.get('active_analytics_profile_per_page') or {}
+        if not isinstance(profiles, list):
+            profiles = []
+        if not isinstance(active, dict):
+            active = {}
+        return profiles, active
+
+    @staticmethod
+    def _save_analytics_profiles(organization, profiles, active):
+        if not organization.settings:
+            organization.settings = {}
+        organization.settings['analytics_profiles'] = profiles
+        organization.settings['active_analytics_profile_per_page'] = active
+        organization.save(update_fields=['settings'])
+
+    @staticmethod
+    def get_analytics_profiles(organization):
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        # Stamp is_active for convenience based on the active map.
+        for p in profiles:
+            ctx = p.get('page_context')
+            p['is_active'] = bool(ctx and active.get(ctx) == p.get('id'))
+        return {
+            'profiles': profiles,
+            'active_profile_per_page': active,
+        }
+
+    @staticmethod
+    def resolve_analytics_config(organization, page_context):
+        """Merge defaults + active profile overrides for a page."""
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        active_id = active.get(page_context)
+        overrides = {}
+        if active_id:
+            for p in profiles:
+                if p.get('id') == active_id and p.get('page_context') == page_context:
+                    overrides = p.get('overrides') or {}
+                    break
+        # Defaults pulled from organization settings if present, else hard defaults.
+        defaults = organization.settings.get('analytics_defaults') or {}
+        return {**defaults, **overrides}
+
+    @staticmethod
+    def create_analytics_profile(organization, name, page_context, overrides):
+        import uuid
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        profile = {
+            'id': str(uuid.uuid4()),
+            'name': name,
+            'page_context': page_context,
+            'is_system': False,
+            'is_active': False,
+            'overrides': overrides or {},
+        }
+        profiles.append(profile)
+        ConfigurationService._save_analytics_profiles(organization, profiles, active)
+        return profile
+
+    @staticmethod
+    def update_analytics_profile(organization, profile_id, updates):
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        target = next((p for p in profiles if p.get('id') == profile_id), None)
+        if not target:
+            raise ValueError(f"Profile {profile_id} not found")
+        if 'name' in updates:
+            target['name'] = updates['name']
+        if 'overrides' in updates:
+            target['overrides'] = updates['overrides'] or {}
+        ConfigurationService._save_analytics_profiles(organization, profiles, active)
+        return {'profile': target}
+
+    @staticmethod
+    def delete_analytics_profile(organization, profile_id):
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        target = next((p for p in profiles if p.get('id') == profile_id), None)
+        if not target:
+            raise ValueError(f"Profile {profile_id} not found")
+        if target.get('is_system'):
+            raise ValueError("Cannot delete a system profile")
+        profiles = [p for p in profiles if p.get('id') != profile_id]
+        # Clear active reference if it pointed here.
+        active = {k: (None if v == profile_id else v) for k, v in active.items()}
+        ConfigurationService._save_analytics_profiles(organization, profiles, active)
+        return True
+
+    @staticmethod
+    def set_active_profile(organization, page_context, profile_id):
+        profiles, active = ConfigurationService._load_analytics_profiles(organization)
+        if profile_id is not None:
+            match = next((p for p in profiles if p.get('id') == profile_id and p.get('page_context') == page_context), None)
+            if not match:
+                raise ValueError(f"Profile {profile_id} not found for {page_context}")
+        active[page_context] = profile_id
+        ConfigurationService._save_analytics_profiles(organization, profiles, active)
+        return {'page_context': page_context, 'active_profile_id': profile_id}
+
 
 # =============================================================================
 # BACKWARD-COMPATIBLE RE-EXPORTS (Safe)
