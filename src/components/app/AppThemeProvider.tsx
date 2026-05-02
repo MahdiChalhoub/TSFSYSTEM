@@ -43,8 +43,13 @@ const LOCAL_STORAGE_KEY = 'tsfsystem-app-theme';
 const LOCAL_STORAGE_FULL = 'tsfsystem-theme-full'; // Full preset cache
 const DEFAULT_SLUG = 'midnight-pro';
 
-// ── Default configs (used before backend loads) ──────────────────
-const DEFAULT_COLORS: ColorScheme = {
+// ── Default configs (used before backend loads, OR when a theme is missing
+//    its light/dark variant). Without a per-mode default, the fallback at
+//    line ~297 (`presetData?.colors?.[effectiveMode] || DEFAULT_COLORS`)
+//    silently returned dark colors even after the user toggled to light —
+//    the `.dark` class came off `<html>` correctly but the CSS variables
+//    stayed dark, so visually nothing changed. ──
+const DEFAULT_DARK_COLORS: ColorScheme = {
     primary: '#10B981',
     primaryDark: '#059669',
     bg: '#020617',
@@ -54,6 +59,24 @@ const DEFAULT_COLORS: ColorScheme = {
     textMuted: '#94A3B8',
     border: 'rgba(255, 255, 255, 0.08)',
 };
+
+const DEFAULT_LIGHT_COLORS: ColorScheme = {
+    primary: '#10B981',
+    primaryDark: '#059669',
+    bg: '#FFFFFF',
+    surface: '#F8FAFC',
+    surfaceHover: 'rgba(15, 23, 42, 0.04)',
+    text: '#0F172A',
+    textMuted: '#64748B',
+    border: 'rgba(15, 23, 42, 0.08)',
+};
+
+// Backwards-compat alias — earlier code referenced `DEFAULT_COLORS` directly.
+const DEFAULT_COLORS = DEFAULT_DARK_COLORS;
+
+function defaultColorsFor(mode: 'dark' | 'light'): ColorScheme {
+    return mode === 'light' ? DEFAULT_LIGHT_COLORS : DEFAULT_DARK_COLORS;
+}
 
 const DEFAULT_LAYOUT: LayoutConfig = {
     density: 'medium',
@@ -273,7 +296,7 @@ export function AppThemeProvider({
     // ⚡ FOUC Prevention: apply cached theme IMMEDIATELY (before useEffect fires)
     if (initial.theme && typeof window !== 'undefined') {
         const effectiveMode = initial.colorMode === 'auto' ? getSystemColorMode() : initial.colorMode;
-        const colors = initial.theme.presetData?.colors?.[effectiveMode] || DEFAULT_COLORS;
+        const colors = initial.theme.presetData?.colors?.[effectiveMode] || defaultColorsFor(effectiveMode);
         const layout = initial.theme.presetData?.layout || DEFAULT_LAYOUT;
         const components = initial.theme.presetData?.components || DEFAULT_COMPONENTS;
         const navigation = initial.theme.presetData?.navigation || DEFAULT_NAVIGATION;
@@ -292,9 +315,9 @@ export function AppThemeProvider({
 
     // ── Compute active configs ──
     const activeColors = useMemo<ColorScheme>(() => {
-        if (!currentTheme) return DEFAULT_COLORS;
         const effectiveMode = colorMode === 'auto' ? getSystemColorMode() : colorMode;
-        return currentTheme.presetData?.colors?.[effectiveMode] || DEFAULT_COLORS;
+        if (!currentTheme) return defaultColorsFor(effectiveMode);
+        return currentTheme.presetData?.colors?.[effectiveMode] || defaultColorsFor(effectiveMode);
     }, [currentTheme, colorMode]);
 
     const activeLayout = useMemo<LayoutConfig>(() => currentTheme?.presetData?.layout || DEFAULT_LAYOUT, [currentTheme]);
@@ -330,7 +353,7 @@ export function AppThemeProvider({
             setError(null);
 
             // Client-side fetch via proxy
-            const response = await fetch('/api/proxy/ui-themes', {
+            const response = await fetch('/api/proxy/ui-themes/', {
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -393,7 +416,7 @@ export function AppThemeProvider({
             .catch(() => { /* non-fatal */ });
 
         // Activate on backend
-        fetch(`/api/proxy/ui-themes/${theme.id}/activate`, {
+        fetch(`/api/proxy/ui-themes/${theme.id}/activate/`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -405,7 +428,7 @@ export function AppThemeProvider({
         setColorModeState(newMode);
 
         // Persist
-        fetch('/api/proxy/ui-themes/toggle-mode', {
+        fetch('/api/proxy/ui-themes/toggle-mode/', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -423,7 +446,7 @@ export function AppThemeProvider({
 
     // ── CRUD for settings  ──
     const createThemeFn = useCallback(async (input: CreateThemeInput): Promise<ThemePreset> => {
-        const res = await fetch('/api/proxy/ui-themes/create', {
+        const res = await fetch('/api/proxy/ui-themes/create/', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input),
@@ -436,7 +459,7 @@ export function AppThemeProvider({
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updateThemeFn = useCallback(async (id: number, updates: Partial<ThemePreset>): Promise<ThemePreset> => {
-        const res = await fetch(`/api/proxy/ui-themes/${id}/update`, {
+        const res = await fetch(`/api/proxy/ui-themes/${id}/update/`, {
             method: 'PATCH', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updates),
@@ -490,7 +513,7 @@ export function AppThemeProvider({
     }, [currentTheme, updateThemeFn]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const deleteThemeFn = useCallback(async (id: number): Promise<void> => {
-        const res = await fetch(`/api/proxy/ui-themes/${id}/delete`, {
+        const res = await fetch(`/api/proxy/ui-themes/${id}/delete/`, {
             method: 'DELETE', credentials: 'include',
         });
         if (!res.ok) throw new Error('Failed to delete theme');
@@ -500,7 +523,7 @@ export function AppThemeProvider({
     const exportThemeFn = useCallback(async (slug: string): Promise<string> => {
         const theme = allThemes.find(t => t.slug === slug);
         if (!theme) throw new Error('Theme not found');
-        const res = await fetch(`/api/proxy/ui-themes/${theme.id}/export`, { credentials: 'include' });
+        const res = await fetch(`/api/proxy/ui-themes/${theme.id}/export/`, { credentials: 'include' });
         if (!res.ok) throw new Error('Export failed');
         const data = await res.json();
         return JSON.stringify(data, null, 2);
@@ -508,7 +531,7 @@ export function AppThemeProvider({
 
     const importThemeFn = useCallback(async (json: string): Promise<ThemePreset> => {
         const themeData = JSON.parse(json);
-        const res = await fetch('/api/proxy/ui-themes/import', {
+        const res = await fetch('/api/proxy/ui-themes/import/', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(themeData),
