@@ -325,7 +325,11 @@ class PurchaseService:
                         # Accumulate custom tax liabilities for GL posting
                         if tl.get('type') == 'CUSTOM' and tl.get('custom_tax_rule_id'):
                             try:
-                                from erp.connector_registry import connector
+                                # connector is already imported at module level
+                                # (line 1). Re-importing here as a local would
+                                # turn the entire enclosing function's `connector`
+                                # name into a local, raising UnboundLocalError
+                                # at lines 173-201 BEFORE this branch ever runs.
                                 CustomTaxRule = connector.require(
                                     'finance.tax_rules.get_custom_model', org_id=organization.id
                                 )
@@ -578,7 +582,8 @@ class PurchaseService:
             try:
                 fne_config = getattr(_ctx, 'einvoice_config', None)
                 if fne_config and order.scope == 'OFFICIAL' and not _supplier_profile.vat_registered:
-                    from erp.connector_registry import connector
+                    # connector imported at module level — see comment near
+                    # line 328 for why a local re-import here would break.
                     FNEService = connector.require('finance.fne.get_service', org_id=order.organization_id)
                     FNELineItem = connector.require('finance.fne.get_line_item_class', org_id=order.organization_id)
                     FNEInvoiceRequest = connector.require('finance.fne.get_request_class', org_id=order.organization_id)
