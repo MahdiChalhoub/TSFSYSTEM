@@ -32,22 +32,51 @@ class TenantOwnedModel(models.Model):
         db_column='tenant_id', # Standard multi-tenant column name
     )
 
+    # ── DEPRECATED ALIASES — do not introduce new uses ──
+    # `tenant` and `tenant_id` are Python @properties only — they are NOT
+    # queryable Django fields. Filtering on them (e.g. `.filter(tenant=...)`)
+    # raises FieldError at runtime, which is then often silently swallowed
+    # by surrounding try/except blocks (caused real bugs in
+    # apps.inventory.services.procurement_status_service — see commit history).
+    #
+    # Standard going forward: use `organization` and `organization_id`
+    # everywhere. These aliases stay only to keep already-working
+    # legacy callers from breaking; they will be removed once all callers
+    # are migrated. Each access logs a one-line warning so we can find them.
+    import warnings as _warnings
+    import logging as _logging
+    _legacy_logger = _logging.getLogger('tenancy.deprecated')
+
     @property
     def tenant(self):
-        """Compatibility property for 'tenant' access."""
+        type(self)._legacy_logger.debug(
+            'DEPRECATED: %s.tenant accessed; use .organization',
+            type(self).__name__,
+        )
         return self.organization
 
     @tenant.setter
     def tenant(self, value):
+        type(self)._legacy_logger.debug(
+            'DEPRECATED: %s.tenant assigned; use .organization',
+            type(self).__name__,
+        )
         self.organization = value
 
     @property
     def tenant_id(self):
-        """Compatibility property for 'tenant_id' access."""
+        type(self)._legacy_logger.debug(
+            'DEPRECATED: %s.tenant_id accessed; use .organization_id',
+            type(self).__name__,
+        )
         return self.organization_id
 
     @tenant_id.setter
     def tenant_id(self, value):
+        type(self)._legacy_logger.debug(
+            'DEPRECATED: %s.tenant_id assigned; use .organization_id',
+            type(self).__name__,
+        )
         self.organization_id = value
 
     objects = TenantManager()
