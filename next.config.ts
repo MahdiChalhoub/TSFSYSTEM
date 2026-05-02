@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Prevent 308 redirects that strip trailing slashes — Django requires them
+  skipTrailingSlashRedirect: true,
   // Server action configuration
   experimental: {
     serverActions: {
