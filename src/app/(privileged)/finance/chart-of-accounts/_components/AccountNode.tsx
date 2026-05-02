@@ -235,13 +235,34 @@ export const AccountNode = ({
                     )
                 })()}
 
-                {/* Balance — back to a single value, its own clean column. */}
-                <div
-                    className="w-28 text-right font-mono text-tp-md font-bold flex-shrink-0 tabular-nums"
-                    style={{ color: node.balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
-                >
-                    {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
+                {/* Balance — single number when no branch selected;
+                    twin "branch / tenant" stack when a branch IS selected
+                    AND the account's scope_mode is branch-split or located.
+                    Tenant-wide accounts always show one number (their
+                    branch balance == tenant balance by definition). */}
+                {(() => {
+                    const fmt = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                    const balance = Number(node.balance) || 0
+                    const tenant = node.tenant_balance != null ? Number(node.tenant_balance) : null
+                    const branch = node.branch_balance != null ? Number(node.branch_balance) : null
+                    const scopeMode = (node.scope_mode as 'tenant_wide' | 'branch_split' | 'branch_located' | undefined) || deriveScopeMode(node)
+                    const showTwin = branch != null && tenant != null && scopeMode !== 'tenant_wide'
+                    return (
+                        <div className="w-28 text-right flex-shrink-0 flex flex-col items-end leading-tight">
+                            <span className="font-mono text-tp-md font-bold tabular-nums"
+                                style={{ color: balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}>
+                                {fmt(balance)}
+                            </span>
+                            {showTwin && (
+                                <span className="font-mono text-[9px] tabular-nums opacity-60 mt-0.5"
+                                    style={{ color: 'var(--app-muted-foreground)' }}
+                                    title={`Tenant total = ${fmt(tenant!)} (sum across all branches)`}>
+                                    of {fmt(tenant!)}
+                                </span>
+                            )}
+                        </div>
+                    )
+                })()}
 
                 {/* Actions */}
                 <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-16 justify-end">

@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-    Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag
+    Award, Pencil, Trash2, ExternalLink, Globe, ChevronRight, Loader2, Package, Flag,
+    FolderTree, Tag
 } from 'lucide-react'
 import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
@@ -32,6 +33,9 @@ export function BrandRow({
     const [products, setProducts] = useState<ProductRow[] | null>(null)
     const [loading, setLoading] = useState(false)
     const [openCountries, setOpenCountries] = useState<Set<string>>(new Set())
+    const [openCategories, setOpenCategories] = useState<Set<string>>(new Set())
+    const [openAttrs, setOpenAttrs] = useState<Set<string>>(new Set())
+    const [openFacets, setOpenFacets] = useState<Set<string>>(new Set(['country']))
 
     const cats = brand.categories?.length || 0
     const countries = brand.countries?.length || 0
@@ -100,12 +104,92 @@ export function BrandRow({
         })
     }, [products])
 
+    // Group products by category. Products with no category FK fall
+    // under "Uncategorized". Mirrors byCountry's Universal pattern.
+    const byCategory = useMemo(() => {
+        if (!products) return []
+        const map = new Map<string, { id: number | null, name: string, items: ProductRow[] }>()
+        products.forEach(p => {
+            const key = String(p.category ?? 'none')
+            if (!map.has(key)) {
+                map.set(key, {
+                    id: p.category ?? null,
+                    name: p.category_name || (p.category ? '—' : 'Uncategorized'),
+                    items: []
+                })
+            }
+            map.get(key)!.items.push(p)
+        })
+        return [...map.values()].sort((a, b) => {
+            if (a.id === null) return 1  // Uncategorized last
+            if (b.id === null) return -1
+            return a.name.localeCompare(b.name)
+        })
+    }, [products])
+
+    // Group products by attribute value. One product can carry multiple
+    // attribute values, so it appears under each — that's intentional
+    // (browsing by attribute is the point).
+    const byAttribute = useMemo(() => {
+        if (!products) return []
+        const map = new Map<string, { name: string, items: ProductRow[] }>()
+        products.forEach(p => {
+            const attrs = p.attribute_value_names || []
+            if (attrs.length === 0) {
+                if (!map.has('__none__')) {
+                    map.set('__none__', { name: 'No attributes', items: [] })
+                }
+                map.get('__none__')!.items.push(p)
+                return
+            }
+            attrs.forEach(attr => {
+                if (!map.has(attr)) map.set(attr, { name: attr, items: [] })
+                map.get(attr)!.items.push(p)
+            })
+        })
+        return [...map.entries()]
+            .map(([key, v]) => ({ key, ...v }))
+            .sort((a, b) => {
+                if (a.key === '__none__') return 1
+                if (b.key === '__none__') return -1
+                return a.name.localeCompare(b.name)
+            })
+    }, [products])
+
     const toggleCountry = useCallback((countryId: number | null) => {
         const key = String(countryId)
         setOpenCountries(prev => {
             const next = new Set(prev)
             if (next.has(key)) next.delete(key)
             else next.add(key)
+            return next
+        })
+    }, [])
+
+    const toggleCategory = useCallback((categoryId: number | null) => {
+        const key = String(categoryId)
+        setOpenCategories(prev => {
+            const next = new Set(prev)
+            if (next.has(key)) next.delete(key)
+            else next.add(key)
+            return next
+        })
+    }, [])
+
+    const toggleAttr = useCallback((attrKey: string) => {
+        setOpenAttrs(prev => {
+            const next = new Set(prev)
+            if (next.has(attrKey)) next.delete(attrKey)
+            else next.add(attrKey)
+            return next
+        })
+    }, [])
+
+    const toggleFacet = useCallback((facetKey: string) => {
+        setOpenFacets(prev => {
+            const next = new Set(prev)
+            if (next.has(facetKey)) next.delete(facetKey)
+            else next.add(facetKey)
             return next
         })
     }, [])
@@ -302,14 +386,57 @@ export function BrandRow({
                 </div>
             )}
 
-            {/* Country + product tree */}
-            {isOpen && products && byCountry.map(country => {
-                const countryKey = String(country.id)
-                const isCountryOpen = openCountries.has(countryKey)
-                const countryProducts = country.items
+            {/* ── FACET 1: BY CATEGORY ── */}
+            {isOpen && products && products.length > 0 && (
+                <FacetSection
+                    label="By Category"
+                    icon={<FolderTree size={13} style={{ color: 'var(--app-info)' }} />}
+                    color="var(--app-info)"
+                    isOpen={openFacets.has('category')}
+                    onToggle={() => toggleFacet('category')}
+                    count={byCategory.length}
+                    selectable={selectable}>
+                    {byCategory.map(cat => {
+                        const catKey = String(cat.id)
+                        const catOpen = openCategories.has(catKey)
+                        return (
+                            <div key={`cat-${catKey}`}>
+                                <FacetValueRow
+                                    label={cat.name}
+                                    isOpen={catOpen}
+                                    onToggle={() => toggleCategory(cat.id)}
+                                    count={cat.items.length}
+                                    indent={28}
+                                    selectable={selectable}
+                                    iconColor="var(--app-info)"
+                                    icon={<FolderTree size={12} />}
+                                    isMuted={cat.id === null}
+                                />
+                                {catOpen && cat.items.map(p => (
+                                    <ProductLeaf key={`cat-${cat.id}-p-${p.id}`} product={p} compact={compact} selectable={selectable} indent={48} />
+                                ))}
+                            </div>
+                        )
+                    })}
+                </FacetSection>
+            )}
 
-                return (
-                    <div key={countryKey}>
+            {/* ── FACET 2: BY COUNTRY ── */}
+            {isOpen && products && products.length > 0 && (
+                <FacetSection
+                    label="By Country"
+                    icon={<Globe size={13} style={{ color: 'var(--app-warning)' }} />}
+                    color="var(--app-warning)"
+                    isOpen={openFacets.has('country')}
+                    onToggle={() => toggleFacet('country')}
+                    count={byCountry.length}
+                    selectable={selectable}>
+                    {byCountry.map(country => {
+                        const countryKey = String(country.id)
+                        const isCountryOpen = openCountries.has(countryKey)
+                        const countryProducts = country.items
+                        return (
+                            <div key={`country-${countryKey}`}>
                         {/* Level 1 — Country row */}
                         <div
                             className="group flex items-stretch relative transition-colors duration-150 cursor-pointer hover:bg-app-surface-hover"
@@ -462,6 +589,212 @@ export function BrandRow({
                     </div>
                 )
             })}
+                </FacetSection>
+            )}
+
+            {/* ── FACET 3: BY ATTRIBUTE ── */}
+            {isOpen && products && products.length > 0 && (
+                <FacetSection
+                    label="By Attribute"
+                    icon={<Tag size={13} style={{ color: 'var(--app-success)' }} />}
+                    color="var(--app-success)"
+                    isOpen={openFacets.has('attribute')}
+                    onToggle={() => toggleFacet('attribute')}
+                    count={byAttribute.length}
+                    selectable={selectable}>
+                    {byAttribute.map(attr => {
+                        const attrOpen = openAttrs.has(attr.key)
+                        return (
+                            <div key={`attr-${attr.key}`}>
+                                <FacetValueRow
+                                    label={attr.name}
+                                    isOpen={attrOpen}
+                                    onToggle={() => toggleAttr(attr.key)}
+                                    count={attr.items.length}
+                                    indent={28}
+                                    selectable={selectable}
+                                    iconColor="var(--app-success)"
+                                    icon={<Tag size={12} />}
+                                    isMuted={attr.key === '__none__'}
+                                />
+                                {attrOpen && attr.items.map(p => (
+                                    <ProductLeaf key={`attr-${attr.key}-p-${p.id}`} product={p} compact={compact} selectable={selectable} indent={48} />
+                                ))}
+                            </div>
+                        )
+                    })}
+                </FacetSection>
+            )}
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  Helper rows — one place for visual structure of the tree
+ *  so the three facets stay consistent.
+ * ═══════════════════════════════════════════════════════════ */
+
+function FacetSection({
+    label, icon, color, isOpen, onToggle, count, selectable, children
+}: {
+    label: string
+    icon: React.ReactNode
+    color: string
+    isOpen: boolean
+    onToggle: () => void
+    count: number
+    selectable?: boolean
+    children: React.ReactNode
+}) {
+    return (
+        <>
+            <div
+                className="group flex items-stretch relative cursor-pointer transition-colors duration-150 hover:bg-app-surface-hover"
+                onClick={onToggle}
+                style={{
+                    paddingLeft: '12px',
+                    background: 'color-mix(in srgb, var(--app-border) 15%, transparent)',
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                }}>
+                {selectable && <div className="w-9 flex-shrink-0" />}
+                <div className="flex items-center gap-2 flex-1 min-w-0 py-1.5 pl-3 pr-3">
+                    <ChevronRight
+                        size={12}
+                        className="flex-shrink-0 transition-transform duration-200"
+                        style={{ color, transform: isOpen ? 'rotate(90deg)' : 'none' }} />
+                    {icon}
+                    <span className="text-tp-xxs font-black uppercase tracking-widest"
+                        style={{ color }}>
+                        {label}
+                    </span>
+                    <span className="ml-auto text-tp-xxs font-bold px-1.5 py-[1px] rounded-full"
+                        style={{
+                            background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                            color
+                        }}>
+                        {count}
+                    </span>
+                </div>
+            </div>
+            {isOpen && children}
+        </>
+    )
+}
+
+function FacetValueRow({
+    label, isOpen, onToggle, count, indent, selectable, iconColor, icon, isMuted
+}: {
+    label: string
+    isOpen: boolean
+    onToggle: () => void
+    count: number
+    indent: number
+    selectable?: boolean
+    iconColor: string
+    icon: React.ReactNode
+    isMuted?: boolean
+}) {
+    return (
+        <div
+            className="group flex items-stretch relative cursor-pointer transition-colors duration-150 hover:bg-app-surface-hover"
+            onClick={onToggle}
+            style={{
+                paddingLeft: '12px',
+                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)',
+            }}>
+            {selectable && <div className="w-9 flex-shrink-0" />}
+            <div className="flex items-center gap-2 flex-1 min-w-0 py-2 pr-3"
+                style={{ paddingLeft: `${indent}px` }}>
+                <ChevronRight
+                    size={13}
+                    className="flex-shrink-0 transition-transform duration-200"
+                    style={{ color: 'var(--app-text-faint)', transform: isOpen ? 'rotate(90deg)' : 'none' }} />
+                <span style={{ color: iconColor }}>{icon}</span>
+                <span className={`text-tp-sm font-semibold ${isMuted ? 'italic' : ''}`}
+                    style={{ color: isMuted ? 'var(--app-text-faint)' : 'var(--app-foreground)' }}>
+                    {label}
+                </span>
+                <span className="ml-auto text-tp-xxs font-semibold px-2 py-0.5 rounded-full"
+                    style={{
+                        background: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
+                        color: iconColor
+                    }}>
+                    {count}
+                </span>
+            </div>
+        </div>
+    )
+}
+
+function ProductLeaf({
+    product, compact, selectable, indent
+}: {
+    product: ProductRow
+    compact?: boolean
+    selectable?: boolean
+    indent: number
+}) {
+    return (
+        <div
+            className="group flex items-stretch relative transition-colors duration-150 hover:bg-app-surface-hover"
+            style={{
+                paddingLeft: '12px',
+                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
+            }}>
+            {selectable && <div className="w-9 flex-shrink-0" />}
+            <div className="relative flex items-center gap-2 flex-1 min-w-0 py-2 pr-3"
+                style={{ paddingLeft: `${indent}px` }}>
+                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-success) 12%, transparent)',
+                        color: 'var(--app-success)',
+                    }}>
+                    <Package size={12} />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-tp-sm font-semibold text-app-foreground truncate">
+                        {product.name}
+                    </p>
+                    {product.sku && (
+                        <p className="text-tp-xxs font-mono text-app-muted-foreground mt-0.5">
+                            {product.sku}
+                        </p>
+                    )}
+                </div>
+                {product.attribute_value_names && product.attribute_value_names.length > 0 && (
+                    <div className="hidden sm:flex gap-1 flex-wrap flex-shrink-0">
+                        {product.attribute_value_names.slice(0, 2).map((attr, idx) => (
+                            <span key={idx} className="text-tp-xxs px-2 py-1 rounded-full flex-shrink-0"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
+                                    color: 'var(--app-info)'
+                                }}>
+                                {attr}
+                            </span>
+                        ))}
+                        {product.attribute_value_names.length > 2 && (
+                            <span className="text-tp-xxs px-2 py-1 rounded-full flex-shrink-0"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-text-faint) 15%, transparent)',
+                                    color: 'var(--app-text-faint)'
+                                }}>
+                                +{product.attribute_value_names.length - 2}
+                            </span>
+                        )}
+                    </div>
+                )}
+                {!compact && product.selling_price_ttc != null && (
+                    <span className="hidden sm:block text-tp-xs font-semibold tabular-nums flex-shrink-0"
+                        style={{ color: 'var(--app-foreground)' }}>
+                        {Number(product.selling_price_ttc).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </span>
+                )}
+                <Link href={`/inventory/products/${product.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-app-muted-foreground hover:text-app-foreground" title="Open product">
+                    <ExternalLink size={12} />
+                </Link>
+            </div>
         </div>
     )
 }

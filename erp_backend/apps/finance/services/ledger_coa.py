@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import transaction, models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from apps.finance.services.audit_service import ForensicAuditService
 
 from apps.finance.models import JournalEntry, JournalEntryLine, ChartOfAccount, FinancialEvent
@@ -538,7 +538,25 @@ class LedgerCOAMixin:
 
 
     @staticmethod
-    def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False, site_id=None):
+    def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False, site_id=None, branch_id=None):
+        """Compute per-account balances + parent rollups.
+
+        branch_id (optional): when set, the user has picked a Branch in
+        the BranchSwitcher. We then compute TWO balance aggregations:
+            - tenant_balance: across every site (no warehouse filter)
+            - branch_balance: filtered to journal entries from warehouses
+              belonging to that branch (the branch warehouse itself + every
+              child warehouse, so a Store under "Siège Principal" is included).
+
+        Per-account balance picking — uses ChartOfAccount.scope_mode:
+            - tenant_wide   → tenant_balance (AR/AP/Bank/Equity never split)
+            - branch_split  → branch_balance (Revenue/Expense/COGS)
+            - branch_located → branch_balance (Inventory/WIP)
+
+        site_id (legacy): when set without branch_id, restricts every
+        account's balance to that one warehouse — preserves the old
+        site-filter behavior callers may rely on.
+        """
         from apps.finance.models import ChartOfAccount, JournalEntryLine
         qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')
         if not include_inactive:
@@ -547,40 +565,85 @@ class LedgerCOAMixin:
         if scope == 'OFFICIAL':
             qs = qs.filter(is_internal=False)
 
-        # SQL Aggregation (Massive speed gain over manual mapping)
-        balance_qs = JournalEntryLine.objects.filter(
+        # ── Resolve branch → list of warehouse ids ────────────────────
+        # A "branch" is a Warehouse with location_type='BRANCH'. Its
+        # children (Store / Warehouse rows whose `parent_id` points at
+        # the branch) belong to the same branch for accounting purposes.
+        branch_warehouse_ids = None
+        if branch_id:
+            try:
+                from apps.inventory.models import Warehouse
+                branch_warehouse_ids = list(
+                    Warehouse.objects.filter(
+                        Q(id=branch_id) | Q(parent_id=branch_id)
+                    ).values_list('id', flat=True)
+                )
+                if not branch_warehouse_ids:
+                    # Branch id passed but resolves to nothing — treat as
+                    # "no match" so balance is zero rather than tenant-wide.
+                    branch_warehouse_ids = [-1]
+            except Exception:
+                branch_warehouse_ids = None
+
+        # ── Base aggregation queryset (shared by tenant + branch sums) ──
+        base_qs = JournalEntryLine.objects.filter(
             organization=organization,
-            journal_entry__status='POSTED'
+            journal_entry__status='POSTED',
         )
         if scope == 'OFFICIAL':
-            balance_qs = balance_qs.filter(journal_entry__scope='OFFICIAL')
-        if site_id:
-            balance_qs = balance_qs.filter(journal_entry__site_id=site_id)
-        
-        balance_map = {
-            b['account_id']: Decimal(str(b['net'] or '0')) 
-            for b in balance_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+            base_qs = base_qs.filter(journal_entry__scope='OFFICIAL')
+        # Legacy: a single site_id filters the whole result, no per-scope split.
+        if site_id and not branch_id:
+            base_qs = base_qs.filter(journal_entry__site_id=site_id)
+
+        # ── Tenant-wide balance map (always computed) ─────────────────
+        tenant_map = {
+            b['account_id']: Decimal(str(b['net'] or '0'))
+            for b in base_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
         }
-        
+
+        # ── Branch-restricted balance map (only when branch_id is set) ──
+        branch_map: dict = {}
+        if branch_warehouse_ids:
+            branch_map = {
+                b['account_id']: Decimal(str(b['net'] or '0'))
+                for b in (
+                    base_qs
+                    .filter(journal_entry__site_id__in=branch_warehouse_ids)
+                    .values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+                )
+            }
+
         accounts = list(qs)
         account_map = {acc.id: acc for acc in accounts}
-        for acc in accounts: 
-            acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
+        for acc in accounts:
+            # Pick the right map based on scope_mode. For tenant-wide
+            # accounts we ALWAYS show the full sum; for split/located
+            # accounts we show the branch sum (or 0 when no entries hit
+            # the branch's warehouses).
+            if branch_warehouse_ids and acc.scope_mode != ChartOfAccount.SCOPE_TENANT_WIDE:
+                acc.temp_balance = branch_map.get(acc.id, Decimal('0'))
+            else:
+                acc.temp_balance = tenant_map.get(acc.id, Decimal('0'))
+            # Always expose tenant-wide for the UI to show "Branch / Total"
+            # twin-column views without a second round-trip.
+            acc.tenant_balance = tenant_map.get(acc.id, Decimal('0'))
+            acc.branch_balance = branch_map.get(acc.id, Decimal('0')) if branch_warehouse_ids else None
             acc.temp_children = []
-            
+
         roots = []
         for acc in accounts:
-            if acc.parent_id and acc.parent_id in account_map: 
+            if acc.parent_id and acc.parent_id in account_map:
                 account_map[acc.parent_id].temp_children.append(acc)
-            else: 
+            else:
                 roots.append(acc)
-                
+
         def rollup(node):
             node.rollup_balance = node.temp_balance + sum(rollup(child) for child in node.temp_children)
             return node.rollup_balance
-            
+
         for root in roots: rollup(root)
-        
+
         return accounts
 
 

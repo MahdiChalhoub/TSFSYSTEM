@@ -42,12 +42,24 @@ class COASetupMixin:
 
         include_inactive = request.query_params.get('include_inactive') == 'true'
         site_id = request.query_params.get('site_id') or None
+        # Branch filter — id of a Warehouse with location_type='BRANCH'.
+        # When set, balances on accounts whose scope_mode is branch_split
+        # / branch_located are filtered to journal entries from that branch
+        # (and its child warehouses). Tenant-wide accounts ignore it.
+        branch_id_raw = request.query_params.get('branch_id') or None
+        try:
+            branch_id = int(branch_id_raw) if branch_id_raw else None
+        except (TypeError, ValueError):
+            branch_id = None
 
-        accounts = LedgerService.get_chart_of_accounts(organization, scope, include_inactive, site_id=site_id)
+        accounts = LedgerService.get_chart_of_accounts(
+            organization, scope, include_inactive,
+            site_id=site_id, branch_id=branch_id,
+        )
 
         data = []
         for acc in accounts:
-            data.append({
+            row = {
                 "id": acc.id,
                 "code": acc.code,
                 "name": acc.name,
@@ -67,7 +79,17 @@ class COASetupMixin:
                 "system_role": acc.system_role,
                 "balance": float(acc.balance),
                 "balance_official": float(acc.balance_official),
-            })
+                # ── Branch-aware fields (also exposed for twin-column UIs) ──
+                "scope_mode": acc.scope_mode,
+            }
+            # tenant_balance / branch_balance only present when branch_id
+            # was passed; lets the frontend render "Branch / Total" twins
+            # without inferring scope client-side.
+            if hasattr(acc, 'tenant_balance'):
+                row["tenant_balance"] = float(acc.tenant_balance)
+            if getattr(acc, 'branch_balance', None) is not None:
+                row["branch_balance"] = float(acc.branch_balance)
+            data.append(row)
         return Response(data)
 
     @action(detail=False, methods=['get'])

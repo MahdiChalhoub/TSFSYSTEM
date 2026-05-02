@@ -34,18 +34,31 @@ export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE
 
 export async function getChartOfAccounts(includeInactive: boolean = false, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     try {
-        const query = new URLSearchParams({
+        const params = new URLSearchParams({
             scope,
-            include_inactive: includeInactive.toString()
-        }).toString()
+            include_inactive: includeInactive.toString(),
+        })
+        // Forward the active branch from the BranchSwitcher cookie so the
+        // backend filters branch-split / branch-located balances to that
+        // branch's warehouses. Tenant-wide accounts are unaffected.
+        try {
+            const { cookies } = await import('next/headers')
+            const store = await cookies()
+            const b = store.get('tsf_active_branch')?.value
+            if (b) params.set('branch_id', b)
+        } catch { /* server context only — fine to skip */ }
+
         // no-store: the scope toggle must reflect immediately. The default 30s
         // revalidate window would let a stale OFFICIAL response stick around
         // after the user flips to INTERNAL, making the toggle look broken.
-        const result = await erpFetch(`coa/coa/?${query}`, { cache: 'no-store' })
+        const result = await erpFetch(`coa/coa/?${params}`, { cache: 'no-store' })
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),
-            directBalance: Number(acc.temp_balance ?? 0)
+            directBalance: Number(acc.temp_balance ?? 0),
+            // Pass through branch-aware fields when the backend included them.
+            tenant_balance: acc.tenant_balance != null ? Number(acc.tenant_balance) : null,
+            branch_balance: acc.branch_balance != null ? Number(acc.branch_balance) : null,
         })))
     } catch (error) {
         // Auth failure = stale/expired token. Force re-auth instead of
