@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import type { PurchaseLine } from '@/types/erp'
 import { createPurchaseOrder, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
 import {
@@ -71,6 +72,7 @@ export default function PurchaseForm({
     // existing PATCH-to-purchase-orders flow.
     const submitAction = isEdit ? updatePurchaseInvoice : createPurchaseOrder
     const [state, formAction, isPending] = useActionState(submitAction, initialState)
+    const router = useRouter()
     const searchRef = useRef<HTMLInputElement>(null)
 
     // Edit-mode prefill helper. `useState` initializers run once at mount,
@@ -177,7 +179,12 @@ export default function PurchaseForm({
     const recoverDraft = useCallback(() => {
         if (!draft) return
         const d = draft.data
-        setReference(d.reference || ''); setReferenceTouched(true)
+        // Clear the reference and mark untouched so the auto-peek effect
+        // refetches the *current* next-PO number from the backend. The
+        // saved-draft reference would otherwise be a stale peek that's
+        // already been consumed by another save.
+        setReference('')
+        setReferenceTouched(false)
         setSupplierRef(d.supplierRef || '')
         setDate(d.date || new Date().toISOString().split('T')[0])
         setDeliveryDate(d.deliveryDate || '')
@@ -354,10 +361,30 @@ export default function PurchaseForm({
 
     useEffect(() => {
         if (state.message && state.errors && Object.keys(state.errors).length === 0) {
-            // Successful save — wipe the draft so the next visit starts
-            // fresh instead of offering to recover an already-saved order.
+            // Successful save — wipe the draft and toast, then send the
+            // user to the PO list. Reset every field on the way so a
+            // back-button trip doesn't show the just-saved data.
             clearDraft()
             toast.success(state.message)
+            if (!isEdit) {
+                setReference(''); setReferenceTouched(false)
+                setSupplierRef('')
+                setLines([])
+                setSupplierId('')
+                setSelectedSiteId('')
+                setWarehouseId('')
+                setAssigneeId('')
+                setDriverId('')
+                setDate(new Date().toISOString().split('T')[0])
+                const t = new Date(); t.setDate(t.getDate() + 1)
+                setDeliveryDate(t.toISOString().split('T')[0])
+                // Navigate to the list so the user sees the new PO in
+                // context. router.push is client-side so it skips the
+                // server-action redirect path that previously kicked
+                // the user to /login when /purchases had a downstream
+                // 401.
+                router.push('/purchases')
+            }
         } else if (state.message) {
             // Surface which fields failed so the user knows what to fix
             // instead of staring at a generic "Some fields are missing or

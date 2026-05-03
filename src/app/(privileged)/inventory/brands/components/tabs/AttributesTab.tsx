@@ -77,6 +77,25 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
                 </p>
             </div>
 
+            {/* Why no Link / Unlink here — attributes are not stored on
+                the brand; they live on the product (Product.attribute_values
+                M2M). Editing this list means editing the products. We
+                surface that explicitly so the user understands the
+                missing buttons aren't a bug. */}
+            <div className="flex-shrink-0 mx-4 mt-2 mb-1 px-3 py-2 rounded-xl text-tp-xs leading-snug flex items-start gap-2"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-info) 6%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)',
+                    color: 'var(--app-info)',
+                }}>
+                <span className="flex-shrink-0 mt-0.5">ℹ️</span>
+                <span>
+                    Attributes belong to <strong>products</strong>, not to the brand directly. To
+                    add or remove an attribute value here, open one of the products below and edit
+                    its attribute values — the list will update automatically.
+                </span>
+            </div>
+
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="divide-y divide-app-border/30">
                     {rows.map(row => {

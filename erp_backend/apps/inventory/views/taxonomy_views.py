@@ -835,11 +835,18 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     def move_products(self, request):
         """
         Bulk-reassign products from one brand to another (or to unbranded).
-        Used by the delete-protection migration flow.
+        Used by both the delete-protection migration flow and the brand
+        side panel's Products tab "Move" bulk action.
 
         Body:
           source_brand_id (required): brand to move away from
           target_brand_id (optional): brand to assign — omit/null to clear brand
+          product_ids (optional): list[int] — when present, ONLY these
+            products are moved (subset move). Each id must currently
+            belong to source_brand_id; ids that don't are silently
+            ignored (the source filter handles that). When absent,
+            ALL products of source_brand_id are moved (the original
+            full-brand-merge behaviour the delete-protection flow uses).
           also_delete_source (default false): after successful migration,
             delete the source brand (only if empty now)
         """
@@ -849,6 +856,7 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
         source_id = request.data.get('source_brand_id')
         target_id = request.data.get('target_brand_id')
         also_delete = bool(request.data.get('also_delete_source'))
+        product_ids = request.data.get('product_ids')
         if not source_id:
             return Response({'error': 'source_brand_id is required'}, status=400)
 
@@ -865,9 +873,12 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
                 return Response({'error': 'Target brand not found'}, status=404)
 
         with transaction.atomic():
-            updated = Product.objects.filter(
-                brand=source, organization=organization
-            ).update(brand=target)
+            qs = Product.objects.filter(brand=source, organization=organization)
+            if isinstance(product_ids, list) and product_ids:
+                # Subset move — only the supplied ids that still belong
+                # to the source brand. Defends against stale UIs.
+                qs = qs.filter(id__in=product_ids)
+            updated = qs.update(brand=target)
             deleted = False
             if also_delete:
                 remaining = Product.objects.filter(brand=source, organization=organization).count()

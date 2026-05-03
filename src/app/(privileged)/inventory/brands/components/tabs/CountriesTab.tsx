@@ -12,6 +12,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Plus, Globe, Loader2, Unlink, Flag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
 
 interface CountryRow { id: number; name: string; code?: string }
@@ -169,9 +170,24 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
                                     <Globe size={13} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-tp-md font-semibold text-app-foreground truncate" style={{ color: 'var(--app-info)' }}>Universal</p>
-                                    <p className="text-tp-xxs font-medium text-app-muted-foreground">Products without a country FK — sold across all countries</p>
+                                    <p className="text-tp-md font-semibold truncate" style={{ color: 'var(--app-info)' }}>Universal</p>
+                                    {/* Universal isn't a real M2M link — it's
+                                        derived from products whose country FK
+                                        is NULL. To remove it, those products
+                                        need a country FK assigned (open the
+                                        product, set Country, save). The chip
+                                        will disappear automatically once no
+                                        product is country-less. */}
+                                    <p className="text-tp-xxs font-medium text-app-muted-foreground">
+                                        Derived from products with no country FK. To remove this row,
+                                        open each product and set its Country.
+                                    </p>
                                 </div>
+                                <Link href={`/inventory/products/?brand=${brandId}&country=`}
+                                    className="text-tp-xxs font-bold px-2 py-1 rounded-lg transition-colors flex-shrink-0"
+                                    style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                    Find products
+                                </Link>
                             </div>
                         )}
                         {linked.map(c => {

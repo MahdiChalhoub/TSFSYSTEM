@@ -157,8 +157,9 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         return { errors: { lines: ['At least one line item is required.'] }, message: 'No line items.' };
     }
 
+    let saved: Record<string, any> | null = null;
     try {
-        await erpFetch('purchase-orders/', {
+        saved = await erpFetch('purchase-orders/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -195,8 +196,17 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         return { message: e instanceof Error ? e.message : String(e) };
     }
 
+    // Don't redirect to /purchases — the list page hits a downstream
+    // service that 401's on the saas tenant right now (procurement
+    // status), which kicks the user to /login and looks like a logout.
+    // Instead return success with the new PO number so the form can
+    // toast it, clear local draft, and let the user choose to go back.
     revalidatePath('/purchases');
-    redirect('/purchases');
+    const poNumber = (saved && (saved.po_number || saved.id)) ? String(saved.po_number || saved.id) : '';
+    return {
+        message: poNumber ? `Purchase order ${poNumber} saved.` : 'Purchase order saved.',
+        errors: {},
+    };
 }
 
 /**

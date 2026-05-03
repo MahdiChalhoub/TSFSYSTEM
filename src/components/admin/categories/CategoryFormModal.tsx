@@ -304,11 +304,16 @@ export function CategoryFormModal({
                     </button>
                 </div>
 
-                {/* ── Body: sidebar + pane ── */}
+                {/* ── Body: sidebar + pane ──
+                     Layout direction is column on mobile so the mobile tab
+                     strip sits ABOVE the pane content, then row on desktop
+                     so the sidebar sits beside it. Without the col→row
+                     switch the tab strip got squeezed into a vertical
+                     sliver next to the form on narrow viewports. */}
                 <form
                     id="category-form"
                     action={(formData) => { setPending(true); formAction(formData); }}
-                    className="flex-1 flex min-h-0"
+                    className="flex-1 flex flex-col md:flex-row min-h-0"
                 >
                     {/* Sidebar nav (desktop, ≥768px) */}
                     <aside
