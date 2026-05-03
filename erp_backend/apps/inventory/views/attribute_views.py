@@ -375,6 +375,121 @@ class ProductAttributeViewSet(TenantModelViewSet):
             ).update(sort_order=idx)
         return Response({'status': 'ok'})
 
+    @action(detail=True, methods=['get'], url_path='values-for-product')
+    def values_for_product(self, request, pk=None):
+        """
+        GET /api/inventory/product-attributes/<group_id>/values-for-product/
+            ?category_id=X&country_id=Y&brand_id=Z
+
+        Phase 2 of multi-dim attribute scoping. Returns the values of
+        this attribute group that are OFFERED for a product with the
+        given (category, country, brand) keys, grouped by scope.
+
+        Response:
+            {
+              "group": {id, name, code},
+              "buckets": [
+                {
+                  "key": "universal",
+                  "label": "Universal",
+                  "values": [{id, name, code, scope_label, source}, …]
+                },
+                {
+                  "key": "categorical",
+                  "label": "Category-specific",
+                  "values": [...]
+                },
+                {
+                  "key": "country",   "label": "Country-specific",   "values": [...] },
+                {
+                  "key": "brand",     "label": "Brand-specific",     "values": [...] },
+                {
+                  "key": "composite", "label": "Multi-scope",        "values": [...] }
+              ]
+            }
+
+        The picker on the product form renders one section per non-empty
+        bucket so the operator sees exactly why each value is offered.
+        """
+        from apps.inventory.services.attribute_scope import (
+            scoped_values_for_product, attribute_scope_label,
+        )
+
+        group = self.get_object()
+        if group.parent_id is not None:
+            return Response(
+                {'error': 'values-for-product must be called on a root attribute group, not a leaf'},
+                status=400,
+            )
+
+        # Construct a draft "product" dict from the query params. The
+        # service helper accepts either a model instance or a dict.
+        product = {
+            'category_id': _qp_int(request, 'category_id') or _qp_int(request, 'category'),
+            'country_id':  _qp_int(request, 'country_id')  or _qp_int(request, 'country'),
+            'brand_id':    _qp_int(request, 'brand_id')    or _qp_int(request, 'brand'),
+        }
+
+        qs = scoped_values_for_product(group, product).select_related('parent')
+
+        # Bucket by scope source so the UI can render sections.
+        buckets = {
+            'universal':   {'key': 'universal',   'label': 'Universal',          'values': []},
+            'categorical': {'key': 'categorical', 'label': 'Category-specific',  'values': []},
+            'country':     {'key': 'country',     'label': 'Country-specific',   'values': []},
+            'brand':       {'key': 'brand',       'label': 'Brand-specific',     'values': []},
+            'composite':   {'key': 'composite',   'label': 'Multi-scope',        'values': []},
+        }
+        for v in qs:
+            has_cats = _has_any_scope(v, 'scope_categories')
+            has_cous = _has_any_scope(v, 'scope_countries')
+            has_bras = _has_any_scope(v, 'scope_brands')
+            scope_count = sum([has_cats, has_cous, has_bras])
+            if scope_count == 0:
+                key = 'universal'
+            elif scope_count > 1:
+                key = 'composite'
+            elif has_cats:
+                key = 'categorical'
+            elif has_cous:
+                key = 'country'
+            else:
+                key = 'brand'
+
+            buckets[key]['values'].append({
+                'id': v.id,
+                'name': v.name,
+                'code': v.code,
+                'scope_label': attribute_scope_label(v),
+            })
+
+        return Response({
+            'group': {'id': group.id, 'name': group.name, 'code': group.code},
+            'buckets': [b for b in buckets.values() if b['values']],
+        })
+
+
+def _qp_int(request, name):
+    """Parse a query param as int, return None if absent / invalid."""
+    raw = request.query_params.get(name)
+    if raw is None or raw == '':
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _has_any_scope(value, attr):
+    """True if the value has any rows in the given scope M2M (post-migration)."""
+    field = getattr(value, attr, None)
+    if field is None:
+        return False
+    try:
+        return field.exists()
+    except Exception:
+        return False
+
     @action(detail=False, methods=['get'], url_path='product-matrix')
     def product_matrix(self, request):
         """

@@ -5,6 +5,7 @@ import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
 import { getBrandsByCategory } from '@/app/actions/inventory/brands';
+import { getScopedValuesForGroup, type ScopedBucket } from '@/app/actions/inventory/attribute-scope';
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
 import {
@@ -145,6 +146,17 @@ export default function SmartProductForm({
     /* ── Cascading filter state ── */
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
     const [selectedBrandId, setSelectedBrandId] = useState<string>(initialData?.brandId ? String(initialData.brandId) : '');
+    // Phase 2: track country too so the attribute picker can scope-filter
+    // values by all three axes (category × country × brand).
+    const [selectedCountryId, setSelectedCountryId] = useState<number | null>(
+        (initialData as { countryId?: number })?.countryId ?? null,
+    );
+    // Memoised context object so AttrGroupSelector's effect deps stay stable.
+    const productScopeCtx = useMemo(() => ({
+        categoryId: selectedCategoryId,
+        countryId: selectedCountryId,
+        brandId: selectedBrandId ? Number(selectedBrandId) : null,
+    }), [selectedCategoryId, selectedCountryId, selectedBrandId]);
     const [selectedAttributeId] = useState('');
     const [activeTab, setActiveTab] = useState('pricing');
 
@@ -589,6 +601,7 @@ export default function SmartProductForm({
                                                 group={group}
                                                 selectedId={selectedAttrValues[group.id] || null}
                                                 onSelect={(childId) => setSelectedAttrValues(prev => ({ ...prev, [group.id]: childId }))}
+                                                productCtx={productScopeCtx}
                                             />
                                         ))}
                                     </div>
@@ -623,7 +636,9 @@ export default function SmartProductForm({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className={fieldLabel}>Origin Country</label>
-                                    <select name="countryId" className={fieldSelect}>
+                                    <select name="countryId" className={fieldSelect}
+                                        value={selectedCountryId ?? ''}
+                                        onChange={(e) => setSelectedCountryId(e.target.value ? Number(e.target.value) : null)}>
                                         <option value="">Select country...</option>
                                         {countries.map(c => <option key={String(c.id)} value={String(c.id)}>{c.name} ({c.code})</option>)}
                                     </select>
@@ -1144,13 +1159,43 @@ export default function SmartProductForm({
  *  V3 Attribute Group Selector — Chip-based per-group
  * ═══════════════════════════════════════════════════════════ */
 function AttrGroupSelector({
-    group, selectedId, onSelect,
+    group, selectedId, onSelect, productCtx,
 }: {
     group: AttrGroup
     selectedId: number | null
     onSelect: (childId: number | null) => void
+    /** Product context for scope filtering (Phase 2). When provided,
+     *  the selector fetches scoped buckets from the backend instead of
+     *  rendering group.children flat. Optional — omitting it keeps the
+     *  legacy flat behaviour. */
+    productCtx?: { categoryId?: number | null; countryId?: number | null; brandId?: number | null }
 }) {
     const selected = group.children.find(c => c.id === selectedId);
+
+    // Phase 2: scope-aware buckets. Fetched lazily when productCtx changes.
+    // Empty buckets array → show flat group.children (pre-migration / no
+    // scopes set on any value).
+    const [buckets, setBuckets] = useState<ScopedBucket[] | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        // Skip the fetch entirely when we have no product context — the
+        // result would be identical to group.children (everything is
+        // universal from the picker's POV).
+        if (!productCtx || (!productCtx.categoryId && !productCtx.countryId && !productCtx.brandId)) {
+            setBuckets(null);
+            return;
+        }
+        getScopedValuesForGroup(group.id, productCtx).then(r => {
+            if (cancelled) return;
+            // Only show bucket sections when more than one bucket is
+            // active OR there's a non-universal bucket — otherwise the
+            // flat group.children rendering is cleaner.
+            if (!r || r.buckets.length === 0) { setBuckets(null); return; }
+            const onlyUniversal = r.buckets.length === 1 && r.buckets[0].key === 'universal';
+            setBuckets(onlyUniversal ? null : r.buckets);
+        });
+        return () => { cancelled = true; };
+    }, [group.id, productCtx?.categoryId, productCtx?.countryId, productCtx?.brandId]);
 
     return (
         <div className="rounded-xl border border-app-border/40 overflow-hidden transition-all"
@@ -1186,30 +1231,81 @@ function AttrGroupSelector({
                 )}
             </div>
 
-            {/* Value chips */}
-            <div className="px-3 pb-2.5 flex flex-wrap gap-1.5">
-                {group.children.map(child => {
-                    const isSel = child.id === selectedId;
-                    return (
-                        <button
+            {/* Value chips — bucketed when scope filtering is active,
+                flat otherwise. The two paths share <Chip> rendering so a
+                value picked in either mode looks identical. */}
+            {buckets ? (
+                <div className="px-3 pb-2.5 space-y-2">
+                    {buckets.map(bucket => (
+                        <div key={bucket.key}>
+                            <div className="text-[8px] font-bold uppercase tracking-widest text-app-muted-foreground mb-1 flex items-center gap-1.5">
+                                <span>{bucket.label}</span>
+                                <span className="text-app-muted-foreground/60">·</span>
+                                <span>{bucket.values.length}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {bucket.values.map(v => (
+                                    <Chip
+                                        key={v.id}
+                                        id={v.id}
+                                        name={v.name}
+                                        scopeLabel={v.scope_label !== 'Universal' ? v.scope_label : undefined}
+                                        selected={v.id === selectedId}
+                                        onClick={() => onSelect(v.id === selectedId ? null : v.id)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="px-3 pb-2.5 flex flex-wrap gap-1.5">
+                    {group.children.map(child => (
+                        <Chip
                             key={child.id}
-                            type="button"
-                            onClick={() => onSelect(isSel ? null : child.id)}
-                            className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${isSel
-                                ? 'border-app-primary bg-app-primary text-white shadow-md'
-                                : 'border-app-border/50 text-app-foreground hover:border-app-border hover:bg-app-surface/50'
-                                }`}
-                            style={isSel ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' } : {}}>
-                            {child.color_hex && (
-                                <div className="w-3 h-3 rounded-full flex-shrink-0 border border-white/20"
-                                    style={{ background: child.color_hex }} />
-                            )}
-                            {child.name}
-                            {isSel && <Check className="w-3 h-3" />}
-                        </button>
-                    );
-                })}
-            </div>
+                            id={child.id}
+                            name={child.name}
+                            colorHex={child.color_hex}
+                            selected={child.id === selectedId}
+                            onClick={() => onSelect(child.id === selectedId ? null : child.id)}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
+    );
+}
+
+function Chip({ id, name, colorHex, scopeLabel, selected, onClick }: {
+    id: number
+    name: string
+    colorHex?: string | null
+    scopeLabel?: string
+    selected: boolean
+    onClick: () => void
+}) {
+    return (
+        <button
+            key={id}
+            type="button"
+            onClick={onClick}
+            title={scopeLabel ? `Scope: ${scopeLabel}` : undefined}
+            className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${selected
+                ? 'border-app-primary bg-app-primary text-white shadow-md'
+                : 'border-app-border/50 text-app-foreground hover:border-app-border hover:bg-app-surface/50'
+                }`}
+            style={selected ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' } : {}}>
+            {colorHex && (
+                <div className="w-3 h-3 rounded-full flex-shrink-0 border border-white/20"
+                    style={{ background: colorHex }} />
+            )}
+            <span>{name}</span>
+            {scopeLabel && (
+                <span className={`text-[8px] font-mono ${selected ? 'text-white/70' : 'text-app-muted-foreground'}`}>
+                    {scopeLabel}
+                </span>
+            )}
+            {selected && <Check className="w-3 h-3" />}
+        </button>
     );
 }
