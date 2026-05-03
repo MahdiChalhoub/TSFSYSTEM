@@ -248,17 +248,19 @@ export function CategoryFormModal({
                 });
         }
 
-        // NOTE: brand + attribute trees themselves are NOT loaded here;
-        // they fetch on demand the first time the user opens the Brands
-        // or Attributes pane (see ensureLinksLoaded below). Saves a
-        // noticeable chunk of the modal's open time when the user only
-        // edits Identity.
+        // Eagerly preload the brand + attribute trees so the user sees
+        // populated panes the instant they switch tabs — no "Loading…"
+        // wait. Fires in parallel with the linked_* + locales + code
+        // peek requests above, so the dominant time is whichever single
+        // request is slowest, not the sum.
+        ensureLinksLoaded();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, parentId, categoryId]);
 
-    // Lazy loader for the Brands + Attributes panes. First time the user
-    // clicks one of those tabs we fetch both (cheaper to fetch together
-    // than to round-trip twice). Subsequent visits are no-ops.
+    // Loader for the Brands + Attributes trees. Called once on modal
+    // open (in parallel with linked_* + locales + peekNextCode) so panes
+    // are pre-populated by the time the user switches tabs — no
+    // "Loading…" wait. The loaded/loading flags make repeat calls a no-op.
     //
     // In edit mode this also seeds the existing selections from the
     // loaded data:
@@ -490,10 +492,7 @@ export function CategoryFormModal({
                                 <button
                                     key={p.key}
                                     type="button"
-                                    onClick={() => {
-                                        setActivePane(p.key);
-                                        if (p.key === 'brands' || p.key === 'attributes') ensureLinksLoaded();
-                                    }}
+                                    onClick={() => setActivePane(p.key)}
                                     className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-tp-sm font-bold transition-all relative"
                                     style={{
                                         background: active ? 'var(--app-surface)' : 'transparent',
@@ -560,10 +559,7 @@ export function CategoryFormModal({
                                 <button
                                     key={p.key}
                                     type="button"
-                                    onClick={() => {
-                                        setActivePane(p.key);
-                                        if (p.key === 'brands' || p.key === 'attributes') ensureLinksLoaded();
-                                    }}
+                                    onClick={() => setActivePane(p.key)}
                                     className="flex flex-col items-center justify-center gap-0.5 py-2 text-tp-xxs font-bold transition-all min-h-[52px]"
                                     style={{
                                         color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
