@@ -425,9 +425,9 @@ class ProductAttributeViewSet(TenantModelViewSet):
         # Construct a draft "product" dict from the query params. The
         # service helper accepts either a model instance or a dict.
         product = {
-            'category_id': _qp_int(request, 'category_id') or _qp_int(request, 'category'),
-            'country_id':  _qp_int(request, 'country_id')  or _qp_int(request, 'country'),
-            'brand_id':    _qp_int(request, 'brand_id')    or _qp_int(request, 'brand'),
+            'category_id': self._qp_int(request, 'category_id') or self._qp_int(request, 'category'),
+            'country_id':  self._qp_int(request, 'country_id')  or self._qp_int(request, 'country'),
+            'brand_id':    self._qp_int(request, 'brand_id')    or self._qp_int(request, 'brand'),
         }
 
         qs = scoped_values_for_product(group, product).select_related('parent')
@@ -441,9 +441,9 @@ class ProductAttributeViewSet(TenantModelViewSet):
             'composite':   {'key': 'composite',   'label': 'Multi-scope',        'values': []},
         }
         for v in qs:
-            has_cats = _has_any_scope(v, 'scope_categories')
-            has_cous = _has_any_scope(v, 'scope_countries')
-            has_bras = _has_any_scope(v, 'scope_brands')
+            has_cats = self._has_any_scope(v, 'scope_categories')
+            has_cous = self._has_any_scope(v, 'scope_countries')
+            has_bras = self._has_any_scope(v, 'scope_brands')
             scope_count = sum([has_cats, has_cous, has_bras])
             if scope_count == 0:
                 key = 'universal'
@@ -469,26 +469,58 @@ class ProductAttributeViewSet(TenantModelViewSet):
         })
 
 
-def _qp_int(request, name):
-    """Parse a query param as int, return None if absent / invalid."""
-    raw = request.query_params.get(name)
-    if raw is None or raw == '':
-        return None
-    try:
-        return int(raw)
-    except (TypeError, ValueError):
-        return None
+    # Module-level helpers needed by values-for-product (kept as class
+    # methods for indentation correctness — Python complained when they
+    # sat at module scope between two class methods).
+    @staticmethod
+    def _qp_int(request, name):
+        """Parse a query param as int, return None if absent / invalid."""
+        raw = request.query_params.get(name)
+        if raw is None or raw == '':
+            return None
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
 
+    @staticmethod
+    def _has_any_scope(value, attr):
+        """True if the value has any rows in the given scope M2M."""
+        field = getattr(value, attr, None)
+        if field is None:
+            return False
+        try:
+            return field.exists()
+        except Exception:
+            return False
 
-def _has_any_scope(value, attr):
-    """True if the value has any rows in the given scope M2M (post-migration)."""
-    field = getattr(value, attr, None)
-    if field is None:
-        return False
-    try:
-        return field.exists()
-    except Exception:
-        return False
+    # ── Phase 3: scope-suggestion wizard endpoints ──
+    # /scope-suggestions/   GET  → list usage-derived scope proposals
+    # /<id>/apply-scope/    POST → commit accepted proposals as M2M adds
+
+    @action(detail=False, methods=['get'], url_path='scope-suggestions')
+    def scope_suggestions(self, request):
+        from apps.inventory.services.scope_suggester import suggest_scopes
+        org = _current_org(request)
+        if not org:
+            return Response([])
+        value_ids = request.query_params.get('value_ids')
+        parsed = None
+        if value_ids:
+            parsed = [int(x) for x in value_ids.split(',') if x.strip().isdigit()]
+        return Response(suggest_scopes(org, value_ids=parsed))
+
+    @action(detail=True, methods=['post'], url_path='apply-scope')
+    def apply_scope(self, request, pk=None):
+        from apps.inventory.services.scope_suggester import apply_scope_suggestion
+        value = self.get_object()
+        diff = apply_scope_suggestion(
+            value,
+            add_categories=request.data.get('add_categories') or [],
+            add_countries=request.data.get('add_countries')  or [],
+            add_brands=request.data.get('add_brands')        or [],
+        )
+        return Response(diff)
 
     @action(detail=False, methods=['get'], url_path='product-matrix')
     def product_matrix(self, request):
