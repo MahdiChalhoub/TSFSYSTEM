@@ -1,0 +1,35 @@
+name: attribute-scope lint
+
+# Runs the AST linter that catches bare .add()/.set()/.remove()/.clear()
+# calls on Product.attribute_values and on the new scope M2Ms
+# (scope_categories / scope_countries / scope_brands). These writes
+# bypass the m2m_changed pre_add scope guard from
+# erp_backend/apps/inventory/services/attribute_scope.py and the audit
+# trail from apps/inventory/services/scope_suggester.py — so they're
+# blocked at the lint layer.
+#
+# Suppress legitimate one-offs (seed scripts, signal-direct tests) by
+# adding `# linter: noqa-attribute-scope <reason>` on the offending line.
+
+on:
+  pull_request:
+    paths:
+      - 'erp_backend/**/*.py'
+      - 'scripts/lint/check_attribute_scope.py'
+      - '.github/workflows/attribute-scope-lint.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'erp_backend/**/*.py'
+      - 'scripts/lint/check_attribute_scope.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run scope linter
+        run: python3 scripts/lint/check_attribute_scope.py erp_backend
