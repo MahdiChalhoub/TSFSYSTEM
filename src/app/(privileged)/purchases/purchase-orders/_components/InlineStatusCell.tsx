@@ -33,7 +33,15 @@ const STATUS_ACTIONS: Record<string, (id: number | string) => Promise<any>> = {
     DRAFT: revertToDraft,
 }
 
-export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => void }) {
+export function InlineStatusCell({ po, onRefresh, onLocalUpdate }: {
+    po: PO
+    onRefresh?: () => void
+    /** Patch a single PO in the parent list without a full refetch.
+     *  Saves N network roundtrips when the user transitions multiple
+     *  rows in quick succession — the chip updates from `setLiveStatus`
+     *  here, the parent row updates from this hook, no GET needed. */
+    onLocalUpdate?: (id: number | string, patch: Record<string, any>) => void
+}) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [rejectOpen, setRejectOpen] = useState(false)
@@ -99,7 +107,14 @@ export function InlineStatusCell({ po, onRefresh }: { po: PO; onRefresh?: () => 
             )
             toast.success(`${po.po_number || `PO-${po.id}`} → ${(STATUS_CONFIG[t]?.label || t)}`)
             setLiveStatus(t)
-            onRefresh?.()
+            // Prefer a local patch — no roundtrip, instant. Fall back to
+            // a full refetch only if the parent didn't wire onLocalUpdate
+            // (legacy callers).
+            if (onLocalUpdate) {
+                onLocalUpdate(po.id, { status: t })
+            } else {
+                onRefresh?.()
+            }
         } catch (e: any) {
             /* Stale-state recovery: backend returns `current_status` in the
              * 400 payload. If our cached state was wrong, sync silently and

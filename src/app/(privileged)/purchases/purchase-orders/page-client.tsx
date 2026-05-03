@@ -301,7 +301,17 @@ export default function PurchaseOrdersManager({
           )
         }}
         renderColumnCell={(key, po) => {
-          if (key === 'status') return <InlineStatusCell po={po} onRefresh={fetchData} />
+          if (key === 'status') return <InlineStatusCell
+            po={po}
+            onRefresh={fetchData}
+            onLocalUpdate={(id, patch) => {
+              // Patch the row in-place — no roundtrip, no UI flicker. The
+              // chip's own setLiveStatus already flipped the visible chip;
+              // this keeps the parent's `orders` array consistent so KPIs
+              // and other derived state recompute from the new value.
+              setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, ...patch } : o))
+            }}
+          />
           return renderPOCell(key, po)
         }}
         renderExpanded={po => <POExpandedRow po={po} onView={onView} onRefresh={fetchData} />}

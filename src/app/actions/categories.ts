@@ -223,11 +223,23 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
         };
         if (attributesDirty) payload.attributes = attributeIds;
 
+        // [updateCategory DEBUG] surfaces what we're actually sending so
+        // we can tell whether a "save did nothing" complaint is a frontend
+        // dirty-flag issue, a backend M2M-write issue, or a stale-cache
+        // problem on the linked_* endpoints. Remove once root cause known.
+        console.log('[updateCategory DEBUG] id=', id,
+            'attributesDirty=', attributesDirty, 'attributeIds=', attributeIds,
+            'brandsDirty=', brandsDirty, 'brandIds=', brandIds,
+            'payload.attributes=', payload.attributes);
+
         const result = await erpFetch(`categories/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+
+        console.log('[updateCategory DEBUG] PATCH result attributes=',
+            (result as any)?.attributes, 'name=', (result as any)?.name);
 
         if (hasError(result)) {
             const fieldErrors = pickFieldErrors(result);
@@ -242,9 +254,13 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
         // it would clear every existing brand→category link otherwise.
         let brandWarning: string | undefined;
         if (brandsDirty) {
+            console.log('[updateCategory DEBUG] running syncBrandLinks with', brandIds);
             const r = await syncBrandLinks(id, brandIds);
+            console.log('[updateCategory DEBUG] syncBrandLinks result', r);
             if (r.failed > 0) brandWarning = `Category updated but ${r.failed} brand link(s) failed to update.`;
             if (r.failed === -1) brandWarning = 'Category updated but the brand list could not be loaded — links not updated.';
+        } else {
+            console.log('[updateCategory DEBUG] brandsDirty=false → skipping syncBrandLinks');
         }
 
         revalidatePath('/inventory/categories');
