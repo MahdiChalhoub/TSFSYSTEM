@@ -446,9 +446,9 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                         {/* ═══ Pane: MARKETS ═══ */}
                         <div className={activePane === 'markets' ? 'space-y-3' : 'hidden'}>
                             <div>
-                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Distribution Markets</h4>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Sourcing Markets</h4>
                                 <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                    Pick the countries where this brand is sold. Leave empty for global availability.
+                                    Pick the countries this brand is sourced from. Leave empty for global / multi-source availability.
                                 </p>
                             </div>
 
