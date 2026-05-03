@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { PurchaseLine } from '@/types/erp'
-import { createPurchaseInvoice, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
+import { createPurchaseOrder, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
 import {
     ShoppingCart, ArrowLeft, Settings2,
     Plus, ArrowRight, BookOpen,
@@ -67,7 +67,9 @@ export default function PurchaseForm({
     // Pick the right server action up-front so we don't change hook
     // identity on a subsequent re-render. The `useActionState` contract
     // assumes a stable function reference per mount.
-    const submitAction = isEdit ? updatePurchaseInvoice : createPurchaseInvoice
+    // Create path = true PO (DRAFT, no GL impact). Edit path keeps the
+    // existing PATCH-to-purchase-orders flow.
+    const submitAction = isEdit ? updatePurchaseInvoice : createPurchaseOrder
     const [state, formAction, isPending] = useActionState(submitAction, initialState)
     const searchRef = useRef<HTMLInputElement>(null)
 

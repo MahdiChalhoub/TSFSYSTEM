@@ -94,6 +94,85 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
 }
 
 /**
+ * Create a TRUE Purchase Order — DRAFT-state commitment, no GL impact.
+ *
+ * Hits POST `/api/purchase-orders/` (PurchaseOrderViewSet) which writes
+ * a `PurchaseOrder` row + `PurchaseOrderLine` rows and stops there. No
+ * journal voucher, no inventory movement, no AP entry — that's all
+ * deferred to the Receive (GRN) and Match-Invoice steps later in the
+ * lifecycle (DRAFT → SUBMITTED → APPROVED → ORDERED → RECEIVED →
+ * INVOICED → COMPLETED).
+ *
+ * Use this for /purchases/new. The legacy `createPurchaseInvoice` is
+ * the "quick purchase" shortcut that fuses PO+GRN+Invoice in one shot
+ * — keep it for that workflow, but it is NOT what /purchases/new wants.
+ */
+export async function createPurchaseOrder(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
+    let rawLines: Record<string, unknown>[] = [];
+    const linesRaw = formData.get('lines');
+    if (typeof linesRaw === 'string' && linesRaw.length) {
+        try {
+            const parsed = JSON.parse(linesRaw);
+            if (Array.isArray(parsed)) rawLines = parsed as Record<string, unknown>[];
+        } catch { /* fall through; backend will reject below */ }
+    }
+
+    const orUndef = (v: FormDataEntryValue | null) =>
+        (typeof v === 'string' && v.length > 0) ? v : undefined;
+
+    // Backend payload — matches PurchaseOrderViewSet.perform_create + the
+    // serializer fields. Field names are snake_case to match Django.
+    const supplierId = formData.get('supplierId');
+    const siteId = formData.get('siteId');
+    const warehouseId = formData.get('warehouseId');
+    if (!supplierId) return { errors: { supplierId: ['Supplier is required.'] }, message: 'Supplier is required.' };
+    if (!warehouseId) return { errors: { warehouseId: ['Warehouse is required.'] }, message: 'Warehouse is required.' };
+
+    const payload = {
+        supplier: Number(supplierId),
+        site: siteId ? Number(siteId) : null,
+        warehouse: Number(warehouseId),
+        scope: orUndef(formData.get('scope')) || 'OFFICIAL',
+        order_date: orUndef(formData.get('orderDate') ?? formData.get('date')),
+        expected_date: orUndef(formData.get('expectedDelivery') ?? formData.get('deliveryDate')),
+        supplier_ref: orUndef(formData.get('supplierRef')),
+        notes: orUndef(formData.get('notes')),
+        // Status defaults to DRAFT in the model — don't set it; lifecycle
+        // transitions move it forward via the explicit status endpoints.
+        lines: rawLines
+            .filter(l => l && (l as any).productId)
+            .map(l => {
+                const ll = l as any;
+                return {
+                    product: Number(ll.productId),
+                    quantity: Number(ll.quantity || 0),
+                    unit_price: Number(ll.unitCostHT ?? ll.unitPrice ?? 0),
+                    tax_rate: Number(ll.taxRate ?? 0),
+                    discount_percent: Number(ll.discountPercent ?? 0),
+                };
+            }),
+    };
+
+    if (payload.lines.length === 0) {
+        return { errors: { lines: ['At least one line item is required.'] }, message: 'No line items.' };
+    }
+
+    try {
+        await erpFetch('purchase-orders/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+    } catch (e: unknown) {
+        console.error('[createPurchaseOrder] Failed:', e);
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Failed to create purchase order.' };
+    }
+
+    revalidatePath('/purchases');
+    redirect('/purchases');
+}
+
+/**
  * Update an existing Purchase Order from the same New Order form.
  *
  * Wires the `/purchases/new?edit=<id>` flow into a `useActionState`

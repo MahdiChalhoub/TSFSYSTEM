@@ -258,6 +258,13 @@ class StorefrontCategorySerializer(serializers.ModelSerializer):
 
 class BrandSerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
+    # Counts are the UNION of M2M-linked entries and product-derived
+    # entries, plus a Universal/Uncategorized/No-attributes bucket when
+    # at least one product has the FK unset. Mirrors the in-tree facet
+    # group counts the user sees on /inventory/brands.
+    category_count = serializers.SerializerMethodField()
+    country_count = serializers.SerializerMethodField()
+    attribute_count = serializers.SerializerMethodField()
     countries = CountrySimpleSerializer(many=True, read_only=True)
     categories = CategorySimpleSerializer(many=True, read_only=True)
     category_ids = serializers.PrimaryKeyRelatedField(
@@ -268,12 +275,15 @@ class BrandSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        # `short_name` — readable marketing abbreviation (e.g. "P&G")
+        # `code`       — short ISO-like identifier (e.g. "PNG"); separate
+        #                from short_name, mirrors the Category split
         model = Brand
         fields = [
-            'id', 'name', 'reference_code', 'short_name', 'logo', 'translations',
+            'id', 'name', 'reference_code', 'short_name', 'code', 'logo', 'translations',
             'countries', 'categories',
             'category_ids', 'country_ids',
-            'product_count',
+            'product_count', 'category_count', 'country_count', 'attribute_count',
             'created_at', 'organization',
         ]
         read_only_fields = ['organization', 'reference_code']
@@ -283,6 +293,37 @@ class BrandSerializer(serializers.ModelSerializer):
         if pre is not None:
             return pre.get(obj.id, 0)
         return Product.objects.filter(brand=obj).count()
+
+    def get_category_count(self, obj):
+        m2m_ids = set(obj.categories.values_list('id', flat=True))
+        product_ids = set(
+            obj.products.exclude(category__isnull=True).values_list('category', flat=True)
+        )
+        union_ids = m2m_ids | product_ids
+        has_uncategorized = obj.products.filter(category__isnull=True).exists()
+        return len(union_ids) + (1 if has_uncategorized else 0)
+
+    def get_country_count(self, obj):
+        m2m_ids = set(obj.countries.values_list('id', flat=True))
+        product_ids = set(
+            obj.products.exclude(country__isnull=True).values_list('country', flat=True)
+        )
+        union_ids = m2m_ids | product_ids
+        has_universal = obj.products.filter(country__isnull=True).exists() if obj.products.exists() else False
+        return len(union_ids) + (1 if has_universal else 0)
+
+    def get_attribute_count(self, obj):
+        # Attributes only come from products (no brand↔attribute M2M in
+        # the schema). Plus a "No attributes" bucket if any product has
+        # zero attribute_values.
+        if not obj.products.exists():
+            return 0
+        from apps.inventory.models import ProductAttribute
+        real = ProductAttribute.objects.filter(
+            products_with_attribute__brand=obj
+        ).distinct().count()
+        has_unattributed = obj.products.filter(attribute_values__isnull=True).exists()
+        return real + (1 if has_unattributed else 0)
 
     @classmethod
     def prefetch_counts(cls, organization):
@@ -308,7 +349,7 @@ class BrandDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'short_name', 'logo',
+            'id', 'name', 'short_name', 'code', 'logo',
             'countries', 'categories',
             'product_count', 'created_at', 'organization',
         ]

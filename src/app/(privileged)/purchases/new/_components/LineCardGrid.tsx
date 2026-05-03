@@ -111,12 +111,14 @@ function LineCard({ line, onUpdate, onRemove }: {
           SKU-{String(line.productId || 0).padStart(4, '0')}
         </p>
 
-        {/* CONTROLS GRID */}
+        {/* EDITABLE CONTROLS — quantity + unit cost are the only fields
+            the operator changes per line; everything else below is read-only
+            context to inform the decision. */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
             <label className="block text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 ml-1">Quantity</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               className="w-full rounded-xl px-3 py-2 text-[13px] font-black outline-none border transition-all"
               style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}
               value={Number(line.quantity || 0)}
@@ -127,8 +129,8 @@ function LineCard({ line, onUpdate, onRemove }: {
             <label className="block text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 ml-1">Unit Cost HT</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground opacity-40"><DollarSign size={10} /></span>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="w-full pl-7 rounded-xl px-3 py-2 text-[13px] font-black outline-none border transition-all"
                 style={{ background: 'var(--app-background)', borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}
                 value={Number(line.unitCostHT || 0)}
@@ -138,24 +140,72 @@ function LineCard({ line, onUpdate, onRemove }: {
           </div>
         </div>
 
-        {/* STATS STRIP */}
-        <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tight">Stock Total</span>
-            <span className="text-[12px] font-black text-app-foreground tabular-nums">{Number(line.stockTotal || 0)}</span>
+        {/* CONTEXT GRID — mirrors the list-view columns split across 2 rows.
+            Each cell: tiny label + sub-label + value(s). Same vocabulary
+            as PurchaseColumns.tsx so users see the same data in either view. */}
+        <div className="pt-3 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+          {/* Row 1 — supply-side context: what was asked for, what's
+              already in stock / on the way, and how many POs are open. */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            <Stat label="Requested" value={fmt(Number(line.requested || 0))} />
+            <Stat label="Required" sub="proposed" value={fmt(Number(line.requiredProposed || 0))} />
+            <Stat label="Stock" sub="transit · total" value={
+              <span>
+                <span className="opacity-60">{fmt(Number(line.stockTransit || 0))}</span>
+                <span className="opacity-40 mx-0.5">·</span>
+                <span>{fmt(Number(line.stockTotal || 0))}</span>
+              </span>
+            } />
+            <Stat label="PO" sub="count" value={fmt(Number(line.poCount || 0))} />
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tight">Sales</span>
-            <span className="text-[12px] font-black text-app-info tabular-nums">{String(line.salesMonthly || '0')}</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tight">Line Total</span>
-            <span className="text-[12px] font-black text-app-foreground tabular-nums">
-              {((Number(line.quantity || 0)) * (Number(line.unitCostHT || 0))).toLocaleString()}
-            </span>
+          {/* Row 2 — demand-side context: how it's selling, score signal,
+              cost vs sell vs supplier price, and expiry safety window. */}
+          <div className="grid grid-cols-4 gap-2">
+            <Stat label="Sales" sub="monthly" value={fmt(Number(line.salesMonthly || 0))} accent="var(--app-info, #3b82f6)" />
+            <Stat label="Cost" sub="sell" value={
+              <span>
+                <span>{fmt(Number(line.unitCostHT || 0))}</span>
+                <span className="opacity-40 mx-0.5">·</span>
+                <span className="opacity-60">{fmt(Number(line.sellingPriceHT || 0))}</span>
+              </span>
+            } />
+            <Stat label="Supplier" sub="price" value={fmt(Number(line.supplierPrice || 0))} accent="var(--app-error, #ef4444)" />
+            <Stat label="Expiry" sub="safety" value={String(line.expirySafety || '—')} accent="var(--app-success, #10b981)" />
           </div>
         </div>
+
+        {/* LINE TOTAL — pinned at the bottom, computed live from qty × cost. */}
+        <div className="mt-3 pt-3 flex items-center justify-between border-t"
+             style={{ borderColor: 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+          <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Line Total HT</span>
+          <span className="text-[14px] font-black text-app-foreground tabular-nums">
+            {((Number(line.quantity || 0)) * (Number(line.unitCostHT || 0))).toLocaleString()}
+          </span>
+        </div>
       </div>
+    </div>
+  )
+}
+
+/** Reusable mini-stat cell — label + optional sub-label + value, matching
+ *  the column-header treatment in the list view. Keeps every card cell
+ *  visually identical so users can scan across cards quickly. */
+function Stat({ label, sub, value, accent }: {
+  label: string
+  sub?: string
+  value: React.ReactNode
+  accent?: string
+}) {
+  return (
+    <div className="flex flex-col items-start min-w-0">
+      <div className="flex items-baseline gap-1">
+        <span className="text-[9px] font-black text-app-foreground uppercase tracking-tight">{label}</span>
+        {sub && <span className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-tight opacity-70">{sub}</span>}
+      </div>
+      <span className="text-[12px] font-black tabular-nums truncate w-full"
+            style={{ color: accent || 'var(--app-foreground)' }}>
+        {value}
+      </span>
     </div>
   )
 }

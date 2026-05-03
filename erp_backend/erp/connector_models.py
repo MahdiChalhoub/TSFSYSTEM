@@ -298,9 +298,16 @@ class ConnectorCache(models.Model):
         'Organization',
         on_delete=models.CASCADE,
         related_name='connector_cache',
-        null=True, blank=True
+        null=True, blank=True,
+        # The DB column was created as `tenant_id` (matching the rest of
+        # the multi-tenant tables). Without this `db_column` Django queries
+        # `organization_id` and the column-doesn't-exist error blows up
+        # `_is_circuit_broken`, which in turn makes `get_module_state`
+        # throw — connectors then return `None` and downstream services
+        # raise misleading "Module is required" errors.
+        db_column='tenant_id',
     )
-    
+
     # Cached data
     response_data = models.JSONField(null=True, blank=True)
     
