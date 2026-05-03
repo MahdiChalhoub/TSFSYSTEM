@@ -390,19 +390,37 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                             <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>
                                         )}
                                     </div>
+                                    {/* Short Name — readable marketing
+                                        abbreviation (e.g. "P&G"). Free text,
+                                        distinct from the Code field below. */}
+                                    <div>
+                                        <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Short Name</label>
+                                        <input
+                                            name="shortName"
+                                            defaultValue={brand?.short_name || ''}
+                                            placeholder="e.g., P&G"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2.5 text-tp-md font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                        />
+                                        <p className="text-tp-xxs font-bold text-app-muted-foreground mt-1">
+                                            Readable abbreviation shown alongside the full name.
+                                        </p>
+                                    </div>
+                                    {/* Code — short ISO-like identifier
+                                        (e.g. "PNG"). Auto-suggested from the
+                                        BRAND sequence; locked once saved. */}
                                     <div>
                                         <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Code</label>
                                         <LockableCodeInput
-                                            name="shortName"
-                                            defaultValue={brand?.short_name}
+                                            name="code"
+                                            defaultValue={brand?.code}
                                             suggestedValue={suggestedCode}
                                             isEdit={!!brand}
-                                            placeholder="e.g., NES"
+                                            placeholder="e.g., PNG"
                                             mono
                                             className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2.5 text-tp-md font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all"
                                         />
                                         <p className="text-tp-xxs font-bold text-app-muted-foreground mt-1">
-                                            3-letter abbreviation shown on compact listings.
+                                            3-letter ISO-like identifier shown on compact listings.
                                         </p>
                                     </div>
                                 </>
@@ -420,23 +438,32 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                             className="w-full bg-app-surface border border-app-border rounded-xl px-4 py-3 text-tp-lg font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                         />
                                     </div>
+                                    {/* Per-language Short Name. The translations
+                                        JSON has only {name, short_name} per
+                                        locale — no per-language `code` field —
+                                        so this writes to short_name and keeps
+                                        the field labelled accordingly. */}
                                     <div>
                                         <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
-                                            Code · {activeLang.toUpperCase()}
+                                            Short Name · {activeLang.toUpperCase()}
                                         </label>
                                         <input
                                             value={translations[activeLang]?.short_name || ''}
                                             onChange={e => patchT(activeLang, 'short_name', e.target.value)}
-                                            placeholder={isRTL(activeLang) ? 'مثال: نس' : 'e.g., NES'}
+                                            placeholder={isRTL(activeLang) ? 'مثال: ب&ج' : 'e.g., P&G'}
                                             dir={isRTL(activeLang) ? 'rtl' : undefined}
-                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2.5 text-tp-md font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2.5 text-tp-md font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                         />
                                         <p className="text-tp-xxs font-bold text-app-muted-foreground mt-1">
-                                            3-letter abbreviation in {labelFor(activeLang)}.
+                                            Localised short name in {labelFor(activeLang)}.
                                         </p>
                                     </div>
+                                    {/* Hidden mirrors so the form posts the
+                                        canonical English values when a
+                                        non-default language tab is active. */}
                                     <input type="hidden" name="name" value={nameDraft} />
                                     <input type="hidden" name="shortName" value={brand?.short_name || ''} />
+                                    <input type="hidden" name="code" value={brand?.code || ''} />
                                 </>
                             )}
 

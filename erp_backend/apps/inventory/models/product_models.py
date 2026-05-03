@@ -279,7 +279,12 @@ class Brand(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
     SEQUENCE_PREFIX = 'BRA-'
     SEQUENCE_PADDING = 5
     name = models.CharField(max_length=255)
+    # Two separate fields, mirroring Category:
+    #   • short_name — readable marketing abbreviation (e.g. "P&G")
+    #   • code       — short ISO-like identifier (e.g. "PNG"), used in
+    #     compact list chips and for sequence-prefilled values
     short_name = models.CharField(max_length=50, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
     translations = models.JSONField(
         default=dict, blank=True,
         help_text='Localised brand names keyed by language code, e.g. {"fr":{"name":"...","short_name":"..."}}'

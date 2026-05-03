@@ -14,6 +14,7 @@ export type BrandState = {
 export async function createBrand(prevState: BrandState, formData: FormData): Promise<BrandState> {
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
+    const code = formData.get('code') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
 
@@ -28,6 +29,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
             body: JSON.stringify({
                 name,
                 short_name: shortName,
+                code,
                 category_ids: categoryIds,
                 country_ids: countryIds
             })
@@ -43,6 +45,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
 export async function updateBrand(id: number, prevState: BrandState, formData: FormData): Promise<BrandState> {
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
+    const code = formData.get('code') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
 
@@ -53,6 +56,7 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
             body: JSON.stringify({
                 name,
                 short_name: shortName,
+                code,
                 category_ids: categoryIds,
                 country_ids: countryIds
             })

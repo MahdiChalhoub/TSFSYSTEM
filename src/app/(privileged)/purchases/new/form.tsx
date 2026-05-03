@@ -12,6 +12,7 @@ import {
 import Link from 'next/link'
 import { toast } from 'sonner'
 
+import { useFormDraft } from './_lib/use-form-draft'
 import { ProductSearch } from './_components/ProductSearch'
 import { LineCardGrid } from './_components/LineCardGrid'
 import { AdminSidebar } from './_components/AdminSidebar'
@@ -151,6 +152,48 @@ export default function PurchaseForm({
         isEdit ? seedNumber(initialPO?.driver?.id ?? initialPO?.driver ?? initialPO?.driver_id) : ''
     )
     const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
+
+    // ── Draft autosave + recovery ────────────────────────────────────
+    // Persist a debounced snapshot of the user's in-progress order to
+    // localStorage. If the tab dies (crash, accidental close, navigate
+    // away), the next visit can recover from the stored draft instead
+    // of forcing the user to re-enter everything. Disabled on edit
+    // mode since the server row is the source of truth there.
+    type PODraft = {
+        reference: string; supplierRef: string; date: string; deliveryDate: string
+        scope: 'OFFICIAL' | 'INTERNAL'
+        supplierId: number | ''; selectedSiteId: number | ''; warehouseId: number | ''
+        assigneeId: number | ''; driverId: number | ''
+        lines: PurchaseLine[]
+    }
+    const { recoverable: draft, saveDraft, clearDraft } = useFormDraft<PODraft>({
+        storageKey: 'po.draft.create.v1',
+        enabled: !isEdit,
+    })
+    const [draftBannerDismissed, setDraftBannerDismissed] = useState(false)
+    const showDraftBanner = !isEdit && draft !== null && !draftBannerDismissed
+    const recoverDraft = useCallback(() => {
+        if (!draft) return
+        const d = draft.data
+        setReference(d.reference || ''); setReferenceTouched(true)
+        setSupplierRef(d.supplierRef || '')
+        setDate(d.date || new Date().toISOString().split('T')[0])
+        setDeliveryDate(d.deliveryDate || '')
+        setScope(d.scope === 'INTERNAL' ? 'INTERNAL' : 'OFFICIAL')
+        setSupplierId(d.supplierId ?? '')
+        setSelectedSiteId(d.selectedSiteId ?? '')
+        setWarehouseId(d.warehouseId ?? '')
+        setAssigneeId(d.assigneeId ?? '')
+        setDriverId(d.driverId ?? '')
+        setLines(Array.isArray(d.lines) ? d.lines : [])
+        setDraftBannerDismissed(true)
+        toast.success('Draft restored')
+    }, [draft])
+    const discardDraft = useCallback(() => {
+        clearDraft()
+        setDraftBannerDismissed(true)
+    }, [clearDraft])
+
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [catalogueOpen, setCatalogueOpen] = useState(false)
     const [columnsOpen, setColumnsOpen] = useState(false)
@@ -293,8 +336,25 @@ export default function PurchaseForm({
 
     const canSubmit = !isPending && lines.length > 0 && supplierId !== '' && selectedSiteId !== '' && warehouseId !== ''
 
+    // Persist draft on every change (debounced inside the hook). Edit
+    // mode bypasses — the hook's `enabled: !isEdit` makes saveDraft a
+    // no-op there.
+    useEffect(() => {
+        if (isEdit) return
+        saveDraft({
+            reference, supplierRef, date, deliveryDate, scope,
+            supplierId, selectedSiteId, warehouseId, assigneeId, driverId,
+            lines,
+        })
+    }, [isEdit, reference, supplierRef, date, deliveryDate, scope,
+        supplierId, selectedSiteId, warehouseId, assigneeId, driverId,
+        lines, saveDraft])
+
     useEffect(() => {
         if (state.message && state.errors && Object.keys(state.errors).length === 0) {
+            // Successful save — wipe the draft so the next visit starts
+            // fresh instead of offering to recover an already-saved order.
+            clearDraft()
             toast.success(state.message)
         } else if (state.message) {
             // Surface which fields failed so the user knows what to fix
@@ -314,6 +374,7 @@ export default function PurchaseForm({
                 duration: 6000,
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state])
 
     useEffect(() => {
@@ -386,6 +447,51 @@ export default function PurchaseForm({
     return (
         <div className="h-full flex flex-col overflow-hidden bg-app-background">
             <input type="hidden" name="scope" value={scope} form="po-form" />
+
+            {/* ── Draft recovery banner ──
+                 Surfaces a previously-autosaved order from a crashed /
+                 closed tab. One tap to restore the snapshot, or dismiss
+                 (which also wipes the draft). Hidden in edit mode and
+                 once the user has acted on it. */}
+            {showDraftBanner && (
+                <div className="flex-shrink-0 mx-4 md:mx-6 mt-3 p-3 rounded-xl flex items-center gap-3"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-info, #3b82f6) 10%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 35%, transparent)',
+                    }}>
+                    <BookOpen size={16} className="flex-shrink-0" style={{ color: 'var(--app-info, #3b82f6)' }} />
+                    <div className="flex-1 min-w-0">
+                        <div className="text-tp-sm font-bold text-app-foreground">
+                            Recover unsaved purchase order?
+                        </div>
+                        <div className="text-tp-xs text-app-muted-foreground truncate">
+                            Auto-saved {draft ? new Date(draft.savedAt).toLocaleString() : ''}
+                            {draft?.data?.lines?.length ? ` · ${draft.data.lines.length} line${draft.data.lines.length === 1 ? '' : 's'}` : ''}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={recoverDraft}
+                        className="flex-shrink-0 px-3 h-8 rounded-lg text-tp-sm font-bold text-white transition-all active:scale-95"
+                        style={{
+                            background: 'var(--app-info, #3b82f6)',
+                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)',
+                        }}>
+                        Recover
+                    </button>
+                    <button
+                        type="button"
+                        onClick={discardDraft}
+                        className="flex-shrink-0 px-3 h-8 rounded-lg text-tp-sm font-bold transition-all active:scale-95"
+                        style={{
+                            background: 'transparent',
+                            color: 'var(--app-muted-foreground)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                        }}>
+                        Discard
+                    </button>
+                </div>
+            )}
 
             {/* ── Page Header ── */}
             <div className="flex-shrink-0 px-4 md:px-6 pt-4 pb-3 animate-in fade-in duration-300">

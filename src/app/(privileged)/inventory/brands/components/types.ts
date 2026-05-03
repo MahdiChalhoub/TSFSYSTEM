@@ -6,6 +6,10 @@ export interface Brand {
     id: number
     name: string
     short_name?: string | null
+    /** Short ISO-like identifier (e.g. "PNG"). Distinct from short_name
+     *  which is a marketing display name (e.g. "P&G"). Used in compact
+     *  list chips and pre-filled by the BRAND sequence on create. */
+    code?: string | null
     logo?: string | null
     reference_code?: string | null
     translations?: Record<string, { name?: string; short_name?: string }>
