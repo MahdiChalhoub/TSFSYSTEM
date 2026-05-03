@@ -562,7 +562,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                     {/* Column Headers — hidden when the list pane is compact;
                      *  the card-style row renderer draws its own layout. */}
                     {config.columnHeaders && !isCompact && (
-                        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xxs font-black text-app-muted-foreground uppercase tracking-widest"
+                        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2.5 text-tp-xs font-black text-app-muted-foreground uppercase tracking-wider"
                             style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, transparent)', borderBottom: '2px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                             {/* Checkbox gutter header — "Select All" when selectable */}
                             {config.selectable ? (
@@ -629,7 +629,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     >
                                         <span>{col.label}</span>
                                         {active && (
-                                            <span className="text-[9px] leading-none" aria-hidden="true">
+                                            <span className="text-[10px] leading-none" aria-hidden="true">
                                                 {sortDir === 'asc' ? '▲' : '▼'}
                                             </span>
                                         )}
