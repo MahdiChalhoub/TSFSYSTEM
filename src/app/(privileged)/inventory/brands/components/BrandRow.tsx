@@ -371,16 +371,15 @@ export function BrandRow({
                     <div className="flex items-center justify-end gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                         {/* Details — opens the side panel for this brand. Row
                             click is reserved for expand/collapse so this is
-                            the dedicated affordance for the panel. */}
+                            the dedicated affordance for the panel. The
+                            old "Open brand page" external-link button was
+                            removed (along with the dedicated brand detail
+                            page) — the side panel already shows everything
+                            that page did. */}
                         <button onClick={(e) => { e.stopPropagation(); onSelect(brand) }}
                             className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Open side panel">
                             <Bookmark size={12} />
                         </button>
-                        <Link href={`/inventory/brands/${brand.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Open brand page">
-                            <ExternalLink size={12} />
-                        </Link>
                         <button onClick={(e) => { e.stopPropagation(); onEdit(brand) }}
                             className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
                             <Pencil size={12} />

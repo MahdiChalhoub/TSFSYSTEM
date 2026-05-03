@@ -45,48 +45,96 @@ function hasError(raw: any): boolean {
  *     never blocks the main category save.
  */
 /**
- * Returns the count of brand PATCHes that failed (0 = clean).  The
- * caller surfaces a soft warning if non-zero so the user knows the
- * category itself saved but some brand links did not.
+ * Sync the M2M link sets for brands + attributes by diffing against the
+ * authoritative `linked_brands` / `linked_attributes` endpoints and
+ * calling the dedicated link/unlink helpers.
  *
- * Audit BLOCKER #3 — previous version swallowed both the list-fetch
- * failure and per-brand PATCH failures with no signal back to the UI.
+ * Why this and not a single PATCH on the category?
+ *
+ *   • CategorySerializer.Meta.fields doesn't include `attributes`, only
+ *     `attribute_count` (a SerializerMethodField). PATCHing
+ *     `{attributes: [...]}` succeeds with HTTP 200 but silently drops
+ *     the field — the M2M is never touched.
+ *
+ *   • BrandSerializer exposes `categories` as read-only
+ *     (CategorySimpleSerializer with read_only=True). The writable field
+ *     is `category_ids`. PATCHing brand `{categories: [...]}` is also
+ *     silently dropped.
+ *
+ * Backend exposes four dedicated endpoints that DO write the M2M:
+ *
+ *   POST /api/categories/<id>/link_brand/        body: { brand_id }
+ *   POST /api/categories/<id>/unlink_brand/      body: { brand_id, force }
+ *   POST /api/categories/<id>/link_attribute/    body: { attribute_id }
+ *   POST /api/categories/<id>/unlink_attribute/  body: { attribute_id, force }
+ *
+ * `force=true` on unlink bypasses the "products still use this" guard —
+ * we pass it because the user explicitly toggled OFF in the modal.
  */
-async function syncBrandLinks(categoryId: number, brandIds: number[]): Promise<{ failed: number }> {
-    const desired = new Set(brandIds);
-    let brands: any[] = [];
+type SyncResult = { failed: number; mode: 'attributes' | 'brands' };
+
+async function syncMembership(
+    categoryId: number,
+    desiredIds: number[],
+    mode: 'attributes' | 'brands',
+): Promise<SyncResult> {
+    const linkedPath = mode === 'brands' ? 'linked_brands' : 'linked_attributes';
+    const linkPath = mode === 'brands' ? 'link_brand' : 'link_attribute';
+    const unlinkPath = mode === 'brands' ? 'unlink_brand' : 'unlink_attribute';
+    const idKey = mode === 'brands' ? 'brand_id' : 'attribute_id';
+
+    // Read current set so we only POST the diff (avoids re-linking
+    // every existing brand on every save and triggering N pointless
+    // M2M writes).
+    let current: number[] = [];
     try {
-        const res: any = await erpFetch('inventory/brands/');
-        brands = Array.isArray(res) ? res : (res?.results ?? []);
+        const res: any = await erpFetch(`categories/${categoryId}/${linkedPath}/`);
+        const list: any[] = Array.isArray(res) ? res
+            : Array.isArray(res?.linked) ? res.linked
+                : Array.isArray(res?.results) ? res.results : [];
+        current = list
+            .map(x => Number(typeof x === 'number' ? x : x?.id))
+            .filter(Number.isFinite);
     } catch (e) {
-        console.warn('[syncBrandLinks] brands list fetch failed:', e);
-        return { failed: -1 };  // signal "couldn't even start"
+        console.warn(`[syncMembership/${mode}] couldn't read current set:`, e);
+        return { failed: -1, mode };
     }
 
+    const currentSet = new Set(current);
+    const desiredSet = new Set(desiredIds);
+    const toAdd = desiredIds.filter(id => !currentSet.has(id));
+    const toRemove = current.filter(id => !desiredSet.has(id));
+
     let failed = 0;
-    const tasks = brands.map(async (b) => {
-        const currentIds: number[] = Array.isArray(b.categories)
-            ? b.categories.map((c: any) => typeof c === 'number' ? c : c.id)
-            : [];
-        const has = currentIds.includes(categoryId);
-        const wants = desired.has(b.id);
-        if (has === wants) return;
-        const next = wants
-            ? Array.from(new Set([...currentIds, categoryId]))
-            : currentIds.filter((id) => id !== categoryId);
-        try {
-            await erpFetch(`inventory/brands/${b.id}/`, {
-                method: 'PATCH',
+    const tasks: Promise<void>[] = [];
+
+    for (const id of toAdd) {
+        tasks.push(
+            erpFetch(`categories/${categoryId}/${linkPath}/`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: next }),
-            });
-        } catch (e) {
-            console.warn(`[syncBrandLinks] brand ${b.id} update failed:`, e);
-            failed++;
-        }
-    });
+                body: JSON.stringify({ [idKey]: id }),
+            }).then(() => undefined).catch((e) => {
+                console.warn(`[syncMembership/${mode}] link ${id} failed:`, e);
+                failed++;
+            })
+        );
+    }
+    for (const id of toRemove) {
+        tasks.push(
+            erpFetch(`categories/${categoryId}/${unlinkPath}/?force=1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [idKey]: id, force: true }),
+            }).then(() => undefined).catch((e) => {
+                console.warn(`[syncMembership/${mode}] unlink ${id} failed:`, e);
+                failed++;
+            })
+        );
+    }
+
     await Promise.all(tasks);
-    return { failed };
+    return { failed, mode };
 }
 
 function readIntList(formData: FormData, key: string): number[] {
@@ -118,9 +166,10 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     }
 
     try {
-        // Only include `attributes` in the payload when the user actually
-        // touched the Attributes pane — otherwise the serializer would
-        // happily overwrite the M2M with [] on every save.
+        // CategorySerializer doesn't expose `attributes` as a writable
+        // field — that M2M is set via the dedicated /link_attribute/
+        // endpoint after creation (see syncMembership). We only POST the
+        // base fields here.
         const payload: Record<string, unknown> = {
             name,
             parent: parentId,
@@ -131,7 +180,6 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
             name_fr: nameFr,
             name_ar: nameAr,
         };
-        if (attributesDirty) payload.attributes = attributeIds;
 
         const result = await erpFetch('categories/', {
             method: 'POST',
@@ -150,23 +198,28 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
         }
 
-        // Brand links are reverse M2M — sync via per-brand PATCHes,
-        // but ONLY if the user actually touched the Brands pane. The
-        // empty-set case must not run blindly (it would unlink every
-        // brand that already references this category).
-        const newId = (result as any)?.id;
-        let brandWarning: string | undefined;
-        if (newId && brandsDirty) {
-            const r = await syncBrandLinks(Number(newId), brandIds);
-            if (r.failed > 0) brandWarning = `Category created but ${r.failed} brand link(s) failed to update.`;
-            if (r.failed === -1) brandWarning = 'Category created but the brand list could not be loaded — links not updated.';
+        // M2M sync via the dedicated link/unlink endpoints. Only runs
+        // when the user actually toggled chips in the corresponding pane;
+        // the dirty flags prevent blank-out on Identity-only saves.
+        const newId = Number((result as any)?.id);
+        const warnings: string[] = [];
+        if (newId) {
+            if (brandsDirty) {
+                const r = await syncMembership(newId, brandIds, 'brands');
+                if (r.failed > 0) warnings.push(`${r.failed} brand link(s) failed`);
+                if (r.failed === -1) warnings.push('brand link sync skipped — could not read current set');
+            }
+            if (attributesDirty) {
+                const r = await syncMembership(newId, attributeIds, 'attributes');
+                if (r.failed > 0) warnings.push(`${r.failed} attribute link(s) failed`);
+                if (r.failed === -1) warnings.push('attribute link sync skipped — could not read current set');
+            }
         }
 
         revalidatePath('/inventory/categories');
-        // The frontend treats `state.message === 'success'` as the close
-        // signal. If we have a warning to surface, return it instead so
-        // the modal stays open and shows the user what to retry.
-        return brandWarning ? { message: brandWarning } : { message: 'success' };
+        return warnings.length
+            ? { message: `Category created but: ${warnings.join('; ')}.` }
+            : { message: 'success' };
     } catch (e: unknown) {
         console.error('[createCategory] Exception:', e);
         const data = (e as any)?.data || (e as any)?.body;
@@ -209,8 +262,9 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             return { message: 'Category cannot be its own parent' };
         }
 
-        // Only forward `attributes` when the user touched the pane —
-        // otherwise the serializer would overwrite the M2M with [].
+        // CategorySerializer doesn't expose `attributes` as a writable
+        // field — that M2M is set via the dedicated /link_attribute/
+        // endpoint (see syncMembership). PATCH only the base fields here.
         const payload: Record<string, unknown> = {
             name,
             parent: parentId,
@@ -221,25 +275,12 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             name_fr: nameFr,
             name_ar: nameAr,
         };
-        if (attributesDirty) payload.attributes = attributeIds;
-
-        // [updateCategory DEBUG] surfaces what we're actually sending so
-        // we can tell whether a "save did nothing" complaint is a frontend
-        // dirty-flag issue, a backend M2M-write issue, or a stale-cache
-        // problem on the linked_* endpoints. Remove once root cause known.
-        console.log('[updateCategory DEBUG] id=', id,
-            'attributesDirty=', attributesDirty, 'attributeIds=', attributeIds,
-            'brandsDirty=', brandsDirty, 'brandIds=', brandIds,
-            'payload.attributes=', payload.attributes);
 
         const result = await erpFetch(`categories/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-
-        console.log('[updateCategory DEBUG] PATCH result attributes=',
-            (result as any)?.attributes, 'name=', (result as any)?.name);
 
         if (hasError(result)) {
             const fieldErrors = pickFieldErrors(result);
@@ -250,21 +291,24 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
         }
 
-        // Same dirty-gate as create — never run syncBrandLinks blindly,
-        // it would clear every existing brand→category link otherwise.
-        let brandWarning: string | undefined;
+        // M2M sync via dedicated link/unlink endpoints. Dirty flags
+        // ensure Identity-only saves don't blow away existing links.
+        const warnings: string[] = [];
         if (brandsDirty) {
-            console.log('[updateCategory DEBUG] running syncBrandLinks with', brandIds);
-            const r = await syncBrandLinks(id, brandIds);
-            console.log('[updateCategory DEBUG] syncBrandLinks result', r);
-            if (r.failed > 0) brandWarning = `Category updated but ${r.failed} brand link(s) failed to update.`;
-            if (r.failed === -1) brandWarning = 'Category updated but the brand list could not be loaded — links not updated.';
-        } else {
-            console.log('[updateCategory DEBUG] brandsDirty=false → skipping syncBrandLinks');
+            const r = await syncMembership(id, brandIds, 'brands');
+            if (r.failed > 0) warnings.push(`${r.failed} brand link(s) failed`);
+            if (r.failed === -1) warnings.push('brand link sync skipped — could not read current set');
+        }
+        if (attributesDirty) {
+            const r = await syncMembership(id, attributeIds, 'attributes');
+            if (r.failed > 0) warnings.push(`${r.failed} attribute link(s) failed`);
+            if (r.failed === -1) warnings.push('attribute link sync skipped — could not read current set');
         }
 
         revalidatePath('/inventory/categories');
-        return brandWarning ? { message: brandWarning } : { message: 'success' };
+        return warnings.length
+            ? { message: `Category updated but: ${warnings.join('; ')}.` }
+            : { message: 'success' };
     } catch (e: unknown) {
         console.error('[updateCategory] Exception:', e);
         const data = (e as any)?.data || (e as any)?.body;
