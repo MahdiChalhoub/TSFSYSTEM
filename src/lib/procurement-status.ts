@@ -321,6 +321,13 @@ export const DEFAULT_RECOVERY_POLICY: PipelineRecoveryPolicy = {
  *  entered the terminal state and the active policy. Use this in the
  *  pipeline chip renderer so the same row "ages out" of Failed/Cancelled
  *  on its own without a backend cron.
+ *
+ *  Storage of truth: the active policy lives in the database
+ *  (Organization.settings via /api/settings/item/procurement_recovery_policy/).
+ *  Components fetch it through the useProcurementRecoveryPolicy() hook,
+ *  which dedups in module memory per tab. There is intentionally NO
+ *  localStorage layer — multi-tab and multi-device behaviour stays
+ *  consistent because every read goes through the server.
  */
 export function applyRecoveryPolicy(
     status: PipelineStatus,
@@ -337,7 +344,9 @@ export function applyRecoveryPolicy(
         days = rule.perReasonDays[rejectionReason]
     }
     if (days === null) return status              // never auto-recover
-    if (!terminalSince) return status              // can't compute age
+    if (days === 0) return 'NONE'                  // recycle immediately, no
+                                                   // need to know terminalSince
+    if (!terminalSince) return status              // need entry time to age
     const ageMs = Date.now() - new Date(terminalSince).getTime()
     const ageDays = ageMs / (24 * 60 * 60 * 1000)
     return ageDays >= days ? 'NONE' : status
