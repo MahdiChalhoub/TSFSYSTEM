@@ -155,10 +155,46 @@ export function CategoryFormModal({
             );
         }).catch(() => { /* keep cached */ });
 
-        // NOTE: brand + attribute trees are NOT loaded here. They load on
-        // demand the first time the user opens the Brands or Attributes
-        // pane (see ensureLinksLoaded below). Saves a noticeable chunk of
-        // the modal's open time when the user only edits Identity.
+        // ── Edit mode: pre-seed Brand + Attribute selections ──
+        // The category list payload only carries counts (`brand_count`,
+        // `attribute_count`), not the actual ids. Backend exposes two
+        // dedicated endpoints that return the authoritative link sets
+        // (auto-derived from products ∪ explicit M2M):
+        //
+        //   GET /api/categories/<id>/linked_brands/
+        //   GET /api/categories/<id>/linked_attributes/
+        //
+        // Hit both in parallel so the chips are pre-checked before the
+        // user even clicks the Brands or Attributes tab.
+        if (category?.id) {
+            const cid = Number(category.id);
+
+            erpFetch(`categories/${cid}/linked_brands/`)
+                .then((r: any) => {
+                    const list: any[] = Array.isArray(r) ? r : (r?.results ?? r?.brands ?? []);
+                    const ids = list
+                        .map(b => Number(typeof b === 'number' ? b : b?.id))
+                        .filter(Number.isFinite);
+                    if (ids.length > 0) setSelectedBrandIds(new Set(ids));
+                })
+                .catch(() => { /* leave empty — user can still link */ });
+
+            erpFetch(`categories/${cid}/linked_attributes/`)
+                .then((r: any) => {
+                    const list: any[] = Array.isArray(r) ? r : (r?.results ?? r?.attributes ?? []);
+                    const ids = list
+                        .map(a => Number(typeof a === 'number' ? a : a?.id))
+                        .filter(Number.isFinite);
+                    if (ids.length > 0) setSelectedAttrIds(new Set(ids));
+                })
+                .catch(() => { /* leave empty */ });
+        }
+
+        // NOTE: brand + attribute trees themselves are NOT loaded here;
+        // they fetch on demand the first time the user opens the Brands
+        // or Attributes pane (see ensureLinksLoaded below). Saves a
+        // noticeable chunk of the modal's open time when the user only
+        // edits Identity.
     }, [isOpen, parentId, category]);
 
     // Lazy loader for the Brands + Attributes panes. First time the user
