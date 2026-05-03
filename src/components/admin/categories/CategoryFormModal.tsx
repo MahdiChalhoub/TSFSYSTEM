@@ -55,11 +55,16 @@ type TreeNode = {
 export function CategoryFormModal({
     isOpen, onClose, category, parentId, potentialParents = [],
 }: CategoryFormModalProps) {
-    const [state, formAction] = useActionState(
+    // useActionState gives us a built-in `isPending` that flips false the
+    // moment the action resolves. The previous code drove `pending` from
+    // its own useState and called setPending(true) in the action wrapper
+    // but never setPending(false) — so saves stayed stuck on the spinner
+    // forever even after success. Always use the third tuple slot.
+    const [state, formAction, isPending] = useActionState(
         category ? updateCategory.bind(null, category.id) : createCategory,
         initialState,
     );
-    const [pending, setPending] = useState(false);
+    const pending = isPending;
     const [activePane, setActivePane] = useState<PaneKey>('identity');
 
     // ── Hierarchy state ──
@@ -312,7 +317,7 @@ export function CategoryFormModal({
                      sliver next to the form on narrow viewports. */}
                 <form
                     id="category-form"
-                    action={(formData) => { setPending(true); formAction(formData); }}
+                    action={formAction}
                     className="flex-1 flex flex-col md:flex-row min-h-0"
                 >
                     {/* Sidebar nav (desktop, ≥768px) */}
