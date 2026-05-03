@@ -1,5 +1,4 @@
 import { Metadata } from 'next'
-import { erpFetch } from '@/lib/erp-api'
 import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions'
 import PurchaseOrdersPage from './page-client'
 
@@ -9,16 +8,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-dynamic'
-
-async function getPurchaseOrders() {
-    try {
-        const data = await erpFetch(`purchase-orders/`)
-        return Array.isArray(data) ? data : (data?.results ?? [])
-    } catch (e) {
-        console.error('Failed to fetch purchase orders:', e)
-        return []
-    }
-}
 
 async function getOrgCurrency(): Promise<string> {
     // Reuses the layout's cached org fetch (React.cache dedup) instead of
@@ -33,9 +22,11 @@ async function getOrgCurrency(): Promise<string> {
 }
 
 export default async function Page() {
-    const [initialOrders, currency] = await Promise.all([
-        getPurchaseOrders(),
-        getOrgCurrency(),
-    ])
-    return <PurchaseOrdersPage initialOrders={initialOrders} currency={currency} />
+    // Skip the server-side PO fetch — it blocks FCP for ~hundreds of ms
+    // (longer in dev mode). The client component (page-client.tsx) already
+    // calls fetchData() in a mount-effect when initialOrders is empty, so
+    // the shell paints first and data streams in once the client mounts.
+    // Net effect: FCP drops from "after backend round-trip" to "shell only".
+    const currency = await getOrgCurrency()
+    return <PurchaseOrdersPage initialOrders={[]} currency={currency} />
 }

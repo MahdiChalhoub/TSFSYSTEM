@@ -128,6 +128,15 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
     if (!supplierId) return { errors: { supplierId: ['Supplier is required.'] }, message: 'Supplier is required.' };
     if (!warehouseId) return { errors: { warehouseId: ['Warehouse is required.'] }, message: 'Warehouse is required.' };
 
+    // Initial status — the form lets staff pick DRAFT / SUBMITTED /
+    // APPROVED on create (plain users get DRAFT only, gated client-side
+    // in form.tsx::handleStatusChange). Whitelist here as a defense-in-
+    // depth check so a hand-crafted POST can't skip into ORDERED+
+    // without going through the Receive / Invoice flows.
+    const rawStatus = (orUndef(formData.get('status')) || 'DRAFT').toUpperCase();
+    const allowedCreateStatuses = ['DRAFT', 'SUBMITTED', 'APPROVED'];
+    const initialStatus = allowedCreateStatuses.includes(rawStatus) ? rawStatus : 'DRAFT';
+
     const payload = {
         supplier: Number(supplierId),
         site: siteId ? Number(siteId) : null,
@@ -137,8 +146,7 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         expected_date: orUndef(formData.get('expectedDelivery') ?? formData.get('deliveryDate')),
         supplier_ref: orUndef(formData.get('supplierRef')),
         notes: orUndef(formData.get('notes')),
-        // Status defaults to DRAFT in the model — don't set it; lifecycle
-        // transitions move it forward via the explicit status endpoints.
+        status: initialStatus,
         lines: rawLines
             .filter(l => l && (l as any).productId)
             .map(l => {
@@ -396,34 +404,42 @@ export async function deletePurchaseOrder(poId: number | string): Promise<{ ok?:
 
 /** Apply the same status transition to every id in the list. Returns
  *  per-id result so the UI can surface partial failures (a typical case:
- *  some POs are already in a terminal state and reject the transition). */
+ *  some POs are already in a terminal state and reject the transition).
+ *
+ *  Runs in parallel — the previous sequential loop made a 12-PO bulk
+ *  click feel like 1+ second of dead time. The user-throttle (2000/min)
+ *  has plenty of headroom for typical bulk sizes; if a tenant routinely
+ *  bulk-actions hundreds of POs, switch to a chunked Promise.all. */
 export async function bulkTransitionPurchaseOrders(
     poIds: Array<number | string>,
     toStatus: string,
     reason?: string,
 ): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
+    const results = await Promise.all(
+        poIds.map(id => transitionPurchaseOrderStatus(id, toStatus, reason)
+            .then(r => ({ id, ...r })))
+    )
     const failed: Array<{ id: number | string; error: string }> = []
     let succeeded = 0
-    // Sequential — POs are few per click and the backend has its own rate
-    // limits. Parallel would risk hitting the user-throttle.
-    for (const id of poIds) {
-        const r = await transitionPurchaseOrderStatus(id, toStatus, reason)
-        if (r.error) failed.push({ id, error: r.error })
+    for (const r of results) {
+        if (r.error) failed.push({ id: r.id, error: r.error })
         else succeeded += 1
     }
     revalidatePath('/purchases')
     return { succeeded, failed }
 }
 
-/** Bulk DELETE — same per-id-result pattern as the bulk transition. */
+/** Bulk DELETE — parallel for the same UX reasons as bulkTransition. */
 export async function bulkDeletePurchaseOrders(
     poIds: Array<number | string>,
 ): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
+    const results = await Promise.all(
+        poIds.map(id => deletePurchaseOrder(id).then(r => ({ id, ...r })))
+    )
     const failed: Array<{ id: number | string; error: string }> = []
     let succeeded = 0
-    for (const id of poIds) {
-        const r = await deletePurchaseOrder(id)
-        if (r.error) failed.push({ id, error: r.error })
+    for (const r of results) {
+        if (r.error) failed.push({ id: r.id, error: r.error })
         else succeeded += 1
     }
     revalidatePath('/purchases')

@@ -156,8 +156,14 @@ export default function PurchaseOrdersManager({
   const stats = useMemo(() => {
     const total = orders.length
     const totalValue = orders.reduce((s, o) => s + Number(o.total_amount || 0), 0)
+    // Lifecycle buckets — every non-cancelled / non-rejected status MUST
+    // land in one of these counters, otherwise it disappears from the
+    // KPI strip and operators can't tell what's in flight.
+    //   Pending   = paperwork (no GL impact yet)
+    //   Incoming  = sent to supplier OR partial receipt (goods on the way)
+    //   Completed = fully received / invoiced / closed
     const pending = orders.filter(o => ['DRAFT', 'SUBMITTED', 'APPROVED'].includes(o.status)).length
-    const incoming = orders.filter(o => ['SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(o.status)).length
+    const incoming = orders.filter(o => ['ORDERED', 'SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(o.status)).length
     const completed = orders.filter(o => ['RECEIVED', 'COMPLETED', 'INVOICED'].includes(o.status)).length
     return { total, totalValue, pending, incoming, completed }
   }, [orders])

@@ -33,19 +33,34 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
         return () => { cancelled = true }
     }, [brandId])
 
+    // Bucket products by attribute value, plus an explicit
+    // "(No attributes)" group for products carrying zero attribute_values.
+    // The +1 bucket aligns this list count with the chip count from the
+    // brand serializer's get_attribute_count, which also adds 1 when any
+    // product is unattributed.
     const rows = useMemo<AttrRow[]>(() => {
         const map = new Map<string, AttrProduct[]>()
+        const noAttrs: AttrProduct[] = []
         products.forEach(p => {
+            const id = (p as any).id as number
+            const name = (p as any).name as string
             const attrs = (p as any).attribute_value_names as string[] | undefined
-            if (!attrs || attrs.length === 0) return
+            if (!attrs || attrs.length === 0) {
+                noAttrs.push({ id, name })
+                return
+            }
             attrs.forEach(v => {
                 if (!map.has(v)) map.set(v, [])
-                map.get(v)!.push({ id: (p as any).id, name: (p as any).name })
+                map.get(v)!.push({ id, name })
             })
         })
-        return [...map.entries()]
+        const named = [...map.entries()]
             .map(([value, products]) => ({ value, products }))
             .sort((a, b) => a.value.localeCompare(b.value))
+        if (noAttrs.length > 0) {
+            named.push({ value: '(No attributes)', products: noAttrs })
+        }
+        return named
     }, [products])
 
     if (loading) {

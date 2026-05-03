@@ -17,6 +17,11 @@ interface CategoryRow { id: number; name: string }
 export function CategoriesTab({ brandId, brandName }: { brandId: number; brandName: string }) {
     const [linkedCats, setLinkedCats] = useState<CategoryRow[]>([])
     const [allCats, setAllCats] = useState<CategoryRow[]>([])
+    // M2M-linked ids tracked separately so rows derived purely from
+    // products can hide their Unlink button (clicking Unlink would
+    // PATCH a no-op against the M2M and the row would stay because
+    // the product still has the category FK).
+    const [m2mIds, setM2mIds] = useState<Set<number>>(new Set())
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
@@ -43,9 +48,10 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
             setAllCats(masterCats)
 
             const m2mRaw = brandData?.categories
-            const m2mIds: number[] = Array.isArray(m2mRaw)
+            const m2mIdsLocal: number[] = Array.isArray(m2mRaw)
                 ? m2mRaw.map((c: any) => typeof c === 'number' ? c : c?.id).filter((n): n is number => typeof n === 'number')
                 : []
+            setM2mIds(new Set(m2mIdsLocal))
 
             const products = Array.isArray(prodData) ? prodData : (prodData?.results ?? [])
             const fromProducts = new Map<number, string>()
@@ -54,7 +60,7 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
             })
 
             const merged = new Map<number, string>()
-            m2mIds.forEach(id => {
+            m2mIdsLocal.forEach(id => {
                 const name = idToName.get(id) || `Category #${id}`
                 merged.set(id, name)
             })
@@ -66,15 +72,22 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
 
     useEffect(() => { loadData() }, [loadData])
 
-    const linkedIds = useMemo(() => new Set(linkedCats.map(c => c.id)), [linkedCats])
-    const unlinkedCats = allCats.filter(c => !linkedIds.has(c.id))
+    // The picker should offer every category not currently in the M2M
+    // (even ones already inferred from products — re-adding via M2M is
+    // a meaningful action that locks the link in place independent of
+    // any specific product). Using m2mIds (not the merged linkedIds)
+    // is the correct source of truth for "what's linked at the brand".
+    const unlinkedCats = useMemo(
+        () => allCats.filter(c => !m2mIds.has(c.id)),
+        [allCats, m2mIds]
+    )
 
     const linkCategory = async (catId: number) => {
         setLinking(true)
         try {
             await erpFetch(`inventory/brands/${brandId}/`, {
                 method: 'PATCH',
-                body: JSON.stringify({ category_ids: [...Array.from(linkedIds), catId] }),
+                body: JSON.stringify({ category_ids: [...Array.from(m2mIds), catId] }),
             })
             toast.success('Category linked')
             loadData(); router.refresh()
@@ -90,7 +103,7 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
         try {
             await erpFetch(`inventory/brands/${brandId}/`, {
                 method: 'PATCH',
-                body: JSON.stringify({ category_ids: Array.from(linkedIds).filter(id => id !== catId) }),
+                body: JSON.stringify({ category_ids: Array.from(m2mIds).filter(id => id !== catId) }),
             })
             toast.success('Category unlinked')
             loadData(); router.refresh()
@@ -141,24 +154,40 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
                     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                         <FolderTree size={32} className="text-app-muted-foreground mb-2 opacity-40" />
                         <p className="text-tp-md font-semibold text-app-muted-foreground">No categories linked</p>
-                        <p className="text-tp-sm text-app-muted-foreground mt-1">Categories appear when products use them.</p>
+                        <p className="text-tp-sm text-app-muted-foreground mt-1">
+                            {brandName} has no products tied to a category yet. Use Link above to add one.
+                        </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {linkedCats.map(c => (
-                            <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
-                                    <FolderTree size={13} />
+                        {linkedCats.map(c => {
+                            const isFromM2M = m2mIds.has(c.id)
+                            return (
+                                <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
+                                        <FolderTree size={13} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-tp-md font-semibold text-app-foreground truncate">{c.name}</p>
+                                        <p className="text-tp-xxs font-medium text-app-muted-foreground">
+                                            {isFromM2M ? 'Linked via brand' : 'Inferred from product category'}
+                                        </p>
+                                    </div>
+                                    {/* Unlink only renders for M2M-linked rows. Rows
+                                        that are only here because a product carries
+                                        the FK can't be removed via this PATCH — the
+                                        product would need its category cleared. */}
+                                    {isFromM2M && (
+                                        <button onClick={() => unlinkCategory(c.id)} disabled={linking}
+                                            className="flex items-center gap-1 text-tp-xs font-semibold px-2 py-1 rounded-lg transition-all disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
+                                            <Unlink size={11} />Unlink
+                                        </button>
+                                    )}
                                 </div>
-                                <p className="flex-1 min-w-0 text-tp-md font-semibold text-app-foreground truncate">{c.name}</p>
-                                <button onClick={() => unlinkCategory(c.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xs font-semibold px-2 py-1 rounded-lg transition-all disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
-                                    <Unlink size={11} />Unlink
-                                </button>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 )}
             </div>

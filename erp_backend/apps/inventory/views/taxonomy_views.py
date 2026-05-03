@@ -792,7 +792,6 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     pagination_class = None  # Taxonomy data — return all brands for tree building
 
     def list(self, request, *args, **kwargs):
-        print(f"[DEBUG] BrandViewSet.list called for org: {request.headers.get('X-Tenant-Id')}")
         organization, err = _get_org_or_400()
         if err: return err
 
@@ -800,10 +799,15 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
         
         with_counts = str(request.query_params.get('with_counts', '')).lower() in ('true', '1', 'yes')
         context = self.get_serializer_context()
-        
+
         if with_counts:
-            # Bulk-calculate product counts to avoid N+1 queries
-            context['product_counts'] = BrandSerializer.prefetch_counts(organization)
+            # Bulk-prefetch all four chip counts (product, category,
+            # country, attribute) so the serializer's getters become
+            # O(1) lookups instead of N+1 queries each. The cache:
+            # 'no-store' on the brands page makes this list call run
+            # on every page hit, so the saving compounds.
+            bundles = BrandSerializer.prefetch_counts(organization)
+            context.update(bundles)
 
         serializer = self.get_serializer(queryset, many=True, context=context)
         return Response(serializer.data)

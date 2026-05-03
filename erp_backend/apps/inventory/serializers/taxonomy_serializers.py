@@ -295,6 +295,9 @@ class BrandSerializer(serializers.ModelSerializer):
         return Product.objects.filter(brand=obj).count()
 
     def get_category_count(self, obj):
+        pre = (self.context or {}).get('category_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
         m2m_ids = set(obj.categories.values_list('id', flat=True))
         product_ids = set(
             obj.products.exclude(category__isnull=True).values_list('category', flat=True)
@@ -304,6 +307,9 @@ class BrandSerializer(serializers.ModelSerializer):
         return len(union_ids) + (1 if has_uncategorized else 0)
 
     def get_country_count(self, obj):
+        pre = (self.context or {}).get('country_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
         m2m_ids = set(obj.countries.values_list('id', flat=True))
         product_ids = set(
             obj.products.exclude(country__isnull=True).values_list('country', flat=True)
@@ -313,6 +319,9 @@ class BrandSerializer(serializers.ModelSerializer):
         return len(union_ids) + (1 if has_universal else 0)
 
     def get_attribute_count(self, obj):
+        pre = (self.context or {}).get('attribute_counts')
+        if pre is not None:
+            return pre.get(obj.id, 0)
         # Attributes only come from products (no brand↔attribute M2M in
         # the schema). Plus a "No attributes" bucket if any product has
         # zero attribute_values.
@@ -327,19 +336,129 @@ class BrandSerializer(serializers.ModelSerializer):
 
     @classmethod
     def prefetch_counts(cls, organization):
-        """
-        Bulk calculate product counts for all brands in an organization.
-        Returns a dict mapping brand_id -> product_count.
+        """Bulk-calculate the four chip counts for every brand in the
+        organization. Returns a dict of dicts:
+
+            {
+              'product_counts':   {brand_id: int, ...},
+              'category_counts':  {brand_id: int, ...},
+              'country_counts':   {brand_id: int, ...},
+              'attribute_counts': {brand_id: int, ...},
+            }
+
+        Computing all four here avoids the N+1 storm where each
+        SerializerMethodField would otherwise hit the DB once per
+        brand on every list call (and the brands page sets
+        cache: 'no-store', so this list call runs on every page hit).
+
+        Each *_count value matches the per-brand union-and-bucket
+        formula used by the matching getter — see those getters for
+        the semantics.
         """
         from django.db.models import Count
-        from apps.inventory.models import Product
-        
-        counts = Product.objects.filter(organization=organization) \
-            .values('brand_id') \
-            .annotate(count=Count('id')) \
-            .filter(brand_id__isnull=False)
-            
-        return {item['brand_id']: item['count'] for item in counts}
+        from apps.inventory.models import Product, Brand, ProductAttribute
+
+        scope = Product.objects.filter(organization=organization)
+
+        # Product counts — one row per (brand_id) with .count.
+        product_rows = (
+            scope.values('brand_id').annotate(count=Count('id'))
+                 .filter(brand_id__isnull=False)
+        )
+        product_counts = {r['brand_id']: r['count'] for r in product_rows}
+
+        # Category & country: collect (brand_id, fk_id) pairs once,
+        # then derive distinct sets per brand. Also tracks which brands
+        # have at least one product with the FK NULL ("Universal" /
+        # "Uncategorized" bucket — adds +1 to the count).
+        cat_pairs = scope.values_list('brand_id', 'category')
+        country_pairs = scope.values_list('brand_id', 'country')
+
+        cat_sets: dict[int, set] = {}
+        cat_has_null: set[int] = set()
+        for b, c in cat_pairs:
+            if b is None:
+                continue
+            if c is None:
+                cat_has_null.add(b)
+            else:
+                cat_sets.setdefault(b, set()).add(c)
+
+        country_sets: dict[int, set] = {}
+        country_has_null: set[int] = set()
+        for b, c in country_pairs:
+            if b is None:
+                continue
+            if c is None:
+                country_has_null.add(b)
+            else:
+                country_sets.setdefault(b, set()).add(c)
+
+        # Fold in the M2M brand.categories / brand.countries (counts
+        # are the union of M2M-linked AND product-derived).
+        cat_m2m = Brand.categories.through.objects.filter(
+            brand__organization=organization
+        ).values_list('brand_id', 'category_id')
+        for b, c in cat_m2m:
+            cat_sets.setdefault(b, set()).add(c)
+
+        country_m2m = Brand.countries.through.objects.filter(
+            brand__organization=organization
+        ).values_list('brand_id', 'country_id')
+        for b, c in country_m2m:
+            country_sets.setdefault(b, set()).add(c)
+
+        category_counts = {
+            b: len(s) + (1 if b in cat_has_null else 0)
+            for b, s in cat_sets.items()
+        }
+        # Brands with only-uncategorized products (and no real cats)
+        # still need the +1 bucket recorded.
+        for b in cat_has_null:
+            category_counts.setdefault(b, 1)
+
+        country_counts = {
+            b: len(s) + (1 if b in country_has_null else 0)
+            for b, s in country_sets.items()
+        }
+        for b in country_has_null:
+            country_counts.setdefault(b, 1)
+
+        # Attributes: distinct ProductAttribute leaves used by each
+        # brand's products (via the Product.attribute_values M2M),
+        # plus a +1 "No attributes" bucket per brand that has any
+        # product with zero attribute_values.
+        attr_pairs = ProductAttribute.objects.filter(
+            products_with_attribute__brand__organization=organization
+        ).values_list('products_with_attribute__brand_id', 'id')
+
+        attr_sets: dict[int, set] = {}
+        for b, a in attr_pairs:
+            if b is None:
+                continue
+            attr_sets.setdefault(b, set()).add(a)
+
+        # Brands with at least one fully-unattributed product.
+        unattr_brands = set(
+            scope.filter(attribute_values__isnull=True)
+                 .exclude(brand_id__isnull=True)
+                 .values_list('brand_id', flat=True)
+                 .distinct()
+        )
+
+        attribute_counts = {
+            b: len(s) + (1 if b in unattr_brands else 0)
+            for b, s in attr_sets.items()
+        }
+        for b in unattr_brands:
+            attribute_counts.setdefault(b, 1)
+
+        return {
+            'product_counts':   product_counts,
+            'category_counts':  category_counts,
+            'country_counts':   country_counts,
+            'attribute_counts': attribute_counts,
+        }
 
 
 class BrandDetailSerializer(serializers.ModelSerializer):

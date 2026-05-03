@@ -302,16 +302,37 @@ export default function PurchaseForm({
     const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
     const [statusTransitioning, setStatusTransitioning] = useState(false)
 
+    /** Statuses the user can SET on create (gated by role).
+     *  - Plain users: DRAFT only.
+     *  - Staff / superuser: DRAFT, SUBMITTED, APPROVED — i.e. they can
+     *    short-circuit the approval workflow when the PO is being entered
+     *    after-the-fact (a phone-confirmed order, an already-signed quote).
+     *  Lifecycle states beyond APPROVED (ORDERED / RECEIVED / INVOICED…)
+     *  are never reachable on create — they require GRN / invoice match. */
+    const allowedCreateStatuses: POStatus[] = isStaff
+        ? ['DRAFT', 'SUBMITTED', 'APPROVED']
+        : ['DRAFT']
+
     const handleStatusChange = useCallback(async (next: POStatus) => {
-        if (!isEdit || !editId) return
         if (next === poStatus) return
+
+        // Create mode: the PO doesn't exist yet, so we can't call the
+        // transition endpoint. Just stash the desired initial status —
+        // it travels with the form payload to the backend on save.
+        if (!isEdit || !editId) {
+            if (!allowedCreateStatuses.includes(next)) {
+                toast.error(`You don't have permission to start a PO as ${next.toLowerCase()}.`)
+                return
+            }
+            setPoStatus(next)
+            return
+        }
 
         setStatusTransitioning(true)
         try {
             const result = await transitionPurchaseOrderStatus(editId, next)
             if (result.error) {
                 toast.error(result.error)
-                // If the backend tells us the actual status, sync to it
                 if (result.current_status) {
                     setPoStatus(result.current_status as POStatus)
                 }
@@ -325,7 +346,8 @@ export default function PurchaseForm({
         } finally {
             setStatusTransitioning(false)
         }
-    }, [isEdit, editId, poStatus])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEdit, editId, poStatus, isStaff])
 
     const selectedSupplier = useMemo(() => suppliers.find(s => Number(s.id) === Number(supplierId)), [suppliers, supplierId])
     const selectedSite = useMemo(() => sites.find(s => Number(s.id) === Number(selectedSiteId)), [sites, selectedSiteId])
@@ -655,6 +677,11 @@ export default function PurchaseForm({
                             <input type="hidden" name="orderDate" value={date} />
                             <input type="hidden" name="expectedDelivery" value={deliveryDate} />
                             <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+                            {/* Initial PO status — DRAFT for plain users,
+                                Staff can choose Submitted/Approved (gated
+                                in handleStatusChange). Travels to the
+                                createPurchaseOrder action and onto Django. */}
+                            <input type="hidden" name="status" value={poStatus} />
                             <button type="submit" disabled={!canSubmit}
                                     className="h-9 px-3.5 flex items-center gap-1.5 text-[11px] font-bold rounded-xl border transition-all active:scale-[0.97] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
                                     style={{

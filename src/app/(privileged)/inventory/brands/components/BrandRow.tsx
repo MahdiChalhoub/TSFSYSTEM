@@ -35,7 +35,11 @@ export function BrandRow({
     const [openCountries, setOpenCountries] = useState<Set<string>>(new Set())
     const [openCategories, setOpenCategories] = useState<Set<string>>(new Set())
     const [openAttrs, setOpenAttrs] = useState<Set<string>>(new Set())
-    const [openFacets, setOpenFacets] = useState<Set<string>>(new Set(['country']))
+    // All three facet sections start open so the first expand of a
+    // brand reveals the full Category / Country / Attribute breakdown
+    // immediately. Previously only Country was open, which made
+    // Category and Attribute look hidden / empty on first view.
+    const [openFacets, setOpenFacets] = useState<Set<string>>(new Set(['category', 'country', 'attribute']))
 
     const cats = brand.categories?.length || 0
     const countries = brand.countries?.length || 0
