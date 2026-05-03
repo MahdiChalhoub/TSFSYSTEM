@@ -201,33 +201,128 @@ def apply_scope_suggestion(value, *, add_categories=None, add_countries=None, ad
     Apply an accepted suggestion. Adds the listed ids to the value's
     scope M2Ms (idempotent — already-linked ids are no-ops).
 
+    Phase 5: also writes an audit_log entry per axis describing the
+    before / after state, so operators can see in the audit trail
+    exactly which categories / countries / brands were added to a
+    value's scope, and by whom.
+
     Returns a small audit dict describing what changed so the wizard can
-    surface a confirmation toast and the audit log can record the diff.
+    surface a confirmation toast.
     """
     if not all(hasattr(value, n) for n in ('scope_categories', 'scope_countries', 'scope_brands')):
         # Migration not applied — silently skip rather than crash.
         return {'applied': False, 'reason': 'migration not applied'}
 
-    diff = {'added': {'categories': [], 'countries': [], 'brands': []}}
+    diff = {'added': {'categories': [], 'countries': [], 'brands': []}, 'before': {}, 'after': {}}
+
+    # Snapshot before — used for the audit log diff.
+    diff['before'] = {
+        'categories': sorted(value.scope_categories.values_list('id', flat=True)),
+        'countries':  sorted(value.scope_countries.values_list('id', flat=True)),
+        'brands':     sorted(value.scope_brands.values_list('id', flat=True)),
+    }
 
     if add_categories:
-        existing = set(value.scope_categories.values_list('id', flat=True))
+        existing = set(diff['before']['categories'])
         new_ids = [i for i in add_categories if i not in existing]
         if new_ids:
             value.scope_categories.add(*new_ids)
             diff['added']['categories'] = new_ids
     if add_countries:
-        existing = set(value.scope_countries.values_list('id', flat=True))
+        existing = set(diff['before']['countries'])
         new_ids = [i for i in add_countries if i not in existing]
         if new_ids:
             value.scope_countries.add(*new_ids)
             diff['added']['countries'] = new_ids
     if add_brands:
-        existing = set(value.scope_brands.values_list('id', flat=True))
+        existing = set(diff['before']['brands'])
         new_ids = [i for i in add_brands if i not in existing]
         if new_ids:
             value.scope_brands.add(*new_ids)
             diff['added']['brands'] = new_ids
 
     diff['applied'] = any(diff['added'].values())
+
+    if diff['applied']:
+        diff['after'] = {
+            'categories': sorted(value.scope_categories.values_list('id', flat=True)),
+            'countries':  sorted(value.scope_countries.values_list('id', flat=True)),
+            'brands':     sorted(value.scope_brands.values_list('id', flat=True)),
+        }
+        # Phase 5: audit log entry. Best-effort — never block the apply
+        # on an audit failure (the logger has its own fallback).
+        try:
+            from kernel.audit.audit_logger import audit_log
+            audit_log(
+                action='attribute_value.scope_changed',
+                resource_type='product_attribute',
+                resource_id=value.pk,
+                resource_repr=f'{value.parent.name if value.parent else "?"}: {value.name}',
+                details={
+                    'before': diff['before'],
+                    'after':  diff['after'],
+                    'added':  diff['added'],
+                },
+                severity='INFO',
+            )
+        except Exception as e:  # noqa: BLE001 — audit must never break the operation
+            logger.warning('attribute_value.scope_changed audit log failed: %s', e)
+
     return diff
+
+
+def impact_of_scope(value, *, add_categories=None, remove_categories=None,
+                    add_countries=None, remove_countries=None,
+                    add_brands=None,  remove_brands=None) -> dict:
+    """
+    Phase 5: preview "what would change" before applying a scope edit.
+
+    Returns:
+      {
+        'products_currently_using_value':  N,
+        'products_that_would_lose_access': N,   # because newly out-of-scope
+        'losers_sample': [{id, name}, ...],     # first 10 affected products
+      }
+
+    Operator UI shows this in a confirm dialog so a destructive scope
+    narrowing surfaces its blast radius before the click.
+    """
+    from django.apps import apps as django_apps
+    from django.db.models import Q
+
+    Product = django_apps.get_model('inventory', 'Product')
+
+    # Current set on each axis (post-edit prediction).
+    cur_cats = set(value.scope_categories.values_list('id', flat=True))
+    cur_cous = set(value.scope_countries.values_list('id', flat=True))
+    cur_bras = set(value.scope_brands.values_list('id', flat=True))
+
+    new_cats = (cur_cats | set(add_categories or [])) - set(remove_categories or [])
+    new_cous = (cur_cous | set(add_countries or []))  - set(remove_countries or [])
+    new_bras = (cur_bras | set(add_brands or []))     - set(remove_brands or [])
+
+    using = Product.objects.filter(attribute_values=value)
+    total = using.count()
+
+    # A product loses access when, for any axis where the new scope is
+    # NON-empty, the product's matching field id is NOT in the new set.
+    losers = using
+    if new_cats:
+        losers = losers.exclude(category_id__in=new_cats).exclude(category_id__isnull=True) | losers.filter(category_id__isnull=True).none()
+        # Above: products whose category isn't in the new categorical
+        # scope are losers. Products with NULL category fall through to
+        # universal-by-axis behaviour — they would still match.
+        losers = using.filter(~Q(category_id__in=new_cats) & Q(category_id__isnull=False))
+    if new_cous:
+        losers = losers | using.filter(~Q(country_of_origin_id__in=new_cous) & Q(country_of_origin_id__isnull=False))
+    if new_bras:
+        losers = losers | using.filter(~Q(brand_id__in=new_bras) & Q(brand_id__isnull=False))
+
+    losers = losers.distinct()
+    sample = list(losers.values('id', 'name')[:10])
+
+    return {
+        'products_currently_using_value':  total,
+        'products_that_would_lose_access': losers.count(),
+        'losers_sample': sample,
+    }

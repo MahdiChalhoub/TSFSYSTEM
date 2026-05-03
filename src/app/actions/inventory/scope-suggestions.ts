@@ -41,6 +41,40 @@ export async function listScopeSuggestions(valueIds?: number[]): Promise<ScopeSu
     }
 }
 
+/**
+ * Phase 5: preview the impact of a scope edit BEFORE applying it.
+ *
+ * Returns counts + a sample of products that would lose access to this
+ * value if the proposed add/remove sets were applied. The wizard shows
+ * this in a confirmation dialog when products_that_would_lose_access > 0.
+ */
+export type ScopeImpact = {
+    products_currently_using_value: number
+    products_that_would_lose_access: number
+    losers_sample: { id: number; name: string }[]
+}
+
+export async function previewScopeImpact(
+    valueId: number,
+    delta: {
+        add_categories?: number[]; remove_categories?: number[]
+        add_countries?:  number[]; remove_countries?:  number[]
+        add_brands?:     number[]; remove_brands?:     number[]
+    },
+): Promise<ScopeImpact | null> {
+    try {
+        const r = await erpFetch(`inventory/product-attributes/${valueId}/scope-impact/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(delta),
+        })
+        return r as ScopeImpact
+    } catch (e) {
+        console.warn('[scope-impact] preview failed', e)
+        return null
+    }
+}
+
 export async function applyScopeSuggestion(
     valueId: number,
     add: { categories?: number[]; countries?: number[]; brands?: number[] },

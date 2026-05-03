@@ -522,6 +522,30 @@ class ProductAttributeViewSet(TenantModelViewSet):
         )
         return Response(diff)
 
+    @action(detail=True, methods=['post'], url_path='scope-impact')
+    def scope_impact(self, request, pk=None):
+        """
+        Phase 5: preview the blast radius of a proposed scope edit
+        BEFORE the operator confirms it. Returns counts + a sample of
+        products that would lose access to this value if the edit were
+        applied.
+
+        Body: { add_categories?: [...], remove_categories?: [...],
+                add_countries?:  [...], remove_countries?:  [...],
+                add_brands?:     [...], remove_brands?:     [...] }
+        """
+        from apps.inventory.services.scope_suggester import impact_of_scope
+        value = self.get_object()
+        return Response(impact_of_scope(
+            value,
+            add_categories=request.data.get('add_categories') or [],
+            remove_categories=request.data.get('remove_categories') or [],
+            add_countries=request.data.get('add_countries') or [],
+            remove_countries=request.data.get('remove_countries') or [],
+            add_brands=request.data.get('add_brands') or [],
+            remove_brands=request.data.get('remove_brands') or [],
+        ))
+
     @action(detail=False, methods=['get'], url_path='product-matrix')
     def product_matrix(self, request):
         """

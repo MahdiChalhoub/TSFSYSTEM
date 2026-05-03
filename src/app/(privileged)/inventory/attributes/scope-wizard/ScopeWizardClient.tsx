@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeft, Check, X, Sparkles, Loader2, Tag, Globe, FolderTree, Award } from 'lucide-react'
 import {
-    applyScopeSuggestion,
-    type ScopeSuggestion,
+    applyScopeSuggestion, previewScopeImpact,
+    type ScopeSuggestion, type ScopeImpact,
 } from '@/app/actions/inventory/scope-suggestions'
 
 /**
@@ -48,6 +48,13 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
         return map
     })
     const [customizingId, setCustomizingId] = useState<number | null>(null)
+    // Phase 5: pending confirm-with-impact dialog. When non-null, shows
+    // a modal asking the operator to confirm a scope edit that would
+    // remove products from the value's scope.
+    const [pendingConfirm, setPendingConfirm] = useState<{
+        suggestion: ScopeSuggestion
+        impact: ScopeImpact
+    } | null>(null)
 
     // Group suggestions by attribute group for visual structure.
     const grouped = useMemo(() => {
@@ -70,7 +77,7 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
         })
     }
 
-    const applyOne = (s: ScopeSuggestion) => {
+    const reallyApply = (s: ScopeSuggestion) => {
         const a = accepted[s.value_id]
         startTransition(async () => {
             const r = await applyScopeSuggestion(s.value_id, {
@@ -84,6 +91,27 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
             } else {
                 toast.error(r.message || 'Apply failed')
             }
+            setPendingConfirm(null)
+        })
+    }
+
+    const applyOne = (s: ScopeSuggestion) => {
+        // Phase 5: preview impact first. Adding scope ids NARROWS the
+        // available products; if any product currently using this value
+        // would lose access, surface a confirm dialog before applying.
+        const a = accepted[s.value_id]
+        startTransition(async () => {
+            const impact = await previewScopeImpact(s.value_id, {
+                add_categories: Array.from(a.categories),
+                add_countries:  Array.from(a.countries),
+                add_brands:     Array.from(a.brands),
+            })
+            if (impact && impact.products_that_would_lose_access > 0) {
+                setPendingConfirm({ suggestion: s, impact })
+                return
+            }
+            // No-impact apply runs immediately.
+            reallyApply(s)
         })
     }
 
@@ -135,6 +163,59 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
                     </button>
                 )}
             </div>
+
+            {/* Phase 5: confirm dialog when an apply would orphan
+                products. Lists the count + first 10 affected so the
+                operator sees the blast radius before clicking confirm. */}
+            {pendingConfirm && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center animate-in fade-in duration-150"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setPendingConfirm(null) }}>
+                    <div className="w-full max-w-md mx-4 rounded-2xl p-5 animate-in zoom-in-95 duration-150"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div className="flex items-start gap-2 mb-3">
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'color-mix(in srgb, var(--app-warning) 15%, transparent)', color: 'var(--app-warning)' }}>
+                                <Sparkles size={16} />
+                            </div>
+                            <div>
+                                <h3 className="text-tp-md font-bold text-app-foreground">Confirm scope narrowing</h3>
+                                <p className="text-tp-xs text-app-muted-foreground">
+                                    Applying this scope to <strong>{pendingConfirm.suggestion.value_name}</strong> would
+                                    remove <strong>{pendingConfirm.impact.products_that_would_lose_access}</strong> of
+                                    the <strong>{pendingConfirm.impact.products_currently_using_value}</strong> product
+                                    {pendingConfirm.impact.products_currently_using_value === 1 ? '' : 's'} currently using it.
+                                </p>
+                            </div>
+                        </div>
+                        {pendingConfirm.impact.losers_sample.length > 0 && (
+                            <div className="rounded-xl p-3 mb-3 max-h-48 overflow-y-auto custom-scrollbar"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                <p className="text-tp-xxs font-bold uppercase tracking-wider text-app-muted-foreground mb-1.5">
+                                    Affected products (first {pendingConfirm.impact.losers_sample.length})
+                                </p>
+                                <ul className="text-tp-xs text-app-foreground space-y-0.5">
+                                    {pendingConfirm.impact.losers_sample.map(p => (
+                                        <li key={p.id}>· {p.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        <div className="flex gap-2 justify-end">
+                            <button onClick={() => setPendingConfirm(null)}
+                                className="px-4 py-2 rounded-xl text-tp-xs font-bold border"
+                                style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
+                                Cancel
+                            </button>
+                            <button onClick={() => reallyApply(pendingConfirm.suggestion)} disabled={pending}
+                                className="px-4 py-2 rounded-xl text-tp-xs font-bold bg-app-warning text-white flex items-center gap-2 hover:brightness-110 transition-all disabled:opacity-50">
+                                {pending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                Apply Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {suggestions.length === 0 ? (
                 <div className="text-center py-20">
