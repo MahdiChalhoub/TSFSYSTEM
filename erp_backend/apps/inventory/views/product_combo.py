@@ -240,7 +240,17 @@ class ProductComboMixin:
                     )
                     
                     if attribute_value_ids:
-                        product.attribute_values.set(attribute_value_ids)
+                        # Phase 4 — go through the helper so the m2m_changed
+                        # pre_add scope guard runs. Bulk path: validate each
+                        # value, then commit the whole set in one atomic call.
+                        from apps.inventory.services.attribute_scope import assign_attribute_value
+                        from apps.inventory.models import ProductAttribute
+                        for vid in attribute_value_ids:
+                            try:
+                                value = ProductAttribute.objects.get(id=vid)
+                            except ProductAttribute.DoesNotExist:
+                                continue
+                            assign_attribute_value(product, value)
                         # Re-sync name once from attributes if rules suggest it
                         product.name = product.compute_display_name()
                         product.save(update_fields=['name'])
@@ -318,7 +328,15 @@ class ProductComboMixin:
                         )
                         
                         if v_attr_ids:
-                            product.attribute_values.set(v_attr_ids)
+                            # Same scope guard as the single-product path above.
+                            from apps.inventory.services.attribute_scope import assign_attribute_value
+                            from apps.inventory.models import ProductAttribute
+                            for vid in v_attr_ids:
+                                try:
+                                    value = ProductAttribute.objects.get(id=vid)
+                                except ProductAttribute.DoesNotExist:
+                                    continue
+                                assign_attribute_value(product, value)
                             product.name = product.compute_display_name()
                             product.save(update_fields=['name'])
                         

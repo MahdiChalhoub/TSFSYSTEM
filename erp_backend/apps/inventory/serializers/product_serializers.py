@@ -393,12 +393,18 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         product = super().create(validated_data)
         if attr_ids:
             from apps.inventory.models import ProductAttribute
+            from apps.inventory.services.attribute_scope import assign_attribute_value
             valid_attrs = ProductAttribute.objects.filter(
                 id__in=attr_ids,
                 parent__isnull=False,  # Only child/value nodes
                 organization=product.organization,
             )
-            product.attribute_values.set(valid_attrs)
+            # Phase 4 — route through the helper so the m2m_changed
+            # pre_add scope guard validates each value. .set() bypasses
+            # the linter rule and (more importantly) the validation; one
+            # assign_attribute_value() call per id is the safe path.
+            for value in valid_attrs:
+                assign_attribute_value(product, value)
 
             # Auto-generate display name if base_name is set
             if product.base_name:

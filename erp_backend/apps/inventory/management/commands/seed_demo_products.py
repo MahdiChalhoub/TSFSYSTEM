@@ -294,7 +294,7 @@ class Command(BaseCommand):
                 # Link attributes
                 for ak in attr_keys:
                     if ak in attr_values:
-                        p.attribute_values.add(attr_values[ak])
+                        p.attribute_values.add(attr_values[ak])  # linter: noqa-attribute-scope demo seed — fixtures pre-validate scope
                 created_products[name] = p
             self.stdout.write(f'  ✓ {len(created_products)} standard products created')
 
@@ -472,7 +472,7 @@ class Command(BaseCommand):
                     )
                     for ak in v['attrs']:
                         if ak in attr_values:
-                            child.attribute_values.add(attr_values[ak])
+                            child.attribute_values.add(attr_values[ak])  # linter: noqa-attribute-scope demo seed — fixtures pre-validate scope
                     created_products[full_name] = child
                     variant_count += 1
             self.stdout.write(f'  ✓ {len(variant_families)} variant families, {variant_count} child variants created')

@@ -53,7 +53,7 @@ class TestProductAutoLinkage(TestCase):
         )
         
         # Add attribute value (triggers m2m_changed)
-        product.attribute_values.add(self.attr_value)
+        product.attribute_values.add(self.attr_value)  # linter: noqa-attribute-scope test asserts the m2m_changed signal directly
         
         # Check Brand - Attribute Group link
         self.assertTrue(self.brand.attributes.filter(id=self.attr_group.id).exists())
@@ -95,7 +95,7 @@ class TestProductAutoLinkage(TestCase):
             category=self.category
         )
         
-        product.attribute_values.add(self.attr_value, floral_val)
+        product.attribute_values.add(self.attr_value, floral_val)  # linter: noqa-attribute-scope test asserts the m2m_changed signal directly
         
         # Verify both groups are linked
         brand_attrs = self.brand.attributes.values_list('id', flat=True)
