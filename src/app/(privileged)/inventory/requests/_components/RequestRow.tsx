@@ -9,7 +9,7 @@ import {
     bumpProcurementRequest,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META, PRIORITY_META, STATUS_META } from '../_lib/meta'
+import { TYPE_META, PRIORITY_META, getRequestStatusMeta } from '../_lib/meta'
 import { runTimed } from '@/lib/perf-timing'
 
 type RunAction = (
@@ -25,7 +25,9 @@ export function RequestRow({ r, pending, runAction }: {
 }) {
     const tm = TYPE_META[r.request_type]
     const pm = PRIORITY_META[r.priority]
-    const sm = STATUS_META[r.status]
+    // Type-aware lookup so EXECUTED renders as "PO Sent" (purchase) or
+    // "In Transit" (transfer) — same vocabulary as /inventory/products.
+    const sm = getRequestStatusMeta(r.request_type, r.status)
     const TypeIcon = tm.icon
     const StatusIcon = sm.icon
     const requestedAt = new Date(r.requested_at)

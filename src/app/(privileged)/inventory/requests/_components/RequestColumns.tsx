@@ -3,13 +3,13 @@
 import React from 'react'
 import { ExternalLink, RefreshCcw } from 'lucide-react'
 import type { ProcurementRequestRecord } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META, PRIORITY_META, STATUS_META } from '../_lib/meta'
+import { TYPE_META, PRIORITY_META, getRequestStatusMeta } from '../_lib/meta'
 import { formatRelative, formatDateTime, fmtQty } from '../_lib/format'
 
 export function renderRequestCell(key: string, r: ProcurementRequestRecord): React.ReactNode {
     const tm = TYPE_META[r.request_type]
     const pm = PRIORITY_META[r.priority]
-    const sm = STATUS_META[r.status]
+    const sm = getRequestStatusMeta(r.request_type, r.status)
 
     switch (key) {
         case 'type': {

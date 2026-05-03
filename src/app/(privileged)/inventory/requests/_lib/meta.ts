@@ -1,34 +1,94 @@
-import { Clock, CheckCircle2, XCircle, PlayCircle, Ban, ShoppingCart, ArrowRightLeft } from 'lucide-react'
+import { Clock, CheckCircle2, XCircle, PlayCircle, Ban, ShoppingCart, ArrowRightLeft, Truck, AlertTriangle, Package, AlertCircle } from 'lucide-react'
 import type {
     ProcurementRequestStatus, ProcurementRequestType, ProcurementRequestPriority,
 } from '@/app/actions/inventory/procurement-requests'
+import {
+    PIPELINE_STATUS_CONFIG,
+    type PipelineStatus,
+    type ProcurementStatusMeta,
+} from '@/lib/procurement-status'
 
 /**
- * STATUS_META maps a request's *internal* status enum to the
- * **canonical procurement vocabulary** shared with /inventory/products
- * (PIPELINE_STATUS_CONFIG). Same product, same word — no more "PO Sent"
- * on one page and "Executed" on another.
+ * THIS FILE NEVER DEFINES PIPELINE LABELS OR COLORS.
+ * ──────────────────────────────────────────────────
+ * The single source of truth lives in
+ *   src/lib/procurement-status.ts → PIPELINE_STATUS_CONFIG
  *
- * Canonical labels (from src/lib/procurement-status.ts):
- *   Available · Requested · PO Sent · PO Accepted · In Transit · Failed
- *
- * Internal request status → canonical mapping (mirrors
- * `mapRequestStatusToPipeline` in the same module):
- *   PENDING/APPROVED → Requested  (waiting for PO)
- *   EXECUTED         → PO Sent    (request closed because a PO was issued)
- *   REJECTED         → Failed     (request denied)
- *   CANCELLED        → Failed     (operator stopped it)
- *
- * When the user needs the *internal* state (audit, debugging), the
- * `internal` field below carries it. Display as a sub-line if needed.
+ * Every page (products, requests, purchases/new, ...) reads its
+ * pipeline label/color from THAT file. This module's only job is to
+ * translate a request-row's (type, internal-status) tuple into the
+ * canonical PipelineStatus enum key, then look it up in the shared
+ * config. If the user changes a label there, it updates everywhere.
  */
-export const STATUS_META: Record<ProcurementRequestStatus, { label: string; internal: string; color: string; icon: typeof Clock }> = {
-    PENDING:   { label: 'Requested', internal: 'Pending',   color: 'var(--app-warning, #f59e0b)', icon: Clock },
-    APPROVED:  { label: 'Requested', internal: 'Approved',  color: 'var(--app-warning, #f59e0b)', icon: CheckCircle2 },
-    EXECUTED:  { label: 'PO Sent',   internal: 'Executed',  color: 'var(--app-info, #3b82f6)',    icon: PlayCircle },
-    REJECTED:  { label: 'Failed',    internal: 'Rejected',  color: 'var(--app-error, #ef4444)',   icon: XCircle },
-    CANCELLED: { label: 'Failed',    internal: 'Cancelled', color: 'var(--app-error, #ef4444)',   icon: Ban },
+
+/** Translate (request type, internal status) → canonical pipeline key.
+ *  Mirrors the backend's product-level pipeline derivation:
+ *    PURCHASE + PENDING/APPROVED → REQUESTED_PURCHASE
+ *    PURCHASE + EXECUTED         → PO_SENT
+ *    TRANSFER + PENDING/APPROVED → REQUESTED_TRANSFER
+ *    TRANSFER + EXECUTED         → IN_TRANSIT
+ *    *        + REJECTED/CANCELLED → FAILED
+ */
+export function toPipelineKey(type: ProcurementRequestType, status: ProcurementRequestStatus): PipelineStatus {
+    if (status === 'REJECTED' || status === 'CANCELLED') return 'FAILED'
+    if (status === 'EXECUTED') return type === 'TRANSFER' ? 'IN_TRANSIT' : 'PO_SENT'
+    // PENDING + APPROVED — both still "Requested" until the PO/TO is issued
+    return type === 'TRANSFER' ? 'REQUESTED_TRANSFER' : 'REQUESTED_PURCHASE'
 }
+
+/** Resolved meta for a request row — pipeline label/color from the
+ *  canonical config + a per-request icon (chosen here because the
+ *  canonical config is shared with non-request views). The internal
+ *  enum is also surfaced for audit/debug sub-lines. */
+export interface RequestStatusMeta extends ProcurementStatusMeta {
+    icon: typeof Clock
+    /** Internal lifecycle stage (Pending / Approved / Executed / …) —
+     *  preserved for tooltips or audit columns. The user-facing chip
+     *  uses `label` (canonical) instead. */
+    internal: string
+}
+
+const ICON_BY_STATUS: Record<ProcurementRequestStatus, typeof Clock> = {
+    PENDING:   Clock,
+    APPROVED:  CheckCircle2,
+    EXECUTED:  PlayCircle,
+    REJECTED:  XCircle,
+    CANCELLED: Ban,
+}
+const INTERNAL_LABEL: Record<ProcurementRequestStatus, string> = {
+    PENDING: 'Pending', APPROVED: 'Approved', EXECUTED: 'Executed',
+    REJECTED: 'Rejected', CANCELLED: 'Cancelled',
+}
+
+/** Resolve the pipeline meta for a single request row. The label and
+ *  color come straight from the canonical PIPELINE_STATUS_CONFIG —
+ *  whatever shows on /inventory/products will show here too. */
+export function getRequestStatusMeta(
+    type: ProcurementRequestType,
+    status: ProcurementRequestStatus,
+): RequestStatusMeta {
+    const key = toPipelineKey(type, status)
+    const meta = PIPELINE_STATUS_CONFIG[key] || PIPELINE_STATUS_CONFIG.NONE
+    return {
+        ...meta,
+        icon: ICON_BY_STATUS[status],
+        internal: INTERNAL_LABEL[status],
+    }
+}
+
+/** @deprecated Use `getRequestStatusMeta(type, status)`. Kept for any
+ *  legacy caller that doesn't have the type at hand; defaults to
+ *  Purchase semantics. */
+export const STATUS_META: Record<ProcurementRequestStatus, RequestStatusMeta> = {
+    PENDING:   getRequestStatusMeta('PURCHASE', 'PENDING'),
+    APPROVED:  getRequestStatusMeta('PURCHASE', 'APPROVED'),
+    EXECUTED:  getRequestStatusMeta('PURCHASE', 'EXECUTED'),
+    REJECTED:  getRequestStatusMeta('PURCHASE', 'REJECTED'),
+    CANCELLED: getRequestStatusMeta('PURCHASE', 'CANCELLED'),
+}
+
+// Re-export icons that consumers still pull from this module
+export { Clock, CheckCircle2, XCircle, PlayCircle, Ban, AlertTriangle, Package, AlertCircle }
 
 export const TYPE_META: Record<ProcurementRequestType, { label: string; color: string; icon: typeof ShoppingCart }> = {
     PURCHASE: { label: 'Purchase', color: 'var(--app-info, #3b82f6)',    icon: ShoppingCart },

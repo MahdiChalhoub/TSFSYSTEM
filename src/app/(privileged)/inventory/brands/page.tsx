@@ -37,18 +37,17 @@ async function getCountries() {
 }
 
 async function getCategories() {
-    // Only top-level categories. Brand ↔ category links live at the
-    // root level; child categories inherit their parent's brand
-    // associations through the tree, and the backend's link_category
-    // action either rejects or silently no-ops a leaf id (same pattern
-    // the user hit on the attributes pane). Filtering parent-IS-NULL
-    // here means the tree selector shows a clean flat list of roots
-    // and the user can't pick a child by accident.
-    try {
-        const res: any = await erpFetch('inventory/categories/');
-        const rows: any[] = Array.isArray(res?.results) ? res.results : (Array.isArray(res) ? res : []);
-        return rows.filter(c => c?.parent == null);
-    } catch { return []; }
+    // Return the full category tree — brands legitimately link to
+    // child categories (e.g. Pepsi → "Soft Drinks", which is a child
+    // of "Beverages"). Earlier this filtered to parent==null roots
+    // by analogy with the attributes-pane fix, but that hid existing
+    // child links from the edit modal: a brand whose only linked
+    // category was a child showed nothing as selected because the
+    // checkbox never rendered. The new link_category action on
+    // BrandViewSet accepts any category id, so the picker can offer
+    // the whole tree.
+    try { return await erpFetch('inventory/categories/'); }
+    catch { return []; }
 }
 
 export default async function BrandsPage() {
