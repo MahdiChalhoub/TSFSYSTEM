@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { useMemo } from 'react';
+import { ChevronRight, FolderTree, Layers } from 'lucide-react';
 
 type Category = {
     id: number;
@@ -13,131 +13,142 @@ type CategoryCascaderProps = {
     allCategories: Category[];
     selectedId: number | null;
     onSelect: (id: number | null) => void;
-    excludeId?: number; // Prevent selecting self or descendants as parent
+    /** Prevent selecting self or descendants as a parent. */
+    excludeId?: number;
     placeholder?: string;
 };
 
-export function CategoryCascader({ allCategories, selectedId, onSelect, excludeId, placeholder = "Select category..." }: CategoryCascaderProps) {
-    // 1. Build memoized trees and lookups
+/**
+ * CategoryCascader — drill-down picker for a node in the category tree.
+ *
+ * Renders a column per depth level (Root → Sub → …) and only opens the
+ * next column when the current one has children. Themed (var(--app-*))
+ * to match the rest of the modal — replaces the previous hard-coded
+ * gray/emerald styling and the "Selected Parent: …" footer (the
+ * Placement Preview in the Hierarchy pane shows that already).
+ */
+export function CategoryCascader({
+    allCategories, selectedId, onSelect, excludeId,
+}: CategoryCascaderProps) {
+    // ── Tree indices ──
     const { categoryMap, childrenMap } = useMemo(() => {
         const catMap = new Map<number, Category>();
         const childMap = new Map<number | 'root', Category[]>();
-
         childMap.set('root', []);
-
         allCategories.forEach(cat => {
             catMap.set(cat.id, cat);
             const pId = cat.parent ? cat.parent : 'root';
-            if (!childMap.has(pId)) {
-                childMap.set(pId, []);
-            }
+            if (!childMap.has(pId)) childMap.set(pId, []);
             childMap.get(pId)!.push(cat);
         });
-
         return { categoryMap: catMap, childrenMap: childMap };
     }, [allCategories]);
 
-    // 2. Helper to get path to root: [Grandparent, Parent, Self]
-    const getPath = (id: number | null): number[] => {
-        if (!id) return [];
+    // ── Path from root to current selection ──
+    const activePath = useMemo(() => {
+        if (!selectedId) return [] as number[];
         const path: number[] = [];
-        let currentId: number | null | undefined = id;
-
-        while (currentId) {
-            path.unshift(currentId);
-            const cat = categoryMap.get(currentId);
-            currentId = cat?.parent;
+        let cur: number | null | undefined = selectedId;
+        while (cur) {
+            path.unshift(cur);
+            cur = categoryMap.get(cur)?.parent;
         }
         return path;
-    };
+    }, [selectedId, categoryMap]);
 
-    // 3. Derived state from props
-    // We don't keep local state for path to avoid sync issues, we derive it from selectedId
-    const activePath = useMemo(() => getPath(selectedId), [selectedId, categoryMap]);
-
-    // 4. Calculate Columns to display
-    // Always show Root column. Then show columns for each item in the path that has children.
+    // ── Columns to render: root + every level whose currently-selected
+    //    item has children of its own. ──
     const columns = useMemo(() => {
-        const cols = [];
-        // Root column
-        cols.push({ parentId: 'root' as const, selected: activePath[0] || null });
-
-        // Subsequent columns
+        const cols: { parentId: number | 'root'; selected: number | null }[] = [
+            { parentId: 'root', selected: activePath[0] || null },
+        ];
         for (let i = 0; i < activePath.length; i++) {
-            const currentId = activePath[i];
-            const children = childrenMap.get(currentId);
-
-            // If the current selection has children, we show the next column
-            // BUT we only show it if this is the last item in the current path OR we are expanding
-            if (children && children.length > 0) {
-                cols.push({
-                    parentId: currentId,
-                    selected: activePath[i + 1] || null
-                });
+            const cur = activePath[i];
+            const kids = childrenMap.get(cur);
+            if (kids && kids.length > 0) {
+                cols.push({ parentId: cur, selected: activePath[i + 1] || null });
             }
         }
         return cols;
     }, [activePath, childrenMap]);
 
-    // 5. Handle Filtering (Circular dependency prevention)
+    // ── Filter out the excluded id (prevents selecting self as parent). ──
     const getOptions = (parentId: number | 'root') => {
-        let options = childrenMap.get(parentId) || [];
-
-        if (excludeId) {
-            // Must not be the excluded ID
-            options = options.filter(o => o.id !== excludeId);
-
-            // Note: We should technically also filter descendants of excludeId, 
-            // but if the parent is excluded, you can't reach the descendants anyway in a cascader.
-            // So filtering just the excludeId at any level is sufficient for the UI.
-        }
-        return options;
+        const all = childrenMap.get(parentId) || [];
+        return excludeId ? all.filter(o => o.id !== excludeId) : all;
     };
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-1.5">
             {columns.map((col, index) => {
                 const options = getOptions(col.parentId);
-                // Don't render empty columns (dead ends)
                 if (options.length === 0) return null;
 
+                const isRoot = index === 0;
+                const levelLabel = isRoot ? 'Main' : `L${index + 1}`;
+
                 return (
-                    <div key={col.parentId} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
-                        {index > 0 && <ChevronRight className="text-gray-400" size={16} />}
-                        <div className="flex-1">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 block">
-                                {index === 0 ? 'Main Category' : `Level ${index + 1}`}
-                            </label>
+                    <div
+                        key={col.parentId}
+                        className="flex items-center gap-2 animate-in fade-in slide-in-from-left-1 duration-150"
+                    >
+                        {/* Level badge — compact, inline */}
+                        <span
+                            className="inline-flex items-center gap-1 flex-shrink-0 px-2 py-1 rounded-lg text-tp-xxs font-bold uppercase tracking-wider"
+                            style={{
+                                background: col.selected
+                                    ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
+                                    : 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                color: col.selected ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                border: `1px solid ${col.selected
+                                    ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                    : 'color-mix(in srgb, var(--app-border) 80%, transparent)'}`,
+                                minWidth: '46px',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {isRoot ? <FolderTree size={9} /> : <Layers size={9} />}
+                            {levelLabel}
+                        </span>
+
+                        {/* Slim select — uses theme tokens, custom chevron */}
+                        <div className="flex-1 relative">
                             <select
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none bg-white transition-all shadow-sm"
+                                className="w-full appearance-none text-tp-sm font-bold pl-3 pr-8 py-2 rounded-lg outline-none transition-all"
+                                style={{
+                                    background: 'var(--app-surface)',
+                                    border: `1px solid ${col.selected
+                                        ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                        : 'var(--app-border)'}`,
+                                    color: col.selected ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                                }}
                                 value={col.selected || ''}
                                 onChange={(e) => {
                                     const val = e.target.value ? parseInt(e.target.value) : null;
-                                    // If user selects a value in the middle of a chain, we just select that value
-                                    // The parent logic upstream will decide if it needs to be deeper? 
-                                    // User said: "he will render a new box... until i select one"
-                                    // So collecting any ID is valid.
                                     onSelect(val);
                                 }}
                             >
-                                <option value="">{index === 0 ? 'None (Top Level)' : 'Select sub-category...'}</option>
+                                <option value="">
+                                    {isRoot ? 'Pick a top-level category…' : 'Pick a sub-category…'}
+                                </option>
                                 {options.map(opt => (
                                     <option key={opt.id} value={opt.id}>
                                         {opt.name}
                                     </option>
                                 ))}
                             </select>
+                            <ChevronRight
+                                size={12}
+                                className="absolute right-2.5 top-1/2 pointer-events-none rotate-90"
+                                style={{
+                                    color: 'var(--app-muted-foreground)',
+                                    transform: 'translateY(-50%) rotate(90deg)',
+                                }}
+                            />
                         </div>
                     </div>
                 );
             })}
-
-            {/* Helper message */}
-            {selectedId && (
-                <div className="text-xs text-emerald-600 bg-emerald-50 p-2 rounded border border-emerald-100 mt-2">
-                    Selected Parent: <span className="font-bold">{categoryMap.get(selectedId)?.name}</span>
-                </div>
-            )}
         </div>
     );
 }

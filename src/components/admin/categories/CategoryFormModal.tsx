@@ -638,12 +638,11 @@ export function CategoryFormModal({
                                 />
                             </div>
 
-                            {/* ── Parent picker (only when sub-category) ── */}
+                            {/* ── Parent picker (only when sub-category) ──
+                                 Cascader has its own per-level badges so a
+                                 separate field label would just add visual noise. */}
                             {isSubCategory && (
-                                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">
-                                        Choose Parent
-                                    </label>
+                                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
                                     <CategoryCascader
                                         allCategories={availableParents as any}
                                         selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
