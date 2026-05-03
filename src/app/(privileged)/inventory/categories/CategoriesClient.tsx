@@ -5,7 +5,7 @@ import { prefetchNextCode } from '@/lib/sequences-client'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
@@ -34,6 +34,8 @@ import { CsvImportDialog } from './components/CsvImportDialog'
  * ═══════════════════════════════════════════════════════════ */
 export function CategoriesClient({ initialCategories }: { initialCategories: CategoryNode[] }) {
     const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
     const { t } = useTranslation()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
@@ -55,6 +57,21 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
         prefetchNextCode('CATEGORY')
         getCatalogueLanguages()
     }, [])
+
+    // Auto-open the create modal when ?new=1 is present in the URL.
+    // The standalone /inventory/categories/new route redirects here with
+    // that flag so mobile users get the proper bottom-sheet modal instead
+    // of the broken stub that page used to render. Strip the param after
+    // opening so reload / back doesn't re-trigger.
+    useEffect(() => {
+        if (searchParams?.get('new') === '1') {
+            setModalState({ open: true })
+            const next = new URLSearchParams(searchParams.toString())
+            next.delete('new')
+            const qs = next.toString()
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+        }
+    }, [searchParams, pathname, router])
 
     // Build a path lookup for category hierarchy — reused by export/print
     const byId = useMemo(() => {

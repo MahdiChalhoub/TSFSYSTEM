@@ -1,116 +1,33 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { erpFetch } from '@/lib/erp-api'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft,  } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
+/**
+ * Standalone "Create Category" route.
+ *
+ * Redirects to the categories list with `?new=1`, which CategoriesClient
+ * picks up and opens the proper CategoryFormModal (bottom-sheet on
+ * mobile, centered card on desktop, lazy-loaded brand/attribute trees,
+ * cached code peek). Replaces the previous stub form that posted an
+ * empty payload with "No form fields available" — that page never
+ * worked, and on mobile it ignored the responsive modal entirely.
+ */
 export default function CreateCategoriesPage() {
-  const router = useRouter()
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+    const router = useRouter()
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setSubmitting(true)
+    useEffect(() => {
+        router.replace('/inventory/categories?new=1')
+    }, [router])
 
-    try {
-      const formData = new FormData(e.currentTarget)
-      const data = Object.fromEntries(formData.entries())
-
-      await erpFetch('inventory/categories/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      setSuccess(true)
-      setTimeout(() => router.push('/inventory/categories'), 500)
-    } catch (err: any) {
-      setError(err.message || 'Failed to create item')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen layout-container-padding theme-bg">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="h-9 px-3"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+    // Brief loading state in case the redirect doesn't paint instantly.
+    return (
+        <div className="min-h-screen flex items-center justify-center theme-bg">
+            <div className="flex items-center gap-3 text-app-muted-foreground">
+                <Loader2 size={18} className="animate-spin" />
+                <span className="text-tp-sm font-bold">Opening Create Category…</span>
+            </div>
         </div>
-
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold theme-text">
-            Create Categories
-          </h1>
-          <p className="theme-text-muted mt-1">
-            Add a new categories to the system
-          </p>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="max-w-4xl">
-        <div className="bg-app-surface rounded-[32px] shadow-lg border border-app-border p-6 md:p-8">
-          {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-app-error-bg text-app-error border border-app-error">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 rounded-2xl bg-app-success-bg text-app-success border border-app-success">
-              Item created successfully! Redirecting...
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <p>No form fields available</p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-4 justify-end pt-4 border-t border-app-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={submitting}
-                className="h-11 px-6 rounded-xl font-bold"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="h-11 px-6 rounded-xl font-bold bg-app-primary hover:bg-app-primary text-app-foreground shadow-lg"
-              >
-                {submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-app-foreground border-t-transparent mr-2" />
-                    Creating...
-                  </>
-                ) : (
-                  <>Create Categories</>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
+    )
 }
