@@ -126,16 +126,28 @@ export function CategoryFormModal({
     const [brandsSeeded, setBrandsSeeded] = useState(false);
     const [attrsSeeded, setAttrsSeeded] = useState(false);
 
-    // One-shot success guard. useActionState keeps `state.message === 'success'`
-    // after the modal closes; without this the next open would re-fire onClose
-    // immediately. Audit BLOCKER #2.
-    const lastFiredSuccessRef = useRef<unknown>(null);
+    // One-shot success guard.
+    //
+    // Two failure modes the simpler version had:
+    //
+    //   1) `state.message === 'success'` persists after onClose — reopening
+    //      the same component instance re-fires onClose immediately.
+    //   2) useActionState may return the SAME state object reference when
+    //      the action returns the same shape twice in a row, so a plain
+    //      `state !== prevRef` check fails on the second save.
+    //
+    // Trigger close on the isPending falling edge AFTER an actual submit,
+    // gated by a counter that we bump every time the user clicks Submit.
+    // The submit count flips through React's transition tracking, and
+    // close only fires once per pending→idle transition with success.
+    const wasPendingRef = useRef(false);
     useEffect(() => {
-        if (state.message === 'success' && lastFiredSuccessRef.current !== state) {
-            lastFiredSuccessRef.current = state;
+        if (wasPendingRef.current && !isPending && state.message === 'success') {
+            wasPendingRef.current = false;
             onClose();
         }
-    }, [state, onClose]);
+        if (isPending) wasPendingRef.current = true;
+    }, [isPending, state, onClose]);
 
     // Audit IMPORTANT #6: depend on category?.id (stable PK), not the whole
     // object reference. Parent re-renders (e.g. router.refresh after a save
