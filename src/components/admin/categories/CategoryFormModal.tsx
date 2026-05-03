@@ -291,14 +291,24 @@ export function CategoryFormModal({
             setBrandTree(brandsArr.map(b => ({
                 id: b.id, name: b.name, code: b.code, parent: null, children: [],
             })));
-            const mapAttr = (a: any): TreeNode => ({
-                id: a.id,
-                name: a.name,
-                code: a.code,
-                parent: a.parent ?? null,
-                children: Array.isArray(a.children) ? a.children.map(mapAttr) : [],
-            });
-            setAttrTree(attrsArr.map(mapAttr));
+            // ── Attributes: ROOT GROUPS ONLY ──
+            // A category links to attribute *groups* (Size, Color, Parfum),
+            // not to individual values (Small, Red). The backend
+            // /link_attribute/ endpoint enforces `parent__isnull=True` and
+            // returns 404 when called with a leaf id — which is what we
+            // got when the tree previously rendered children and the user
+            // toggled one. Show roots as a flat list, no expand.
+            setAttrTree(
+                attrsArr
+                    .filter(a => a.parent == null)  // root groups only
+                    .map(a => ({
+                        id: a.id,
+                        name: a.name,
+                        code: a.code,
+                        parent: null,
+                        children: [],
+                    }))
+            );
 
             // Seed existing selections — BUT only as a FALLBACK when the
             // authoritative linked_* endpoint hasn't already populated.
