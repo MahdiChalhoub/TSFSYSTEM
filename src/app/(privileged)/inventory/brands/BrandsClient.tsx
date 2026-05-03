@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback, useTransition, useRef } from 'react'
+import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react'
+import { prefetchNextCode } from '@/lib/sequences-client'
+import { getCatalogueLanguages } from '@/lib/catalogue-languages'
 import {
     Award, Plus, Layers, Package, Globe, FolderTree, X, Search, Pencil, Image as ImageIcon
 } from 'lucide-react'
@@ -42,10 +44,19 @@ export function BrandsClient({ brands, countries, categories }: Props) {
     const [bulkDialog, setBulkDialog] = useState<null | 'move' | 'delete'>(null)
     
     // Selection Ref for bulk actions
-    const selectionRef = useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({ 
-        selectedIds: new Set(), 
-        clearSelection: () => {} 
+    const selectionRef = useRef<{ selectedIds: Set<number>; clearSelection: () => void }>({
+        selectedIds: new Set(),
+        clearSelection: () => {}
     })
+
+    // Warm up the BRAND sequence + catalogue-languages caches on page
+    // mount so the New / Edit dialog opens with the suggested reference
+    // code AND the language tabs already painted on its first frame.
+    // Mirrors what CategoriesClient does for the CATEGORY sequence.
+    useEffect(() => {
+        prefetchNextCode('BRAND')
+        getCatalogueLanguages()
+    }, [])
 
     // Data preparation — Brands are flat, so parent is always null
     const data = useMemo(() => brands.map(b => ({ ...b, parent: null })), [brands])

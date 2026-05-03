@@ -1,6 +1,6 @@
 'use server';
 
-import { erpFetch } from "@/lib/erp-api";
+import { erpFetch, ErpApiError } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -164,8 +164,31 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
             body: JSON.stringify(payload),
         });
     } catch (e: unknown) {
-        console.error('[createPurchaseOrder] Failed:', e);
-        return { message: (e instanceof Error ? e.message : String(e)) || 'Failed to create purchase order.' };
+        // Only redirect to /login when Django actually rejected the
+        // session (401/403). Any other status (400 validation, 500
+        // server error, network) should stay on the form so the user
+        // sees the real error instead of being kicked out.
+        if (e instanceof ErpApiError) {
+            console.error(`[createPurchaseOrder] HTTP ${e.status}:`, e.message, e.data);
+            if (e.status === 401 || e.status === 403) {
+                redirect('/login?error=session_expired');
+            }
+            // Surface field-level Django errors to the form's useActionState.
+            const fieldErrors: Record<string, string[]> = {};
+            const data = e.data as Record<string, unknown> | undefined;
+            if (data && typeof data === 'object') {
+                for (const [k, v] of Object.entries(data)) {
+                    if (Array.isArray(v)) fieldErrors[k] = v.map(String);
+                    else if (typeof v === 'string') fieldErrors[k] = [v];
+                }
+            }
+            return {
+                errors: Object.keys(fieldErrors).length ? fieldErrors : undefined,
+                message: e.message || 'Failed to create purchase order.',
+            };
+        }
+        console.error('[createPurchaseOrder] Unexpected error:', e);
+        return { message: e instanceof Error ? e.message : String(e) };
     }
 
     revalidatePath('/purchases');

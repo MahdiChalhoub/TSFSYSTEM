@@ -6,7 +6,7 @@ import {
     X, Save, Loader2, Globe, Tag, Award, AlertCircle,
     FolderTree, Lightbulb, Hash, Check, Search,
 } from 'lucide-react';
-import { peekNextCode } from '@/lib/sequences-client';
+import { peekNextCode, peekCachedNextCode } from '@/lib/sequences-client';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 import { getCatalogueLanguages, getCachedCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
@@ -68,7 +68,12 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         brand?.categories?.map((c: Record<string, any>) => c.id) || []
     );
-    const [suggestedCode, setSuggestedCode] = useState<string>('');
+    // Seed from the BRAND-sequence cache so the LockableCodeInput's
+    // suggested value is painted on the first frame — same pattern as
+    // the locales seed above. Edit mode never wants a suggestion.
+    const [suggestedCode, setSuggestedCode] = useState<string>(() =>
+        brand ? '' : (peekCachedNextCode('BRAND') ?? '')
+    );
 
     // Seed from the module-level cache so the modal renders with the
     // language tabs already in place on its very first paint — avoids

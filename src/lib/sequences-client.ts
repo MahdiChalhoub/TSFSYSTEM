@@ -110,3 +110,15 @@ export async function peekNextCode(type: SequenceKey): Promise<string> {
 export function prefetchNextCode(type: SequenceKey): void {
     peekNextCode(type).catch(() => { /* ignore */ });
 }
+
+/** Sync read of the in-memory cache. Returns `null` if no fetch has
+ *  resolved yet for this type (or the entry has expired). Use this to
+ *  seed `useState` so a freshly-mounted form renders with the right
+ *  suggested code on its first paint — avoids the empty → filled
+ *  flicker on the LockableCodeInput placeholder. */
+export function peekCachedNextCode(type: SequenceKey): string | null {
+    const hit = cache.get(type);
+    if (!hit) return null;
+    if (Date.now() - hit.at >= CACHE_TTL_MS) return null;
+    return hit.value;
+}
