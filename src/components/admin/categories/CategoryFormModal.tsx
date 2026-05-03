@@ -247,7 +247,7 @@ export function CategoryFormModal({
     return (
         <div
             // Mobile: pin to bottom (sheet). Desktop (sm+): center.
-            className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center animate-in fade-in duration-200"
+            className="fixed inset-0 z-[110] flex items-end md:items-center justify-center animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={e => { if (e.target === e.currentTarget) onClose(); }}
         >
@@ -256,28 +256,28 @@ export function CategoryFormModal({
                 //   95vh tall so the user actually has room to type.
                 // Desktop (sm+): centered card, all corners rounded, max
                 //   width 3xl, restored zoom-in animation, restored 92vh.
-                className="w-full sm:max-w-3xl sm:mx-4 overflow-hidden flex flex-col
-                           rounded-t-2xl sm:rounded-2xl
-                           h-[95vh] sm:h-auto sm:max-h-[92vh]
-                           animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+                className="w-full md:max-w-3xl md:mx-4 overflow-hidden flex flex-col
+                           rounded-t-2xl md:rounded-2xl
+                           h-[95vh] md:h-auto md:max-h-[92vh]
+                           animate-in slide-in-from-bottom-4 md:slide-in-from-bottom-0 md:zoom-in-95 duration-200"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
             >
                 {/* Mobile drag-handle hint — purely decorative, signals
                     the sheet is dismissable by swiping the modal away. */}
-                <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0">
+                <div className="md:hidden flex justify-center pt-2 pb-1 flex-shrink-0">
                     <div className="w-10 h-1 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }} />
                 </div>
                 {/* ── Header ── */}
                 <div
-                    className="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0"
+                    className="px-4 md:px-5 py-2.5 md:py-3 flex items-center justify-between flex-shrink-0"
                     style={{
                         background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))',
                         borderBottom: '1px solid var(--app-border)',
                     }}
                 >
-                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
                         <div
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                             style={{
                                 background: 'var(--app-primary)',
                                 boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
@@ -310,9 +310,9 @@ export function CategoryFormModal({
                     action={(formData) => { setPending(true); formAction(formData); }}
                     className="flex-1 flex min-h-0"
                 >
-                    {/* Sidebar nav (desktop) */}
+                    {/* Sidebar nav (desktop, ≥768px) */}
                     <aside
-                        className="w-[180px] flex-shrink-0 p-2 space-y-1 border-r hidden sm:block"
+                        className="w-[180px] flex-shrink-0 p-2 space-y-1 border-r hidden md:block"
                         style={{
                             background: 'color-mix(in srgb, var(--app-background) 60%, var(--app-surface))',
                             borderColor: 'var(--app-border)',
@@ -377,11 +377,11 @@ export function CategoryFormModal({
                         </div>
                     </aside>
 
-                    {/* Mobile tab strip — equal-width segments instead of a
-                        horizontal scrollbar; bigger touch targets; the badge
-                        sits below the label so labels stay aligned. */}
+                    {/* Mobile + tablet tab strip (<768px) — equal-width segments
+                        instead of a horizontal scrollbar; bigger touch targets;
+                        the badge sits below the label so labels stay aligned. */}
                     <div
-                        className="sm:hidden grid border-b flex-shrink-0"
+                        className="md:hidden grid border-b flex-shrink-0"
                         style={{
                             borderColor: 'var(--app-border)',
                             background: 'color-mix(in srgb, var(--app-background) 50%, var(--app-surface))',
@@ -426,8 +426,8 @@ export function CategoryFormModal({
                         padding on mobile, no enforced minHeight (the sheet
                         already fills 95vh). */}
                     <div
-                        className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-5 min-w-0
-                                   sm:min-h-[460px]"
+                        className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-5 min-w-0
+                                   md:min-h-[460px]"
                         style={{
                             scrollBehavior: 'smooth',
                             overscrollBehavior: 'contain',
@@ -875,7 +875,7 @@ export function CategoryFormModal({
                      and bigger touch targets so they sit above the home
                      indicator. ── */}
                 <div
-                    className="px-4 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2 flex-shrink-0"
+                    className="px-4 md:px-5 py-2.5 md:py-3 flex items-center gap-2 flex-shrink-0"
                     style={{
                         borderTop: '1px solid var(--app-border)',
                         background: 'color-mix(in srgb, var(--app-background) 40%, var(--app-surface))',
@@ -883,7 +883,7 @@ export function CategoryFormModal({
                     }}
                 >
                     {/* Meta label — desktop only, mobile hides to free width */}
-                    <div className="hidden sm:block flex-1 text-tp-xs font-bold text-app-muted-foreground">
+                    <div className="hidden md:block flex-1 text-tp-xs font-bold text-app-muted-foreground">
                         {panes.find(p => p.key === activePane)?.label} ·{' '}
                         {activePane === 'identity' ? 'Required' : 'Optional'}
                     </div>
@@ -891,7 +891,7 @@ export function CategoryFormModal({
                         type="button"
                         onClick={onClose}
                         disabled={pending}
-                        className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-2 rounded-xl text-tp-xs font-bold transition-all disabled:opacity-50"
+                        className="flex-1 md:flex-initial px-4 py-2.5 md:py-2 rounded-xl text-tp-xs font-bold transition-all disabled:opacity-50"
                         style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}
                     >
                         Cancel
@@ -900,7 +900,7 @@ export function CategoryFormModal({
                         type="submit"
                         form="category-form"
                         disabled={pending}
-                        className="flex-1 sm:flex-initial px-5 py-2.5 sm:py-2 rounded-xl text-tp-xs font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
+                        className="flex-1 md:flex-initial px-5 py-2.5 md:py-2 rounded-xl text-tp-xs font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
                         style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
                     >
                         {pending ? <Loader2 className="animate-spin" size={14} /> : (category ? <Check size={14} /> : <Save size={14} />)}
