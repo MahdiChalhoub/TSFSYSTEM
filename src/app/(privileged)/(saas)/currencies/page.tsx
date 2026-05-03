@@ -1212,10 +1212,10 @@ export default function CurrenciesPage() {
             },
           },
           columnHeaders: [
-            { label: 'Currency', width: 'auto' },
-            { label: 'Numeric', width: '64px', hideOnMobile: true },
-            { label: 'DP', width: '64px', hideOnMobile: true },
-            { label: 'Symbol', width: '48px', hideOnMobile: true },
+            { label: 'Currency', width: 'auto', sortKey: 'name' },
+            { label: 'Numeric', width: '64px', hideOnMobile: true, sortKey: 'numeric_code' },
+            { label: 'DP', width: '64px', hideOnMobile: true, sortKey: 'decimal_places' },
+            { label: 'Symbol', width: '48px', hideOnMobile: true, sortKey: 'symbol' },
           ],
           // Single source of truth — combined tree (currencies + linked
           // country/tenant rows). KPI predicates filter on `kind === 'currency'`

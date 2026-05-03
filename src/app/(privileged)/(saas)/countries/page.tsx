@@ -1798,11 +1798,11 @@ export default function SaaSCountriesPage() {
             },
           },
           columnHeaders: [
-            { label: 'Country', width: 'auto' },
-            { label: 'Codes', width: '80px', hideOnMobile: true },
-            { label: 'Phone', width: '64px', hideOnMobile: true },
-            { label: 'Currency', width: '64px', color: 'var(--app-info, #3b82f6)', hideOnMobile: true },
-            { label: 'Region', width: '96px', hideOnMobile: true },
+            { label: 'Country', width: 'auto', sortKey: 'name' },
+            { label: 'Codes', width: '80px', hideOnMobile: true, sortKey: 'iso2' },
+            { label: 'Phone', width: '64px', hideOnMobile: true, sortKey: 'phone_code' },
+            { label: 'Currency', width: '64px', color: 'var(--app-info, #3b82f6)', hideOnMobile: true, sortKey: 'currency_code' },
+            { label: 'Region', width: '96px', hideOnMobile: true, sortKey: 'region' },
           ],
           // Single-source-of-truth: template owns search + KPI filtering.
           // Combined dataset = countries (kind:'country') + linked entities

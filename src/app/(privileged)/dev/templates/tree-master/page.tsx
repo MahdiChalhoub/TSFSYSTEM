@@ -98,9 +98,9 @@ export default function TreeMasterDemo() {
                         },
                     ],
                     columnHeaders: [
-                        { label: 'Widget', width: 'auto' },
-                        { label: 'Code',   width: '80px',  hideOnMobile: true },
-                        { label: 'Items',  width: '64px',  color: 'var(--app-primary)' },
+                        { label: 'Widget', width: 'auto', sortKey: 'name' },
+                        { label: 'Code',   width: '80px',  hideOnMobile: true, sortKey: 'code' },
+                        { label: 'Items',  width: '64px',  color: 'var(--app-primary)', sortKey: 'item_count' },
                     ],
                     emptyState: {
                         icon: <ShoppingCart size={36} />,
