@@ -1,0 +1,25 @@
+# Pre-commit hooks for TSFSYSTEM.
+#
+# Install once:   pre-commit install
+# Run manually:   pre-commit run --all-files
+#
+# The hook below blocks the bug class documented in
+# scripts/lint/check_attribute_scope.py — bare M2M writes on
+# attribute_values / scope_categories / scope_countries / scope_brands
+# that would bypass the scope guard.
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-attribute-scope
+        name: Attribute scope guard (no bare .add()/.set() on guarded M2Ms)
+        entry: python3 scripts/lint/check_attribute_scope.py
+        language: system
+        # Only re-run when Python files under erp_backend/ change. Keep
+        # the hook fast by passing the staged files explicitly so the
+        # linter only walks what's touched.
+        files: ^erp_backend/.*\.py$
+        pass_filenames: false
+        # Always scan the whole erp_backend tree (the linter cross-
+        # references module-level imports) — keeps suppressions honest
+        # even when a violation lands in a file the commit didn't touch.

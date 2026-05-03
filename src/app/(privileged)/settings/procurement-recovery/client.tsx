@@ -9,15 +9,16 @@
  * reasons can recover at different speeds (e.g. NO_STOCK in 3 days,
  * DAMAGED never).
  *
- * Persistence is local-storage today (no backend table yet); when the
- * backend adds OrgProcurementPolicy, swap the load/save helpers in
- * src/lib/procurement-recovery-storage.ts — the UI stays the same.
+ * Persistence: server-side via the generic settings/item/<key>/ endpoint
+ * (key = procurement_recovery_policy). Stored on Organization.settings,
+ * so the policy is tenant-wide — every user in the org sees and edits
+ * the same values regardless of device.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import {
-    Save, RotateCcw, Info, CheckCircle, Ban, XCircle, AlertTriangle, Clock,
+    Save, RotateCcw, Info, CheckCircle, Ban, XCircle, AlertTriangle, Clock, Loader2,
 } from 'lucide-react'
 import {
     DEFAULT_RECOVERY_POLICY,
@@ -25,10 +26,10 @@ import {
     type RecoveryRule,
 } from '@/lib/procurement-status'
 import {
-    loadRecoveryPolicy,
+    getRecoveryPolicy,
     saveRecoveryPolicy,
     resetRecoveryPolicy,
-} from '@/lib/procurement-recovery-storage'
+} from '@/app/actions/settings/procurement-recovery'
 
 type TerminalKey = keyof PipelineRecoveryPolicy
 
@@ -82,10 +83,16 @@ export default function ProcurementRecoveryClient() {
     const [policy, setPolicy] = useState<PipelineRecoveryPolicy>(DEFAULT_RECOVERY_POLICY)
     const [dirty, setDirty] = useState(false)
     const [hydrated, setHydrated] = useState(false)
+    const [saving, startSaving] = useTransition()
 
     useEffect(() => {
-        setPolicy(loadRecoveryPolicy())
-        setHydrated(true)
+        // Server-side load — reads Organization.settings.procurement_recovery_policy
+        // so every user in the tenant sees the same values regardless of
+        // which device or browser they're on.
+        getRecoveryPolicy().then(p => {
+            setPolicy(p)
+            setHydrated(true)
+        })
     }, [])
 
     const updateRule = (key: TerminalKey, patch: Partial<RecoveryRule>) => {
@@ -103,16 +110,24 @@ export default function ProcurementRecoveryClient() {
         setDirty(true)
     }
     const handleSave = () => {
-        const ok = saveRecoveryPolicy(policy)
-        if (ok) { toast.success('Recovery policy saved'); setDirty(false) }
-        else toast.error('Could not save (storage quota or private mode)')
+        startSaving(async () => {
+            const r = await saveRecoveryPolicy(policy)
+            if (r.ok) { toast.success('Recovery policy saved · applies to all users in your organization'); setDirty(false) }
+            else toast.error(`Could not save: ${r.error}`)
+        })
     }
     const handleReset = () => {
-        if (!confirm('Reset all recovery rules to defaults?')) return
-        resetRecoveryPolicy()
-        setPolicy(DEFAULT_RECOVERY_POLICY)
-        setDirty(false)
-        toast.success('Reverted to defaults')
+        if (!confirm('Reset all recovery rules to defaults? This affects every user in the organization.')) return
+        startSaving(async () => {
+            const r = await resetRecoveryPolicy()
+            if (r.ok) {
+                setPolicy(DEFAULT_RECOVERY_POLICY)
+                setDirty(false)
+                toast.success('Reverted to defaults')
+            } else {
+                toast.error(`Could not reset: ${r.error}`)
+            }
+        })
     }
 
     return (
@@ -135,17 +150,18 @@ export default function ProcurementRecoveryClient() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button onClick={handleReset}
-                            className="flex items-center gap-1 text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-3 h-9 rounded-xl hover:bg-app-surface transition-all">
+                        <button onClick={handleReset} disabled={saving}
+                            className="flex items-center gap-1 text-tp-xs font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-3 h-9 rounded-xl hover:bg-app-surface transition-all disabled:opacity-50">
                             <RotateCcw size={13} /> Reset
                         </button>
-                        <button onClick={handleSave} disabled={!dirty}
+                        <button onClick={handleSave} disabled={!dirty || saving}
                             className="flex items-center gap-1 text-tp-xs font-bold text-white px-4 h-9 rounded-xl transition-all disabled:opacity-50 active:scale-95"
                             style={{
                                 background: 'var(--app-primary)',
                                 boxShadow: dirty ? '0 4px 14px color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'none',
                             }}>
-                            <Save size={13} /> {dirty ? 'Save Changes' : 'Saved'}
+                            {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                            {saving ? 'Saving…' : dirty ? 'Save Changes' : 'Saved'}
                         </button>
                     </div>
                 </div>
