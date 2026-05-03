@@ -31,6 +31,13 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
     }
 
     try {
+        // BrandSerializer exposes `categories` + `countries` as READ-ONLY
+        // (CategorySimpleSerializer / CountrySimpleSerializer with
+        // read_only=True). The writable mirrors are `category_ids` and
+        // `country_ids` (PrimaryKeyRelatedField, write_only=True,
+        // source='categories'/'countries'). Sending the read-only key was
+        // silently dropped by DRF — same silent-failure pattern as the
+        // CategorySerializer.attributes bug fixed in the categories action.
         await erpFetch('brands/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -38,8 +45,8 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
                 name,
                 short_name: shortName,
                 translations,
-                categories: categoryIds,
-                countries: countryIds
+                category_ids: categoryIds,
+                country_ids: countryIds,
             })
         });
 
@@ -58,6 +65,9 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
     const translations = parseTranslations(formData);
 
     try {
+        // See createBrand for why category_ids / country_ids and not the
+        // bare names — the read-only serializer fields silently swallow
+        // the wrong key.
         await erpFetch(`brands/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -65,8 +75,8 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
                 name,
                 short_name: shortName,
                 translations,
-                categories: categoryIds,
-                countries: countryIds
+                category_ids: categoryIds,
+                country_ids: countryIds,
             })
         });
         revalidatePath('/inventory/brands');
