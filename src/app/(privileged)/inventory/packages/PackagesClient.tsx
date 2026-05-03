@@ -286,10 +286,10 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     { label: 'Rules', icon: <ShieldCheck size={13} />, href: '/inventory/packaging-suggestions' },
                 ],
                 columnHeaders: [
-                    { label: 'Template', width: 'auto' },
-                    { label: 'Ratio', width: '60px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Links', width: '48px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Used By', width: '60px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Template', width: 'auto', sortKey: 'name' },
+                    { label: 'Ratio', width: '60px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'ratio' },
+                    { label: 'Links', width: '48px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'link_count' },
+                    { label: 'Used By', width: '60px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'used_by_count' },
                 ],
                 footerLeft: (
                     <>

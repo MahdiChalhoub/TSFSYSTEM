@@ -82,17 +82,23 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
         [allCats, m2mIds]
     )
 
+    // Link/unlink go through the dedicated BrandViewSet actions instead
+    // of PATCHing category_ids on the ModelSerializer. PATCH was
+    // silently dropping the write — the read_only `categories` field
+    // shadowed the write_only `category_ids` source alias and DRF
+    // returned 200 with the M2M unchanged. The actions call
+    // brand.categories.add() / .remove() directly so the change is
+    // authoritative and any failure raises a real error.
     const linkCategory = async (catId: number) => {
         setLinking(true)
         try {
-            await erpFetch(`inventory/brands/${brandId}/`, {
-                method: 'PATCH',
-                body: JSON.stringify({ category_ids: [...Array.from(m2mIds), catId] }),
+            await erpFetch(`inventory/brands/${brandId}/link_category/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_id: catId }),
             })
             toast.success('Category linked')
             loadData(); router.refresh()
-            // Close the picker so the user immediately sees the result in
-            // the linked list below — no second click needed.
             setShowLink(false)
         } catch { toast.error('Failed to link') }
         finally { setLinking(false) }
@@ -101,9 +107,10 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
     const unlinkCategory = async (catId: number) => {
         setLinking(true)
         try {
-            await erpFetch(`inventory/brands/${brandId}/`, {
-                method: 'PATCH',
-                body: JSON.stringify({ category_ids: Array.from(m2mIds).filter(id => id !== catId) }),
+            await erpFetch(`inventory/brands/${brandId}/unlink_category/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_id: catId }),
             })
             toast.success('Category unlinked')
             loadData(); router.refresh()

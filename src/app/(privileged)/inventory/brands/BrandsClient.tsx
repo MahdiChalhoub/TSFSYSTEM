@@ -198,11 +198,11 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     // tablets so the row reads as a structured grid: chip
                     // sits under its label, label sits over its chip.
                     columnHeaders: [
-                        { label: 'Brand', width: 'auto' },
-                        { label: 'Products',   width: '95px',  color: 'var(--app-success)', hideOnMobile: true },
-                        { label: 'Categories', width: '105px', color: 'var(--app-info)',    hideOnMobile: true },
-                        { label: 'Countries',  width: '100px', color: 'var(--app-warning)', hideOnMobile: true },
-                        { label: 'Attrs',      width: '75px',  color: 'var(--app-success)', hideOnMobile: true },
+                        { label: 'Brand', width: 'auto', sortKey: 'name' },
+                        { label: 'Products',   width: '95px',  color: 'var(--app-success)', hideOnMobile: true, sortKey: 'product_count' },
+                        { label: 'Categories', width: '105px', color: 'var(--app-info)',    hideOnMobile: true, sortKey: 'category_count' },
+                        { label: 'Countries',  width: '100px', color: 'var(--app-warning)', hideOnMobile: true, sortKey: 'country_count' },
+                        { label: 'Attrs',      width: '75px',  color: 'var(--app-success)', hideOnMobile: true, sortKey: 'attribute_count' },
                     ],
                     data: dataAsRecords,
                     searchFields: ['name', 'short_name', 'reference_code'],

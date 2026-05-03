@@ -214,10 +214,10 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
                 searchPlaceholder: 'Search country or ISO code… (Ctrl+K)',
                 primaryAction: { label: 'Add Sourcing', icon: <Plus size={14} />, onClick: () => setPickerOpen(true) },
                 columnHeaders: [
-                    { label: 'Country', width: 'auto' },
-                    { label: 'ISO', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Currency', width: '72px', color: 'var(--app-warning)', hideOnMobile: true },
-                    { label: 'Status', width: '64px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Country', width: 'auto', sortKey: 'name' },
+                    { label: 'ISO', width: '56px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'code' },
+                    { label: 'Currency', width: '72px', color: 'var(--app-warning)', hideOnMobile: true, sortKey: 'currency' },
+                    { label: 'Status', width: '64px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'is_active' },
                 ],
 
                 // ── Template-owned filtering ──

@@ -219,10 +219,10 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                         { label: 'Product Matrix', icon: <Sparkles size={13} />, href: '/inventory/attributes/matrix' },
                     ],
                     columnHeaders: [
-                        { label: 'Attribute', width: 'auto' },
-                        { label: 'Values', width: '48px', color: 'var(--app-info)', hideOnMobile: true },
-                        { label: 'Links', width: '56px', color: 'var(--app-warning)', hideOnMobile: true },
-                        { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
+                        { label: 'Attribute', width: 'auto', sortKey: 'name' },
+                        { label: 'Values', width: '48px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'value_count' },
+                        { label: 'Links', width: '56px', color: 'var(--app-warning)', hideOnMobile: true, sortKey: 'link_count' },
+                        { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'product_count' },
                     ],
 
                     // ── Template owns filter + tree build ──

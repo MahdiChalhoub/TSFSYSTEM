@@ -231,11 +231,15 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
                     { label: 'Cleanup', icon: <Wrench size={13} />, href: '/inventory/maintenance?tab=unit' },
                 ],
                 columnHeaders: [
-                    { label: 'Unit', width: 'auto' },
-                    { label: 'Sub', width: '40px', hideOnMobile: true },
-                    { label: 'Conv.', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Pkgs', width: '56px', color: 'var(--app-primary)', hideOnMobile: true },
-                    { label: 'Products', width: '48px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Unit', width: 'auto', sortKey: 'name' },
+                    {
+                        label: 'Sub', width: '40px', hideOnMobile: true,
+                        sortKey: 'sub_count',
+                        sortAccessor: (u: any) => (data as any[]).filter(x => x.base_unit === u.id).length,
+                    },
+                    { label: 'Conv.', width: '56px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'conversion_factor' },
+                    { label: 'Pkgs', width: '56px', color: 'var(--app-primary)', hideOnMobile: true, sortKey: 'packaging_count' },
+                    { label: 'Products', width: '48px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'product_count' },
                 ],
 
                 // ── Template owns filtering (parent link for Units is `base_unit`) ──

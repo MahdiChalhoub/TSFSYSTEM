@@ -917,7 +917,7 @@ export default function PurchaseForm({
                                 expectedDelivery={deliveryDate} onExpectedDeliveryChange={setDeliveryDate}
                                 onClose={() => setSidebarOpen(false)}
                                 poStatus={poStatus}
-                                onStatusChange={isEdit ? handleStatusChange : undefined}
+                                onStatusChange={handleStatusChange}
                                 statusTransitioning={statusTransitioning}
                             />
                         </div>

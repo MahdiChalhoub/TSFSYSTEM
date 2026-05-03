@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from erp.models import Organization
+from erp.models import Organization, Country
 from apps.inventory.models import (
     Brand,
     Category,
@@ -893,6 +893,75 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
             'status': 'moved', 'products_updated': updated,
             'source_deleted': deleted,
         })
+
+    # ─────────────────────────────────────────────────────────────────
+    # Dedicated link/unlink endpoints for the two M2M relations on Brand.
+    # Mirrors the pattern on CategoryViewSet (link_brand/unlink_brand,
+    # link_attribute/unlink_attribute). They exist because PATCHing the
+    # ModelSerializer with category_ids / country_ids payloads has
+    # silently dropped writes in this codebase before — TenantOwnedModel
+    # signal cascades and the read-only `categories` field shadowing the
+    # write_only `category_ids` source alias both contribute. These
+    # actions call brand.categories.add() / brand.countries.add()
+    # explicitly so the write is authoritative and reportable.
+    # ─────────────────────────────────────────────────────────────────
+
+    def _get_brand_or_404(self, pk):
+        organization, err = _get_org_or_400()
+        if err:
+            return None, organization, err
+        try:
+            return Brand.objects.get(id=pk, organization=organization), organization, None
+        except Brand.DoesNotExist:
+            return None, organization, Response({'error': 'Brand not found'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def link_category(self, request, pk=None):
+        brand, organization, err = self._get_brand_or_404(pk)
+        if err: return err
+        cid = request.data.get('category_id')
+        if not cid:
+            return Response({'error': 'category_id is required'}, status=400)
+        try:
+            cat = Category.objects.get(id=cid, organization=organization)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=404)
+        brand.categories.add(cat)
+        return Response({'status': 'linked', 'brand_id': brand.id, 'category_id': cat.id})
+
+    @action(detail=True, methods=['post'])
+    def unlink_category(self, request, pk=None):
+        brand, _, err = self._get_brand_or_404(pk)
+        if err: return err
+        cid = request.data.get('category_id')
+        if not cid:
+            return Response({'error': 'category_id is required'}, status=400)
+        brand.categories.remove(cid)  # M2M.remove accepts pk directly
+        return Response({'status': 'unlinked', 'brand_id': brand.id, 'category_id': int(cid)})
+
+    @action(detail=True, methods=['post'])
+    def link_country(self, request, pk=None):
+        brand, _, err = self._get_brand_or_404(pk)
+        if err: return err
+        country_id = request.data.get('country_id')
+        if not country_id:
+            return Response({'error': 'country_id is required'}, status=400)
+        try:
+            country = Country.objects.get(id=country_id)
+        except Country.DoesNotExist:
+            return Response({'error': 'Country not found'}, status=404)
+        brand.countries.add(country)
+        return Response({'status': 'linked', 'brand_id': brand.id, 'country_id': country.id})
+
+    @action(detail=True, methods=['post'])
+    def unlink_country(self, request, pk=None):
+        brand, _, err = self._get_brand_or_404(pk)
+        if err: return err
+        country_id = request.data.get('country_id')
+        if not country_id:
+            return Response({'error': 'country_id is required'}, status=400)
+        brand.countries.remove(country_id)
+        return Response({'status': 'unlinked', 'brand_id': brand.id, 'country_id': int(country_id)})
 
     @action(detail=True, methods=['get'])
     def hierarchy(self, request, pk=None):

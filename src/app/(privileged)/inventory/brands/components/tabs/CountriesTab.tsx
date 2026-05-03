@@ -88,12 +88,18 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
         [allCountries, m2mIds]
     )
 
+    // Same dedicated-endpoint pattern as CategoriesTab — PATCH on
+    // country_ids was silently dropped (read_only `countries` shadowing
+    // the write_only `country_ids` source alias). link_country /
+    // unlink_country actions on BrandViewSet call
+    // brand.countries.add() / .remove() directly.
     const linkCountry = async (countryId: number) => {
         setLinking(true)
         try {
-            await erpFetch(`inventory/brands/${brandId}/`, {
-                method: 'PATCH',
-                body: JSON.stringify({ country_ids: [...Array.from(m2mIds), countryId] }),
+            await erpFetch(`inventory/brands/${brandId}/link_country/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ country_id: countryId }),
             })
             toast.success('Country linked')
             loadData(); router.refresh()
@@ -105,9 +111,10 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
     const unlinkCountry = async (countryId: number) => {
         setLinking(true)
         try {
-            await erpFetch(`inventory/brands/${brandId}/`, {
-                method: 'PATCH',
-                body: JSON.stringify({ country_ids: Array.from(m2mIds).filter(id => id !== countryId) }),
+            await erpFetch(`inventory/brands/${brandId}/unlink_country/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ country_id: countryId }),
             })
             toast.success('Country unlinked')
             loadData(); router.refresh()

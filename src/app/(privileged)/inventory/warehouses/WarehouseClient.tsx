@@ -151,10 +151,14 @@ export function WarehouseClient({
                     },
                 ],
                 columnHeaders: [
-                    { label: 'Location', width: 'auto' },
-                    { label: 'Sub', width: '40px', hideOnMobile: true },
-                    { label: 'Country', width: '64px', hideOnMobile: true },
-                    { label: 'SKUs', width: '48px', color: 'var(--app-primary)', hideOnMobile: true },
+                    { label: 'Location', width: 'auto', sortKey: 'name' },
+                    {
+                        label: 'Sub', width: '40px', hideOnMobile: true,
+                        sortKey: 'sub_count',
+                        sortAccessor: (w: any) => (data as any[]).filter(x => x.parent === w.id).length,
+                    },
+                    { label: 'Country', width: '64px', hideOnMobile: true, sortKey: 'country' },
+                    { label: 'SKUs', width: '48px', color: 'var(--app-primary)', hideOnMobile: true, sortKey: 'sku_count' },
                 ],
                 emptyState: {
                     icon: <GitBranch size={36} />,

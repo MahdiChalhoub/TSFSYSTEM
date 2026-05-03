@@ -163,11 +163,11 @@ export function AccountCategoriesClient({
                         onClick: () => openAddModal(),
                     },
                     columnHeaders: [
-                        { label: 'Category', width: 'auto' },
-                        { label: 'Code', width: '80px', hideOnMobile: true },
-                        { label: 'Accounts', width: '72px', color: 'var(--app-info)', hideOnMobile: true },
-                        { label: 'COA', width: '80px', color: 'var(--app-warning)', hideOnMobile: true },
-                        { label: 'Order', width: '72px', hideOnMobile: true },
+                        { label: 'Category', width: 'auto', sortKey: 'name' },
+                        { label: 'Code', width: '80px', hideOnMobile: true, sortKey: 'code' },
+                        { label: 'Accounts', width: '72px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'account_count' },
+                        { label: 'COA', width: '80px', color: 'var(--app-warning)', hideOnMobile: true, sortKey: 'coa_count' },
+                        { label: 'Order', width: '72px', hideOnMobile: true, sortKey: 'sort_order' },
                     ],
 
                     // ── Template owns filtering ──

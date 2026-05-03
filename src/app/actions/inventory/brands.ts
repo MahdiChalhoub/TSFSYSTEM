@@ -11,6 +11,82 @@ export type BrandState = {
     };
 };
 
+/* ════════════════════════════════════════════════════════════════════
+ *  syncBrandLinks — authoritative M2M writer for Brand.categories and
+ *  Brand.countries.
+ *
+ *  Same fix the categories module needed: PATCHing the ModelSerializer
+ *  with `category_ids` / `country_ids` payloads has been silently
+ *  dropping writes. Returning HTTP 200 with the M2M unchanged.
+ *  Reasons stack up — read_only nested field (`categories` /
+ *  `countries`) shadowing the write_only source-aliased one,
+ *  TenantOwnedModel save signals, custom managers — none of which
+ *  surface as an error to the client.
+ *
+ *  Fix: don't go through the serializer for M2M state. Use the
+ *  dedicated link_category / unlink_category / link_country /
+ *  unlink_country actions on BrandViewSet — they call
+ *  brand.categories.add() / .remove() directly, which IS authoritative.
+ *
+ *  Returns { failed: [{ kind, id, error }] } so callers can surface
+ *  partial-success warnings (matches the categories module signature).
+ * ════════════════════════════════════════════════════════════════════ */
+type SyncMode = 'category' | 'country'
+type LinkFailure = { kind: SyncMode; id: number; error: string }
+
+async function syncBrandLinks(
+    brandId: number,
+    desiredIds: number[],
+    mode: SyncMode,
+): Promise<{ failed: LinkFailure[] }> {
+    // Read current set of linked ids straight from the brand record so
+    // we don't trust whatever stale shape a list snapshot might have.
+    let currentIds: number[] = []
+    try {
+        const fresh: any = await erpFetch(`inventory/brands/${brandId}/`)
+        const list = mode === 'category' ? fresh?.categories : fresh?.countries
+        currentIds = (Array.isArray(list) ? list : [])
+            .map((row: any) => typeof row === 'number' ? row : row?.id)
+            .filter((n: any): n is number => typeof n === 'number')
+    } catch {
+        // If we can't read current state, fall through with empty —
+        // the diff below treats every desired id as a fresh add.
+    }
+
+    const desired = new Set(desiredIds.filter(n => Number.isFinite(n)))
+    const current = new Set(currentIds)
+    const toAdd = [...desired].filter(id => !current.has(id))
+    const toRemove = [...current].filter(id => !desired.has(id))
+
+    const idKey = mode === 'category' ? 'category_id' : 'country_id'
+    const linkPath = mode === 'category' ? 'link_category' : 'link_country'
+    const unlinkPath = mode === 'category' ? 'unlink_category' : 'unlink_country'
+    const failed: LinkFailure[] = []
+
+    // Run adds and removes in parallel — they touch different rows of
+    // the through table so there's no ordering constraint. Promise
+    // .allSettled so a single 4xx doesn't kill the rest.
+    const calls = [
+        ...toAdd.map(id =>
+            erpFetch(`inventory/brands/${brandId}/${linkPath}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [idKey]: id }),
+            }).then(() => null).catch(e => ({ kind: mode, id, error: e?.message || 'link failed' } as LinkFailure))
+        ),
+        ...toRemove.map(id =>
+            erpFetch(`inventory/brands/${brandId}/${unlinkPath}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [idKey]: id }),
+            }).then(() => null).catch(e => ({ kind: mode, id, error: e?.message || 'unlink failed' } as LinkFailure))
+        ),
+    ]
+    const results = await Promise.all(calls)
+    results.forEach(r => { if (r) failed.push(r) })
+    return { failed }
+}
+
 export async function createBrand(prevState: BrandState, formData: FormData): Promise<BrandState> {
     const name = formData.get('name') as string;
     const shortName = formData.get('shortName') as string;
@@ -23,17 +99,30 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
     }
 
     try {
-        await erpFetch('inventory/brands/', {
+        // Create with scalar fields only; M2M writes go through the
+        // dedicated link endpoints below so they don't get silently
+        // dropped by the serializer.
+        const created: any = await erpFetch('inventory/brands/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name,
                 short_name: shortName,
                 code,
-                category_ids: categoryIds,
-                country_ids: countryIds
             })
         });
+
+        const newId = created?.id;
+        if (newId) {
+            const [catRes, countryRes] = await Promise.all([
+                categoryIds.length > 0 ? syncBrandLinks(newId, categoryIds, 'category') : Promise.resolve({ failed: [] }),
+                countryIds.length  > 0 ? syncBrandLinks(newId, countryIds,  'country')  : Promise.resolve({ failed: [] }),
+            ]);
+            const failures = [...catRes.failed, ...countryRes.failed];
+            if (failures.length > 0) {
+                console.warn('[createBrand] link partial failures:', failures);
+            }
+        }
 
         revalidatePath('/inventory/brands');
         return { message: 'success' };
@@ -50,6 +139,10 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
 
     try {
+        // Scalar fields via PATCH; M2M state via the dedicated endpoints.
+        // The PATCH no longer carries category_ids / country_ids — those
+        // were getting silently dropped (same root cause as the
+        // categories module's link-failure bug).
         await erpFetch(`inventory/brands/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -57,10 +150,18 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
                 name,
                 short_name: shortName,
                 code,
-                category_ids: categoryIds,
-                country_ids: countryIds
             })
         });
+
+        const [catRes, countryRes] = await Promise.all([
+            syncBrandLinks(id, categoryIds, 'category'),
+            syncBrandLinks(id, countryIds,  'country'),
+        ]);
+        const failures = [...catRes.failed, ...countryRes.failed];
+        if (failures.length > 0) {
+            console.warn('[updateBrand] link partial failures:', failures);
+        }
+
         revalidatePath('/inventory/brands');
         revalidatePath('/inventory/categories');
         return { message: 'success' };
