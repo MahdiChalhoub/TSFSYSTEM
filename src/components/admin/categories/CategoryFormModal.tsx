@@ -42,6 +42,13 @@ const initialState: CategoryState = { message: '', errors: {} };
 // suggestion synchronously instead of showing a blank field that pops in.
 let _categoryCodeCache: string | null = null;
 
+// Module-level cache for the Brands + Attributes trees. They're org-wide
+// reference data that rarely changes during a session, so paying the
+// network cost once and reusing the result keeps every subsequent
+// "Create Category" / "Edit Category" open instant.
+let _brandTreeCache: any[] | null = null;
+let _attrTreeCache: any[] | null = null;
+
 // Shape consumed by CategoryTreeSelector. Brands are flat (children = []),
 // attributes are roots with their values nested as children.
 type TreeNode = {
@@ -100,8 +107,11 @@ export function CategoryFormModal({
     // with an empty set (removing this category from every brand). We
     // only forward the pane data to the action when the user has
     // actually touched the chips. ──
-    const [brandTree, setBrandTree] = useState<TreeNode[]>([]);
-    const [attrTree, setAttrTree] = useState<TreeNode[]>([]);
+    // Seed from module-level cache when available so the modal renders
+    // populated Brand + Attribute trees on the FIRST paint of subsequent
+    // opens — no spinner, no flicker.
+    const [brandTree, setBrandTree] = useState<TreeNode[]>(() => _brandTreeCache ?? []);
+    const [attrTree, setAttrTree] = useState<TreeNode[]>(() => _attrTreeCache ?? []);
     const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(
         () => new Set<number>(
             Array.isArray(category?.brand_ids) ? category!.brand_ids
@@ -119,7 +129,9 @@ export function CategoryFormModal({
     const [brandsDirty, setBrandsDirty] = useState(false);
     const [attrsDirty, setAttrsDirty] = useState(false);
     const [loadingLinks, setLoadingLinks] = useState(false);
-    const [linksLoaded, setLinksLoaded] = useState(false);
+    // If we have cached trees, treat the panes as already loaded so we
+    // skip the spinner entirely on subsequent opens.
+    const [linksLoaded, setLinksLoaded] = useState(() => _brandTreeCache !== null && _attrTreeCache !== null);
     // True the moment linked_brands / linked_attributes resolves. ensureLinksLoaded
     // checks these to avoid clobbering an authoritative seed with a (possibly
     // smaller) tree-walk fallback. Audit BLOCKER #1.
@@ -161,14 +173,19 @@ export function CategoryFormModal({
         setActivePane('identity');
         setActiveLang('__default__');                          // audit #10
         setNameDraft(category?.name || '');
-        // Reset dirty flags + reload tracker + seeded flags on each open so
-        // the next save doesn't blindly clear M2M data the user never
-        // touched, and the linked-* fetches can re-seed cleanly.
+        // Reset dirty flags + seeded flags on each open so the next save
+        // doesn't blindly clear M2M data the user never touched, and the
+        // linked-* fetches can re-seed cleanly.
+        // linksLoaded keeps its value when the module-level cache is
+        // populated (subsequent opens render trees on first paint with
+        // no spinner flash); resets only when the cache is cold.
         setBrandsDirty(false);
         setAttrsDirty(false);
-        setLinksLoaded(false);
         setBrandsSeeded(false);
         setAttrsSeeded(false);
+        if (_brandTreeCache === null || _attrTreeCache === null) {
+            setLinksLoaded(false);
+        }
 
         if (!category) {
             // Fire and update cache. If we already had a cached value the
@@ -248,12 +265,20 @@ export function CategoryFormModal({
                 });
         }
 
-        // Eagerly preload the brand + attribute trees so the user sees
-        // populated panes the instant they switch tabs — no "Loading…"
-        // wait. Fires in parallel with the linked_* + locales + code
-        // peek requests above, so the dominant time is whichever single
-        // request is slowest, not the sum.
-        ensureLinksLoaded();
+        // Preload the brand + attribute trees so tab switches are
+        // instant. Defer to the next idle callback (or one frame, on
+        // browsers without requestIdleCallback) so the modal's open
+        // animation paints first — no jank from kicking off four
+        // network requests in the same tick the modal mounts.
+        // Cache hits short-circuit immediately inside ensureLinksLoaded,
+        // so the deferral only affects the very first session-open.
+        const idle = (cb: () => void) => {
+            if (typeof window === 'undefined') return cb();
+            const ric = (window as any).requestIdleCallback;
+            if (typeof ric === 'function') ric(cb, { timeout: 500 });
+            else setTimeout(cb, 0);
+        };
+        idle(() => { ensureLinksLoaded(); });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, parentId, categoryId]);
 
@@ -279,6 +304,14 @@ export function CategoryFormModal({
     // yet (the dirty flags). That way reopening the pane after a prior
     // save doesn't blow away the user's in-flight changes.
     const ensureLinksLoaded = () => {
+        // Cache hit — populate state from cache, no fetch, no spinner.
+        // This is what makes subsequent modal opens feel instant.
+        if (_brandTreeCache !== null && _attrTreeCache !== null) {
+            if (brandTree.length === 0) setBrandTree(_brandTreeCache);
+            if (attrTree.length === 0) setAttrTree(_attrTreeCache);
+            setLinksLoaded(true);
+            return;
+        }
         if (linksLoaded || loadingLinks) return;
         setLoadingLinks(true);
         Promise.all([
@@ -290,27 +323,26 @@ export function CategoryFormModal({
             const brandsArr = brands as any[];
             const attrsArr = attrs as any[];
 
-            setBrandTree(brandsArr.map(b => ({
+            const brandNodes: TreeNode[] = brandsArr.map(b => ({
                 id: b.id, name: b.name, code: b.code, parent: null, children: [],
-            })));
+            }));
             // ── Attributes: ROOT GROUPS ONLY ──
             // A category links to attribute *groups* (Size, Color, Parfum),
             // not to individual values (Small, Red). The backend
             // /link_attribute/ endpoint enforces `parent__isnull=True` and
-            // returns 404 when called with a leaf id — which is what we
-            // got when the tree previously rendered children and the user
-            // toggled one. Show roots as a flat list, no expand.
-            setAttrTree(
-                attrsArr
-                    .filter(a => a.parent == null)  // root groups only
-                    .map(a => ({
-                        id: a.id,
-                        name: a.name,
-                        code: a.code,
-                        parent: null,
-                        children: [],
-                    }))
-            );
+            // returns 404 when called with a leaf id.
+            const attrNodes: TreeNode[] = attrsArr
+                .filter(a => a.parent == null)
+                .map(a => ({
+                    id: a.id, name: a.name, code: a.code, parent: null, children: [],
+                }));
+
+            setBrandTree(brandNodes);
+            setAttrTree(attrNodes);
+            // Persist into the module-level cache so subsequent modal
+            // opens within the session don't re-fetch.
+            _brandTreeCache = brandNodes;
+            _attrTreeCache = attrNodes;
 
             // Seed existing selections — BUT only as a FALLBACK when the
             // authoritative linked_* endpoint hasn't already populated.
