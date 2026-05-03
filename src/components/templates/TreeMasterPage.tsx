@@ -36,6 +36,15 @@ export interface ColumnHeader {
      *  that behavior for a specific secondary column you need visible
      *  even in narrow panes. Default: auto-hide (treated as true). */
     hideOnSplit?: boolean
+    /** When set, the header becomes a button that cycles through
+     *  asc → desc → unsorted on click, sorting the list/tree by this
+     *  field. Defaults to `item[sortKey]`; pass `sortAccessor` for
+     *  computed values (e.g. `(c) => c.brand_count + c.attribute_count`). */
+    sortKey?: string
+    /** Custom value extractor for the sort. Strings sort
+     *  case-insensitively; numbers sort numerically; other types fall
+     *  back to lexicographic. */
+    sortAccessor?: (item: any) => unknown
 }
 
 export interface TreeMasterConfig extends MasterPageConfig {
@@ -128,6 +137,16 @@ interface TreeMasterPageProps {
 export function TreeMasterPage({ config, children, detailPanel, modals, aboveTree, bulkActions }: TreeMasterPageProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [kpiFilter, setKpiFilter] = useState<string | null>(null)
+    // Column-header sorting. Cycles unsorted → asc → desc → unsorted.
+    // Persists for the lifetime of the page (intentional — operator
+    // expectation that flipping a filter doesn't reset their sort).
+    const [sortBy, setSortBy] = useState<string | null>(null)
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+    const cycleSort = useCallback((key: string) => {
+        if (sortBy !== key) { setSortBy(key); setSortDir('asc'); return }
+        if (sortDir === 'asc') { setSortDir('desc'); return }
+        setSortBy(null); setSortDir('asc')
+    }, [sortBy, sortDir])
 
     // Notify parent on search — used by legacy consumers that do their own
     // filtering. Modern consumers pass `config.data` and ignore this.
@@ -203,12 +222,34 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
         const q = searchQuery.trim().toLowerCase()
         const fields = config.searchFields || defaultSearchFields
         const predicate = kpiFilter ? config.kpiPredicates?.[kpiFilter] : null
-        return all.filter(item => {
+        const filtered = all.filter(item => {
             const searchMatch = !q || fields.some(f => String(item?.[f] ?? '').toLowerCase().includes(q))
             const kpiMatch = !predicate || predicate(item, all)
             return searchMatch && kpiMatch
         })
-    }, [ownsData, config.data, searchQuery, kpiFilter, config.searchFields, config.kpiPredicates, defaultSearchFields])
+
+        // Column-header sort. For tree mode this sorts the flat list;
+        // buildTree below preserves order within parent groups, so
+        // siblings end up in the requested order. For flat (non-tree)
+        // pages it's the final order.
+        if (!sortBy) return filtered
+        const col = (config.columnHeaders || []).find(c => c.sortKey === sortBy)
+        const accessor = col?.sortAccessor ?? ((item: any) => item?.[sortBy as string])
+        const dir = sortDir === 'asc' ? 1 : -1
+        const norm = (v: unknown): string | number => {
+            if (v == null) return ''
+            if (typeof v === 'number') return v
+            if (typeof v === 'string') return v.toLowerCase()
+            return String(v).toLowerCase()
+        }
+        return [...filtered].sort((a, b) => {
+            const av = norm(accessor(a))
+            const bv = norm(accessor(b))
+            if (av === bv) return 0
+            return av < bv ? -dir : dir
+        })
+    }, [ownsData, config.data, searchQuery, kpiFilter, config.searchFields,
+        config.kpiPredicates, defaultSearchFields, sortBy, sortDir, config.columnHeaders])
 
     const tree = useMemo(
         () => (ownsData ? buildTree(filteredData, config.treeParentKey || 'parent') : []),
@@ -558,11 +599,41 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                 // specific secondary column must stay visible.
                                 const shouldHideWhenCompact = col.hideOnSplit !== false && i > 0;
                                 if (shouldHideWhenCompact && isCompact) return null;
+                                const sortable = !!col.sortKey;
+                                const active = sortable && sortBy === col.sortKey;
+                                const baseStyle: React.CSSProperties = {
+                                    width: col.width,
+                                    color: active ? 'var(--app-primary)' : col.color,
+                                    ...(i === 0 ? { flex: '1 1 0%', minWidth: 0, textAlign: 'left' } : {}),
+                                };
+                                const cls = `${col.hideOnMobile ? 'hidden sm:block' : ''} flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis ${i === 0 ? 'text-left' : 'text-center'}`;
+                                if (!sortable) {
+                                    return (
+                                        <div key={i} className={cls} style={baseStyle}>
+                                            {col.label}
+                                        </div>
+                                    );
+                                }
+                                // Sortable header — button cycling asc → desc → off.
+                                // Inline arrow indicator only when active.
                                 return (
-                                    <div key={i} className={`${col.hideOnMobile ? 'hidden sm:block' : ''} flex-shrink-0 text-center overflow-hidden whitespace-nowrap text-ellipsis`}
-                                        style={{ width: col.width, color: col.color, ...(i === 0 ? { flex: '1 1 0%', minWidth: 0, textAlign: 'left' } : {}) }}>
-                                        {col.label}
-                                    </div>
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => cycleSort(col.sortKey!)}
+                                        className={`${cls} inline-flex items-center gap-1 cursor-pointer hover:text-app-foreground transition-colors select-none ${i === 0 ? 'justify-start' : 'justify-center'}`}
+                                        style={baseStyle}
+                                        title={active
+                                            ? (sortDir === 'asc' ? 'Sorted ascending — click for descending' : 'Sorted descending — click to clear')
+                                            : 'Click to sort'}
+                                    >
+                                        <span>{col.label}</span>
+                                        {active && (
+                                            <span className="text-[9px] leading-none" aria-hidden="true">
+                                                {sortDir === 'asc' ? '▲' : '▼'}
+                                            </span>
+                                        )}
+                                    </button>
                                 );
                             })}
                             <div className="w-[68px] flex-shrink-0" />

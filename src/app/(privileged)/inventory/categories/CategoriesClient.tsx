@@ -244,12 +244,16 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
                 ],
                 columnHeaders: [
-                    { label: 'Category', width: 'auto' },
-                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true },
-                    { label: 'Sub', width: '48px', hideOnMobile: true },
-                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true },
-                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true },
-                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
+                    { label: 'Category', width: 'auto', sortKey: 'name' },
+                    { label: 'Barcode', width: '96px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'barcode_prefix' },
+                    {
+                        label: 'Sub', width: '48px', hideOnMobile: true,
+                        sortKey: 'sub_count',
+                        sortAccessor: (c: any) => data.filter((x: any) => x.parent === c.id).length,
+                    },
+                    { label: 'Brands', width: '56px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'brand_count' },
+                    { label: 'Attrs', width: '48px', color: 'var(--app-warning)', hideOnMobile: true, sortKey: 'attribute_count' },
+                    { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true, sortKey: 'product_count' },
                 ],
 
                 // ── Template owns filtering ──
