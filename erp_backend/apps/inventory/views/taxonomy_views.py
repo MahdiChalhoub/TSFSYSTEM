@@ -5,6 +5,7 @@ from apps.inventory.models import (
     Category,
     Parfum,
     Product,
+    ProductAttribute,
     ProductGroup,
     Unit,
 )
@@ -962,6 +963,43 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
             return Response({'error': 'country_id is required'}, status=400)
         brand.countries.remove(country_id)
         return Response({'status': 'unlinked', 'brand_id': brand.id, 'country_id': int(country_id)})
+
+    @action(detail=True, methods=['post'])
+    def link_attribute(self, request, pk=None):
+        """Link a ProductAttribute root group to this brand.
+
+        Mirrors CategoryViewSet.link_attribute — requires the attribute
+        to be a root group (parent IS NULL). Leaves are rejected because
+        what makes sense at the brand level is "this brand cares about
+        Color / Volume / Parfum" not "this brand cares about Red". The
+        leaves come along automatically through the products.
+        """
+        brand, organization, err = self._get_brand_or_404(pk)
+        if err: return err
+        aid = request.data.get('attribute_id')
+        if not aid:
+            return Response({'error': 'attribute_id is required'}, status=400)
+        try:
+            attr = ProductAttribute.objects.get(
+                id=aid, organization=organization, parent__isnull=True
+            )
+        except ProductAttribute.DoesNotExist:
+            return Response(
+                {'error': 'Attribute not found, or it is a leaf value (only root attribute groups can be linked to a brand)'},
+                status=404,
+            )
+        brand.attributes.add(attr)
+        return Response({'status': 'linked', 'brand_id': brand.id, 'attribute_id': attr.id})
+
+    @action(detail=True, methods=['post'])
+    def unlink_attribute(self, request, pk=None):
+        brand, _, err = self._get_brand_or_404(pk)
+        if err: return err
+        aid = request.data.get('attribute_id')
+        if not aid:
+            return Response({'error': 'attribute_id is required'}, status=400)
+        brand.attributes.remove(aid)
+        return Response({'status': 'unlinked', 'brand_id': brand.id, 'attribute_id': int(aid)})
 
     @action(detail=True, methods=['get'])
     def hierarchy(self, request, pk=None):

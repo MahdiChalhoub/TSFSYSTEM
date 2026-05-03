@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from 'react';
 import { createBrand, updateBrand, BrandState } from '@/app/actions/brands';
 import {
     X, Save, Loader2, Globe, Tag, Award, AlertCircle,
-    FolderTree, Lightbulb, Hash, Check, Search,
+    FolderTree, Lightbulb, Hash, Check, Search, Sparkles,
 } from 'lucide-react';
 import { peekNextCode, peekCachedNextCode } from '@/lib/sequences-client';
 import { erpFetch } from '@/lib/erp-api';
@@ -18,6 +18,10 @@ type BrandFormModalProps = {
     brand?: Record<string, any>;
     countries: Record<string, any>[];
     categories: Record<string, any>[];
+    /** Root ProductAttribute groups available to link to this brand.
+     *  Backend rejects leaf values, so the page filters to roots
+     *  before passing them in. */
+    attributes: Record<string, any>[];
 };
 
 type CategoryNode = {
@@ -46,11 +50,11 @@ type LangEntry = { name?: string; short_name?: string };
 const coerce = (v: any): LangEntry =>
     typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
 
-type PaneKey = 'identity' | 'markets' | 'taxonomy';
+type PaneKey = 'identity' | 'markets' | 'taxonomy' | 'attributes';
 
 const initialState: BrandState = { message: '', errors: {} };
 
-export function BrandFormModal({ isOpen, onClose, brand, countries, categories }: BrandFormModalProps) {
+export function BrandFormModal({ isOpen, onClose, brand, countries, categories, attributes }: BrandFormModalProps) {
     const [state, formAction] = useActionState(brand ? updateBrand.bind(null, brand.id) : createBrand, initialState);
     const [pending, setPending] = useState(false);
 
@@ -69,6 +73,13 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
         brand?.categories?.map((c: Record<string, any>) => c.id) || []
     );
+    // Attribute selection — flat (no tree). Brand links to root attribute
+    // groups only; leaf values come along through the products. Same Set
+    // pattern as countries so toggle is O(1).
+    const [selectedAttributeIds, setSelectedAttributeIds] = useState<Set<number>>(
+        () => new Set<number>((brand?.attributes || []).map((a: any) => (typeof a === 'number' ? a : a?.id)).filter((n: any) => typeof n === 'number'))
+    );
+    const [attributeFilter, setAttributeFilter] = useState('');
     // Seed from the BRAND-sequence cache so the LockableCodeInput's
     // suggested value is painted on the first frame — same pattern as
     // the locales seed above. Edit mode never wants a suggestion.
@@ -139,6 +150,8 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
         // M2M state.
         setSelectedCountryIds(new Set(idsOf(brand?.countries)));
         setSelectedCategoryIds(idsOf(brand?.categories));
+        setSelectedAttributeIds(new Set(idsOf(brand?.attributes)));
+        setAttributeFilter('');
         setPending(false);
         setCountryFilter('');
         setActivePane('identity');
@@ -175,6 +188,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                 if (cancelled || !fresh) return;
                 setSelectedCountryIds(new Set(idsOf(fresh.countries)));
                 setSelectedCategoryIds(idsOf(fresh.categories));
+                setSelectedAttributeIds(new Set(idsOf(fresh.attributes)));
                 setNameDraft(fresh.name || '');
                 if (fresh.translations && typeof fresh.translations === 'object') {
                     const out: Record<string, LangEntry> = {};
@@ -216,7 +230,33 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
             badge: selectedCategoryIds.length > 0 ? `${selectedCategoryIds.length}` : 'Any',
             tone: selectedCategoryIds.length > 0 ? 'var(--app-primary)' : 'var(--app-warning, #f59e0b)',
         },
+        {
+            key: 'attributes',
+            label: 'Attributes',
+            icon: <Sparkles size={13} />,
+            badge: selectedAttributeIds.size > 0 ? `${selectedAttributeIds.size}` : 'None',
+            tone: selectedAttributeIds.size > 0 ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+        },
     ];
+
+    const toggleAttribute = (id: number) => setSelectedAttributeIds(s => {
+        const next = new Set(s);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+    });
+
+    const sortedAttributes = useMemo(
+        () => [...attributes].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+        [attributes]
+    );
+    const filteredAttributes = useMemo(() => {
+        const q = attributeFilter.trim().toLowerCase();
+        if (!q) return sortedAttributes;
+        return sortedAttributes.filter(a =>
+            (a.name || '').toLowerCase().includes(q) ||
+            (a.code || '').toLowerCase().includes(q)
+        );
+    }, [sortedAttributes, attributeFilter]);
 
     const toggleCountry = (id: number) => setSelectedCountryIds(s => {
         const next = new Set(s);
@@ -650,6 +690,97 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                         : `Selecting a parent automatically includes all sub-categories. ${selectedCategoryIds.length} category${selectedCategoryIds.length === 1 ? '' : 'ies'} linked.`}
                                 </span>
                             </div>
+                        </div>
+
+                        {/* ═══ Pane: ATTRIBUTES ═══
+                             Flat picker over root attribute groups (Volume,
+                             Parfum, Concentration). Backend rejects leaf
+                             values, so the page already filters to roots
+                             before passing them in. Same toggle / chip /
+                             search affordances as Markets so the two panes
+                             feel symmetric. */}
+                        <div className={activePane === 'attributes' ? 'space-y-3' : 'hidden'}>
+                            <div>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Attribute Groups</h4>
+                                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                                    Pick which attribute groups (Volume, Parfum, Concentration) apply to this brand&apos;s products.
+                                    Leaf values come along automatically through the products.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
+                                    <input
+                                        value={attributeFilter}
+                                        onChange={e => setAttributeFilter(e.target.value)}
+                                        placeholder={`Search ${sortedAttributes.length} attribute group${sortedAttributes.length === 1 ? '' : 's'}…`}
+                                        className="w-full bg-app-background border border-app-border rounded-xl pl-8 pr-3 py-2 text-tp-sm font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAttributeIds(new Set(sortedAttributes.map(a => a.id)))}
+                                    className="text-tp-xxs font-bold px-2.5 py-2 rounded-xl transition-all"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                    All
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAttributeIds(new Set())}
+                                    className="text-tp-xxs font-bold px-2.5 py-2 rounded-xl transition-all"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                    None
+                                </button>
+                            </div>
+
+                            <div
+                                className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1.5 rounded-xl overflow-y-auto custom-scrollbar"
+                                style={{
+                                    background: 'var(--app-background)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                    maxHeight: '320px',
+                                }}>
+                                {filteredAttributes.length === 0 ? (
+                                    <div className="col-span-full p-4 text-center text-tp-xs font-bold text-app-muted-foreground">
+                                        {attributeFilter
+                                            ? `No attribute group matches “${attributeFilter}”.`
+                                            : 'No attribute groups defined yet — create some at /inventory/attributes.'}
+                                    </div>
+                                ) : filteredAttributes.map(a => {
+                                    const checked = selectedAttributeIds.has(a.id);
+                                    return (
+                                        <button
+                                            key={a.id}
+                                            type="button"
+                                            onClick={() => toggleAttribute(a.id)}
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-left text-tp-sm"
+                                            style={{
+                                                background: checked ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                                border: `1px solid ${checked ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'transparent'}`,
+                                                color: checked ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                            }}>
+                                            <span
+                                                className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all"
+                                                style={{
+                                                    background: checked ? 'var(--app-primary)' : 'var(--app-surface)',
+                                                    border: `1px solid ${checked ? 'var(--app-primary)' : 'var(--app-border)'}`,
+                                                }}>
+                                                {checked && <Check size={10} className="text-white" strokeWidth={3} />}
+                                            </span>
+                                            <span className="font-bold truncate flex-1">{a.name}</span>
+                                            {a.code && <span className="font-mono text-tp-xxs opacity-60">{a.code}</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Hidden inputs — formData.getAll('attributeIds')
+                                is what the action reads. Same pattern as
+                                countryIds / categoryIds. */}
+                            {Array.from(selectedAttributeIds).map(id => (
+                                <input key={id} type="hidden" name="attributeIds" value={id} />
+                            ))}
                         </div>
                     </div>
                 </form>

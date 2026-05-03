@@ -103,10 +103,17 @@ export default function ProcurementRequestsPage() {
 
     const counts = useMemo(() => {
         const c: Record<ProcurementRequestStatus, number> & { ALL: number; BUMPED: number } = {
-            ALL: requests.length, PENDING: 0, APPROVED: 0, EXECUTED: 0, REJECTED: 0, CANCELLED: 0, BUMPED: 0,
+            ALL: requests.length,
+            PENDING: 0, APPROVED: 0, ORDERED: 0, EXECUTED: 0,
+            SUPPLIER_CONFIRMED: 0, IN_TRANSIT: 0, PARTIALLY_RECEIVED: 0,
+            RECEIVED: 0, COMPLETED: 0,
+            REJECTED: 0, CANCELLED: 0, FAILED: 0,
+            BUMPED: 0,
         }
         for (const r of requests) {
-            c[r.status]++
+            // Defensive — backend may emit a status the frontend hasn't
+            // seen yet. Skip the increment instead of crashing.
+            if (r.status in c) c[r.status]++
             if (r.bump_count > 0) c.BUMPED++
         }
         return c

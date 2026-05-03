@@ -50,6 +50,19 @@ async function getCategories() {
     catch { return []; }
 }
 
+async function getAttributes() {
+    // Brands link only to root attribute GROUPS (Parfum, Volume,
+    // Concentration) — not to leaf values (Floral, 100ml). The
+    // BrandViewSet.link_attribute action enforces parent IS NULL so
+    // we filter here too: the picker is a flat list of roots, no
+    // accidental leaf selection.
+    try {
+        const res: any = await erpFetch('inventory/product-attributes/');
+        const rows: any[] = Array.isArray(res?.results) ? res.results : (Array.isArray(res) ? res : []);
+        return rows.filter(a => a?.parent == null);
+    } catch { return []; }
+}
+
 export default async function BrandsPage() {
     // Brands are tenant-scoped — without a tenant context (e.g. on saas.* root)
     // every backend call 404s. Detect that upfront and render a clear notice
@@ -63,10 +76,11 @@ export default async function BrandsPage() {
         );
     }
 
-    const [brands, countries, categories] = await Promise.all([
+    const [brands, countries, categories, attributes] = await Promise.all([
         getBrands(),
         getCountries(),
-        getCategories()
+        getCategories(),
+        getAttributes(),
     ]);
 
     return (
@@ -75,6 +89,7 @@ export default async function BrandsPage() {
                 brands={brands}
                 countries={countries}
                 categories={categories}
+                attributes={attributes}
             />
         </div>
     );

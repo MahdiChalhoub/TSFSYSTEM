@@ -250,6 +250,15 @@ class CategorySimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code']
 
 
+class AttributeSimpleSerializer(serializers.ModelSerializer):
+    """Lightweight read shape for embedding in BrandSerializer.attributes —
+    a brand links to attribute *root groups* (Size, Color, Parfum), so the
+    parent_id is exposed for clients that want to skip leaves on display."""
+    class Meta:
+        model = ProductAttribute
+        fields = ['id', 'name', 'code', 'parent']
+
+
 class StorefrontCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -267,11 +276,15 @@ class BrandSerializer(serializers.ModelSerializer):
     attribute_count = serializers.SerializerMethodField()
     countries = CountrySimpleSerializer(many=True, read_only=True)
     categories = CategorySimpleSerializer(many=True, read_only=True)
+    attributes = AttributeSimpleSerializer(many=True, read_only=True)
     category_ids = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), many=True, write_only=True, source='categories', required=False
     )
     country_ids = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(), many=True, write_only=True, source='countries', required=False
+    )
+    attribute_ids = serializers.PrimaryKeyRelatedField(
+        queryset=ProductAttribute.objects.all(), many=True, write_only=True, source='attributes', required=False
     )
 
     class Meta:
@@ -281,8 +294,8 @@ class BrandSerializer(serializers.ModelSerializer):
         model = Brand
         fields = [
             'id', 'name', 'reference_code', 'short_name', 'code', 'logo', 'translations',
-            'countries', 'categories',
-            'category_ids', 'country_ids',
+            'countries', 'categories', 'attributes',
+            'category_ids', 'country_ids', 'attribute_ids',
             'product_count', 'category_count', 'country_count', 'attribute_count',
             'created_at', 'organization',
         ]
@@ -471,11 +484,15 @@ class BrandDetailSerializer(serializers.ModelSerializer):
     """
     countries = CountrySimpleSerializer(many=True, read_only=True)
     categories = CategorySimpleSerializer(many=True, read_only=True)
+    attributes = AttributeSimpleSerializer(many=True, read_only=True)
     category_ids = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), many=True, write_only=True, source='categories', required=False
     )
     country_ids = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(), many=True, write_only=True, source='countries', required=False
+    )
+    attribute_ids = serializers.PrimaryKeyRelatedField(
+        queryset=ProductAttribute.objects.all(), many=True, write_only=True, source='attributes', required=False
     )
     product_count = serializers.SerializerMethodField()
 
@@ -483,8 +500,8 @@ class BrandDetailSerializer(serializers.ModelSerializer):
         model = Brand
         fields = [
             'id', 'name', 'reference_code', 'short_name', 'code', 'logo', 'translations',
-            'countries', 'categories',
-            'category_ids', 'country_ids',
+            'countries', 'categories', 'attributes',
+            'category_ids', 'country_ids', 'attribute_ids',
             'product_count', 'created_at', 'organization',
         ]
         read_only_fields = ['organization', 'reference_code']

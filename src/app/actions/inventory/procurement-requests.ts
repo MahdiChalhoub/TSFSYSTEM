@@ -4,12 +4,43 @@ import { revalidatePath } from 'next/cache'
 import { erpFetch } from '@/lib/erp-api'
 
 export type ProcurementRequestType = 'PURCHASE' | 'TRANSFER'
-export type ProcurementRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'CANCELLED'
+/**
+ * Full request lifecycle (matches the operational chain the user sees).
+ * The backend currently emits the original subset (PENDING / APPROVED /
+ * EXECUTED / REJECTED / CANCELLED); the additional states are emitted
+ * once a backend signal bubbles PO/TO progress into the request row:
+ *
+ *   PENDING → APPROVED → ORDERED → SUPPLIER_CONFIRMED → IN_TRANSIT
+ *           → PARTIALLY_RECEIVED → RECEIVED → COMPLETED
+ *           ┊
+ *           CANCELLED · REJECTED · FAILED  (terminals at any stage)
+ *
+ * The original EXECUTED kept as an alias for back-compat — when the
+ * backend hasn't been updated yet, EXECUTED still appears and renders
+ * as "Ordered" via the meta mapping.
+ */
+export type ProcurementRequestStatus =
+    | 'PENDING'
+    | 'APPROVED'
+    | 'ORDERED'
+    | 'SUPPLIER_CONFIRMED'
+    | 'IN_TRANSIT'
+    | 'PARTIALLY_RECEIVED'
+    | 'RECEIVED'
+    | 'COMPLETED'
+    | 'EXECUTED'              // legacy alias — same as ORDERED
+    | 'REJECTED'
+    | 'CANCELLED'
+    | 'FAILED'
 export type ProcurementRequestPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
 
 export interface ProcurementRequestRecord {
     id: number
     request_type: ProcurementRequestType
+    /** Live status — bubbles up as the linked PO/TO progresses, so the
+     *  request row mirrors the full physical journey (not just its own
+     *  PENDING/APPROVED/EXECUTED enum). Backend may send any value from
+     *  ProcurementRequestStatus or fall back to its internal subset. */
     status: ProcurementRequestStatus
     priority: ProcurementRequestPriority
     product: number

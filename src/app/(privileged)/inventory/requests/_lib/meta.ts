@@ -4,6 +4,7 @@ import type {
 } from '@/app/actions/inventory/procurement-requests'
 import {
     PIPELINE_STATUS_CONFIG,
+    formatPipelineLabel,
     type PipelineStatus,
     type ProcurementStatusMeta,
 } from '@/lib/procurement-status'
@@ -21,28 +22,39 @@ import {
  * config. If the user changes a label there, it updates everywhere.
  */
 
-/** Translate (request type, internal status) → canonical pipeline key.
- *  Mirrors the unified vocabulary defined in src/lib/procurement-status.ts:
+/** Translate (type, request status) → canonical pipeline key.
+ *  Same set of stages for PURCHASE and TRANSFER; REJECTED / CANCELLED /
+ *  FAILED stay distinct so the chip says exactly what happened.
+ *  The flow-type suffix is appended later by `formatPipelineLabel`.
  *
- *    (PURCHASE,  PENDING)   → REQUESTED_PURCHASE
- *    (PURCHASE,  APPROVED)  → APPROVED
- *    (PURCHASE,  EXECUTED)  → ORDERED          (PO sent to supplier)
- *    (TRANSFER,  PENDING)   → REQUESTED_TRANSFER
- *    (TRANSFER,  APPROVED)  → APPROVED
- *    (TRANSFER,  EXECUTED)  → IN_TRANSIT       (TO is issued = goods moving)
- *    *         + REJECTED/CANCELLED → FAILED
- *
- *  Once the PO/TO progresses (CONFIRMED / IN_TRANSIT / RECEIVED), the
- *  product-level chip is recomputed from the PO/TO state directly via
- *  `entityStatusToPipeline('po' | 'to', ...)` — at that point the
- *  request is just an upstream pointer.
+ *    PENDING             → REQUESTED
+ *    APPROVED            → APPROVED
+ *    ORDERED / EXECUTED  → ORDERED   (purchase) / IN_TRANSIT (transfer)
+ *    SUPPLIER_CONFIRMED  → SUPPLIER_CONFIRMED
+ *    IN_TRANSIT          → IN_TRANSIT
+ *    PARTIALLY_RECEIVED  → PARTIALLY_RECEIVED
+ *    RECEIVED/COMPLETED  → RECEIVED
+ *    REJECTED            → REJECTED   ← distinct
+ *    CANCELLED           → CANCELLED  ← distinct
+ *    FAILED              → FAILED     ← distinct
  */
 export function toPipelineKey(type: ProcurementRequestType, status: ProcurementRequestStatus): PipelineStatus {
-    if (status === 'REJECTED' || status === 'CANCELLED') return 'FAILED'
-    if (status === 'EXECUTED') return type === 'TRANSFER' ? 'IN_TRANSIT' : 'ORDERED'
-    if (status === 'APPROVED') return 'APPROVED'
-    // PENDING — qualified by type
-    return type === 'TRANSFER' ? 'REQUESTED_TRANSFER' : 'REQUESTED_PURCHASE'
+    switch (status) {
+        case 'REJECTED':  return 'REJECTED'
+        case 'CANCELLED': return 'CANCELLED'
+        case 'FAILED':    return 'FAILED'
+        case 'PENDING':   return 'REQUESTED'
+        case 'APPROVED':  return 'APPROVED'
+        case 'EXECUTED':       // legacy alias for ORDERED
+        case 'ORDERED':
+            return type === 'TRANSFER' ? 'IN_TRANSIT' : 'ORDERED'
+        case 'SUPPLIER_CONFIRMED': return 'SUPPLIER_CONFIRMED'
+        case 'IN_TRANSIT':         return 'IN_TRANSIT'
+        case 'PARTIALLY_RECEIVED': return 'PARTIALLY_RECEIVED'
+        case 'RECEIVED':
+        case 'COMPLETED': return 'RECEIVED'
+        default: return 'NONE'
+    }
 }
 
 /** Resolved meta for a request row — pipeline label/color from the
@@ -58,15 +70,32 @@ export interface RequestStatusMeta extends ProcurementStatusMeta {
 }
 
 const ICON_BY_STATUS: Record<ProcurementRequestStatus, typeof Clock> = {
-    PENDING:   Clock,
-    APPROVED:  CheckCircle2,
-    EXECUTED:  PlayCircle,
-    REJECTED:  XCircle,
-    CANCELLED: Ban,
+    PENDING:            Clock,
+    APPROVED:           CheckCircle2,
+    ORDERED:            ShoppingCart,
+    EXECUTED:           PlayCircle,
+    SUPPLIER_CONFIRMED: Package,
+    IN_TRANSIT:         Truck,
+    PARTIALLY_RECEIVED: AlertCircle,
+    RECEIVED:           CheckCircle2,
+    COMPLETED:          CheckCircle2,
+    REJECTED:           XCircle,
+    CANCELLED:          Ban,
+    FAILED:             AlertTriangle,
 }
 const INTERNAL_LABEL: Record<ProcurementRequestStatus, string> = {
-    PENDING: 'Pending', APPROVED: 'Approved', EXECUTED: 'Executed',
-    REJECTED: 'Rejected', CANCELLED: 'Cancelled',
+    PENDING:            'Pending',
+    APPROVED:           'Approved',
+    ORDERED:            'Ordered',
+    EXECUTED:           'Executed',
+    SUPPLIER_CONFIRMED: 'Supplier Confirmed',
+    IN_TRANSIT:         'In Transit',
+    PARTIALLY_RECEIVED: 'Partial Receipt',
+    RECEIVED:           'Received',
+    COMPLETED:          'Completed',
+    REJECTED:           'Rejected',
+    CANCELLED:          'Cancelled',
+    FAILED:             'Failed',
 }
 
 /** Resolve the pipeline meta for a single request row. The label and
@@ -80,6 +109,10 @@ export function getRequestStatusMeta(
     const meta = PIPELINE_STATUS_CONFIG[key] || PIPELINE_STATUS_CONFIG.NONE
     return {
         ...meta,
+        // Append "· Purchase" / "· Transfer" so each chip carries BOTH
+        // the stage and the flow type at a glance — Rejected · Purchase
+        // is easily distinguished from Rejected · Transfer.
+        label: formatPipelineLabel(key, type),
         icon: ICON_BY_STATUS[status],
         internal: INTERNAL_LABEL[status],
     }
@@ -89,11 +122,18 @@ export function getRequestStatusMeta(
  *  legacy caller that doesn't have the type at hand; defaults to
  *  Purchase semantics. */
 export const STATUS_META: Record<ProcurementRequestStatus, RequestStatusMeta> = {
-    PENDING:   getRequestStatusMeta('PURCHASE', 'PENDING'),
-    APPROVED:  getRequestStatusMeta('PURCHASE', 'APPROVED'),
-    EXECUTED:  getRequestStatusMeta('PURCHASE', 'EXECUTED'),
-    REJECTED:  getRequestStatusMeta('PURCHASE', 'REJECTED'),
-    CANCELLED: getRequestStatusMeta('PURCHASE', 'CANCELLED'),
+    PENDING:            getRequestStatusMeta('PURCHASE', 'PENDING'),
+    APPROVED:           getRequestStatusMeta('PURCHASE', 'APPROVED'),
+    ORDERED:            getRequestStatusMeta('PURCHASE', 'ORDERED'),
+    EXECUTED:           getRequestStatusMeta('PURCHASE', 'EXECUTED'),
+    SUPPLIER_CONFIRMED: getRequestStatusMeta('PURCHASE', 'SUPPLIER_CONFIRMED'),
+    IN_TRANSIT:         getRequestStatusMeta('PURCHASE', 'IN_TRANSIT'),
+    PARTIALLY_RECEIVED: getRequestStatusMeta('PURCHASE', 'PARTIALLY_RECEIVED'),
+    RECEIVED:           getRequestStatusMeta('PURCHASE', 'RECEIVED'),
+    COMPLETED:          getRequestStatusMeta('PURCHASE', 'COMPLETED'),
+    REJECTED:           getRequestStatusMeta('PURCHASE', 'REJECTED'),
+    CANCELLED:          getRequestStatusMeta('PURCHASE', 'CANCELLED'),
+    FAILED:             getRequestStatusMeta('PURCHASE', 'FAILED'),
 }
 
 // Re-export icons that consumers still pull from this module

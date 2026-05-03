@@ -31,8 +31,14 @@ export type BrandState = {
  *  Returns { failed: [{ kind, id, error }] } so callers can surface
  *  partial-success warnings (matches the categories module signature).
  * ════════════════════════════════════════════════════════════════════ */
-type SyncMode = 'category' | 'country'
+type SyncMode = 'category' | 'country' | 'attribute'
 type LinkFailure = { kind: SyncMode; id: number; error: string }
+
+const SYNC_FIELD: Record<SyncMode, string> = {
+    category: 'categories',
+    country: 'countries',
+    attribute: 'attributes',
+}
 
 async function syncBrandLinks(
     brandId: number,
@@ -44,7 +50,7 @@ async function syncBrandLinks(
     let currentIds: number[] = []
     try {
         const fresh: any = await erpFetch(`inventory/brands/${brandId}/`)
-        const list = mode === 'category' ? fresh?.categories : fresh?.countries
+        const list = fresh?.[SYNC_FIELD[mode]]
         currentIds = (Array.isArray(list) ? list : [])
             .map((row: any) => typeof row === 'number' ? row : row?.id)
             .filter((n: any): n is number => typeof n === 'number')
@@ -58,9 +64,9 @@ async function syncBrandLinks(
     const toAdd = [...desired].filter(id => !current.has(id))
     const toRemove = [...current].filter(id => !desired.has(id))
 
-    const idKey = mode === 'category' ? 'category_id' : 'country_id'
-    const linkPath = mode === 'category' ? 'link_category' : 'link_country'
-    const unlinkPath = mode === 'category' ? 'unlink_category' : 'unlink_country'
+    const idKey = mode === 'category' ? 'category_id' : mode === 'country' ? 'country_id' : 'attribute_id'
+    const linkPath = `link_${mode}`
+    const unlinkPath = `unlink_${mode}`
     const failed: LinkFailure[] = []
 
     // Run adds and removes in parallel — they touch different rows of
@@ -93,6 +99,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
     const code = formData.get('code') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const attributeIds = formData.getAll('attributeIds').map(id => Number(id));
 
     if (!name || name.length < 2) {
         return { message: 'Failed to create brand', errors: { name: ['Name must be at least 2 characters'] } };
@@ -114,11 +121,12 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
 
         const newId = created?.id;
         if (newId) {
-            const [catRes, countryRes] = await Promise.all([
-                categoryIds.length > 0 ? syncBrandLinks(newId, categoryIds, 'category') : Promise.resolve({ failed: [] }),
-                countryIds.length  > 0 ? syncBrandLinks(newId, countryIds,  'country')  : Promise.resolve({ failed: [] }),
+            const [catRes, countryRes, attrRes] = await Promise.all([
+                categoryIds.length  > 0 ? syncBrandLinks(newId, categoryIds,  'category')  : Promise.resolve({ failed: [] }),
+                countryIds.length   > 0 ? syncBrandLinks(newId, countryIds,   'country')   : Promise.resolve({ failed: [] }),
+                attributeIds.length > 0 ? syncBrandLinks(newId, attributeIds, 'attribute') : Promise.resolve({ failed: [] }),
             ]);
-            const failures = [...catRes.failed, ...countryRes.failed];
+            const failures = [...catRes.failed, ...countryRes.failed, ...attrRes.failed];
             if (failures.length > 0) {
                 console.warn('[createBrand] link partial failures:', failures);
             }
@@ -137,12 +145,13 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
     const code = formData.get('code') as string;
     const countryIds = formData.getAll('countryIds').map(id => Number(id));
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    const attributeIds = formData.getAll('attributeIds').map(id => Number(id));
 
     try {
         // Scalar fields via PATCH; M2M state via the dedicated endpoints.
-        // The PATCH no longer carries category_ids / country_ids — those
-        // were getting silently dropped (same root cause as the
-        // categories module's link-failure bug).
+        // The PATCH no longer carries category_ids / country_ids /
+        // attribute_ids — those were getting silently dropped (same root
+        // cause as the categories module's link-failure bug).
         await erpFetch(`inventory/brands/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -153,11 +162,12 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
             })
         });
 
-        const [catRes, countryRes] = await Promise.all([
-            syncBrandLinks(id, categoryIds, 'category'),
-            syncBrandLinks(id, countryIds,  'country'),
+        const [catRes, countryRes, attrRes] = await Promise.all([
+            syncBrandLinks(id, categoryIds,  'category'),
+            syncBrandLinks(id, countryIds,   'country'),
+            syncBrandLinks(id, attributeIds, 'attribute'),
         ]);
-        const failures = [...catRes.failed, ...countryRes.failed];
+        const failures = [...catRes.failed, ...countryRes.failed, ...attrRes.failed];
         if (failures.length > 0) {
             console.warn('[updateBrand] link partial failures:', failures);
         }

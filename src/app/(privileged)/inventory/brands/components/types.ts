@@ -15,6 +15,10 @@ export interface Brand {
     translations?: Record<string, { name?: string; short_name?: string }>
     countries?: Array<{ id: number; name: string; code?: string }>
     categories?: Array<{ id: number; name: string; code?: string }>
+    /** Root attribute groups linked to this brand (e.g. Parfum,
+     *  Concentration, Volume). Leaf values come along automatically
+     *  through the products. */
+    attributes?: Array<{ id: number; name: string; code?: string; parent?: number | null }>
     /** Distinct product count (FK products → this brand). */
     product_count?: number
     /** Distinct categories the brand's products belong to. Derived

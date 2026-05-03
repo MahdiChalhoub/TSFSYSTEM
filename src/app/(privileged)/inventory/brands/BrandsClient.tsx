@@ -25,6 +25,7 @@ type Props = {
     brands: Brand[]
     countries: Array<Record<string, unknown>>
     categories: Array<Record<string, unknown>>
+    attributes: Array<Record<string, unknown>>
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -32,7 +33,7 @@ type Props = {
  *  Achieves parity with Categories module using extracted
  *  components and advanced bulk/conflict handling.
  * ═══════════════════════════════════════════════════════════ */
-export function BrandsClient({ brands, countries, categories }: Props) {
+export function BrandsClient({ brands, countries, categories, attributes }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     
@@ -275,6 +276,7 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                             brand={editingBrand || undefined}
                             countries={countries}
                             categories={categories}
+                            attributes={attributes}
                         />
                         <ConfirmDialog
                             open={deleteTarget !== null}

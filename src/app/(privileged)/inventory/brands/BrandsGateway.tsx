@@ -7,8 +7,10 @@ type BrandsGatewayProps = {
     brands: Brand[]
     countries: Array<Record<string, unknown>>
     categories: Array<Record<string, unknown>>
+    attributes: Array<Record<string, unknown>>
 }
 
 export function BrandsGateway(props: BrandsGatewayProps) {
     return <BrandsClient {...props} />
 }
+

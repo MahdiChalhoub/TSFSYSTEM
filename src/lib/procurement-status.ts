@@ -37,26 +37,48 @@
  *   Received   → all units arrived (cycle done from a stock perspective)
  *   Failed     → request / PO / TO got rejected, cancelled, or aborted
  */
+/**
+ * Canonical pipeline stages — same set for PURCHASE and TRANSFER.
+ * The flow differs by entity but the vocabulary is identical:
+ *
+ *   Available → Requested → Approved → Ordered → Supplier Confirmed
+ *             → In Transit → Partial Receipt → Received
+ *             ┊
+ *             Rejected · Cancelled · Failed   (terminal at any stage)
+ *
+ * REJECTED / CANCELLED / FAILED are kept distinct (each carries
+ * different operational meaning) — collapsing them into a single
+ * "Failed" lost the audit trail. Use `formatPipelineLabel(status, type)`
+ * to append "· Purchase" / "· Transfer" so users see both the stage
+ * AND the flow at a glance.
+ */
 export type PipelineStatus =
-    | 'NONE'                     // no active request, PO, or TO
-    | 'REQUESTED'                // generic — request pending/approved
-    | 'REQUESTED_PURCHASE'       // qualified — purchase request pending/approved
-    | 'REQUESTED_TRANSFER'       // qualified — transfer request pending/approved
-    | 'REQUESTED_BOTH'           // both purchase AND transfer active
-    | 'APPROVED'                 // request/PO approved, no movement yet
-    | 'ORDERED'                  // PO sent to supplier
-    | 'SUPPLIER_CONFIRMED'       // supplier accepted the PO
-    | 'IN_TRANSIT'               // goods moving (PO or TO)
-    | 'PARTIALLY_RECEIVED'       // partial arrival
-    | 'RECEIVED'                 // fully received (terminal — cycle done)
-    | 'FAILED'                   // rejected / cancelled / aborted
+    | 'NONE'
+    | 'REQUESTED'
+    | 'APPROVED'
+    | 'ORDERED'
+    | 'SUPPLIER_CONFIRMED'
+    | 'IN_TRANSIT'
+    | 'PARTIALLY_RECEIVED'
+    | 'RECEIVED'
+    | 'REJECTED'
+    | 'CANCELLED'
+    | 'FAILED'
 
-    // ── Aliases kept for back-compat with existing call sites ──
-    // PO_SENT was renamed → ORDERED. PO_ACCEPTED → SUPPLIER_CONFIRMED.
-    // Imports of these still resolve via PIPELINE_STATUS_CONFIG (old keys
-    // alias to the new entry), so no caller breaks during the rename.
+    // ── Type-qualified variants kept for the Product page where the
+    //    chip needs to embed the flow type into the SAME label
+    //    (no separate "type" badge). Internally they're (status, type)
+    //    pairs collapsed into one key. ──
+    | 'REQUESTED_PURCHASE'
+    | 'REQUESTED_TRANSFER'
+    | 'REQUESTED_BOTH'
+
+    // ── Legacy aliases (callers still mid-migration) ──
     | 'PO_SENT'
     | 'PO_ACCEPTED'
+
+/** Flow type — drives the "· Purchase" / "· Transfer" suffix. */
+export type FlowType = 'PURCHASE' | 'TRANSFER'
 
 export interface ProcurementStatusMeta {
     label: string
@@ -70,20 +92,52 @@ export interface ProcurementStatusMeta {
 export const PIPELINE_STATUS_CONFIG: Record<string, ProcurementStatusMeta> = {
     NONE:               { label: 'Available',            color: 'var(--app-success, #22c55e)' },
     REQUESTED:          { label: 'Requested',            color: 'var(--app-warning, #f59e0b)' },
-    REQUESTED_PURCHASE: { label: 'Requested · Purchase', color: 'var(--app-warning, #f59e0b)' },
-    REQUESTED_TRANSFER: { label: 'Requested · Transfer', color: 'var(--app-warning, #f59e0b)' },
-    REQUESTED_BOTH:     { label: 'Requested · P+T',      color: 'var(--app-warning, #f59e0b)' },
     APPROVED:           { label: 'Approved',             color: 'var(--app-info, #3b82f6)' },
     ORDERED:            { label: 'Ordered',              color: 'var(--app-info, #3b82f6)' },
     SUPPLIER_CONFIRMED: { label: 'Supplier Confirmed',   color: 'var(--app-info, #3b82f6)' },
     IN_TRANSIT:         { label: 'In Transit',           color: 'var(--app-accent, #8b5cf6)' },
     PARTIALLY_RECEIVED: { label: 'Partial Receipt',      color: 'var(--app-warning, #f59e0b)' },
     RECEIVED:           { label: 'Received',             color: 'var(--app-success, #22c55e)' },
+    // Distinct terminal stages — different colors so a glance separates
+    // a supplier-rejection from an operator-cancel from a system-failure.
+    REJECTED:           { label: 'Rejected',             color: 'var(--app-error, #ef4444)' },
+    CANCELLED:          { label: 'Cancelled',            color: 'var(--app-muted-foreground)' },
     FAILED:             { label: 'Failed',               color: 'var(--app-error, #ef4444)' },
 
-    // ── Aliases (legacy keys still used by some callers) ──
+    // ── Type-qualified variants (Product page uses these) ──
+    REQUESTED_PURCHASE: { label: 'Requested · Purchase', color: 'var(--app-warning, #f59e0b)' },
+    REQUESTED_TRANSFER: { label: 'Requested · Transfer', color: 'var(--app-warning, #f59e0b)' },
+    REQUESTED_BOTH:     { label: 'Requested · P+T',      color: 'var(--app-warning, #f59e0b)' },
+
+    // ── Legacy aliases ──
     PO_SENT:            { label: 'Ordered',              color: 'var(--app-info, #3b82f6)' },
     PO_ACCEPTED:        { label: 'Supplier Confirmed',   color: 'var(--app-info, #3b82f6)' },
+}
+
+/**
+ * Format a pipeline status with the flow-type suffix appended.
+ *   formatPipelineLabel('REJECTED', 'PURCHASE')  → "Rejected · Purchase"
+ *   formatPipelineLabel('IN_TRANSIT', 'TRANSFER') → "In Transit · Transfer"
+ *   formatPipelineLabel('NONE')                   → "Available" (no suffix)
+ *
+ * Use this in any chip that knows BOTH the stage and the flow — request
+ * rows, PO lines, TO lines, the per-line breakdown on Product detail.
+ * Pages that only know the stage (e.g. an aggregated Product chip with
+ * mixed flows) just look up `PIPELINE_STATUS_CONFIG[key].label`.
+ */
+export function formatPipelineLabel(
+    status: PipelineStatus | string,
+    type?: FlowType,
+): string {
+    const meta = PIPELINE_STATUS_CONFIG[status] || PIPELINE_STATUS_CONFIG.NONE
+    // NONE / aggregated keys never take a suffix — the suffix only makes
+    // sense for an active, single-flow stage.
+    if (!type || status === 'NONE'
+        || status === 'REQUESTED_PURCHASE' || status === 'REQUESTED_TRANSFER' || status === 'REQUESTED_BOTH') {
+        return meta.label
+    }
+    const typeLabel = type === 'PURCHASE' ? 'Purchase' : 'Transfer'
+    return `${meta.label} · ${typeLabel}`
 }
 
 /**
@@ -152,15 +206,16 @@ const PO_STATUS_TO_PIPELINE: Record<string, PipelineStatus> = {
     IN_TRANSIT:          'IN_TRANSIT',
     PARTIALLY_RECEIVED:  'PARTIALLY_RECEIVED',
     RECEIVED:            'RECEIVED',
-    INVOICED:            'RECEIVED',  // already received by invoicing time
+    INVOICED:            'RECEIVED',  // invoicing implies received earlier
     PARTIALLY_INVOICED:  'RECEIVED',
     COMPLETED:           'RECEIVED',
-    REJECTED:            'FAILED',
-    CANCELLED:           'FAILED',
+    // Distinct terminals — same wording everywhere
+    REJECTED:            'REJECTED',
+    CANCELLED:           'CANCELLED',
     FAILED:              'FAILED',
 }
 
-/** Transfer Order → canonical pipeline. Same idea as the PO mapper. */
+/** Transfer Order → canonical pipeline. Same set of stages as Purchase. */
 const TO_STATUS_TO_PIPELINE: Record<string, PipelineStatus> = {
     DRAFT:               'REQUESTED',
     SUBMITTED:           'REQUESTED',
@@ -169,20 +224,25 @@ const TO_STATUS_TO_PIPELINE: Record<string, PipelineStatus> = {
     PARTIALLY_RECEIVED:  'PARTIALLY_RECEIVED',
     RECEIVED:            'RECEIVED',
     COMPLETED:           'RECEIVED',
-    REJECTED:            'FAILED',
-    CANCELLED:           'FAILED',
+    REJECTED:            'REJECTED',
+    CANCELLED:           'CANCELLED',
     FAILED:              'FAILED',
 }
 
-/** Procurement Request → canonical pipeline. Pure status (no type
- *  qualifier). Use the type-aware variant below if you need
- *  "Requested · Purchase" vs "Requested · Transfer". */
+/** Procurement Request → canonical pipeline (status only — no flow
+ *  qualifier; pass it via formatPipelineLabel(key, type)). */
 const REQUEST_STATUS_TO_PIPELINE: Record<string, PipelineStatus> = {
     PENDING:    'REQUESTED',
     APPROVED:   'APPROVED',
-    EXECUTED:   'ORDERED',  // PO created — caller may bump to IN_TRANSIT etc.
-    REJECTED:   'FAILED',
-    CANCELLED:  'FAILED',
+    EXECUTED:   'ORDERED',
+    ORDERED:    'ORDERED',
+    SUPPLIER_CONFIRMED: 'SUPPLIER_CONFIRMED',
+    IN_TRANSIT: 'IN_TRANSIT',
+    PARTIALLY_RECEIVED: 'PARTIALLY_RECEIVED',
+    RECEIVED:   'RECEIVED',
+    COMPLETED:  'RECEIVED',
+    REJECTED:   'REJECTED',
+    CANCELLED:  'CANCELLED',
     FAILED:     'FAILED',
 }
 
@@ -199,10 +259,12 @@ export function entityStatusToPipeline(
         case 'po':      return PO_STATUS_TO_PIPELINE[s] || 'NONE'
         case 'to':      return TO_STATUS_TO_PIPELINE[s] || 'NONE'
         case 'receipt':
-            // GRN is a thin event: it exists → goods landed.
+            // GRN: exists → goods landed. Distinct REJECTED/CANCELLED.
             if (s === 'POSTED' || s === 'RECEIVED' || s === 'COMPLETED') return 'RECEIVED'
             if (s === 'PARTIALLY_RECEIVED') return 'PARTIALLY_RECEIVED'
-            if (s === 'CANCELLED' || s === 'REJECTED' || s === 'FAILED') return 'FAILED'
+            if (s === 'REJECTED')  return 'REJECTED'
+            if (s === 'CANCELLED') return 'CANCELLED'
+            if (s === 'FAILED')    return 'FAILED'
             return 'IN_TRANSIT'
         case 'invoice':
             // Invoice doesn't move product state — its existence implies
