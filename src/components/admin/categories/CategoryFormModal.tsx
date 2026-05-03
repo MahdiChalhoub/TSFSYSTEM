@@ -164,6 +164,23 @@ export function CategoryFormModal({
     // Lazy loader for the Brands + Attributes panes. First time the user
     // clicks one of those tabs we fetch both (cheaper to fetch together
     // than to round-trip twice). Subsequent visits are no-ops.
+    //
+    // In edit mode this also seeds the existing selections from the
+    // loaded data:
+    //
+    //   • Brands — Brand owns the M2M (Brand.categories), so the category
+    //     payload doesn't carry brand ids back. We figure out which brands
+    //     reference this category by scanning the loaded brands list.
+    //
+    //   • Attributes — Category.attributes is a direct M2M, so the payload
+    //     usually includes it as `attributes: [ids]`. We use that when
+    //     present, but also fall back to scanning the loaded attribute
+    //     tree (`a.categories.includes(category.id)`) so the chips light
+    //     up even on serializers that omit the field.
+    //
+    // Seeding only runs when the user hasn't manually touched the chips
+    // yet (the dirty flags). That way reopening the pane after a prior
+    // save doesn't blow away the user's in-flight changes.
     const ensureLinksLoaded = () => {
         if (linksLoaded || loadingLinks) return;
         setLoadingLinks(true);
@@ -173,7 +190,10 @@ export function CategoryFormModal({
             ).catch(() => []),
             getAttributeTree().catch(() => []),
         ]).then(([brands, attrs]) => {
-            setBrandTree((brands as any[]).map(b => ({
+            const brandsArr = brands as any[];
+            const attrsArr = attrs as any[];
+
+            setBrandTree(brandsArr.map(b => ({
                 id: b.id, name: b.name, code: b.code, parent: null, children: [],
             })));
             const mapAttr = (a: any): TreeNode => ({
@@ -183,7 +203,49 @@ export function CategoryFormModal({
                 parent: a.parent ?? null,
                 children: Array.isArray(a.children) ? a.children.map(mapAttr) : [],
             });
-            setAttrTree((attrs as any[]).map(mapAttr));
+            setAttrTree(attrsArr.map(mapAttr));
+
+            // Seed existing selections in edit mode (only if user hasn't
+            // started touching the chips yet — see dirty flags).
+            if (category?.id) {
+                const myId = Number(category.id);
+
+                // Brands → reverse M2M; pick brands whose categories list
+                // includes this category id. Both numeric ids and nested
+                // {id} objects are handled to match common DRF shapes.
+                if (!brandsDirty) {
+                    const linkedBrandIds = brandsArr
+                        .filter(b => Array.isArray(b.categories) && b.categories.some((c: any) =>
+                            (typeof c === 'number' ? c : c?.id) === myId
+                        ))
+                        .map(b => b.id as number);
+                    if (linkedBrandIds.length > 0) {
+                        setSelectedBrandIds(new Set(linkedBrandIds));
+                    }
+                }
+
+                // Attributes → only walk the tree as a fallback. If the
+                // category payload already gave us the ids on open, those
+                // are already in selectedAttrIds and we don't need to
+                // recompute. Walk roots + children since either level can
+                // declare a category link.
+                if (!attrsDirty && selectedAttrIds.size === 0) {
+                    const linkedAttrIds: number[] = [];
+                    const visit = (a: any) => {
+                        if (Array.isArray(a.categories) && a.categories.some((c: any) =>
+                            (typeof c === 'number' ? c : c?.id) === myId
+                        )) {
+                            linkedAttrIds.push(a.id);
+                        }
+                        if (Array.isArray(a.children)) a.children.forEach(visit);
+                    };
+                    attrsArr.forEach(visit);
+                    if (linkedAttrIds.length > 0) {
+                        setSelectedAttrIds(new Set(linkedAttrIds));
+                    }
+                }
+            }
+
             setLinksLoaded(true);
         }).finally(() => setLoadingLinks(false));
     };
