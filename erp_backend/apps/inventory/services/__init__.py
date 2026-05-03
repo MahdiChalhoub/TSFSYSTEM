@@ -43,7 +43,19 @@ class InventoryService:
 
 from .procurement_status_service import get_procurement_status_batch, get_product_display_status
 
+# Phase 1 of multi-dim attribute value scoping. Single source of truth for
+# "which values does this product see" + "is this assignment legal".
+from .attribute_scope import (
+    values_for_product as scoped_values_for_product,
+    assign_attribute_value,
+    check_scope as check_attribute_scope,
+    scope_label as attribute_scope_label,
+    ScopeViolation,
+)
+
 __all__ = [
     'InventoryService', 'StockReservationService', 'StockReservationError',
     'get_procurement_status_batch', 'get_product_display_status',
+    'scoped_values_for_product', 'assign_attribute_value',
+    'check_attribute_scope', 'attribute_scope_label', 'ScopeViolation',
 ]

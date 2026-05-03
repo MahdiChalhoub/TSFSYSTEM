@@ -1025,6 +1025,29 @@ class ProductAttribute(ReferenceCodeMixin, AuditLogMixin, TenantOwnedModel):
         help_text='Products with this attribute require individual barcodes and stock tracking'
     )
 
+    # ── V4: Scoped attribute values (Phase 1 of the multi-dim
+    # value-scope feature). Empty = universal (default). Populated =
+    # only available to products that match ALL active scopes via
+    # the OR-with-null filter in services.attribute_scope.
+    # ────────────────────────────────────────────────────────────
+    # Only meaningful on LEAF nodes (parent != null). Root groups
+    # set them to empty; the helper functions ignore them on roots.
+    scope_categories = models.ManyToManyField(
+        Category, blank=True, related_name='scoped_attribute_values',
+        help_text='If set, this VALUE is only offered for products in these categories. '
+                  'Empty = available to every category.'
+    )
+    scope_countries = models.ManyToManyField(
+        'reference.Country', blank=True, related_name='scoped_attribute_values',
+        help_text='If set, this VALUE is only offered for products whose country is one of these. '
+                  'Empty = available in every country.'
+    )
+    scope_brands = models.ManyToManyField(
+        'inventory.Brand', blank=True, related_name='scoped_attribute_values',
+        help_text='If set, this VALUE is only offered for products of these brands. '
+                  'Empty = available for every brand.'
+    )
+
     class Meta:
         db_table = 'product_attribute'
         ordering = ['sort_order', 'name']
