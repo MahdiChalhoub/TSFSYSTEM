@@ -402,22 +402,36 @@ export async function deletePurchaseOrder(poId: number | string): Promise<{ ok?:
     }
 }
 
-/** Apply the same status transition to every id in the list. Returns
- *  per-id result so the UI can surface partial failures (a typical case:
- *  some POs are already in a terminal state and reject the transition).
- *
- *  Runs in parallel — the previous sequential loop made a 12-PO bulk
- *  click feel like 1+ second of dead time. The user-throttle (2000/min)
- *  has plenty of headroom for typical bulk sizes; if a tenant routinely
- *  bulk-actions hundreds of POs, switch to a chunked Promise.all. */
+/** Run an async map with a fixed concurrency limit. We need this because
+ *  the dev backend uses `manage.py runserver` (single-process) and a
+ *  full-fan-out Promise.all of 10+ requests overwhelms it — the server
+ *  starts dropping connections and the follow-up GET surfaces in the UI
+ *  as "fetch failed". Chunk size of 3 = fast for the user, gentle on the
+ *  worker. Production (gunicorn N workers) can handle more, but 3 is
+ *  safe everywhere. */
+async function chunkedMap<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+    const results: R[] = new Array(items.length)
+    let i = 0
+    const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+        while (i < items.length) {
+            const idx = i++
+            results[idx] = await fn(items[idx])
+        }
+    })
+    await Promise.all(workers)
+    return results
+}
+
+/** Apply the same status transition to every id. Per-id result so the
+ *  UI can surface partial failures (typical: some POs are in a terminal
+ *  state and reject the transition). */
 export async function bulkTransitionPurchaseOrders(
     poIds: Array<number | string>,
     toStatus: string,
     reason?: string,
 ): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
-    const results = await Promise.all(
-        poIds.map(id => transitionPurchaseOrderStatus(id, toStatus, reason)
-            .then(r => ({ id, ...r })))
+    const results = await chunkedMap(poIds, 3, id =>
+        transitionPurchaseOrderStatus(id, toStatus, reason).then(r => ({ id, ...r }))
     )
     const failed: Array<{ id: number | string; error: string }> = []
     let succeeded = 0
@@ -429,12 +443,12 @@ export async function bulkTransitionPurchaseOrders(
     return { succeeded, failed }
 }
 
-/** Bulk DELETE — parallel for the same UX reasons as bulkTransition. */
+/** Bulk DELETE — chunked for the same dev-server-friendliness reasons. */
 export async function bulkDeletePurchaseOrders(
     poIds: Array<number | string>,
 ): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
-    const results = await Promise.all(
-        poIds.map(id => deletePurchaseOrder(id).then(r => ({ id, ...r })))
+    const results = await chunkedMap(poIds, 3, id =>
+        deletePurchaseOrder(id).then(r => ({ id, ...r }))
     )
     const failed: Array<{ id: number | string; error: string }> = []
     let succeeded = 0

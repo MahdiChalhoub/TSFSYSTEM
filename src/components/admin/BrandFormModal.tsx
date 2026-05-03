@@ -7,6 +7,7 @@ import {
     FolderTree, Lightbulb, Hash, Check, Search,
 } from 'lucide-react';
 import { peekNextCode, peekCachedNextCode } from '@/lib/sequences-client';
+import { erpFetch } from '@/lib/erp-api';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 import { getCatalogueLanguages, getCachedCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
@@ -124,8 +125,20 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
 
     useEffect(() => {
         if (!isOpen) return;
-        setSelectedCountryIds(new Set<number>((brand?.countries || []).map((c: any) => c.id)));
-        setSelectedCategoryIds(brand?.categories?.map((c: Record<string, any>) => c.id) || []);
+        // Tolerant id extraction — the brand prop might come from
+        // BrandSerializer (nested {id, name, ...}) OR a stale shape
+        // (bare numbers). Normalise both to a list of numeric ids.
+        const idsOf = (rows: any): number[] =>
+            (Array.isArray(rows) ? rows : []).map(r => typeof r === 'number' ? r : r?.id).filter((n: any) => typeof n === 'number')
+
+        // Seed from whatever the parent passed (the list snapshot) so
+        // the modal is responsive on open. That snapshot can be stale
+        // — the user might have linked/unlinked categories/countries
+        // via the side-panel tabs since this brand was last fetched.
+        // The refetch below brings the modal in sync with the latest
+        // M2M state.
+        setSelectedCountryIds(new Set(idsOf(brand?.countries)));
+        setSelectedCategoryIds(idsOf(brand?.categories));
         setPending(false);
         setCountryFilter('');
         setActivePane('identity');
@@ -145,6 +158,33 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
             setPending(false);
         }
     }, [state.message, onClose]);
+
+    // Refetch the brand on edit-open to get the freshest M2M state.
+    // The list-snapshot seed above gives an instant first paint; this
+    // GET overwrites it once the network returns, so the modal always
+    // reflects whatever the user just did via the side-panel tabs
+    // (Link / Unlink Category, Country, Universal removal, etc.).
+    // Skipped for create (no brand id yet) and on close.
+    useEffect(() => {
+        if (!isOpen || !brand?.id) return;
+        let cancelled = false;
+        const idsOf = (rows: any): number[] =>
+            (Array.isArray(rows) ? rows : []).map(r => typeof r === 'number' ? r : r?.id).filter((n: any) => typeof n === 'number');
+        erpFetch(`inventory/brands/${brand.id}/`)
+            .then((fresh: any) => {
+                if (cancelled || !fresh) return;
+                setSelectedCountryIds(new Set(idsOf(fresh.countries)));
+                setSelectedCategoryIds(idsOf(fresh.categories));
+                setNameDraft(fresh.name || '');
+                if (fresh.translations && typeof fresh.translations === 'object') {
+                    const out: Record<string, LangEntry> = {};
+                    Object.keys(fresh.translations).forEach(k => { out[k] = coerce(fresh.translations[k]); });
+                    setTranslations(out);
+                }
+            })
+            .catch(() => { /* keep the seeded state on network error */ });
+        return () => { cancelled = true; };
+    }, [isOpen, brand?.id]);
 
     if (!isOpen) return null;
 

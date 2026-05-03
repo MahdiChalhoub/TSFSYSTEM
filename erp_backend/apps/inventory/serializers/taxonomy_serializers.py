@@ -462,17 +462,32 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class BrandDetailSerializer(serializers.ModelSerializer):
+    """Detail (retrieve) serializer — must match the list serializer's
+    shape because the brand edit modal refetches via this endpoint to
+    get fresh M2M state after in-tab Link/Unlink actions. Adding fields
+    that BrandSerializer exposes (translations, reference_code, nested
+    categories, write-only category_ids/country_ids) avoids the modal
+    seeing two different shapes from list vs retrieve.
+    """
     countries = CountrySimpleSerializer(many=True, read_only=True)
+    categories = CategorySimpleSerializer(many=True, read_only=True)
+    category_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), many=True, write_only=True, source='categories', required=False
+    )
+    country_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.all(), many=True, write_only=True, source='countries', required=False
+    )
     product_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'short_name', 'code', 'logo',
+            'id', 'name', 'reference_code', 'short_name', 'code', 'logo', 'translations',
             'countries', 'categories',
+            'category_ids', 'country_ids',
             'product_count', 'created_at', 'organization',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['organization', 'reference_code']
 
     def get_product_count(self, obj):
         return Product.objects.filter(brand=obj).count()

@@ -322,6 +322,7 @@ export default function PurchaseOrdersManager({
             selectedIds={Array.from(state.selectedIds) as Array<number | string>}
             onClear={() => state.setSelectedIds(new Set())}
             onDone={() => { fetchData(); state.setSelectedIds(new Set()) }}
+            onDoneSkipFetch={() => state.setSelectedIds(new Set())}
             // Optimistic: flip the local row state IMMEDIATELY so the
             // user sees the change without waiting for the server-action
             // round-trip + refetch (the previous ~1s lag they reported).
@@ -363,12 +364,19 @@ export default function PurchaseOrdersManager({
  *  actions per-id (sequential to respect rate limits), shows a toast
  *  with succeeded/failed counts, then signals the parent to refetch.
  * ────────────────────────────────────────────────────────────────── */
-function BulkActionBar({ selectedIds, onClear, onDone, onOptimisticStatus, onOptimisticRemove }: {
+function BulkActionBar({ selectedIds, onClear, onDone, onDoneSkipFetch, onOptimisticStatus, onOptimisticRemove }: {
   selectedIds: Array<number | string>
   onClear: () => void
+  /** Full reconcile — clears selection AND refetches the list. Use after
+   *  partial failure or any time the optimistic state may diverge from
+   *  the server. */
   onDone: () => void
+  /** Fast path — clears selection only, NO refetch. Use after a 100%-
+   *  success bulk action where the optimistic state is already correct.
+   *  Saves a roundtrip and the perceived lag. */
+  onDoneSkipFetch: () => void
   /** Optimistic UI hook: flip the rows' status locally before the
-   *  server confirms. The parent reconciles via fetchData() in onDone. */
+   *  server confirms. */
   onOptimisticStatus?: (ids: Array<number | string>, newStatus: string) => void
   /** Optimistic UI hook: remove the rows from the local list. */
   onOptimisticRemove?: (ids: Array<number | string>) => void
@@ -401,15 +409,20 @@ function BulkActionBar({ selectedIds, onClear, onDone, onOptimisticStatus, onOpt
     setBusy(null)
     if (r.failed.length === 0) {
       toast.success(`${r.succeeded} PO${r.succeeded === 1 ? '' : 's'} → ${label}.`)
-    } else if (r.succeeded === 0) {
+      // Skip refetch — optimistic state already matches server reality.
+      // Just clear the selection. Saves ~100ms+ of dead time.
+      onDoneSkipFetch()
+      return
+    }
+    if (r.succeeded === 0) {
       toast.error(`Failed to transition any PO. First error: ${r.failed[0].error}`)
     } else {
       toast.warning(`${r.succeeded} updated, ${r.failed.length} skipped`, {
         description: `Some POs could not move to ${label} (current status doesn't allow it).`,
       })
     }
-    // fetchData() inside onDone will rollback any optimistic flips that
-    // the backend rejected — the server response is the source of truth.
+    // Partial failure → refetch so the rejected rows snap back to their
+    // real status (server is source of truth for the failed cases).
     onDone()
   }
 
@@ -422,7 +435,10 @@ function BulkActionBar({ selectedIds, onClear, onDone, onOptimisticStatus, onOpt
     setBusy(null)
     if (r.failed.length === 0) {
       toast.success(`${r.succeeded} PO${r.succeeded === 1 ? '' : 's'} deleted.`)
-    } else if (r.succeeded === 0) {
+      onDoneSkipFetch()
+      return
+    }
+    if (r.succeeded === 0) {
       toast.error(`Could not delete any PO. ${r.failed[0].error}`)
     } else {
       toast.warning(`${r.succeeded} deleted, ${r.failed.length} skipped`, {
