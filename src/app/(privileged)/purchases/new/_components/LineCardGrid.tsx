@@ -71,17 +71,23 @@ function LineCard({ line, onUpdate, onRemove }: {
           <Package size={28} />
         </div>
 
-        {/* Procurement Status Badge — canonical vocabulary (NONE/REQUESTED/PO_SENT/...). */}
-        <span
-          className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border"
-          style={{
-            background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
-            color: procurement.color,
-            borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
-          }}
-        >
-          {procurement.label}
-        </span>
+        {/* Procurement Status Badge — canonical vocabulary (NONE/REQUESTED/
+            PO_SENT/...). Hidden when the line has no real pipeline status
+            (a fresh PO line that hasn't been requested anywhere) — showing
+            "Available" on every brand-new line was misleading because it
+            described the underlying product's general state, not the line. */}
+        {!!line.pipeline_status && (line.pipeline_status as string) !== 'NONE' && (
+          <span
+            className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border"
+            style={{
+              background: `color-mix(in srgb, ${procurement.color} 12%, transparent)`,
+              color: procurement.color,
+              borderColor: `color-mix(in srgb, ${procurement.color} 30%, transparent)`,
+            }}
+          >
+            {procurement.label}
+          </span>
+        )}
 
         {/* Expiry Badge */}
         {!!line.expirySafety && (

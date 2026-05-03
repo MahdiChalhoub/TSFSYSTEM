@@ -3,12 +3,31 @@ import type {
     ProcurementRequestStatus, ProcurementRequestType, ProcurementRequestPriority,
 } from '@/app/actions/inventory/procurement-requests'
 
-export const STATUS_META: Record<ProcurementRequestStatus, { label: string; color: string; icon: typeof Clock }> = {
-    PENDING:   { label: 'Pending',   color: 'var(--app-warning, #f59e0b)', icon: Clock },
-    APPROVED:  { label: 'Approved',  color: 'var(--app-info, #3b82f6)',    icon: CheckCircle2 },
-    EXECUTED:  { label: 'Executed',  color: 'var(--app-success, #22c55e)', icon: PlayCircle },
-    REJECTED:  { label: 'Rejected',  color: 'var(--app-error, #ef4444)',   icon: XCircle },
-    CANCELLED: { label: 'Cancelled', color: 'var(--app-muted-foreground)', icon: Ban },
+/**
+ * STATUS_META maps a request's *internal* status enum to the
+ * **canonical procurement vocabulary** shared with /inventory/products
+ * (PIPELINE_STATUS_CONFIG). Same product, same word — no more "PO Sent"
+ * on one page and "Executed" on another.
+ *
+ * Canonical labels (from src/lib/procurement-status.ts):
+ *   Available · Requested · PO Sent · PO Accepted · In Transit · Failed
+ *
+ * Internal request status → canonical mapping (mirrors
+ * `mapRequestStatusToPipeline` in the same module):
+ *   PENDING/APPROVED → Requested  (waiting for PO)
+ *   EXECUTED         → PO Sent    (request closed because a PO was issued)
+ *   REJECTED         → Failed     (request denied)
+ *   CANCELLED        → Failed     (operator stopped it)
+ *
+ * When the user needs the *internal* state (audit, debugging), the
+ * `internal` field below carries it. Display as a sub-line if needed.
+ */
+export const STATUS_META: Record<ProcurementRequestStatus, { label: string; internal: string; color: string; icon: typeof Clock }> = {
+    PENDING:   { label: 'Requested', internal: 'Pending',   color: 'var(--app-warning, #f59e0b)', icon: Clock },
+    APPROVED:  { label: 'Requested', internal: 'Approved',  color: 'var(--app-warning, #f59e0b)', icon: CheckCircle2 },
+    EXECUTED:  { label: 'PO Sent',   internal: 'Executed',  color: 'var(--app-info, #3b82f6)',    icon: PlayCircle },
+    REJECTED:  { label: 'Failed',    internal: 'Rejected',  color: 'var(--app-error, #ef4444)',   icon: XCircle },
+    CANCELLED: { label: 'Failed',    internal: 'Cancelled', color: 'var(--app-error, #ef4444)',   icon: Ban },
 }
 
 export const TYPE_META: Record<ProcurementRequestType, { label: string; color: string; icon: typeof ShoppingCart }> = {

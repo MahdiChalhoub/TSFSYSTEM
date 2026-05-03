@@ -37,8 +37,18 @@ async function getCountries() {
 }
 
 async function getCategories() {
-    try { return await erpFetch('inventory/categories/'); }
-    catch { return []; }
+    // Only top-level categories. Brand ↔ category links live at the
+    // root level; child categories inherit their parent's brand
+    // associations through the tree, and the backend's link_category
+    // action either rejects or silently no-ops a leaf id (same pattern
+    // the user hit on the attributes pane). Filtering parent-IS-NULL
+    // here means the tree selector shows a clean flat list of roots
+    // and the user can't pick a child by accident.
+    try {
+        const res: any = await erpFetch('inventory/categories/');
+        const rows: any[] = Array.isArray(res?.results) ? res.results : (Array.isArray(res) ? res : []);
+        return rows.filter(c => c?.parent == null);
+    } catch { return []; }
 }
 
 export default async function BrandsPage() {
