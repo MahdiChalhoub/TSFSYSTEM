@@ -316,6 +316,18 @@ export default function PurchaseOrdersManager({
             selectedIds={Array.from(state.selectedIds) as Array<number | string>}
             onClear={() => state.setSelectedIds(new Set())}
             onDone={() => { fetchData(); state.setSelectedIds(new Set()) }}
+            // Optimistic: flip the local row state IMMEDIATELY so the
+            // user sees the change without waiting for the server-action
+            // round-trip + refetch (the previous ~1s lag they reported).
+            // The background fetchData() in onDone reconciles afterward.
+            onOptimisticStatus={(ids, newStatus) => {
+              const set = new Set(ids.map(String))
+              setOrders(prev => prev.map(o => set.has(String(o.id)) ? { ...o, status: newStatus } : o))
+            }}
+            onOptimisticRemove={(ids) => {
+              const set = new Set(ids.map(String))
+              setOrders(prev => prev.filter(o => !set.has(String(o.id))))
+            }}
           />
         }
         hasFilters={hasFilters}
@@ -345,18 +357,40 @@ export default function PurchaseOrdersManager({
  *  actions per-id (sequential to respect rate limits), shows a toast
  *  with succeeded/failed counts, then signals the parent to refetch.
  * ────────────────────────────────────────────────────────────────── */
-function BulkActionBar({ selectedIds, onClear, onDone }: {
+function BulkActionBar({ selectedIds, onClear, onDone, onOptimisticStatus, onOptimisticRemove }: {
   selectedIds: Array<number | string>
   onClear: () => void
   onDone: () => void
+  /** Optimistic UI hook: flip the rows' status locally before the
+   *  server confirms. The parent reconciles via fetchData() in onDone. */
+  onOptimisticStatus?: (ids: Array<number | string>, newStatus: string) => void
+  /** Optimistic UI hook: remove the rows from the local list. */
+  onOptimisticRemove?: (ids: Array<number | string>) => void
 }) {
   const [busy, setBusy] = useState<null | 'status' | 'delete'>(null)
   const [statusMenu, setStatusMenu] = useState(false)
   const count = selectedIds.length
 
+  // Receive (GRN) — must go through the dedicated form because it needs
+  // per-line received quantities, expiry, and warehouse. We support a
+  // single-PO redirect; multi-PO bulk-receive is intentionally not
+  // wired (the GRN form is one-PO-at-a-time by design).
+  const runReceive = () => {
+    if (count !== 1) {
+      toast.warning('Receive one PO at a time', {
+        description: 'The Receive form needs per-line quantities — open each PO individually.',
+      })
+      return
+    }
+    const id = selectedIds[0]
+    window.location.href = `/purchases/receipts/new?from_po=${id}`
+  }
+
   const runTransition = async (toStatus: string, label: string) => {
     setBusy('status')
     setStatusMenu(false)
+    // Optimistic flip — UI updates this frame, no waiting for the server.
+    onOptimisticStatus?.(selectedIds, toStatus)
     const r = await bulkTransitionPurchaseOrders(selectedIds, toStatus)
     setBusy(null)
     if (r.failed.length === 0) {
@@ -368,12 +402,16 @@ function BulkActionBar({ selectedIds, onClear, onDone }: {
         description: `Some POs could not move to ${label} (current status doesn't allow it).`,
       })
     }
+    // fetchData() inside onDone will rollback any optimistic flips that
+    // the backend rejected — the server response is the source of truth.
     onDone()
   }
 
   const runDelete = async () => {
     if (!confirm(`Delete ${count} purchase order${count === 1 ? '' : 's'}?\n\nOnly DRAFT or CANCELLED POs can be removed; the backend will skip protected ones.`)) return
     setBusy('delete')
+    // Optimistic remove — rows disappear immediately.
+    onOptimisticRemove?.(selectedIds)
     const r = await bulkDeletePurchaseOrders(selectedIds)
     setBusy(null)
     if (r.failed.length === 0) {
@@ -404,6 +442,27 @@ function BulkActionBar({ selectedIds, onClear, onDone }: {
   void count // shown by the slot wrapper
   return (
     <div className="flex items-center gap-2">
+      {/* Receive — redirects to the GRN form. Disabled when >1 PO is
+          selected since the receipt form is single-PO. Tooltip explains. */}
+      <button
+        type="button"
+        onClick={runReceive}
+        disabled={busy !== null}
+        title={count !== 1 ? 'Select exactly 1 PO to receive (GRN form is single-PO).' : 'Open Receipt form for this PO'}
+        className="flex items-center gap-1 text-tp-xs font-bold px-3 h-8 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+        style={{
+          color: count === 1 ? 'var(--app-success, #10b981)' : 'var(--app-muted-foreground)',
+          background: count === 1
+            ? 'color-mix(in srgb, var(--app-success, #10b981) 10%, transparent)'
+            : 'transparent',
+          border: `1px solid ${count === 1
+            ? 'color-mix(in srgb, var(--app-success, #10b981) 30%, transparent)'
+            : 'var(--app-border)'}`,
+        }}>
+        <Truck size={12} />
+        Receive
+      </button>
+
       {/* Change status — opens a small menu of allowed transitions */}
       <div className="relative">
         <button

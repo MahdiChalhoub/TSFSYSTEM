@@ -14,8 +14,26 @@ async function getBrands() {
 }
 
 async function getCountries() {
-    try { return await erpFetch('countries/'); }
-    catch { return []; }
+    // The brand "Sourcing Markets" picker should offer ONLY the
+    // tenant's enabled sourcing countries (the curated subset shown at
+    // /inventory/countries), not the global ~250-country ISO list.
+    // The reference/sourcing-countries/ endpoint returns rows of
+    // SourcingCountry { id, country, country_name, country_iso2, ... }
+    // — adapt to {id, name, code} so the modal's existing rendering
+    // (which expects Country shape) works without changes. The id we
+    // expose is the underlying Country FK (sc.country) because that's
+    // what gets POSTed back as country_ids to the brand endpoint.
+    try {
+        const res: any = await erpFetch('reference/sourcing-countries/');
+        const rows: any[] = Array.isArray(res) ? res : (res?.results ?? []);
+        return rows
+            .filter(sc => sc.is_enabled !== false)
+            .map(sc => ({
+                id: sc.country,
+                name: sc.country_name,
+                code: sc.country_iso2,
+            }));
+    } catch { return []; }
 }
 
 async function getCategories() {
