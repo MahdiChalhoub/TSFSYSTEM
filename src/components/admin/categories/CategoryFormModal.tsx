@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import {
     X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight,
-    Layers, Check, Lightbulb, Barcode, Award, ListTree, Search,
+    Layers, Check, Lightbulb, Barcode, Award, ListTree,
 } from 'lucide-react';
 import { createCategory, updateCategory, CategoryState } from '@/app/actions/categories';
 import { CategoryCascader } from './CategoryCascader';
@@ -15,6 +15,10 @@ import {
 } from '@/lib/catalogue-languages';
 import { erpFetch } from '@/lib/erp-api';
 import { getAttributeTree } from '@/app/actions/inventory/attributes';
+// Reuse the same tree picker BrandFormModal uses for its Categories pane.
+// Brands map to a flat list (no children); attributes map to roots with
+// their values nested — both fit the CategoryTreeSelector shape.
+import { CategoryTreeSelector } from '../CategoryTreeSelector';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
@@ -32,8 +36,15 @@ type PaneKey = 'identity' | 'hierarchy' | 'brands' | 'attributes';
 
 const initialState: CategoryState = { message: '', errors: {} };
 
-type BrandLite = { id: number; name: string; code?: string };
-type AttrLite = { id: number; name: string; code?: string };
+// Shape consumed by CategoryTreeSelector. Brands are flat (children = []),
+// attributes are roots with their values nested as children.
+type TreeNode = {
+    id: number;
+    name: string;
+    parent: number | null;
+    children?: TreeNode[];
+    code?: string;
+};
 
 export function CategoryFormModal({
     isOpen, onClose, category, parentId, potentialParents = [],
@@ -71,8 +82,8 @@ export function CategoryFormModal({
     // ── Brand + Attribute selection (M2M, persisted via separate
     //    PATCHes in the server action — see categories.ts).  Initial
     //    state is hydrated from the category row when editing. ──
-    const [allBrands, setAllBrands] = useState<BrandLite[]>([]);
-    const [allAttributes, setAllAttributes] = useState<AttrLite[]>([]);
+    const [brandTree, setBrandTree] = useState<TreeNode[]>([]);
+    const [attrTree, setAttrTree] = useState<TreeNode[]>([]);
     const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(
         () => new Set<number>(
             Array.isArray(category?.brand_ids) ? category!.brand_ids
@@ -87,8 +98,6 @@ export function CategoryFormModal({
                     : [],
         ),
     );
-    const [brandQuery, setBrandQuery] = useState('');
-    const [attrQuery, setAttrQuery] = useState('');
     const [loadingLinks, setLoadingLinks] = useState(false);
 
     useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
@@ -120,8 +129,21 @@ export function CategoryFormModal({
             ).catch(() => []),
             getAttributeTree().catch(() => []),
         ]).then(([brands, attrs]) => {
-            setAllBrands((brands as any[]).map(b => ({ id: b.id, name: b.name, code: b.code })));
-            setAllAttributes((attrs as any[]).map(a => ({ id: a.id, name: a.name, code: a.code })));
+            // Brands are a flat list — pass `parent: null, children: []` so
+            // CategoryTreeSelector renders them as one indented level.
+            setBrandTree((brands as any[]).map(b => ({
+                id: b.id, name: b.name, code: b.code, parent: null, children: [],
+            })));
+            // Attributes are roots with nested values. Recursively map both
+            // levels so the selector shows expandable groups (Size > S/M/L).
+            const mapAttr = (a: any): TreeNode => ({
+                id: a.id,
+                name: a.name,
+                code: a.code,
+                parent: a.parent ?? null,
+                children: Array.isArray(a.children) ? a.children.map(mapAttr) : [],
+            });
+            setAttrTree((attrs as any[]).map(mapAttr));
         }).finally(() => setLoadingLinks(false));
     }, [isOpen, parentId, category]);
 
@@ -152,24 +174,6 @@ export function CategoryFormModal({
     const defaultCode = locales[0];
     const extras = locales.slice(1);
     const translatedCount = extras.filter(c => (translations[c]?.name || '').trim()).length;
-
-    const filteredBrands = brandQuery.trim()
-        ? allBrands.filter(b => b.name.toLowerCase().includes(brandQuery.toLowerCase()))
-        : allBrands;
-    const filteredAttrs = attrQuery.trim()
-        ? allAttributes.filter(a => a.name.toLowerCase().includes(attrQuery.toLowerCase()))
-        : allAttributes;
-
-    const toggleBrand = (id: number) => setSelectedBrandIds(s => {
-        const next = new Set(s);
-        if (next.has(id)) next.delete(id); else next.add(id);
-        return next;
-    });
-    const toggleAttr = (id: number) => setSelectedAttrIds(s => {
-        const next = new Set(s);
-        if (next.has(id)) next.delete(id); else next.add(id);
-        return next;
-    });
 
     const panes: { key: PaneKey; label: string; icon: React.ReactNode; badge: React.ReactNode; tone: string }[] = [
         {
@@ -619,45 +623,17 @@ export function CategoryFormModal({
                                 </p>
                             </div>
 
-                            <div className="relative">
-                                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                                <input
-                                    value={brandQuery}
-                                    onChange={e => setBrandQuery(e.target.value)}
-                                    placeholder="Search brands…"
-                                    className="w-full pl-9 pr-3 py-2 text-tp-sm font-bold rounded-xl outline-none"
-                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                />
-                            </div>
-
                             {loadingLinks ? (
                                 <div className="py-8 flex items-center justify-center text-app-muted-foreground">
                                     <Loader2 size={14} className="animate-spin mr-2" /> Loading brands…
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1.5 rounded-xl overflow-y-auto custom-scrollbar"
-                                    style={{ maxHeight: '320px', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)', border: '1px solid var(--app-border)' }}>
-                                    {filteredBrands.map(b => {
-                                        const sel = selectedBrandIds.has(b.id);
-                                        return (
-                                            <button key={b.id} type="button" onClick={() => toggleBrand(b.id)}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-tp-xs font-bold transition-all text-left"
-                                                style={{
-                                                    background: sel ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-surface)',
-                                                    border: `1px solid ${sel ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'var(--app-border)'}`,
-                                                    color: sel ? 'var(--app-primary)' : 'var(--app-foreground)',
-                                                }}>
-                                                {sel && <Check size={10} />}
-                                                <span className="truncate flex-1">{b.name}</span>
-                                            </button>
-                                        );
-                                    })}
-                                    {filteredBrands.length === 0 && (
-                                        <div className="col-span-full py-4 text-center text-tp-xs font-bold text-app-muted-foreground">
-                                            {brandQuery ? 'No matches' : 'No brands yet'}
-                                        </div>
-                                    )}
-                                </div>
+                                <CategoryTreeSelector
+                                    categories={brandTree as any}
+                                    selectedIds={Array.from(selectedBrandIds)}
+                                    onChange={(ids) => setSelectedBrandIds(new Set(ids))}
+                                    maxHeight="max-h-[320px]"
+                                />
                             )}
 
                             {Array.from(selectedBrandIds).map(id => (
@@ -686,19 +662,9 @@ export function CategoryFormModal({
                             <div>
                                 <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Relevant Attributes</h4>
                                 <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                    Attribute groups (Size, Color, Parfum, …) that products in this category can use.
+                                    Attribute groups (Size, Color, Parfum, …) and their values relevant to products
+                                    in this category.
                                 </p>
-                            </div>
-
-                            <div className="relative">
-                                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                                <input
-                                    value={attrQuery}
-                                    onChange={e => setAttrQuery(e.target.value)}
-                                    placeholder="Search attributes…"
-                                    className="w-full pl-9 pr-3 py-2 text-tp-sm font-bold rounded-xl outline-none"
-                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                />
                             </div>
 
                             {loadingLinks ? (
@@ -706,29 +672,12 @@ export function CategoryFormModal({
                                     <Loader2 size={14} className="animate-spin mr-2" /> Loading attributes…
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1.5 rounded-xl overflow-y-auto custom-scrollbar"
-                                    style={{ maxHeight: '320px', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)', border: '1px solid var(--app-border)' }}>
-                                    {filteredAttrs.map(a => {
-                                        const sel = selectedAttrIds.has(a.id);
-                                        return (
-                                            <button key={a.id} type="button" onClick={() => toggleAttr(a.id)}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-tp-xs font-bold transition-all text-left"
-                                                style={{
-                                                    background: sel ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-surface)',
-                                                    border: `1px solid ${sel ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'var(--app-border)'}`,
-                                                    color: sel ? 'var(--app-primary)' : 'var(--app-foreground)',
-                                                }}>
-                                                {sel && <Check size={10} />}
-                                                <span className="truncate flex-1">{a.name}</span>
-                                            </button>
-                                        );
-                                    })}
-                                    {filteredAttrs.length === 0 && (
-                                        <div className="col-span-full py-4 text-center text-tp-xs font-bold text-app-muted-foreground">
-                                            {attrQuery ? 'No matches' : 'No attributes yet'}
-                                        </div>
-                                    )}
-                                </div>
+                                <CategoryTreeSelector
+                                    categories={attrTree as any}
+                                    selectedIds={Array.from(selectedAttrIds)}
+                                    onChange={(ids) => setSelectedAttrIds(new Set(ids))}
+                                    maxHeight="max-h-[320px]"
+                                />
                             )}
 
                             {Array.from(selectedAttrIds).map(id => (
