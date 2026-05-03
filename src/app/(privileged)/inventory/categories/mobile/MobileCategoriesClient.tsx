@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import { useState, useMemo, useCallback, useTransition, useEffect } from 'react'
 import {
     FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
     Eye, Pencil, Trash2, Move, Copy, Package, Tag, CornerDownRight,
     ClipboardList,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { deleteCategory } from '@/app/actions/inventory/categories'
@@ -29,8 +29,23 @@ import '@/lib/tours/definitions/inventory-categories-mobile'
 
 export function MobileCategoriesClient({ initialCategories }: { initialCategories: CategoryNode[] }) {
     const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
+
+    // Audit IMPORTANT #7: /inventory/categories/new redirects here with
+    // ?new=1; desktop client handles it but mobile didn't, so the modal
+    // never opened for mobile users hitting the standalone URL.
+    useEffect(() => {
+        if (searchParams?.get('new') === '1') {
+            setModalState({ open: true })
+            const next = new URLSearchParams(searchParams.toString())
+            next.delete('new')
+            const qs = next.toString()
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+        }
+    }, [searchParams, pathname, router])
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
     const [sheetNode, setSheetNode] = useState<CategoryNode | null>(null)
     const [sheetTab, setSheetTab] = useState<PanelTab>('overview')

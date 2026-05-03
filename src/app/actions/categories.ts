@@ -44,18 +44,26 @@ function hasError(raw: any): boolean {
  *     links. Errors are swallowed (best-effort) so a brand-link failure
  *     never blocks the main category save.
  */
-async function syncBrandLinks(categoryId: number, brandIds: number[]) {
+/**
+ * Returns the count of brand PATCHes that failed (0 = clean).  The
+ * caller surfaces a soft warning if non-zero so the user knows the
+ * category itself saved but some brand links did not.
+ *
+ * Audit BLOCKER #3 — previous version swallowed both the list-fetch
+ * failure and per-brand PATCH failures with no signal back to the UI.
+ */
+async function syncBrandLinks(categoryId: number, brandIds: number[]): Promise<{ failed: number }> {
     const desired = new Set(brandIds);
-    // Walk every brand to figure out which need this category added /
-    // removed. The brands list is small (<200 typically) so a single
-    // pass is fine; if it ever grows we can switch to a dedicated
-    // `categories/<id>/sync_brands/` endpoint.
     let brands: any[] = [];
     try {
         const res: any = await erpFetch('inventory/brands/');
         brands = Array.isArray(res) ? res : (res?.results ?? []);
-    } catch { return; }
+    } catch (e) {
+        console.warn('[syncBrandLinks] brands list fetch failed:', e);
+        return { failed: -1 };  // signal "couldn't even start"
+    }
 
+    let failed = 0;
     const tasks = brands.map(async (b) => {
         const currentIds: number[] = Array.isArray(b.categories)
             ? b.categories.map((c: any) => typeof c === 'number' ? c : c.id)
@@ -74,9 +82,11 @@ async function syncBrandLinks(categoryId: number, brandIds: number[]) {
             });
         } catch (e) {
             console.warn(`[syncBrandLinks] brand ${b.id} update failed:`, e);
+            failed++;
         }
     });
     await Promise.all(tasks);
+    return { failed };
 }
 
 function readIntList(formData: FormData, key: string): number[] {
@@ -145,12 +155,18 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
         // empty-set case must not run blindly (it would unlink every
         // brand that already references this category).
         const newId = (result as any)?.id;
+        let brandWarning: string | undefined;
         if (newId && brandsDirty) {
-            await syncBrandLinks(Number(newId), brandIds);
+            const r = await syncBrandLinks(Number(newId), brandIds);
+            if (r.failed > 0) brandWarning = `Category created but ${r.failed} brand link(s) failed to update.`;
+            if (r.failed === -1) brandWarning = 'Category created but the brand list could not be loaded — links not updated.';
         }
 
         revalidatePath('/inventory/categories');
-        return { message: 'success' };
+        // The frontend treats `state.message === 'success'` as the close
+        // signal. If we have a warning to surface, return it instead so
+        // the modal stays open and shows the user what to retry.
+        return brandWarning ? { message: brandWarning } : { message: 'success' };
     } catch (e: unknown) {
         console.error('[createCategory] Exception:', e);
         const data = (e as any)?.data || (e as any)?.body;
@@ -180,6 +196,13 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     } catch { /* tolerate malformed JSON — treat as empty */ }
     const nameFr = translations.fr?.name || '';
     const nameAr = translations.ar?.name || '';
+
+    // Audit IMPORTANT #4 — mirror create's name validation here. The form
+    // marks Name as required client-side but a stray empty PATCH (e.g.
+    // legacy callers, browser autofill) shouldn't reach the backend.
+    if (!name || name.length < 2) {
+        return { message: 'Failed to update category', errors: { name: ['Name must be at least 2 characters'] } };
+    }
 
     try {
         if (parentId === id) {
@@ -217,12 +240,15 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
 
         // Same dirty-gate as create — never run syncBrandLinks blindly,
         // it would clear every existing brand→category link otherwise.
+        let brandWarning: string | undefined;
         if (brandsDirty) {
-            await syncBrandLinks(id, brandIds);
+            const r = await syncBrandLinks(id, brandIds);
+            if (r.failed > 0) brandWarning = `Category updated but ${r.failed} brand link(s) failed to update.`;
+            if (r.failed === -1) brandWarning = 'Category updated but the brand list could not be loaded — links not updated.';
         }
 
         revalidatePath('/inventory/categories');
-        return { message: 'success' };
+        return brandWarning ? { message: brandWarning } : { message: 'success' };
     } catch (e: unknown) {
         console.error('[updateCategory] Exception:', e);
         const data = (e as any)?.data || (e as any)?.body;

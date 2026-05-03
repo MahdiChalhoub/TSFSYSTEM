@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import {
     X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight,
     Layers, Check, Lightbulb, Barcode, Award, ListTree,
@@ -120,20 +120,43 @@ export function CategoryFormModal({
     const [attrsDirty, setAttrsDirty] = useState(false);
     const [loadingLinks, setLoadingLinks] = useState(false);
     const [linksLoaded, setLinksLoaded] = useState(false);
+    // True the moment linked_brands / linked_attributes resolves. ensureLinksLoaded
+    // checks these to avoid clobbering an authoritative seed with a (possibly
+    // smaller) tree-walk fallback. Audit BLOCKER #1.
+    const [brandsSeeded, setBrandsSeeded] = useState(false);
+    const [attrsSeeded, setAttrsSeeded] = useState(false);
 
-    useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
+    // One-shot success guard. useActionState keeps `state.message === 'success'`
+    // after the modal closes; without this the next open would re-fire onClose
+    // immediately. Audit BLOCKER #2.
+    const lastFiredSuccessRef = useRef<unknown>(null);
+    useEffect(() => {
+        if (state.message === 'success' && lastFiredSuccessRef.current !== state) {
+            lastFiredSuccessRef.current = state;
+            onClose();
+        }
+    }, [state, onClose]);
 
+    // Audit IMPORTANT #6: depend on category?.id (stable PK), not the whole
+    // object reference. Parent re-renders (e.g. router.refresh after a save
+    // elsewhere) hand us a fresh object every time and the old deps array
+    // re-fired this whole effect, wiping in-flight chip selections.
+    const categoryId = category?.id;
     useEffect(() => {
         if (!isOpen) return;
         setIsSubCategory(!!parentId || (category && !!category.parent));
         setSelectedParent(parentId || category?.parent || '');
         setActivePane('identity');
+        setActiveLang('__default__');                          // audit #10
         setNameDraft(category?.name || '');
-        // Reset dirty flags + reload tracker on each open so the next save
-        // doesn't blindly clear M2M data the user never touched.
+        // Reset dirty flags + reload tracker + seeded flags on each open so
+        // the next save doesn't blindly clear M2M data the user never
+        // touched, and the linked-* fetches can re-seed cleanly.
         setBrandsDirty(false);
         setAttrsDirty(false);
         setLinksLoaded(false);
+        setBrandsSeeded(false);
+        setAttrsSeeded(false);
 
         if (!category) {
             // Fire and update cache. If we already had a cached value the
@@ -175,9 +198,17 @@ export function CategoryFormModal({
                     const ids = list
                         .map(b => Number(typeof b === 'number' ? b : b?.id))
                         .filter(Number.isFinite);
-                    if (ids.length > 0) setSelectedBrandIds(new Set(ids));
+                    // Always commit (even empty) — empty IS a real answer
+                    // (no brands linked) and the seeded flag must flip to
+                    // block the tree-walk fallback from re-populating.
+                    setSelectedBrandIds(new Set(ids));
+                    setBrandsSeeded(true);
                 })
-                .catch(() => { /* leave empty — user can still link */ });
+                .catch((e) => {
+                    // Audit #9 — log instead of swallow. Don't flip the
+                    // seeded flag so the tree-walk fallback can attempt.
+                    console.warn('[CategoryFormModal] linked_brands failed:', e);
+                });
 
             erpFetch(`categories/${cid}/linked_attributes/`)
                 .then((r: any) => {
@@ -185,9 +216,12 @@ export function CategoryFormModal({
                     const ids = list
                         .map(a => Number(typeof a === 'number' ? a : a?.id))
                         .filter(Number.isFinite);
-                    if (ids.length > 0) setSelectedAttrIds(new Set(ids));
+                    setSelectedAttrIds(new Set(ids));
+                    setAttrsSeeded(true);
                 })
-                .catch(() => { /* leave empty */ });
+                .catch((e) => {
+                    console.warn('[CategoryFormModal] linked_attributes failed:', e);
+                });
         }
 
         // NOTE: brand + attribute trees themselves are NOT loaded here;
@@ -195,7 +229,8 @@ export function CategoryFormModal({
         // or Attributes pane (see ensureLinksLoaded below). Saves a
         // noticeable chunk of the modal's open time when the user only
         // edits Identity.
-    }, [isOpen, parentId, category]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, parentId, categoryId]);
 
     // Lazy loader for the Brands + Attributes panes. First time the user
     // clicks one of those tabs we fetch both (cheaper to fetch together
@@ -241,44 +276,33 @@ export function CategoryFormModal({
             });
             setAttrTree(attrsArr.map(mapAttr));
 
-            // Seed existing selections in edit mode (only if user hasn't
-            // started touching the chips yet — see dirty flags).
+            // Seed existing selections — BUT only as a FALLBACK when the
+            // authoritative linked_* endpoint hasn't already populated.
+            // Audit BLOCKER #1: previously this block could overwrite a
+            // correct seed with a smaller tree-walk-derived set, because
+            // the brand / attribute serializers may omit `categories` or
+            // shape it differently per node.
             if (category?.id) {
                 const myId = Number(category.id);
+                const matches = (cs: any) => Array.isArray(cs) && cs.some((c: any) =>
+                    (typeof c === 'number' ? c : c?.id) === myId
+                );
 
-                // Brands → reverse M2M; pick brands whose categories list
-                // includes this category id. Both numeric ids and nested
-                // {id} objects are handled to match common DRF shapes.
-                if (!brandsDirty) {
+                if (!brandsDirty && !brandsSeeded) {
                     const linkedBrandIds = brandsArr
-                        .filter(b => Array.isArray(b.categories) && b.categories.some((c: any) =>
-                            (typeof c === 'number' ? c : c?.id) === myId
-                        ))
+                        .filter(b => matches(b.categories))
                         .map(b => b.id as number);
-                    if (linkedBrandIds.length > 0) {
-                        setSelectedBrandIds(new Set(linkedBrandIds));
-                    }
+                    setSelectedBrandIds(new Set(linkedBrandIds));
                 }
 
-                // Attributes → only walk the tree as a fallback. If the
-                // category payload already gave us the ids on open, those
-                // are already in selectedAttrIds and we don't need to
-                // recompute. Walk roots + children since either level can
-                // declare a category link.
-                if (!attrsDirty && selectedAttrIds.size === 0) {
+                if (!attrsDirty && !attrsSeeded) {
                     const linkedAttrIds: number[] = [];
                     const visit = (a: any) => {
-                        if (Array.isArray(a.categories) && a.categories.some((c: any) =>
-                            (typeof c === 'number' ? c : c?.id) === myId
-                        )) {
-                            linkedAttrIds.push(a.id);
-                        }
+                        if (matches(a.categories)) linkedAttrIds.push(a.id);
                         if (Array.isArray(a.children)) a.children.forEach(visit);
                     };
                     attrsArr.forEach(visit);
-                    if (linkedAttrIds.length > 0) {
-                        setSelectedAttrIds(new Set(linkedAttrIds));
-                    }
+                    setSelectedAttrIds(new Set(linkedAttrIds));
                 }
             }
 
