@@ -168,12 +168,13 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         // session (401/403). Any other status (400 validation, 500
         // server error, network) should stay on the form so the user
         // sees the real error instead of being kicked out.
+        // Stay on the form for ALL errors (including 401/403) — the
+        // user just told us the silent redirect-to-login was confusing
+        // and looked like a logout. Surface the real reason instead so
+        // we can debug whether it's a missing token, missing perm, or
+        // a Django validation error.
         if (e instanceof ErpApiError) {
             console.error(`[createPurchaseOrder] HTTP ${e.status}:`, e.message, e.data);
-            if (e.status === 401 || e.status === 403) {
-                redirect('/login?error=session_expired');
-            }
-            // Surface field-level Django errors to the form's useActionState.
             const fieldErrors: Record<string, string[]> = {};
             const data = e.data as Record<string, unknown> | undefined;
             if (data && typeof data === 'object') {
@@ -182,9 +183,12 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
                     else if (typeof v === 'string') fieldErrors[k] = [v];
                 }
             }
+            const prefix = e.status === 401 || e.status === 403
+                ? `Auth ${e.status}: `
+                : `HTTP ${e.status}: `;
             return {
                 errors: Object.keys(fieldErrors).length ? fieldErrors : undefined,
-                message: e.message || 'Failed to create purchase order.',
+                message: prefix + (e.message || 'Failed to create purchase order.'),
             };
         }
         console.error('[createPurchaseOrder] Unexpected error:', e);

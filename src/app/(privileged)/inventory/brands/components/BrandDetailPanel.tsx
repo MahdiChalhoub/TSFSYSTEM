@@ -6,6 +6,7 @@ import type { Brand, BrandPanelTab } from './types'
 import { OverviewTab } from './tabs/OverviewTab'
 import { ProductsTab } from './tabs/ProductsTab'
 import { CategoriesTab } from './tabs/CategoriesTab'
+import { CountriesTab } from './tabs/CountriesTab'
 import { AttributesTab } from './tabs/AttributesTab'
 import { AuditTab } from './tabs/AuditTab'
 
@@ -30,6 +31,7 @@ export function BrandDetailPanel({ brand, onEdit, onDelete, initialTab, onClose,
         { key: 'overview', label: 'Overview', icon: <Bookmark size={13} /> },
         { key: 'products', label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
         { key: 'categories', label: 'Categories', icon: <FolderTree size={13} />, count: catCount, color: 'var(--app-info)' },
+        { key: 'countries', label: 'Countries', icon: <Globe size={13} />, count: countryCount, color: 'var(--app-warning)' },
         { key: 'attributes', label: 'Attributes', icon: <Tag size={13} />, color: 'var(--app-success)' },
         { key: 'audit', label: 'Audit', icon: <Clock size={13} />, color: 'var(--app-muted-foreground)' },
     ]
@@ -184,6 +186,9 @@ export function BrandDetailPanel({ brand, onEdit, onDelete, initialTab, onClose,
                 )}
                 {tab === 'categories' && (
                     <CategoriesTab brandId={brand.id} brandName={brand.name} />
+                )}
+                {tab === 'countries' && (
+                    <CountriesTab brandId={brand.id} brandName={brand.name} />
                 )}
                 {tab === 'attributes' && (
                     <AttributesTab brandId={brand.id} brandName={brand.name} />

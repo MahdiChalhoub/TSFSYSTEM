@@ -334,16 +334,32 @@ export function BrandRow({
                         products (avoids the N+1 fetch that would happen if
                         the frontend computed them). The colors match the
                         in-tree facet groups below. */}
+                    {/* Chip strip — each chip sits in a fixed-width slot
+                        whose width matches the corresponding columnHeader
+                        in BrandsClient.tsx, so the header label sits
+                        directly above its chip. */}
                     {!compact && (
-                        <div className="hidden md:flex items-center gap-1 flex-shrink-0">
-                            <StatChip icon={<Package size={11} />} label="products"
-                                value={brand.product_count ?? 0} color="var(--app-success)" />
-                            <StatChip icon={<FolderTree size={11} />} label="categories"
-                                value={brand.category_count ?? 0} color="var(--app-info)" />
-                            <StatChip icon={<Globe size={11} />} label="countries"
-                                value={brand.country_count ?? 0} color="var(--app-warning)" />
-                            <StatChip icon={<Tag size={11} />} label="attrs"
-                                value={brand.attribute_count ?? 0} color="var(--app-success)" />
+                        <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
+                            <div className="flex items-center justify-center" style={{ width: '95px' }}>
+                                <StatChip icon={<Package size={11} />} label="products"
+                                    value={brand.product_count ?? 0} color="var(--app-success)"
+                                    onClick={() => onSelect(brand, 'products')} />
+                            </div>
+                            <div className="flex items-center justify-center" style={{ width: '105px' }}>
+                                <StatChip icon={<FolderTree size={11} />} label="categories"
+                                    value={brand.category_count ?? 0} color="var(--app-info)"
+                                    onClick={() => onSelect(brand, 'categories')} />
+                            </div>
+                            <div className="flex items-center justify-center" style={{ width: '100px' }}>
+                                <StatChip icon={<Globe size={11} />} label="countries"
+                                    value={brand.country_count ?? 0} color="var(--app-warning)"
+                                    onClick={() => onSelect(brand, 'countries')} />
+                            </div>
+                            <div className="flex items-center justify-center" style={{ width: '75px' }}>
+                                <StatChip icon={<Tag size={11} />} label="attrs"
+                                    value={brand.attribute_count ?? 0} color="var(--app-success)"
+                                    onClick={() => onSelect(brand, 'attributes')} />
+                            </div>
                         </div>
                     )}
 
@@ -650,21 +666,26 @@ export function BrandRow({
  * the count is only knowable after lazy fetch (attributes).
  */
 function StatChip({
-    icon, label, value, color, placeholder, placeholderTitle
+    icon, label, value, color, onClick, title
 }: {
     icon: React.ReactNode
     label: string
-    value: number | null
+    value: number
     color: string
-    placeholder?: string
-    placeholderTitle?: string
+    /** Click handler — opens the matching side-panel tab. The chip
+     *  stops event propagation so the row click doesn't also fire. */
+    onClick?: (e: React.MouseEvent) => void
+    title?: string
 }) {
-    const display = value === null ? (placeholder ?? '?') : value
     const isEmpty = value === 0
+    const interactive = !!onClick
     return (
-        <span
-            title={placeholderTitle}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-tp-xxs font-bold tabular-nums"
+        <button
+            type="button"
+            onClick={onClick ? (e) => { e.stopPropagation(); onClick(e) } : undefined}
+            disabled={!interactive}
+            title={title || (interactive ? `Open ${label}` : undefined)}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-tp-xxs font-bold tabular-nums transition-all ${interactive ? 'cursor-pointer hover:brightness-110 hover:shadow-sm' : ''}`}
             style={{
                 background: isEmpty
                     ? 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)'
@@ -673,9 +694,9 @@ function StatChip({
                 border: `1px solid color-mix(in srgb, ${isEmpty ? 'var(--app-muted-foreground)' : color} 18%, transparent)`,
             }}>
             {icon}
-            <span className="font-mono">{display}</span>
+            <span className="font-mono">{value}</span>
             <span className="font-medium opacity-75 hidden lg:inline">{label}</span>
-        </span>
+        </button>
     )
 }
 

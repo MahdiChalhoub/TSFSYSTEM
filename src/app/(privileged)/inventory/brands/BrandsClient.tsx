@@ -193,11 +193,16 @@ export function BrandsClient({ brands, countries, categories }: Props) {
                     secondaryActions: [
                         { label: 'Reorganize', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=brand' },
                     ],
+                    // Header columns mirror the four chips on each row, in
+                    // the same order and with widths sized to the chip
+                    // tablets so the row reads as a structured grid: chip
+                    // sits under its label, label sits over its chip.
                     columnHeaders: [
                         { label: 'Brand', width: 'auto' },
-                        { label: 'Cats', width: '48px', color: 'var(--app-info)', hideOnMobile: true },
-                        { label: 'Countries', width: '72px', color: 'var(--app-warning)', hideOnMobile: true },
-                        { label: 'Products', width: '56px', color: 'var(--app-success)', hideOnMobile: true },
+                        { label: 'Products',   width: '95px',  color: 'var(--app-success)', hideOnMobile: true },
+                        { label: 'Categories', width: '105px', color: 'var(--app-info)',    hideOnMobile: true },
+                        { label: 'Countries',  width: '100px', color: 'var(--app-warning)', hideOnMobile: true },
+                        { label: 'Attrs',      width: '75px',  color: 'var(--app-success)', hideOnMobile: true },
                     ],
                     data: dataAsRecords,
                     searchFields: ['name', 'short_name', 'reference_code'],

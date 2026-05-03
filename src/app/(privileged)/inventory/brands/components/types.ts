@@ -46,4 +46,4 @@ export interface ProductRow {
     image?: string | null | undefined
 }
 
-export type BrandPanelTab = 'overview' | 'products' | 'categories' | 'attributes' | 'audit'
+export type BrandPanelTab = 'overview' | 'products' | 'categories' | 'countries' | 'attributes' | 'audit'
