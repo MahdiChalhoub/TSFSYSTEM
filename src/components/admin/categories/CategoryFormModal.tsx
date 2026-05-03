@@ -192,12 +192,27 @@ export function CategoryFormModal({
         if (category?.id) {
             const cid = Number(category.id);
 
+            // Both endpoints return { linked: [...], all: [...] } (see
+            // taxonomy_views.py — linked_brands & linked_attributes). The
+            // `linked` array contains brand/attribute objects with id +
+            // name + source ('auto' | 'explicit' | 'both'). Pull the ids
+            // out of the `linked` envelope; fall back to other shapes
+            // for older serializers.
+            const extractLinkedIds = (r: any): number[] => {
+                const list: any[] = Array.isArray(r) ? r
+                    : Array.isArray(r?.linked) ? r.linked
+                        : Array.isArray(r?.results) ? r.results
+                            : Array.isArray(r?.brands) ? r.brands
+                                : Array.isArray(r?.attributes) ? r.attributes
+                                    : [];
+                return list
+                    .map(x => Number(typeof x === 'number' ? x : x?.id))
+                    .filter(Number.isFinite);
+            };
+
             erpFetch(`categories/${cid}/linked_brands/`)
                 .then((r: any) => {
-                    const list: any[] = Array.isArray(r) ? r : (r?.results ?? r?.brands ?? []);
-                    const ids = list
-                        .map(b => Number(typeof b === 'number' ? b : b?.id))
-                        .filter(Number.isFinite);
+                    const ids = extractLinkedIds(r);
                     // Always commit (even empty) — empty IS a real answer
                     // (no brands linked) and the seeded flag must flip to
                     // block the tree-walk fallback from re-populating.
@@ -212,10 +227,7 @@ export function CategoryFormModal({
 
             erpFetch(`categories/${cid}/linked_attributes/`)
                 .then((r: any) => {
-                    const list: any[] = Array.isArray(r) ? r : (r?.results ?? r?.attributes ?? []);
-                    const ids = list
-                        .map(a => Number(typeof a === 'number' ? a : a?.id))
-                        .filter(Number.isFinite);
+                    const ids = extractLinkedIds(r);
                     setSelectedAttrIds(new Set(ids));
                     setAttrsSeeded(true);
                 })
