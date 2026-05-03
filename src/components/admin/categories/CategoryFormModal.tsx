@@ -1,13 +1,18 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
+import {
+    X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight,
+    Layers, Check, Lightbulb, Barcode,
+} from 'lucide-react';
 import { createCategory, updateCategory, CategoryState } from '@/app/actions/categories';
-import { X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
 import { CategoryCascader } from './CategoryCascader';
 import { peekNextCode } from '@/lib/sequences-client';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
-import { getCatalogueLanguages, getCachedCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
+import {
+    getCatalogueLanguages, getCachedCatalogueLanguages,
+    labelFor, placeholderFor, isRTL, type LocaleCode,
+} from '@/lib/catalogue-languages';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
@@ -17,52 +22,40 @@ type CategoryFormModalProps = {
     potentialParents?: Record<string, any>[];
 };
 
+type LangEntry = { name?: string; short_name?: string };
+const coerce = (v: any): LangEntry =>
+    typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
+
+type PaneKey = 'identity' | 'hierarchy' | 'codes';
+
 const initialState: CategoryState = { message: '', errors: {} };
 
-export function CategoryFormModal({ isOpen, onClose, category, parentId, potentialParents = [] }: CategoryFormModalProps) {
-    const [state, formAction] = useActionState(category ? updateCategory.bind(null, category.id) : createCategory, initialState);
+export function CategoryFormModal({
+    isOpen, onClose, category, parentId, potentialParents = [],
+}: CategoryFormModalProps) {
+    const [state, formAction] = useActionState(
+        category ? updateCategory.bind(null, category.id) : createCategory,
+        initialState,
+    );
     const [pending, setPending] = useState(false);
+    const [activePane, setActivePane] = useState<PaneKey>('identity');
 
-    const getDescendants = (id: number, allCats: Record<string, any>[]) => {
-        const descendants = new Set<number>();
-        const stack = [id];
-        while (stack.length > 0) {
-            const current = stack.pop()!;
-            const children = allCats.filter(c => c.parent === current);
-            children.forEach(c => { descendants.add(c.id); stack.push(c.id); });
-        }
-        return descendants;
-    };
-
-    const descendants = useMemo(() => {
-        if (!category) return new Set();
-        return getDescendants(category.id, potentialParents);
-    }, [category, potentialParents]);
-
-    const availableParents = useMemo(() => {
-        return potentialParents.filter(p => (!category || p.id !== category.id) && !descendants.has(p.id));
-    }, [potentialParents, category, descendants]);
-
+    // ── Hierarchy state ──
     const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
     const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
+
     // Pre-filled code from /settings/sequences (peek only — sequence is
-    // consumed server-side on save). Empty while creating an existing
-    // category or until the first fetch resolves.
+    // consumed server-side on save).
     const [suggestedCode, setSuggestedCode] = useState<string>('');
-    // Tenant-configured catalogue locales (e.g. ['fr','ar'] or ['en','es','fr']).
-    // Seed from the module-level cache so the modal renders the correct
-    // language tabs on its FIRST paint — avoids the "tabs pop in 200ms later"
-    // flicker. Falls back to ['fr','ar'] if no fetch has resolved yet; the
-    // useEffect below still re-fetches to refresh the cache.
+
+    // ── Tenant-configured catalogue locales ──
+    // Seed from module-level cache so the modal renders correct language tabs
+    // on its first paint — avoids the "tabs pop in 200ms later" flicker.
     const [locales, setLocales] = useState<LocaleCode[]>(
-        () => getCachedCatalogueLanguages() ?? ['fr', 'ar']
+        () => getCachedCatalogueLanguages() ?? ['fr', 'ar'],
     );
-    // Translations now carry BOTH `name` and `short_name` per locale. A
-    // legacy-string value (from the old flat shape) is coerced into
-    // `{ name: string }` so migrated data stays visible.
-    type LangEntry = { name?: string; short_name?: string };
-    const coerce = (v: any): LangEntry =>
-        typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
+
+    // ── Translations (per-locale name + short_name) ──
     const [translations, setTranslations] = useState<Record<string, LangEntry>>(() => {
         const src: Record<string, any> = { ...(category?.translations || {}) };
         if (category?.name_fr && !src.fr) src.fr = { name: category.name_fr };
@@ -73,10 +66,15 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
     });
     const patchT = (code: string, field: 'name' | 'short_name', value: string) =>
         setTranslations(t => ({ ...t, [code]: { ...(t[code] || {}), [field]: value } }));
-    // Which language tab is active above the Name field. `__default__` = the
-    // main `name` column (authoritative base value). Other values are ISO
-    // locale codes writing into `translations[code]`.
+
+    // Active language tab above the Name field. `__default__` = the main
+    // `name` column (authoritative base value).
     const [activeLang, setActiveLang] = useState<string>('__default__');
+
+    // Live mirror of the default Name input — drives the header subtitle
+    // and the Identity pane badge so the user sees their typing reflected
+    // before they save.
+    const [nameDraft, setNameDraft] = useState<string>(category?.name || '');
 
     useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
 
@@ -84,41 +82,91 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
         if (isOpen) {
             setIsSubCategory(!!parentId || (category && !!category.parent));
             setSelectedParent(parentId || category?.parent || '');
+            setActivePane('identity');
+            setNameDraft(category?.name || '');
             if (!category) {
-                // New record — peek next code from sequence so the Code input is pre-filled.
                 peekNextCode('CATEGORY').then(setSuggestedCode).catch(() => setSuggestedCode(''));
             } else {
                 setSuggestedCode('');
             }
-            // Refresh languages on open — first call hits the network, all
-            // subsequent calls return immediately from the module cache.
-            // Only commit setLocales if the result actually differs to avoid
-            // a needless re-render (and a possible visual flicker if the
-            // cached fallback already matched what the server returns).
             getCatalogueLanguages().then(next => {
                 setLocales(prev =>
-                    prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next
+                    prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next,
                 );
-            }).catch(() => { /* keep whatever we already have */ });
+            }).catch(() => { /* keep cached fallback */ });
         }
     }, [isOpen, parentId, category]);
+
+    // ── Tree exclusion (can't pick self or any descendant as parent) ──
+    const descendants = useMemo(() => {
+        if (!category) return new Set<number>();
+        const out = new Set<number>();
+        const stack: number[] = [category.id];
+        while (stack.length) {
+            const cur = stack.pop()!;
+            potentialParents
+                .filter(c => c.parent === cur)
+                .forEach(c => { out.add(c.id); stack.push(c.id); });
+        }
+        return out;
+    }, [category, potentialParents]);
+
+    const availableParents = useMemo(
+        () => potentialParents.filter(p => (!category || p.id !== category.id) && !descendants.has(p.id)),
+        [potentialParents, category, descendants],
+    );
 
     if (!isOpen) return null;
 
     const parentName = selectedParent ? potentialParents.find(p => p.id == selectedParent)?.name : null;
     const parentCode = selectedParent ? potentialParents.find(p => p.id == selectedParent)?.code : null;
+    const hasError = state.message && state.message !== 'success';
+    const defaultCode = locales[0];
+    const extras = locales.slice(1);
+    const translatedCount = extras.filter(c => (translations[c]?.name || '').trim()).length;
+
+    // ── Pane definitions (sidebar + mobile tab strip) ──
+    const panes: { key: PaneKey; label: string; icon: React.ReactNode; badge: React.ReactNode; tone: string }[] = [
+        {
+            key: 'identity',
+            label: 'Identity',
+            icon: <Tag size={13} />,
+            badge: extras.length > 0
+                ? `${(nameDraft.trim() ? 1 : 0) + translatedCount}/${locales.length}`
+                : (nameDraft.trim() ? '✓' : '—'),
+            tone: nameDraft.trim() ? 'var(--app-success)' : 'var(--app-muted-foreground)',
+        },
+        {
+            key: 'hierarchy',
+            label: 'Hierarchy',
+            icon: <Layers size={13} />,
+            badge: isSubCategory
+                ? (parentName ? '↳' : '?')
+                : 'Root',
+            tone: isSubCategory && !parentName ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
+        },
+        {
+            key: 'codes',
+            label: 'Codes',
+            icon: <Hash size={13} />,
+            badge: (category?.code || suggestedCode) ? (category?.barcode_prefix ? '✓' : '½') : '—',
+            tone: (category?.code || suggestedCode)
+                ? (category?.barcode_prefix ? 'var(--app-success)' : 'var(--app-muted-foreground)')
+                : 'var(--app-muted-foreground)',
+        },
+    ];
 
     return (
         <div
             className="fixed inset-0 z-[110] flex items-center justify-center animate-in fade-in duration-200"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
-            onClick={e => { if (e.target === e.currentTarget) onClose() }}
+            onClick={e => { if (e.target === e.currentTarget) onClose(); }}
         >
             <div
                 className="w-full max-w-3xl mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
             >
-                {/* ── Modal Header — matches design-language §11 ── */}
+                {/* ── Header ── */}
                 <div
                     className="px-5 py-3 flex items-center justify-between flex-shrink-0"
                     style={{
@@ -126,125 +174,161 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                         borderBottom: '1px solid var(--app-border)',
                     }}
                 >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                            className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                             style={{
                                 background: 'var(--app-primary)',
                                 boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)',
                             }}
                         >
-                            <FolderTree size={15} className="text-white" />
+                            <FolderTree size={16} className="text-white" />
                         </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-app-foreground">
+                        <div className="min-w-0">
+                            <h3 className="text-tp-md font-bold text-app-foreground truncate">
                                 {category ? 'Edit Category' : 'Create Category'}
                             </h3>
-                            <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                {category ? `Editing #${category.id}` : 'Product Taxonomy'}
+                            <p className="text-tp-xs font-bold text-app-muted-foreground truncate">
+                                {category
+                                    ? `Editing "${category.name}"`
+                                    : (nameDraft ? `Naming: ${nameDraft}` : 'Product Taxonomy — start with a name')}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all flex-shrink-0"
                     >
                         <X size={16} />
                     </button>
                 </div>
 
-                {/* ── Form Body ── */}
-                <form action={(formData) => { setPending(true); formAction(formData); setPending(false); }}
-                    className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
-
-                    {/* Error */}
-                    {state.message && state.message !== 'success' && (
-                        <div
-                            className="p-3 rounded-xl flex items-center gap-2 text-tp-sm font-bold animate-in slide-in-from-top-1 duration-200"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
-                                color: 'var(--app-error)',
-                            }}
-                        >
-                            <AlertCircle size={14} />
-                            {state.message}
-                        </div>
-                    )}
-
-                    {/* Category Type Toggle */}
-                    {!parentId && (
-                        <div
-                            className="flex p-1 rounded-xl"
-                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid var(--app-border)' }}
-                        >
-                            <button
-                                type="button"
-                                onClick={() => setIsSubCategory(false)}
-                                className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
-                                style={!isSubCategory ? {
-                                    background: 'var(--app-surface)',
-                                    color: 'var(--app-primary)',
-                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                } : {
-                                    color: 'var(--app-muted-foreground)',
-                                }}
-                            >
-                                <FolderTree size={13} />
-                                Root Category
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsSubCategory(true)}
-                                className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
-                                style={isSubCategory ? {
-                                    background: 'var(--app-surface)',
-                                    color: 'var(--app-primary)',
-                                    boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                } : {
-                                    color: 'var(--app-muted-foreground)',
-                                }}
-                            >
-                                <ChevronRight size={13} />
-                                Sub-Category
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Parent Selector */}
-                    {isSubCategory && (
-                        <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1.5">
-                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">Parent Category</label>
-                            <CategoryCascader
-                                allCategories={availableParents as any}
-                                selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
-                                onSelect={(id) => setSelectedParent(id || '')}
-                                excludeId={category?.id}
-                            />
-                            <input type="hidden" name="parentId" value={selectedParent} />
-                            {parentName && (
-                                <div className="flex items-center gap-1.5 text-tp-xs font-bold" style={{ color: 'var(--app-success)' }}>
-                                    <ChevronRight size={10} />
-                                    Nesting under &ldquo;{parentName}&rdquo;
-                                    {parentCode && <span className="font-mono opacity-60">({parentCode})</span>}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Name + Short Name — with language tabs above Name.
-                     *  The first enabled locale IS the default — it maps to
-                     *  the main `name` column, so we don't render it as a
-                     *  second tab (that would duplicate the field). The tab
-                     *  strip only shows when at least one *other* locale is
-                     *  enabled. */}
-                    <div>
-                        {(() => {
-                            const defaultCode = locales[0];                  // first = default
-                            const extras = locales.slice(1);                 // everything after
-                            if (extras.length === 0) return null;            // single-lang: no tabs
+                {/* ── Body: sidebar + pane ── */}
+                <form
+                    id="category-form"
+                    action={(formData) => { setPending(true); formAction(formData); }}
+                    className="flex-1 flex min-h-0"
+                >
+                    {/* Sidebar nav (desktop) */}
+                    <aside
+                        className="w-[180px] flex-shrink-0 p-2 space-y-1 border-r hidden sm:block"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-background) 60%, var(--app-surface))',
+                            borderColor: 'var(--app-border)',
+                        }}
+                    >
+                        {panes.map(p => {
+                            const active = activePane === p.key;
                             return (
-                                <div className="flex items-center gap-1 mb-1.5 overflow-x-auto custom-scrollbar">
+                                <button
+                                    key={p.key}
+                                    type="button"
+                                    onClick={() => setActivePane(p.key)}
+                                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-tp-sm font-bold transition-all relative"
+                                    style={{
+                                        background: active ? 'var(--app-surface)' : 'transparent',
+                                        color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                        boxShadow: active ? '0 2px 8px color-mix(in srgb, var(--app-primary) 12%, transparent)' : undefined,
+                                    }}
+                                >
+                                    {active && (
+                                        <span
+                                            className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r"
+                                            style={{ background: 'var(--app-primary)' }}
+                                        />
+                                    )}
+                                    <span className="ml-1 flex items-center justify-center w-6 h-6 rounded-lg flex-shrink-0"
+                                        style={{
+                                            background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                            color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        }}>
+                                        {p.icon}
+                                    </span>
+                                    <span className="flex-1 text-left truncate">{p.label}</span>
+                                    <span
+                                        className="text-tp-xxs font-mono font-bold px-1.5 py-0.5 rounded"
+                                        style={{
+                                            background: 'color-mix(in srgb, var(--app-background) 70%, transparent)',
+                                            color: p.tone,
+                                            border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                        }}
+                                    >
+                                        {p.badge}
+                                    </span>
+                                </button>
+                            );
+                        })}
+
+                        {/* Reference code preview — sidebar meta */}
+                        <div
+                            className="mt-3 p-2.5 rounded-xl"
+                            style={{ background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}
+                        >
+                            <p className="text-tp-xxs font-bold uppercase tracking-wide text-app-muted-foreground flex items-center gap-1 mb-1">
+                                <Hash size={9} /> Reference
+                            </p>
+                            <p className="text-tp-xs font-mono font-bold truncate"
+                                style={{ color: category?.code ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
+                                {category?.code || (suggestedCode ? `${suggestedCode}` : 'Auto on save')}
+                            </p>
+                        </div>
+                    </aside>
+
+                    {/* Mobile tab strip */}
+                    <div className="sm:hidden flex border-b flex-shrink-0 overflow-x-auto custom-scrollbar" style={{ borderColor: 'var(--app-border)' }}>
+                        {panes.map(p => {
+                            const active = activePane === p.key;
+                            return (
+                                <button
+                                    key={p.key}
+                                    type="button"
+                                    onClick={() => setActivePane(p.key)}
+                                    className="flex items-center gap-1 px-3 py-2 text-tp-xs font-bold transition-all flex-shrink-0"
+                                    style={{
+                                        color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        borderBottom: `2px solid ${active ? 'var(--app-primary)' : 'transparent'}`,
+                                    }}
+                                >
+                                    {p.icon}
+                                    {p.label}
+                                    <span className="font-mono opacity-70">{p.badge}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Pane content — all panes stay mounted so the form
+                        captures every input regardless of which pane is open;
+                        min-h locks the body so swapping panes doesn't bounce
+                        the modal. */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-w-0"
+                        style={{ minHeight: '460px' }}>
+                        {hasError && (
+                            <div
+                                className="mb-4 p-3 rounded-xl flex items-center gap-2 text-tp-sm font-bold animate-in slide-in-from-top-1 duration-200"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)',
+                                    color: 'var(--app-error)',
+                                }}
+                            >
+                                <AlertCircle size={14} />
+                                {state.message}
+                            </div>
+                        )}
+
+                        {/* ═══ Pane: IDENTITY ═══ */}
+                        <div className={activePane === 'identity' ? 'space-y-4' : 'hidden'}>
+                            <div>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Category Identity</h4>
+                                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                                    Name shown to operators across the catalogue. Translations are optional.
+                                </p>
+                            </div>
+
+                            {/* Language tabs (only when 2+ locales configured) */}
+                            {extras.length > 0 && (
+                                <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
                                     <button type="button"
                                         onClick={() => setActiveLang('__default__')}
                                         className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-tp-xxs font-bold transition-all flex-shrink-0"
@@ -257,7 +341,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                                     </button>
                                     {extras.map(code => {
                                         const active = activeLang === code;
-                                        const filled = !!translations[code];
+                                        const filled = !!(translations[code]?.name || '').trim();
                                         return (
                                             <button key={code} type="button"
                                                 onClick={() => setActiveLang(code)}
@@ -273,153 +357,270 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                                         );
                                     })}
                                 </div>
-                            );
-                        })()}
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                            {activeLang === '__default__' ? (
-                                <>
-                                    <div>
-                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                            <Tag size={9} className="inline mr-1" />Category Name
-                                        </label>
-                                        <input
-                                            name="name"
-                                            defaultValue={category?.name || ''}
-                                            placeholder="e.g. Beverages"
-                                            required
-                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                        />
-                                        {state.errors?.name && <p className="text-tp-xs font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
-                                        <input
-                                            name="shortName"
-                                            defaultValue={category?.short_name || ''}
-                                            placeholder="e.g. BEV"
-                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div>
-                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                            {labelFor(activeLang)}
-                                        </label>
-                                        <input
-                                            value={translations[activeLang]?.name || ''}
-                                            onChange={e => patchT(activeLang, 'name', e.target.value)}
-                                            placeholder={placeholderFor(activeLang)}
-                                            dir={isRTL(activeLang) ? 'rtl' : undefined}
-                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                            Short Name · {activeLang.toUpperCase()}
-                                        </label>
-                                        <input
-                                            value={translations[activeLang]?.short_name || ''}
-                                            onChange={e => patchT(activeLang, 'short_name', e.target.value)}
-                                            placeholder={isRTL(activeLang) ? 'مثال: مش' : 'e.g. BEV'}
-                                            dir={isRTL(activeLang) ? 'rtl' : undefined}
-                                            className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                        />
-                                    </div>
-                                    {/* Keep the default fields present in the form payload so
-                                     *  the API still receives name + shortName. */}
-                                    <input type="hidden" name="name" value={category?.name || ''} />
-                                    <input type="hidden" name="shortName" value={category?.short_name || ''} />
-                                </>
                             )}
-                            <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
-                        </div>
-                    </div>
 
-                    {/* Code + Barcode Prefix — side-by-side on the wider modal */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                <Hash size={9} className="inline mr-1" />Code (Unique)
-                            </label>
-                            <LockableCodeInput
-                                name="code"
-                                defaultValue={category?.code}
-                                suggestedValue={suggestedCode}
-                                isEdit={!!category}
-                                placeholder="e.g. 1001 or CAT-BEV"
-                                mono
-                                className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                            />
-                            <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
-                                Internal reference — not printed on barcodes.
-                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                                {activeLang === '__default__' ? (
+                                    <>
+                                        <div>
+                                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                                <Tag size={9} className="inline mr-1" />Category Name
+                                            </label>
+                                            <input
+                                                name="name"
+                                                value={nameDraft}
+                                                onChange={e => setNameDraft(e.target.value)}
+                                                placeholder="e.g. Beverages"
+                                                required
+                                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                            />
+                                            {state.errors?.name && <p className="text-tp-xs font-bold mt-0.5" style={{ color: 'var(--app-error)' }}>{state.errors.name[0]}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">Short Name</label>
+                                            <input
+                                                name="shortName"
+                                                defaultValue={category?.short_name || ''}
+                                                placeholder="e.g. BEV"
+                                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                                {labelFor(activeLang)}
+                                            </label>
+                                            <input
+                                                value={translations[activeLang]?.name || ''}
+                                                onChange={e => patchT(activeLang, 'name', e.target.value)}
+                                                placeholder={placeholderFor(activeLang)}
+                                                dir={isRTL(activeLang) ? 'rtl' : undefined}
+                                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                                Short Name · {activeLang.toUpperCase()}
+                                            </label>
+                                            <input
+                                                value={translations[activeLang]?.short_name || ''}
+                                                onChange={e => patchT(activeLang, 'short_name', e.target.value)}
+                                                placeholder={isRTL(activeLang) ? 'مثال: مش' : 'e.g. BEV'}
+                                                dir={isRTL(activeLang) ? 'rtl' : undefined}
+                                                className="w-full text-tp-sm font-bold px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                            />
+                                        </div>
+                                        {/* Keep default fields in form payload */}
+                                        <input type="hidden" name="name" value={nameDraft} />
+                                        <input type="hidden" name="shortName" value={category?.short_name || ''} />
+                                    </>
+                                )}
+                                <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                <Hash size={9} className="inline mr-1" />Barcode Prefix
-                            </label>
-                            <LockableCodeInput
-                                name="barcodePrefix"
-                                defaultValue={category?.barcode_prefix}
-                                isEdit={!!category?.barcode_prefix}
-                                placeholder="e.g. 0410"
-                                mono
-                                maxLength={10}
-                                inputFilter="digits"
-                                warning="Changing the barcode prefix will break every product barcode already printed in this category. Only change this if you understand the impact. Continue?"
-                                className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                        {/* ═══ Pane: HIERARCHY ═══ */}
+                        <div className={activePane === 'hierarchy' ? 'space-y-4' : 'hidden'}>
+                            <div>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Tree Position</h4>
+                                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                                    Where this category sits in the catalogue tree.
+                                </p>
+                            </div>
+
+                            {/* Root vs sub-category toggle (only when not pre-set via parentId prop) */}
+                            {!parentId && (
+                                <div
+                                    className="flex p-1 rounded-xl"
+                                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid var(--app-border)' }}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsSubCategory(false); setSelectedParent(''); }}
+                                        className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                        style={!isSubCategory ? {
+                                            background: 'var(--app-surface)',
+                                            color: 'var(--app-primary)',
+                                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                        } : { color: 'var(--app-muted-foreground)' }}
+                                    >
+                                        <FolderTree size={13} />
+                                        Root Category
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSubCategory(true)}
+                                        className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                        style={isSubCategory ? {
+                                            background: 'var(--app-surface)',
+                                            color: 'var(--app-primary)',
+                                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                        } : { color: 'var(--app-muted-foreground)' }}
+                                    >
+                                        <ChevronRight size={13} />
+                                        Sub-Category
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Parent picker */}
+                            {isSubCategory ? (
+                                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">
+                                        Parent Category
+                                    </label>
+                                    <CategoryCascader
+                                        allCategories={availableParents as any}
+                                        selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
+                                        onSelect={(id) => setSelectedParent(id || '')}
+                                        excludeId={category?.id}
+                                    />
+                                    <input type="hidden" name="parentId" value={selectedParent} />
+                                    {parentName && (
+                                        <div className="flex items-center gap-1.5 text-tp-xs font-bold mt-2" style={{ color: 'var(--app-success)' }}>
+                                            <ChevronRight size={10} />
+                                            Nesting under &ldquo;{parentName}&rdquo;
+                                            {parentCode && <span className="font-mono opacity-60">({parentCode})</span>}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <input type="hidden" name="parentId" value="" />
+                            )}
+
+                            <div
+                                className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
                                 style={{
-                                    background: 'var(--app-background)',
-                                    border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
+                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
+                                    color: 'var(--app-info, #3b82f6)',
                                 }}
-                            />
-                            {state.errors?.barcode_prefix ? (
-                                <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
-                                    {state.errors.barcode_prefix[0]}
-                                </p>
-                            ) : (
-                                <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
-                                    Auto-prefix for products — e.g. <code className="font-mono">0410</code> → <code className="font-mono">0410001</code>. Must be unique per category. <a href="/inventory/barcode" className="underline text-app-primary">Rules</a>.
-                                </p>
-                            )}
+                            >
+                                <Lightbulb size={12} className="mt-0.5 flex-shrink-0" />
+                                <span>
+                                    {isSubCategory
+                                        ? 'Sub-categories inherit barcode rules from their parent unless overridden in the Codes pane.'
+                                        : 'Root categories appear at the top of the catalogue. Move them under a parent later from the tree view.'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="pt-2 flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 py-2.5 rounded-xl text-tp-xs font-bold transition-all"
-                            style={{
-                                color: 'var(--app-muted-foreground)',
-                                border: '1px solid var(--app-border)',
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={pending}
-                            className="flex-1 py-2.5 rounded-xl text-tp-xs font-bold bg-app-primary text-white transition-all flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
-                            style={{
-                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
-                            }}
-                        >
-                            {pending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                            {category ? 'Update' : 'Create'}
-                        </button>
+                        {/* ═══ Pane: CODES ═══ */}
+                        <div className={activePane === 'codes' ? 'space-y-4' : 'hidden'}>
+                            <div>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Codes &amp; Barcodes</h4>
+                                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                                    Internal reference and the barcode prefix used when generating product barcodes.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                        <Hash size={9} className="inline mr-1" />Code (Unique)
+                                    </label>
+                                    <LockableCodeInput
+                                        name="code"
+                                        defaultValue={category?.code}
+                                        suggestedValue={suggestedCode}
+                                        isEdit={!!category}
+                                        placeholder="e.g. 1001 or CAT-BEV"
+                                        mono
+                                        className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                    />
+                                    <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                        Internal reference — not printed on barcodes.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                        <Barcode size={9} className="inline mr-1" />Barcode Prefix
+                                    </label>
+                                    <LockableCodeInput
+                                        name="barcodePrefix"
+                                        defaultValue={category?.barcode_prefix}
+                                        isEdit={!!category?.barcode_prefix}
+                                        placeholder="e.g. 0410"
+                                        mono
+                                        maxLength={10}
+                                        inputFilter="digits"
+                                        warning="Changing the barcode prefix will break every product barcode already printed in this category. Only change this if you understand the impact. Continue?"
+                                        className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                        style={{
+                                            background: 'var(--app-background)',
+                                            border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
+                                        }}
+                                    />
+                                    {state.errors?.barcode_prefix ? (
+                                        <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
+                                            {state.errors.barcode_prefix[0]}
+                                        </p>
+                                    ) : (
+                                        <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                            Auto-prefix for products — e.g. <code className="font-mono">0410</code> → <code className="font-mono">0410001</code>. Must be unique per category.{' '}
+                                            <a href="/inventory/barcode" className="underline text-app-primary">Rules</a>.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div
+                                className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)',
+                                    color: 'var(--app-warning, #f59e0b)',
+                                }}
+                            >
+                                <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+                                <span>
+                                    Both fields are immutable once products exist in the category. Changing them later requires reprinting every barcode label.
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </form>
+
+                {/* ── Footer (sticky, saves regardless of active pane) ── */}
+                <div
+                    className="px-5 py-3 flex items-center gap-2 flex-shrink-0"
+                    style={{
+                        borderTop: '1px solid var(--app-border)',
+                        background: 'color-mix(in srgb, var(--app-background) 40%, var(--app-surface))',
+                    }}
+                >
+                    <div className="flex-1 text-tp-xs font-bold text-app-muted-foreground">
+                        {panes.find(p => p.key === activePane)?.label} ·{' '}
+                        {activePane === 'identity' ? 'Required' : 'Optional'}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={pending}
+                        className="px-4 py-2 rounded-xl text-tp-xs font-bold transition-all disabled:opacity-50"
+                        style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        form="category-form"
+                        disabled={pending}
+                        className="px-5 py-2 rounded-xl text-tp-xs font-bold bg-app-primary text-white transition-all flex items-center gap-2 hover:brightness-110 disabled:opacity-50"
+                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                    >
+                        {pending ? <Loader2 className="animate-spin" size={14} /> : (category ? <Check size={14} /> : <Save size={14} />)}
+                        {category ? 'Update Category' : 'Create Category'}
+                    </button>
+                </div>
             </div>
         </div>
     );
