@@ -1,5 +1,5 @@
 """
-Phase 1 of the scoped-attribute-values feature.
+Phase 1 + 4 of the scoped-attribute-values feature.
 
 Single source of truth for picking which attribute VALUES are offered
 to a given product, and for validating that an assignment respects the
@@ -28,7 +28,9 @@ schema change.
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional
+import threading
+from contextlib import contextmanager
+from typing import Optional
 
 from django.db.models import Q, QuerySet
 
@@ -108,6 +110,29 @@ def values_for_product(group, product) -> QuerySet:
     return qs.distinct()
 
 
+# ── Phase 4: thread-local override flag for the m2m_changed signal ──
+# When assign_attribute_value(force=True) runs the underlying .add(), the
+# pre_add receiver in apps.inventory.signals checks this flag to know it
+# was a sanctioned override and shouldn't raise. We use a thread-local so
+# concurrent requests on the same gunicorn worker don't share the flag.
+_local = threading.local()
+
+
+@contextmanager
+def _scope_override():
+    """Mark the current thread as inside a sanctioned scope override."""
+    setattr(_local, 'override', True)
+    try:
+        yield
+    finally:
+        setattr(_local, 'override', False)
+
+
+def is_scope_override_active() -> bool:
+    """True when the current thread is inside an assign_attribute_value(force=True)."""
+    return bool(getattr(_local, 'override', False))
+
+
 def assign_attribute_value(product, value, *, force: bool = False) -> None:
     """
     Add `value` to product.attribute_values, validating the scope first.
@@ -118,8 +143,10 @@ def assign_attribute_value(product, value, *, force: bool = False) -> None:
     so audit can surface them.
 
     This is the ONLY supported way to assign a value. Bare
-    `product.attribute_values.add(value)` calls bypass scope validation
-    and are flagged by the AST linter (Phase 4).
+    `product.attribute_values.add(value)` calls also go through the
+    pre_add m2m signal (Phase 4), which calls check_scope and raises
+    ScopeViolation unless the thread-local override flag is active —
+    so the protection holds even if a caller bypasses this helper.
     """
     violations = check_scope(product, value)
     if violations and not force:
@@ -131,7 +158,10 @@ def assign_attribute_value(product, value, *, force: bool = False) -> None:
             getattr(product, 'pk', '?'), getattr(value, 'pk', '?'), violations,
         )
 
-    product.attribute_values.add(value)
+    # Wrap in the override context so the m2m_changed pre_add signal
+    # knows this .add() call already went through validation.
+    with _scope_override():
+        product.attribute_values.add(value)
 
 
 def check_scope(product, value) -> list[str]:
