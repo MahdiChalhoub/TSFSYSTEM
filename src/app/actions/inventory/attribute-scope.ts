@@ -28,19 +28,34 @@ export type ScopedBucket = {
     values: ScopedValue[]
 }
 
+/**
+ * Out-of-scope values returned when the picker requests
+ * include_out_of_scope=true. Each value is paired with the list of
+ * scope axes (category / country / brand) that excluded it from the
+ * normal offered set. The picker renders these as warning chips that
+ * require click-to-confirm before assignment.
+ */
+export type ExcludedValue = ScopedValue & {
+    failed_axes: string[]
+}
+
 export type ScopedValuesResponse = {
     group: { id: number; name: string; code?: string | null }
     buckets: ScopedBucket[]
+    /** Only populated when include_out_of_scope=true was passed. */
+    excluded?: ExcludedValue[]
 }
 
 export async function getScopedValuesForGroup(
     groupId: number,
     ctx: { categoryId?: number | null; countryId?: number | null; brandId?: number | null },
+    opts?: { includeOutOfScope?: boolean },
 ): Promise<ScopedValuesResponse | null> {
     const qs = new URLSearchParams()
     if (ctx.categoryId) qs.set('category_id', String(ctx.categoryId))
     if (ctx.countryId)  qs.set('country_id',  String(ctx.countryId))
     if (ctx.brandId)    qs.set('brand_id',    String(ctx.brandId))
+    if (opts?.includeOutOfScope) qs.set('include_out_of_scope', '1')
 
     try {
         const r = await erpFetch(

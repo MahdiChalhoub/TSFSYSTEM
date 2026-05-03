@@ -412,7 +412,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
         bucket so the operator sees exactly why each value is offered.
         """
         from apps.inventory.services.attribute_scope import (
-            scoped_values_for_product, attribute_scope_label,
+            scoped_values_for_product, attribute_scope_label, check_scope,
         )
 
         group = self.get_object()
@@ -430,7 +430,15 @@ class ProductAttributeViewSet(TenantModelViewSet):
             'brand_id':    self._qp_int(request, 'brand_id')    or self._qp_int(request, 'brand'),
         }
 
-        qs = scoped_values_for_product(group, product).select_related('parent')
+        # Phase-5 close-out: when include_out_of_scope=true, also return
+        # the values whose scope EXCLUDES this product, so the picker
+        # can render them with a warning chip + click-to-confirm
+        # instead of hiding them entirely. Default false to keep the
+        # existing pre-existing callers (smart-form) on the
+        # offered-only path.
+        include_excluded = str(request.query_params.get('include_out_of_scope', '')).lower() in ('1', 'true', 'yes')
+
+        offered_qs = scoped_values_for_product(group, product).select_related('parent')
 
         # Bucket by scope source so the UI can render sections.
         buckets = {
@@ -440,7 +448,7 @@ class ProductAttributeViewSet(TenantModelViewSet):
             'brand':       {'key': 'brand',       'label': 'Brand-specific',     'values': []},
             'composite':   {'key': 'composite',   'label': 'Multi-scope',        'values': []},
         }
-        for v in qs:
+        for v in offered_qs:
             has_cats = self._has_any_scope(v, 'scope_categories')
             has_cous = self._has_any_scope(v, 'scope_countries')
             has_bras = self._has_any_scope(v, 'scope_brands')
@@ -463,10 +471,34 @@ class ProductAttributeViewSet(TenantModelViewSet):
                 'scope_label': attribute_scope_label(v),
             })
 
-        return Response({
+        # Phase-5 close-out: gather out-of-scope values too. The picker
+        # shows them in a separate "Out of scope" bucket with the
+        # failing axes per value so the operator can click-to-confirm
+        # an override — beats the silent "the value just doesn't show
+        # up" behaviour when an operator legitimately needs to override.
+        excluded: list[dict] = []
+        if include_excluded:
+            offered_ids = set(offered_qs.values_list('id', flat=True))
+            all_values = group.children.exclude(id__in=offered_ids).select_related('parent')
+            for v in all_values:
+                violations = check_scope(product, v)
+                if not violations:
+                    continue  # shouldn't happen — defensive
+                excluded.append({
+                    'id': v.id,
+                    'name': v.name,
+                    'code': v.code,
+                    'scope_label': attribute_scope_label(v),
+                    'failed_axes': violations,
+                })
+
+        result = {
             'group': {'id': group.id, 'name': group.name, 'code': group.code},
             'buckets': [b for b in buckets.values() if b['values']],
-        })
+        }
+        if include_excluded:
+            result['excluded'] = excluded
+        return Response(result)
 
 
     # Module-level helpers needed by values-for-product (kept as class

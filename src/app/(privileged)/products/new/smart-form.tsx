@@ -5,7 +5,7 @@ import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
 import { getBrandsByCategory } from '@/app/actions/inventory/brands';
-import { getScopedValuesForGroup, type ScopedBucket } from '@/app/actions/inventory/attribute-scope';
+import { getScopedValuesForGroup, type ScopedBucket, type ExcludedValue } from '@/app/actions/inventory/attribute-scope';
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
 import {
@@ -1176,23 +1176,30 @@ function AttrGroupSelector({
     // Empty buckets array → show flat group.children (pre-migration / no
     // scopes set on any value).
     const [buckets, setBuckets] = useState<ScopedBucket[] | null>(null);
+    // Phase-5 close-out: out-of-scope values kept in a separate
+    // "Restricted" bucket so the operator sees them with a warning chip
+    // + click-to-confirm rather than disappearing silently.
+    const [excluded, setExcluded] = useState<ExcludedValue[]>([]);
+    // Track which excluded ids the operator has explicitly approved
+    // (one-click confirm). Approved ids render as normal selectable
+    // chips; un-approved render greyed with a warning icon.
+    const [approvedExcluded, setApprovedExcluded] = useState<Set<number>>(new Set());
     useEffect(() => {
         let cancelled = false;
-        // Skip the fetch entirely when we have no product context — the
-        // result would be identical to group.children (everything is
-        // universal from the picker's POV).
         if (!productCtx || (!productCtx.categoryId && !productCtx.countryId && !productCtx.brandId)) {
             setBuckets(null);
+            setExcluded([]);
             return;
         }
-        getScopedValuesForGroup(group.id, productCtx).then(r => {
+        getScopedValuesForGroup(group.id, productCtx, { includeOutOfScope: true }).then(r => {
             if (cancelled) return;
-            // Only show bucket sections when more than one bucket is
-            // active OR there's a non-universal bucket — otherwise the
-            // flat group.children rendering is cleaner.
-            if (!r || r.buckets.length === 0) { setBuckets(null); return; }
-            const onlyUniversal = r.buckets.length === 1 && r.buckets[0].key === 'universal';
-            setBuckets(onlyUniversal ? null : r.buckets);
+            if (!r || r.buckets.length === 0) {
+                setBuckets(null);
+            } else {
+                const onlyUniversal = r.buckets.length === 1 && r.buckets[0].key === 'universal';
+                setBuckets(onlyUniversal ? null : r.buckets);
+            }
+            setExcluded(r?.excluded ?? []);
         });
         return () => { cancelled = true; };
     }, [group.id, productCtx?.categoryId, productCtx?.countryId, productCtx?.brandId]);
@@ -1257,6 +1264,60 @@ function AttrGroupSelector({
                             </div>
                         </div>
                     ))}
+                    {/* Phase-5 close-out: out-of-scope values rendered
+                        with a warning chip + click-to-confirm. The
+                        operator can still pick them — the click flips
+                        the value into approvedExcluded so the second
+                        click selects normally. Beats the silent
+                        "the value just doesn't appear" UX. */}
+                    {excluded.length > 0 && (
+                        <div>
+                            <div className="text-[8px] font-bold uppercase tracking-widest mb-1 flex items-center gap-1.5"
+                                style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                <span>⚠ Restricted by scope</span>
+                                <span className="opacity-60">·</span>
+                                <span>{excluded.length}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {excluded.map(v => {
+                                    const approved = approvedExcluded.has(v.id);
+                                    const isSel = v.id === selectedId;
+                                    if (approved) {
+                                        return (
+                                            <Chip
+                                                key={v.id}
+                                                id={v.id}
+                                                name={v.name}
+                                                scopeLabel={v.scope_label}
+                                                selected={isSel}
+                                                onClick={() => onSelect(isSel ? null : v.id)}
+                                            />
+                                        );
+                                    }
+                                    return (
+                                        <button
+                                            key={v.id}
+                                            type="button"
+                                            onClick={() => setApprovedExcluded(prev => new Set(prev).add(v.id))}
+                                            title={`Out of scope on: ${v.failed_axes.join(', ')}. Click to override.`}
+                                            className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all"
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)',
+                                                color: 'var(--app-warning, #f59e0b)',
+                                                borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 35%, transparent)',
+                                            }}
+                                        >
+                                            <span>⚠</span>
+                                            <span>{v.name}</span>
+                                            <span className="text-[8px] font-mono opacity-70">
+                                                Override · {v.failed_axes.join('+')}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="px-3 pb-2.5 flex flex-wrap gap-1.5">

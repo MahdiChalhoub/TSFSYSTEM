@@ -55,6 +55,14 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
         suggestion: ScopeSuggestion
         impact: ScopeImpact
     } | null>(null)
+    // Phase 5 (close-out task 3): bulk-confirm dialog for Accept-All.
+    // Holds the list of risky suggestions (impact > 0) along with the
+    // safe ones already applied silently. Operator can apply, skip, or
+    // cancel the risky group as a batch.
+    const [bulkConfirm, setBulkConfirm] = useState<{
+        risky: { suggestion: ScopeSuggestion; impact: ScopeImpact }[]
+        safeAppliedCount: number
+    } | null>(null)
 
     // Group suggestions by attribute group for visual structure.
     const grouped = useMemo(() => {
@@ -119,10 +127,13 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
         setSuggestions(prev => prev.filter(x => x.value_id !== s.value_id))
     }
 
-    const applyAll = () => {
+    // Internal: actually apply the given list of suggestions and refresh.
+    // Used by both the safe-batch path inside applyAll and the bulkConfirm
+    // "Apply Risky" button.
+    const applyMany = (toApply: ScopeSuggestion[], suffix?: string) => {
         startTransition(async () => {
             let ok = 0; let fail = 0
-            for (const s of suggestions) {
+            for (const s of toApply) {
                 const a = accepted[s.value_id]
                 const r = await applyScopeSuggestion(s.value_id, {
                     categories: Array.from(a.categories),
@@ -131,9 +142,65 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
                 })
                 if (r.success) ok++; else fail++
             }
-            toast.success(`Applied ${ok} suggestion${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''}`)
+            const msg = `Applied ${ok} suggestion${ok === 1 ? '' : 's'}`
+                + (fail ? ` · ${fail} failed` : '')
+                + (suffix ? ` ${suffix}` : '')
+            toast.success(msg)
             router.refresh()
-            setSuggestions([])
+            setSuggestions(prev => prev.filter(s => !toApply.some(a => a.value_id === s.value_id)))
+            setBulkConfirm(null)
+        })
+    }
+
+    const applyAll = () => {
+        startTransition(async () => {
+            // Preview impact for every suggestion in parallel — don't
+            // serialize the network calls. Each result tells us whether
+            // the apply would orphan products (risky) or not (safe).
+            const previews = await Promise.all(
+                suggestions.map(async s => {
+                    const a = accepted[s.value_id]
+                    const impact = await previewScopeImpact(s.value_id, {
+                        add_categories: Array.from(a.categories),
+                        add_countries:  Array.from(a.countries),
+                        add_brands:     Array.from(a.brands),
+                    })
+                    return { suggestion: s, impact }
+                })
+            )
+
+            const safe   = previews.filter(p => !p.impact || p.impact.products_that_would_lose_access === 0)
+            const risky  = previews.filter(p => p.impact && p.impact.products_that_would_lose_access > 0)
+
+            // Apply every safe suggestion immediately. If there are any
+            // risky ones, surface a single bulk-confirm dialog after the
+            // safe batch finishes so the operator decides on them
+            // together rather than seeing N modals.
+            if (safe.length > 0) {
+                let ok = 0; let fail = 0
+                for (const { suggestion: s } of safe) {
+                    const a = accepted[s.value_id]
+                    const r = await applyScopeSuggestion(s.value_id, {
+                        categories: Array.from(a.categories),
+                        countries:  Array.from(a.countries),
+                        brands:     Array.from(a.brands),
+                    })
+                    if (r.success) ok++; else fail++
+                }
+                if (risky.length === 0) {
+                    toast.success(`Applied ${ok} suggestion${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''}`)
+                    router.refresh()
+                    setSuggestions([])
+                    return
+                }
+                // Hand the risky batch to the bulk-confirm dialog.
+                toast.success(`Applied ${ok} safe suggestion${ok === 1 ? '' : 's'}${fail ? ` · ${fail} failed` : ''}`)
+                setSuggestions(prev => prev.filter(s => !safe.some(p => p.suggestion.value_id === s.value_id)))
+                setBulkConfirm({ risky: risky as { suggestion: ScopeSuggestion; impact: ScopeImpact }[], safeAppliedCount: ok })
+            } else if (risky.length > 0) {
+                // All suggestions are risky — go straight to bulk confirm.
+                setBulkConfirm({ risky: risky as { suggestion: ScopeSuggestion; impact: ScopeImpact }[], safeAppliedCount: 0 })
+            }
         })
     }
 
@@ -167,6 +234,70 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
             {/* Phase 5: confirm dialog when an apply would orphan
                 products. Lists the count + first 10 affected so the
                 operator sees the blast radius before clicking confirm. */}
+            {/* Phase 5 (close-out task 3): bulk-confirm dialog when
+                Accept-All splits into safe + risky batches. Shows a
+                summary list of risky suggestions with per-row impact
+                count so operator decides on the whole group at once. */}
+            {bulkConfirm && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center animate-in fade-in duration-150"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setBulkConfirm(null) }}>
+                    <div className="w-full max-w-lg mx-4 rounded-2xl p-5 animate-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div className="flex items-start gap-2 mb-3 flex-shrink-0">
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'color-mix(in srgb, var(--app-warning) 15%, transparent)', color: 'var(--app-warning)' }}>
+                                <Sparkles size={16} />
+                            </div>
+                            <div>
+                                <h3 className="text-tp-md font-bold text-app-foreground">
+                                    {bulkConfirm.risky.length} risky suggestion{bulkConfirm.risky.length === 1 ? '' : 's'} need confirmation
+                                </h3>
+                                <p className="text-tp-xs text-app-muted-foreground">
+                                    {bulkConfirm.safeAppliedCount > 0
+                                        ? <>Already applied <strong>{bulkConfirm.safeAppliedCount}</strong> safe one{bulkConfirm.safeAppliedCount === 1 ? '' : 's'}. The remaining would orphan products from their values.</>
+                                        : <>These would each orphan products from their values. Review the impact below.</>}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1 mb-3">
+                            <ul className="space-y-1.5">
+                                {bulkConfirm.risky.map(({ suggestion: s, impact }) => (
+                                    <li key={s.value_id} className="rounded-lg p-2.5 flex items-start gap-2"
+                                        style={{ background: 'var(--app-background)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-tp-sm font-bold text-app-foreground truncate">
+                                                {s.group_name} · {s.value_name}
+                                            </div>
+                                            <div className="text-tp-xs text-app-muted-foreground mt-0.5">
+                                                <span className="font-bold" style={{ color: 'var(--app-warning)' }}>
+                                                    −{impact.products_that_would_lose_access}
+                                                </span>
+                                                {' '}of {impact.products_currently_using_value} product
+                                                {impact.products_currently_using_value === 1 ? '' : 's'} would lose this value
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="flex gap-2 justify-end flex-shrink-0">
+                            <button onClick={() => setBulkConfirm(null)}
+                                className="px-4 py-2 rounded-xl text-tp-xs font-bold border"
+                                style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
+                                Cancel All
+                            </button>
+                            <button onClick={() => applyMany(bulkConfirm.risky.map(r => r.suggestion), '(risky batch)')}
+                                disabled={pending}
+                                className="px-4 py-2 rounded-xl text-tp-xs font-bold bg-app-warning text-white flex items-center gap-2 hover:brightness-110 transition-all disabled:opacity-50">
+                                {pending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                Apply All Anyway ({bulkConfirm.risky.length})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {pendingConfirm && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center animate-in fade-in duration-150"
                     style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
