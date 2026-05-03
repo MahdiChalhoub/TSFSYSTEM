@@ -91,6 +91,8 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
+    const attributesDirty = formData.get('attributesDirty') === '1';
+    const brandsDirty = formData.get('brandsDirty') === '1';
     const attributeIds = readIntList(formData, 'attributeIds');
     const brandIds = readIntList(formData, 'brandIds');
     let translations: Record<string, { name?: string; short_name?: string }> = {};
@@ -106,21 +108,25 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     }
 
     try {
+        // Only include `attributes` in the payload when the user actually
+        // touched the Attributes pane — otherwise the serializer would
+        // happily overwrite the M2M with [] on every save.
+        const payload: Record<string, unknown> = {
+            name,
+            parent: parentId,
+            code,
+            short_name: shortName,
+            barcode_prefix: barcodePrefix,
+            translations,
+            name_fr: nameFr,
+            name_ar: nameAr,
+        };
+        if (attributesDirty) payload.attributes = attributeIds;
+
         const result = await erpFetch('categories/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name,
-                parent: parentId, // DRF expects PK of FK. Field name 'parent' in model.
-                code,
-                short_name: shortName,
-                barcode_prefix: barcodePrefix,
-                translations,
-                name_fr: nameFr,
-                name_ar: nameAr,
-                // Category owns the attributes M2M, so this writes through directly.
-                attributes: attributeIds,
-            })
+            body: JSON.stringify(payload),
         });
 
         // erpFetch may return error object instead of throwing
@@ -134,9 +140,12 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
         }
 
-        // Brand links are reverse M2M — sync via per-brand PATCHes.
+        // Brand links are reverse M2M — sync via per-brand PATCHes,
+        // but ONLY if the user actually touched the Brands pane. The
+        // empty-set case must not run blindly (it would unlink every
+        // brand that already references this category).
         const newId = (result as any)?.id;
-        if (newId && brandIds.length > 0) {
+        if (newId && brandsDirty) {
             await syncBrandLinks(Number(newId), brandIds);
         }
 
@@ -160,6 +169,8 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
+    const attributesDirty = formData.get('attributesDirty') === '1';
+    const brandsDirty = formData.get('brandsDirty') === '1';
     const attributeIds = readIntList(formData, 'attributeIds');
     const brandIds = readIntList(formData, 'brandIds');
     let translations: Record<string, { name?: string; short_name?: string }> = {};
@@ -175,20 +186,24 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             return { message: 'Category cannot be its own parent' };
         }
 
+        // Only forward `attributes` when the user touched the pane —
+        // otherwise the serializer would overwrite the M2M with [].
+        const payload: Record<string, unknown> = {
+            name,
+            parent: parentId,
+            code,
+            short_name: shortName,
+            barcode_prefix: barcodePrefix,
+            translations,
+            name_fr: nameFr,
+            name_ar: nameAr,
+        };
+        if (attributesDirty) payload.attributes = attributeIds;
+
         const result = await erpFetch(`categories/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name,
-                parent: parentId,
-                code,
-                short_name: shortName,
-                barcode_prefix: barcodePrefix,
-                translations,
-                name_fr: nameFr,
-                name_ar: nameAr,
-                attributes: attributeIds,
-            })
+            body: JSON.stringify(payload),
         });
 
         if (hasError(result)) {
@@ -200,8 +215,11 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
         }
 
-        // Brand links live on the Brand model — sync via per-brand PATCHes.
-        await syncBrandLinks(id, brandIds);
+        // Same dirty-gate as create — never run syncBrandLinks blindly,
+        // it would clear every existing brand→category link otherwise.
+        if (brandsDirty) {
+            await syncBrandLinks(id, brandIds);
+        }
 
         revalidatePath('/inventory/categories');
         return { message: 'success' };

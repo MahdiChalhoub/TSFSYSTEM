@@ -36,6 +36,12 @@ type PaneKey = 'identity' | 'hierarchy' | 'brands' | 'attributes';
 
 const initialState: CategoryState = { message: '', errors: {} };
 
+// Module-level cache for the next-code peek. The sequence backend is slow
+// (~300-800ms) and the value rarely changes between modal opens within
+// the same session; cache the first result so subsequent opens stamp the
+// suggestion synchronously instead of showing a blank field that pops in.
+let _categoryCodeCache: string | null = null;
+
 // Shape consumed by CategoryTreeSelector. Brands are flat (children = []),
 // attributes are roots with their values nested as children.
 type TreeNode = {
@@ -60,7 +66,10 @@ export function CategoryFormModal({
     const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
     const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
 
-    const [suggestedCode, setSuggestedCode] = useState<string>('');
+    // Seed from module-level cache so the Code field renders pre-filled
+    // on the modal's first paint when this isn't the very first open in
+    // the session. Avoids the "code pops in 500ms later" flicker.
+    const [suggestedCode, setSuggestedCode] = useState<string>(_categoryCodeCache ?? '');
 
     // ── Locales + translations ──
     const [locales, setLocales] = useState<LocaleCode[]>(
@@ -79,9 +88,13 @@ export function CategoryFormModal({
     const [activeLang, setActiveLang] = useState<string>('__default__');
     const [nameDraft, setNameDraft] = useState<string>(category?.name || '');
 
-    // ── Brand + Attribute selection (M2M, persisted via separate
-    //    PATCHes in the server action — see categories.ts).  Initial
-    //    state is hydrated from the category row when editing. ──
+    // ── Brand + Attribute selection (M2M).
+    // Hydrated from the category row when editing. The dirty flags below
+    // are CRITICAL: without them, opening Edit and clicking Update would
+    // send `attributes: []` (clearing the M2M) and call syncBrandLinks
+    // with an empty set (removing this category from every brand). We
+    // only forward the pane data to the action when the user has
+    // actually touched the chips. ──
     const [brandTree, setBrandTree] = useState<TreeNode[]>([]);
     const [attrTree, setAttrTree] = useState<TreeNode[]>([]);
     const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(
@@ -98,7 +111,10 @@ export function CategoryFormModal({
                     : [],
         ),
     );
+    const [brandsDirty, setBrandsDirty] = useState(false);
+    const [attrsDirty, setAttrsDirty] = useState(false);
     const [loadingLinks, setLoadingLinks] = useState(false);
+    const [linksLoaded, setLinksLoaded] = useState(false);
 
     useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
 
@@ -108,20 +124,43 @@ export function CategoryFormModal({
         setSelectedParent(parentId || category?.parent || '');
         setActivePane('identity');
         setNameDraft(category?.name || '');
+        // Reset dirty flags + reload tracker on each open so the next save
+        // doesn't blindly clear M2M data the user never touched.
+        setBrandsDirty(false);
+        setAttrsDirty(false);
+        setLinksLoaded(false);
+
         if (!category) {
-            peekNextCode('CATEGORY').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+            // Fire and update cache. If we already had a cached value the
+            // input is already showing it — this just refreshes for the
+            // next open.
+            peekNextCode('CATEGORY')
+                .then(code => {
+                    _categoryCodeCache = code;
+                    setSuggestedCode(code);
+                })
+                .catch(() => {/* keep whatever we already had */});
         } else {
             setSuggestedCode('');
         }
+
         getCatalogueLanguages().then(next => {
             setLocales(prev =>
                 prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next,
             );
         }).catch(() => { /* keep cached */ });
 
-        // Load brands + attributes lazily so the modal doesn't need new
-        // props from CategoriesClient. Both endpoints are fast (read-only
-        // lists) and the result is cached for the lifetime of the modal.
+        // NOTE: brand + attribute trees are NOT loaded here. They load on
+        // demand the first time the user opens the Brands or Attributes
+        // pane (see ensureLinksLoaded below). Saves a noticeable chunk of
+        // the modal's open time when the user only edits Identity.
+    }, [isOpen, parentId, category]);
+
+    // Lazy loader for the Brands + Attributes panes. First time the user
+    // clicks one of those tabs we fetch both (cheaper to fetch together
+    // than to round-trip twice). Subsequent visits are no-ops.
+    const ensureLinksLoaded = () => {
+        if (linksLoaded || loadingLinks) return;
         setLoadingLinks(true);
         Promise.all([
             erpFetch('inventory/brands/').then((r: any) =>
@@ -129,13 +168,9 @@ export function CategoryFormModal({
             ).catch(() => []),
             getAttributeTree().catch(() => []),
         ]).then(([brands, attrs]) => {
-            // Brands are a flat list — pass `parent: null, children: []` so
-            // CategoryTreeSelector renders them as one indented level.
             setBrandTree((brands as any[]).map(b => ({
                 id: b.id, name: b.name, code: b.code, parent: null, children: [],
             })));
-            // Attributes are roots with nested values. Recursively map both
-            // levels so the selector shows expandable groups (Size > S/M/L).
             const mapAttr = (a: any): TreeNode => ({
                 id: a.id,
                 name: a.name,
@@ -144,8 +179,9 @@ export function CategoryFormModal({
                 children: Array.isArray(a.children) ? a.children.map(mapAttr) : [],
             });
             setAttrTree((attrs as any[]).map(mapAttr));
+            setLinksLoaded(true);
         }).finally(() => setLoadingLinks(false));
-    }, [isOpen, parentId, category]);
+    };
 
     // ── Tree exclusion (can't pick self or descendant as parent) ──
     const descendants = useMemo(() => {
@@ -288,7 +324,10 @@ export function CategoryFormModal({
                                 <button
                                     key={p.key}
                                     type="button"
-                                    onClick={() => setActivePane(p.key)}
+                                    onClick={() => {
+                                        setActivePane(p.key);
+                                        if (p.key === 'brands' || p.key === 'attributes') ensureLinksLoaded();
+                                    }}
                                     className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-tp-sm font-bold transition-all relative"
                                     style={{
                                         background: active ? 'var(--app-surface)' : 'transparent',
@@ -355,7 +394,10 @@ export function CategoryFormModal({
                                 <button
                                     key={p.key}
                                     type="button"
-                                    onClick={() => setActivePane(p.key)}
+                                    onClick={() => {
+                                        setActivePane(p.key);
+                                        if (p.key === 'brands' || p.key === 'attributes') ensureLinksLoaded();
+                                    }}
                                     className="flex flex-col items-center justify-center gap-0.5 py-2 text-tp-xxs font-bold transition-all min-h-[52px]"
                                     style={{
                                         color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
@@ -738,12 +780,21 @@ export function CategoryFormModal({
                                 <CategoryTreeSelector
                                     categories={brandTree as any}
                                     selectedIds={Array.from(selectedBrandIds)}
-                                    onChange={(ids) => setSelectedBrandIds(new Set(ids))}
+                                    onChange={(ids) => {
+                                        setSelectedBrandIds(new Set(ids));
+                                        setBrandsDirty(true);
+                                    }}
                                     maxHeight="max-h-[320px]"
                                 />
                             )}
 
-                            {Array.from(selectedBrandIds).map(id => (
+                            {/* Only emit hidden inputs once the user has touched
+                                the chips. Without this, an Edit save would clear
+                                every brand link this category currently has. */}
+                            {brandsDirty && (
+                                <input type="hidden" name="brandsDirty" value="1" />
+                            )}
+                            {brandsDirty && Array.from(selectedBrandIds).map(id => (
                                 <input key={id} type="hidden" name="brandIds" value={id} />
                             ))}
 
@@ -782,12 +833,21 @@ export function CategoryFormModal({
                                 <CategoryTreeSelector
                                     categories={attrTree as any}
                                     selectedIds={Array.from(selectedAttrIds)}
-                                    onChange={(ids) => setSelectedAttrIds(new Set(ids))}
+                                    onChange={(ids) => {
+                                        setSelectedAttrIds(new Set(ids));
+                                        setAttrsDirty(true);
+                                    }}
                                     maxHeight="max-h-[320px]"
                                 />
                             )}
 
-                            {Array.from(selectedAttrIds).map(id => (
+                            {/* Same dirty-only emission as brands — avoids
+                                clearing the M2M when the user only edited
+                                Identity fields. */}
+                            {attrsDirty && (
+                                <input type="hidden" name="attributesDirty" value="1" />
+                            )}
+                            {attrsDirty && Array.from(selectedAttrIds).map(id => (
                                 <input key={id} type="hidden" name="attributeIds" value={id} />
                             ))}
 
