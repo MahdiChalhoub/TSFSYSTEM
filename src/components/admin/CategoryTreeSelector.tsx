@@ -80,10 +80,11 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
 
     return (
         <div>
-            {/* Row */}
+            {/* Row — smoothed background + border-left transitions so the
+                hover and select states fade in gently rather than snapping. */}
             <div
                 onClick={() => onToggle(category.id)}
-                className="group flex items-center gap-2 cursor-pointer transition-colors duration-150 relative"
+                className="group flex items-center gap-2 cursor-pointer relative"
                 style={{
                     paddingLeft: `${indent}px`,
                     paddingRight: '12px',
@@ -95,6 +96,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     borderLeft: isSelected
                         ? '2px solid var(--app-primary)'
                         : '2px solid transparent',
+                    transition: 'background 180ms ease, border-color 180ms ease',
                 }}
                 onMouseEnter={e => {
                     if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 60%, transparent)';
@@ -125,15 +127,18 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     </>
                 )}
 
-                {/* Chevron — invisible spacer when no children, keeps alignment */}
+                {/* Chevron — invisible spacer when no children, keeps alignment.
+                    Smoothed transition for the rotate + color so expand/collapse
+                    feels continuous, not snap. */}
                 {hasChildren ? (
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
-                        className="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded transition-all"
+                        className="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded"
                         style={{
                             color: 'var(--app-text-faint)',
-                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)',
+                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                            transition: 'transform 200ms cubic-bezier(.4,0,.2,1), color 150ms',
                         }}
                         title={isExpanded ? 'Collapse' : 'Expand'}>
                         <ChevronRight size={12} />
@@ -142,13 +147,14 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     <div className="w-4 flex-shrink-0" />
                 )}
 
-                {/* Custom checkbox — matches the row hover/select feel */}
+                {/* Custom checkbox with eased transition so check-fill animates */}
                 <div
                     onClick={(e) => { e.stopPropagation(); onToggle(category.id); }}
-                    className="w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                    className="w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0"
                     style={{
                         borderColor: isSelected ? 'var(--app-primary)' : 'var(--app-border)',
                         background: isSelected ? 'var(--app-primary)' : 'transparent',
+                        transition: 'border-color 180ms ease, background 180ms ease',
                     }}
                     aria-checked={isSelected}
                     role="checkbox">
@@ -161,6 +167,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     className="flex-shrink-0"
                     style={{
                         color: isSelected ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                        transition: 'color 180ms ease',
                     }} />
 
                 {/* Name */}
@@ -181,9 +188,10 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                 )}
             </div>
 
-            {/* Children */}
+            {/* Children — fade + slide in when expanded so the tree opens
+                continuously instead of popping. */}
             {isExpanded && hasChildren && (
-                <div className="relative">
+                <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
                     {category.children!.map((child, idx) => (
                         <CategoryTreeNode
                             key={child.id}

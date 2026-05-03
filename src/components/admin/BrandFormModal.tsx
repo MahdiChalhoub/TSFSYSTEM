@@ -302,8 +302,12 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                         })}
                     </div>
 
-                    {/* Pane content — all panes stay mounted so form captures everything */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-w-0">
+                    {/* Pane content — all panes stay mounted so form captures
+                        everything. min-h locks the body height so swapping
+                        language tabs / panes / selecting countries doesn't
+                        bounce the modal up and down. */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-w-0"
+                        style={{ minHeight: '460px' }}>
                         {hasError && (
                             <div
                                 className="mb-4 p-3 rounded-xl flex items-center gap-2 text-tp-sm font-bold animate-in slide-in-from-top-1 duration-200"
@@ -387,7 +391,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Short Name</label>
+                                        <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">Code</label>
                                         <LockableCodeInput
                                             name="shortName"
                                             defaultValue={brand?.short_name}
@@ -418,7 +422,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                     </div>
                                     <div>
                                         <label className="text-tp-xs font-bold text-app-muted-foreground mb-1 block">
-                                            Short · {activeLang.toUpperCase()}
+                                            Code · {activeLang.toUpperCase()}
                                         </label>
                                         <input
                                             value={translations[activeLang]?.short_name || ''}
@@ -427,6 +431,9 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                                             dir={isRTL(activeLang) ? 'rtl' : undefined}
                                             className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2.5 text-tp-md font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                         />
+                                        <p className="text-tp-xxs font-bold text-app-muted-foreground mt-1">
+                                            3-letter abbreviation in {labelFor(activeLang)}.
+                                        </p>
                                     </div>
                                     <input type="hidden" name="name" value={nameDraft} />
                                     <input type="hidden" name="shortName" value={brand?.short_name || ''} />
