@@ -193,7 +193,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
             </div>
 
             {isModalOpen && (
-                <BrandFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} brand={editingBrand as any} countries={countries} categories={categories} />
+                <BrandFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} brand={editingBrand as any} countries={countries} categories={categories} attributes={[]} />
             )}
         </div>
     );

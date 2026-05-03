@@ -246,6 +246,103 @@ const REQUEST_STATUS_TO_PIPELINE: Record<string, PipelineStatus> = {
     FAILED:     'FAILED',
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Recovery Policy — auto-recycle terminal states back to AVAILABLE
+// ═══════════════════════════════════════════════════════════════════
+//
+// Terminal states (RECEIVED, CANCELLED, REJECTED, FAILED) aren't truly
+// terminal — once enough time passes (or a specific reason resolves),
+// the product should be ready for the next request. Hard-coding would
+// trap operators; this config lets every tenant pick the cadence.
+//
+// The defaults below are conservative — the org admin can tune via the
+// settings UI (or by editing the JSON in /finance/settings/regional →
+// Procurement Recovery in a future ticket).
+
+/** Per-terminal-state recovery rule. `autoRecoverAfterDays = null` means
+ *  "stays terminal forever, only manual action clears it". */
+export interface RecoveryRule {
+    autoRecoverAfterDays: number | null
+    /** For REJECTED only — per-reason override. A reason listed here
+     *  uses its own days value; reasons not listed use the top-level
+     *  `autoRecoverAfterDays`. Map keys are the reason category strings
+     *  emitted by the backend (e.g. 'PRICE_HIGH', 'NO_STOCK'). */
+    perReasonDays?: Record<string, number | null>
+}
+
+export interface PipelineRecoveryPolicy {
+    RECEIVED:  RecoveryRule
+    CANCELLED: RecoveryRule
+    REJECTED:  RecoveryRule
+    FAILED:    RecoveryRule
+}
+
+/** Sensible defaults — applied when the tenant hasn't configured their own.
+ *
+ *   RECEIVED  → 0 days  — once the goods landed, the cycle is complete;
+ *                         the product chip flips back to Available
+ *                         immediately so the next request can start.
+ *   CANCELLED → 7 days  — short cooldown so operators can see the
+ *                         "Cancelled" stamp briefly, then the row
+ *                         disappears from the active filters.
+ *   REJECTED  → 30 days — longer because rejections often require human
+ *                         follow-up (price renegotiation, finding a new
+ *                         supplier). Per-reason overrides:
+ *                           NO_STOCK        →  3 days (stock returns fast)
+ *                           PRICE_HIGH      → 14 days (renegotiation)
+ *                           NEEDS_REVISION  →  3 days (operator re-issues)
+ *                           DAMAGED         → null  (manual decision)
+ *                           OTHER           → 30 days
+ *   FAILED    → null    — manual review only. System failures usually
+ *                         indicate a deeper problem we don't want to
+ *                         silently retry without a human looking.
+ */
+export const DEFAULT_RECOVERY_POLICY: PipelineRecoveryPolicy = {
+    RECEIVED:  { autoRecoverAfterDays: 0 },
+    CANCELLED: { autoRecoverAfterDays: 7 },
+    REJECTED:  {
+        autoRecoverAfterDays: 30,
+        perReasonDays: {
+            NO_STOCK:       3,
+            PRICE_HIGH:     14,
+            NEEDS_REVISION: 3,
+            DAMAGED:        null,
+            OTHER:          30,
+        },
+    },
+    FAILED:    { autoRecoverAfterDays: null },
+}
+
+/** Apply a recovery policy to a possibly-terminal pipeline state. If
+ *  the row has been in the terminal state long enough (per the rule),
+ *  return NONE (=Available); otherwise return the input unchanged.
+ *
+ *  Pure function — no side effects. The caller passes when the row
+ *  entered the terminal state and the active policy. Use this in the
+ *  pipeline chip renderer so the same row "ages out" of Failed/Cancelled
+ *  on its own without a backend cron.
+ */
+export function applyRecoveryPolicy(
+    status: PipelineStatus,
+    terminalSince: Date | string | null,
+    policy: PipelineRecoveryPolicy = DEFAULT_RECOVERY_POLICY,
+    rejectionReason?: string,
+): PipelineStatus {
+    if (status !== 'RECEIVED' && status !== 'CANCELLED' && status !== 'REJECTED' && status !== 'FAILED') {
+        return status
+    }
+    const rule = policy[status]
+    let days = rule.autoRecoverAfterDays
+    if (status === 'REJECTED' && rejectionReason && rule.perReasonDays && rejectionReason in rule.perReasonDays) {
+        days = rule.perReasonDays[rejectionReason]
+    }
+    if (days === null) return status              // never auto-recover
+    if (!terminalSince) return status              // can't compute age
+    const ageMs = Date.now() - new Date(terminalSince).getTime()
+    const ageDays = ageMs / (24 * 60 * 60 * 1000)
+    return ageDays >= days ? 'NONE' : status
+}
+
 /** Translate a single underlying entity's state into the canonical
  *  pipeline. Pass the entity kind so we pick the right table. */
 export function entityStatusToPipeline(
