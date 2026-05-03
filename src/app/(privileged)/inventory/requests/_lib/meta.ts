@@ -22,17 +22,26 @@ import {
  */
 
 /** Translate (request type, internal status) → canonical pipeline key.
- *  Mirrors the backend's product-level pipeline derivation:
- *    PURCHASE + PENDING/APPROVED → REQUESTED_PURCHASE
- *    PURCHASE + EXECUTED         → PO_SENT
- *    TRANSFER + PENDING/APPROVED → REQUESTED_TRANSFER
- *    TRANSFER + EXECUTED         → IN_TRANSIT
- *    *        + REJECTED/CANCELLED → FAILED
+ *  Mirrors the unified vocabulary defined in src/lib/procurement-status.ts:
+ *
+ *    (PURCHASE,  PENDING)   → REQUESTED_PURCHASE
+ *    (PURCHASE,  APPROVED)  → APPROVED
+ *    (PURCHASE,  EXECUTED)  → ORDERED          (PO sent to supplier)
+ *    (TRANSFER,  PENDING)   → REQUESTED_TRANSFER
+ *    (TRANSFER,  APPROVED)  → APPROVED
+ *    (TRANSFER,  EXECUTED)  → IN_TRANSIT       (TO is issued = goods moving)
+ *    *         + REJECTED/CANCELLED → FAILED
+ *
+ *  Once the PO/TO progresses (CONFIRMED / IN_TRANSIT / RECEIVED), the
+ *  product-level chip is recomputed from the PO/TO state directly via
+ *  `entityStatusToPipeline('po' | 'to', ...)` — at that point the
+ *  request is just an upstream pointer.
  */
 export function toPipelineKey(type: ProcurementRequestType, status: ProcurementRequestStatus): PipelineStatus {
     if (status === 'REJECTED' || status === 'CANCELLED') return 'FAILED'
-    if (status === 'EXECUTED') return type === 'TRANSFER' ? 'IN_TRANSIT' : 'PO_SENT'
-    // PENDING + APPROVED — both still "Requested" until the PO/TO is issued
+    if (status === 'EXECUTED') return type === 'TRANSFER' ? 'IN_TRANSIT' : 'ORDERED'
+    if (status === 'APPROVED') return 'APPROVED'
+    // PENDING — qualified by type
     return type === 'TRANSFER' ? 'REQUESTED_TRANSFER' : 'REQUESTED_PURCHASE'
 }
 
