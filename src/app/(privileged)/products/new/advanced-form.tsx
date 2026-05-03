@@ -5,6 +5,9 @@ import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
 import { getAttributesByCategory } from '@/app/actions/attributes';
+// Phase 2: scoped picker — used to filter the variation datalist by
+// the same (category × country × brand) scope the smart-form picker uses.
+import { getScopedValuesForGroup } from '@/app/actions/inventory/attribute-scope';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';
 import { toast } from 'sonner';
@@ -109,6 +112,11 @@ export default function AdvancedProductForm({
  /* ── Cascading Filters ── */
  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
  const [selectedBrandId, setSelectedBrandId] = useState<string>(initialData?.brandId ? String(initialData.brandId) : '');
+ // Phase 2: track country so the scoped picker can filter the
+ // variation datalist by all three axes (category × country × brand).
+ const [selectedCountryId, setSelectedCountryId] = useState<number | null>(
+     (initialData as { countryId?: number })?.countryId ?? null,
+ );
  const [filteredBrands, setFilteredBrands] = useState<BrandOption[]>(brands);
  const [filteredAttributes, setFilteredAttributes] = useState<ProductAttribute[]>([]);
 
@@ -181,6 +189,44 @@ export default function AdvancedProductForm({
  };
  filterData();
  }, [selectedCategoryId, brands]);
+
+ // Phase 2: scope-narrow the variation datalist by (category × country × brand).
+ // For each attribute group offered for the category, fetch the
+ // values_for_product result and union the in-scope value names. The
+ // datalist below renders the intersection of category-relevant
+ // attributes AND scope-allowed values, so the typeahead never
+ // suggests an out-of-scope value name.
+ const [scopeAllowedNames, setScopeAllowedNames] = useState<Set<string> | null>(null);
+ useEffect(() => {
+     // Skip when we have no scope context — datalist falls back to the
+     // category-filtered attribute list (legacy behaviour).
+     if (!selectedCategoryId && !selectedCountryId && !selectedBrandId) {
+         setScopeAllowedNames(null);
+         return;
+     }
+     if (filteredAttributes.length === 0) {
+         setScopeAllowedNames(null);
+         return;
+     }
+     let cancelled = false;
+     const ctx = {
+         categoryId: selectedCategoryId,
+         countryId: selectedCountryId,
+         brandId: selectedBrandId ? Number(selectedBrandId) : null,
+     };
+     Promise.all(
+         filteredAttributes.map(a => getScopedValuesForGroup(a.id, ctx).catch(() => null))
+     ).then(results => {
+         if (cancelled) return;
+         const names = new Set<string>();
+         for (const r of results) {
+             if (!r) continue;
+             for (const bucket of r.buckets) for (const v of bucket.values) names.add(v.name);
+         }
+         setScopeAllowedNames(names.size > 0 ? names : null);
+     });
+     return () => { cancelled = true; };
+ }, [selectedCategoryId, selectedCountryId, selectedBrandId, filteredAttributes]);
 
  /* ── Name Auto-rendering ── */
  const [autoName, setAutoName] = useState('');
@@ -279,7 +325,9 @@ export default function AdvancedProductForm({
 
  <div>
  <label className={fieldLabel}>Origin Country</label>
- <select name="countryId" className={fieldSelect}>
+ <select name="countryId" className={fieldSelect}
+     value={selectedCountryId ?? ''}
+     onChange={(e) => setSelectedCountryId(e.target.value ? Number(e.target.value) : null)}>
  <option value="">Select country...</option>
  {filteredCountries.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
  </select>
@@ -367,7 +415,9 @@ export default function AdvancedProductForm({
  placeholder="Type variations here, separated by commas..."
  />
  <datalist id="attributes-list">
- {filteredAttributes.map(a => <option key={a.id} value={a.name} />)}
+ {filteredAttributes
+     .filter(a => !scopeAllowedNames || scopeAllowedNames.has(a.name))
+     .map(a => <option key={a.id} value={a.name} />)}
  </datalist>
 
  {/* Variation Grid */}

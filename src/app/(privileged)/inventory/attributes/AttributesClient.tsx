@@ -17,6 +17,9 @@ import {
     deleteAttribute, addAttributeValue,
     linkCategories, linkBrands,
 } from '@/app/actions/inventory/attributes'
+// Phase-3 / Phase-5 wizard hookup — count pending suggestions so the
+// secondary-action button shows a badge inviting the operator in.
+import { listScopeSuggestions } from '@/app/actions/inventory/scope-suggestions'
 import {
     AddGroupForm, AddValueForm, EditModal,
     CategoryLinkModal, BrandLinkModal,
@@ -72,6 +75,13 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
     const [allCategories] = useState<CategoryRef[]>(initialCategories)
     const [allBrands] = useState<BrandRef[]>(initialBrands)
 
+    // Phase 5: poll the scope-suggestion count on mount so the Wizard
+    // secondary action can show a badge inviting the operator in. Quiet
+    // failure — the link still works even if the count fetch errors.
+    const [suggestionCount, setSuggestionCount] = useState<number | null>(null)
+    useEffect(() => {
+        listScopeSuggestions().then(s => setSuggestionCount(s.length)).catch(() => {})
+    }, [])
 
     // Re-sync state when the server re-renders with fresh data (router.refresh()).
     useEffect(() => { setTree(initialTree) }, [initialTree])
@@ -217,6 +227,17 @@ export function AttributesClient({ initialTree, initialCategories, initialBrands
                     },
                     secondaryActions: [
                         { label: 'Product Matrix', icon: <Sparkles size={13} />, href: '/inventory/attributes/matrix' },
+                        // Phase 3 / 5 entry point. Label reflects the
+                        // pending-suggestion count when known so the
+                        // operator sees there's work to review without
+                        // clicking through.
+                        {
+                            label: suggestionCount !== null && suggestionCount > 0
+                                ? `Scope Wizard (${suggestionCount})`
+                                : 'Scope Wizard',
+                            icon: <Bookmark size={13} />,
+                            href: '/inventory/attributes/scope-wizard',
+                        },
                     ],
                     columnHeaders: [
                         { label: 'Attribute', width: 'auto', sortKey: 'name' },
