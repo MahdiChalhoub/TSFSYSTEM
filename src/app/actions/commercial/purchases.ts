@@ -379,6 +379,57 @@ export async function transitionPurchaseOrderStatus(
     }
 }
 
+/** Hard-delete a single PO. Backend gates on lifecycle — only DRAFT /
+ *  CANCELLED orders can actually be removed; later states are protected
+ *  to preserve audit trail. The 4xx response surfaces back as `error`. */
+export async function deletePurchaseOrder(poId: number | string): Promise<{ ok?: true; error?: string }> {
+    try {
+        await erpFetch(`purchase-orders/${String(poId)}/`, { method: 'DELETE' })
+        revalidatePath('/purchases')
+        return { ok: true }
+    } catch (e: unknown) {
+        console.error('PO Delete Error:', e)
+        const msg = e instanceof Error ? e.message : String(e)
+        return { error: msg || 'Failed to delete PO.' }
+    }
+}
+
+/** Apply the same status transition to every id in the list. Returns
+ *  per-id result so the UI can surface partial failures (a typical case:
+ *  some POs are already in a terminal state and reject the transition). */
+export async function bulkTransitionPurchaseOrders(
+    poIds: Array<number | string>,
+    toStatus: string,
+    reason?: string,
+): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
+    const failed: Array<{ id: number | string; error: string }> = []
+    let succeeded = 0
+    // Sequential — POs are few per click and the backend has its own rate
+    // limits. Parallel would risk hitting the user-throttle.
+    for (const id of poIds) {
+        const r = await transitionPurchaseOrderStatus(id, toStatus, reason)
+        if (r.error) failed.push({ id, error: r.error })
+        else succeeded += 1
+    }
+    revalidatePath('/purchases')
+    return { succeeded, failed }
+}
+
+/** Bulk DELETE — same per-id-result pattern as the bulk transition. */
+export async function bulkDeletePurchaseOrders(
+    poIds: Array<number | string>,
+): Promise<{ succeeded: number; failed: Array<{ id: number | string; error: string }> }> {
+    const failed: Array<{ id: number | string; error: string }> = []
+    let succeeded = 0
+    for (const id of poIds) {
+        const r = await deletePurchaseOrder(id)
+        if (r.error) failed.push({ id, error: r.error })
+        else succeeded += 1
+    }
+    revalidatePath('/purchases')
+    return { succeeded, failed }
+}
+
 export async function createFormalPurchaseOrder(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
     const rawLines: Record<string, any>[] = [];
     for (const [key, value] of Array.from(formData.entries())) {

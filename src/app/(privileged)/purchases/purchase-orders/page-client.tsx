@@ -14,8 +14,10 @@ import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
 import {
   Plus, ClipboardList, DollarSign, Clock, CheckCircle, Truck, ArrowRightCircle,
-  Eye, Receipt, BarChart3, Pencil,
+  Eye, Receipt, BarChart3, Pencil, X, Trash2, ChevronDown, Loader2,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import { bulkTransitionPurchaseOrders, bulkDeletePurchaseOrders } from '@/app/actions/commercial/purchases'
 
 /* ── Shared UI ── */
 import { DajingoListView } from '@/components/common/DajingoListView'
@@ -309,6 +311,13 @@ export default function PurchaseOrdersManager({
         onToggleSelect={state.toggleSelect}
         isAllPageSelected={isAllPageSelected}
         onToggleSelectAll={() => state.toggleSelectAll(paginated)}
+        bulkActions={
+          <BulkActionBar
+            selectedIds={Array.from(state.selectedIds) as Array<number | string>}
+            onClear={() => state.setSelectedIds(new Set())}
+            onDone={() => { fetchData(); state.setSelectedIds(new Set()) }}
+          />
+        }
         hasFilters={hasFilters}
         onClearFilters={() => { state.setSearch(''); setFilters(EMPTY_FILTERS) }}
         emptyIcon={<ClipboardList size={36} />}
@@ -327,5 +336,133 @@ export default function PurchaseOrdersManager({
         policyHiddenFilters={state.policyHiddenFilters}
       />
     </DajingoPageShell>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────
+ *  BulkActionBar — bottom-anchored action strip for multi-PO ops.
+ *  Renders only when something is selected. Each action runs server
+ *  actions per-id (sequential to respect rate limits), shows a toast
+ *  with succeeded/failed counts, then signals the parent to refetch.
+ * ────────────────────────────────────────────────────────────────── */
+function BulkActionBar({ selectedIds, onClear, onDone }: {
+  selectedIds: Array<number | string>
+  onClear: () => void
+  onDone: () => void
+}) {
+  const [busy, setBusy] = useState<null | 'status' | 'delete'>(null)
+  const [statusMenu, setStatusMenu] = useState(false)
+  const count = selectedIds.length
+
+  const runTransition = async (toStatus: string, label: string) => {
+    setBusy('status')
+    setStatusMenu(false)
+    const r = await bulkTransitionPurchaseOrders(selectedIds, toStatus)
+    setBusy(null)
+    if (r.failed.length === 0) {
+      toast.success(`${r.succeeded} PO${r.succeeded === 1 ? '' : 's'} → ${label}.`)
+    } else if (r.succeeded === 0) {
+      toast.error(`Failed to transition any PO. First error: ${r.failed[0].error}`)
+    } else {
+      toast.warning(`${r.succeeded} updated, ${r.failed.length} skipped`, {
+        description: `Some POs could not move to ${label} (current status doesn't allow it).`,
+      })
+    }
+    onDone()
+  }
+
+  const runDelete = async () => {
+    if (!confirm(`Delete ${count} purchase order${count === 1 ? '' : 's'}?\n\nOnly DRAFT or CANCELLED POs can be removed; the backend will skip protected ones.`)) return
+    setBusy('delete')
+    const r = await bulkDeletePurchaseOrders(selectedIds)
+    setBusy(null)
+    if (r.failed.length === 0) {
+      toast.success(`${r.succeeded} PO${r.succeeded === 1 ? '' : 's'} deleted.`)
+    } else if (r.succeeded === 0) {
+      toast.error(`Could not delete any PO. ${r.failed[0].error}`)
+    } else {
+      toast.warning(`${r.succeeded} deleted, ${r.failed.length} skipped`, {
+        description: 'Protected POs (with posted journals) were skipped.',
+      })
+    }
+    onDone()
+  }
+
+  // Transitions surfaced to the user. Wider catalogue lives on the
+  // model (VALID_TRANSITIONS); we expose the ones admins reach for in
+  // bulk: SUBMITTED, APPROVED, ORDERED, CANCELLED.
+  const transitions: Array<{ to: string; label: string }> = [
+    { to: 'SUBMITTED', label: 'Submitted' },
+    { to: 'APPROVED', label: 'Approved' },
+    { to: 'ORDERED', label: 'Ordered' },
+    { to: 'CANCELLED', label: 'Cancelled' },
+  ]
+
+  // Renders inside DajingoListView's `bulkActions` slot — the parent
+  // already shows the "{N} selected" label, so we only emit the action
+  // controls themselves here (no count, no own background).
+  void count // shown by the slot wrapper
+  return (
+    <div className="flex items-center gap-2">
+      {/* Change status — opens a small menu of allowed transitions */}
+      <div className="relative">
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => setStatusMenu(v => !v)}
+          className="flex items-center gap-1 text-tp-xs font-bold px-3 h-8 rounded-lg border transition-all active:scale-95 disabled:opacity-50"
+          style={{ borderColor: 'var(--app-border)', color: 'var(--app-foreground)', background: 'var(--app-surface)' }}>
+          {busy === 'status' ? <Loader2 size={12} className="animate-spin" /> : <ChevronDown size={12} />}
+          Change status
+        </button>
+        {statusMenu && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setStatusMenu(false)} />
+            {/* Drop UPWARD — the bar lives at the bottom of the screen
+                inside DajingoListView's pagination footer, which has its
+                own overflow clipping. Anchoring to bottom-full keeps the
+                menu in view without needing a portal. */}
+            <div className="absolute right-0 bottom-full mb-1 z-50 rounded-xl overflow-hidden min-w-[180px]"
+              style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg, 0 8px 24px rgba(0,0,0,0.18))' }}>
+              {transitions.map(t => (
+                <button
+                  key={t.to}
+                  type="button"
+                  onClick={() => runTransition(t.to, t.label)}
+                  className="w-full text-left text-tp-sm font-bold px-3 py-2 hover:bg-app-surface-2 transition-colors"
+                  style={{ color: 'var(--app-foreground)' }}>
+                  → {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Bulk delete */}
+      <button
+        type="button"
+        onClick={runDelete}
+        disabled={busy !== null}
+        className="flex items-center gap-1 text-tp-xs font-bold px-3 h-8 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+        style={{
+          color: 'var(--app-error, #ef4444)',
+          background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 30%, transparent)',
+        }}>
+        {busy === 'delete' ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+        Delete
+      </button>
+
+      {/* Clear selection */}
+      <button
+        type="button"
+        onClick={onClear}
+        disabled={busy !== null}
+        className="flex items-center justify-center w-8 h-8 rounded-lg text-app-muted-foreground hover:bg-app-surface transition-colors disabled:opacity-50"
+        title="Clear selection">
+        <X size={14} />
+      </button>
+    </div>
   )
 }

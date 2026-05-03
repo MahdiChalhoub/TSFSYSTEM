@@ -9,13 +9,14 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Plus, Globe, Loader2, Unlink, Flag } from 'lucide-react'
+import { Plus, Globe, Loader2, Unlink, Flag, ArrowRightLeft, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
 
 interface CountryRow { id: number; name: string; code?: string }
+interface UniversalProduct { id: number; name: string }
 
 export function CountriesTab({ brandId, brandName }: { brandId: number; brandName: string }) {
     const [linked, setLinked] = useState<CountryRow[]>([])
