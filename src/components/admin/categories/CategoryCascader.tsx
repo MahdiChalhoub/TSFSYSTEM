@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ChevronRight, FolderTree, Layers } from 'lucide-react';
+import { ChevronDown, FolderTree, Layers } from 'lucide-react';
 
 type Category = {
     id: number;
@@ -78,49 +78,66 @@ export function CategoryCascader({
         return excludeId ? all.filter(o => o.id !== excludeId) : all;
     };
 
-    return (
-        <div className="space-y-1.5">
-            {columns.map((col, index) => {
-                const options = getOptions(col.parentId);
-                if (options.length === 0) return null;
+    // Render every column as a uniform row inside one bordered container
+    // so the picker reads as a single grid (no row visually heavier than
+    // another, no per-row border duplication).
+    const renderableCols = columns
+        .map((col, index) => ({ col, index, options: getOptions(col.parentId) }))
+        .filter(c => c.options.length > 0);
 
+    return (
+        <div
+            className="rounded-xl overflow-hidden"
+            style={{
+                background: 'var(--app-surface)',
+                border: '1px solid var(--app-border)',
+            }}
+        >
+            {renderableCols.map(({ col, index, options }, rowIdx) => {
                 const isRoot = index === 0;
                 const levelLabel = isRoot ? 'Main' : `L${index + 1}`;
+                const isLast = rowIdx === renderableCols.length - 1;
 
                 return (
                     <div
                         key={col.parentId}
-                        className="flex items-center gap-2 animate-in fade-in slide-in-from-left-1 duration-150"
+                        className="grid items-stretch"
+                        style={{
+                            gridTemplateColumns: '64px 1fr',
+                            borderBottom: isLast
+                                ? 'none'
+                                : '1px solid color-mix(in srgb, var(--app-border) 70%, transparent)',
+                            // Uniform row height — every row is the same
+                            // 38px regardless of which level it is.
+                            minHeight: '38px',
+                        }}
                     >
-                        {/* Level badge — compact, inline */}
-                        <span
-                            className="inline-flex items-center gap-1 flex-shrink-0 px-2 py-1 rounded-lg text-tp-xxs font-bold uppercase tracking-wider"
+                        {/* Level badge cell — fixed width, vertically centered */}
+                        <div
+                            className="flex items-center justify-center gap-1 text-tp-xxs font-bold uppercase tracking-wider"
                             style={{
                                 background: col.selected
-                                    ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)'
-                                    : 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
-                                color: col.selected ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                border: `1px solid ${col.selected
-                                    ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)'
-                                    : 'color-mix(in srgb, var(--app-border) 80%, transparent)'}`,
-                                minWidth: '46px',
-                                justifyContent: 'center',
+                                    ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)'
+                                    : 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                                color: col.selected
+                                    ? 'var(--app-primary)'
+                                    : 'var(--app-muted-foreground)',
+                                borderRight: '1px solid color-mix(in srgb, var(--app-border) 70%, transparent)',
                             }}
                         >
-                            {isRoot ? <FolderTree size={9} /> : <Layers size={9} />}
-                            {levelLabel}
-                        </span>
+                            {isRoot ? <FolderTree size={10} /> : <Layers size={10} />}
+                            <span>{levelLabel}</span>
+                        </div>
 
-                        {/* Slim select — uses theme tokens, custom chevron */}
-                        <div className="flex-1 relative">
+                        {/* Select cell — borderless, themed chevron, same
+                             height as the badge cell so rows stay uniform. */}
+                        <div className="relative">
                             <select
-                                className="w-full appearance-none text-tp-sm font-bold pl-3 pr-8 py-2 rounded-lg outline-none transition-all"
+                                className="w-full h-full appearance-none text-tp-sm font-bold pl-3 pr-8 outline-none bg-transparent"
                                 style={{
-                                    background: 'var(--app-surface)',
-                                    border: `1px solid ${col.selected
-                                        ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)'
-                                        : 'var(--app-border)'}`,
-                                    color: col.selected ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                                    color: col.selected
+                                        ? 'var(--app-foreground)'
+                                        : 'var(--app-muted-foreground)',
                                 }}
                                 value={col.selected || ''}
                                 onChange={(e) => {
@@ -137,13 +154,10 @@ export function CategoryCascader({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight
-                                size={12}
-                                className="absolute right-2.5 top-1/2 pointer-events-none rotate-90"
-                                style={{
-                                    color: 'var(--app-muted-foreground)',
-                                    transform: 'translateY(-50%) rotate(90deg)',
-                                }}
+                            <ChevronDown
+                                size={13}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                                style={{ color: 'var(--app-muted-foreground)' }}
                             />
                         </div>
                     </div>

@@ -348,9 +348,16 @@ export function CategoryFormModal({
                         })}
                     </div>
 
-                    {/* Pane content */}
+                    {/* Pane content. scroll-behavior + overscroll-behavior
+                        keep the modal scroll smooth and stop wheel events
+                        from chaining to the page underneath. */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-w-0"
-                        style={{ minHeight: '460px' }}>
+                        style={{
+                            minHeight: '460px',
+                            scrollBehavior: 'smooth',
+                            overscrollBehavior: 'contain',
+                            WebkitOverflowScrolling: 'touch',
+                        }}>
                         {hasError && (
                             <div
                                 className="mb-4 p-3 rounded-xl flex items-center gap-2 text-tp-sm font-bold animate-in slide-in-from-top-1 duration-200"
@@ -617,12 +624,12 @@ export function CategoryFormModal({
 
                             {/* ── Live placement preview (mini visual tree) ──
                                  Shows the breadcrumb chain the user is constructing.
-                                 Renders even before a parent is picked so the user
-                                 sees the shape of what they're about to create. */}
+                                 Solid fill (was a gradient) — gradients are
+                                 expensive to repaint when the modal scrolls. */}
                             <div
                                 className="rounded-xl p-3.5"
                                 style={{
-                                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 4%, var(--app-surface)) 0%, var(--app-surface) 100%)',
+                                    background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
                                 }}
                             >
