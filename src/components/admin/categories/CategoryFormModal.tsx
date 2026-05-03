@@ -535,48 +535,114 @@ export function CategoryFormModal({
                             <div>
                                 <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Tree Position</h4>
                                 <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                    Where this category sits in the catalogue tree.
+                                    Pick how this category sits in the catalogue tree — preview updates live.
                                 </p>
                             </div>
 
+                            {/* ── Choice cards (Root vs Sub) — bigger, illustrative,
+                                 with description + icon stack instead of a plain pill toggle. ── */}
                             {!parentId && (
-                                <div
-                                    className="flex p-1 rounded-xl"
-                                    style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid var(--app-border)' }}
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => { setIsSubCategory(false); setSelectedParent(''); }}
-                                        className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
-                                        style={!isSubCategory ? {
-                                            background: 'var(--app-surface)',
-                                            color: 'var(--app-primary)',
-                                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                        } : { color: 'var(--app-muted-foreground)' }}
-                                    >
-                                        <FolderTree size={13} />
-                                        Root Category
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsSubCategory(true)}
-                                        className="flex-1 py-2 text-tp-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
-                                        style={isSubCategory ? {
-                                            background: 'var(--app-surface)',
-                                            color: 'var(--app-primary)',
-                                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                        } : { color: 'var(--app-muted-foreground)' }}
-                                    >
-                                        <ChevronRight size={13} />
-                                        Sub-Category
-                                    </button>
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    {([
+                                        {
+                                            value: false,
+                                            icon: <FolderTree size={18} />,
+                                            title: 'Root Category',
+                                            sub: 'Top-level entry — own branch in the tree',
+                                        },
+                                        {
+                                            value: true,
+                                            icon: <Layers size={18} />,
+                                            title: 'Sub-Category',
+                                            sub: 'Nested under an existing parent',
+                                        },
+                                    ] as const).map(opt => {
+                                        const active = isSubCategory === opt.value;
+                                        return (
+                                            <button
+                                                key={String(opt.value)}
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsSubCategory(opt.value);
+                                                    if (!opt.value) setSelectedParent('');
+                                                }}
+                                                className="text-left p-3 rounded-xl transition-all relative overflow-hidden"
+                                                style={{
+                                                    background: active
+                                                        ? 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))'
+                                                        : 'var(--app-surface)',
+                                                    border: `1.5px solid ${active
+                                                        ? 'color-mix(in srgb, var(--app-primary) 45%, transparent)'
+                                                        : 'var(--app-border)'}`,
+                                                    boxShadow: active
+                                                        ? '0 4px 12px color-mix(in srgb, var(--app-primary) 12%, transparent)'
+                                                        : undefined,
+                                                }}
+                                            >
+                                                {active && (
+                                                    <span
+                                                        className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                                                        style={{ background: 'var(--app-primary)' }}
+                                                    >
+                                                        <Check size={11} className="text-white" strokeWidth={3} />
+                                                    </span>
+                                                )}
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <div
+                                                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                                        style={{
+                                                            background: active
+                                                                ? 'var(--app-primary)'
+                                                                : 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                                            color: active ? '#fff' : 'var(--app-muted-foreground)',
+                                                        }}
+                                                    >
+                                                        {opt.icon}
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    className="text-tp-sm font-bold mb-0.5"
+                                                    style={{ color: active ? 'var(--app-primary)' : 'var(--app-foreground)' }}
+                                                >
+                                                    {opt.title}
+                                                </div>
+                                                <div className="text-tp-xxs font-bold text-app-muted-foreground leading-snug">
+                                                    {opt.sub}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
 
-                            {isSubCategory ? (
+                            {/* ── Live placement preview (mini visual tree) ──
+                                 Shows the breadcrumb chain the user is constructing.
+                                 Renders even before a parent is picked so the user
+                                 sees the shape of what they're about to create. */}
+                            <div
+                                className="rounded-xl p-3.5"
+                                style={{
+                                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 4%, var(--app-surface)) 0%, var(--app-surface) 100%)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
+                                }}
+                            >
+                                <div className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-2 flex items-center gap-1.5">
+                                    <FolderTree size={10} /> Placement Preview
+                                </div>
+                                <PlacementPreview
+                                    isSub={!!isSubCategory}
+                                    parent={isSubCategory && selectedParent
+                                        ? potentialParents.find(p => p.id == selectedParent)
+                                        : null}
+                                    name={nameDraft || (category?.name) || 'New Category'}
+                                />
+                            </div>
+
+                            {/* ── Parent picker (only when sub-category) ── */}
+                            {isSubCategory && (
                                 <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                     <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">
-                                        Parent Category
+                                        Choose Parent
                                     </label>
                                     <CategoryCascader
                                         allCategories={availableParents as any}
@@ -585,31 +651,32 @@ export function CategoryFormModal({
                                         excludeId={category?.id}
                                     />
                                     <input type="hidden" name="parentId" value={selectedParent} />
-                                    {parentName && (
-                                        <div className="flex items-center gap-1.5 text-tp-xs font-bold mt-2" style={{ color: 'var(--app-success)' }}>
-                                            <ChevronRight size={10} />
-                                            Nesting under &ldquo;{parentName}&rdquo;
-                                            {parentCode && <span className="font-mono opacity-60">({parentCode})</span>}
-                                        </div>
-                                    )}
                                 </div>
-                            ) : (
-                                <input type="hidden" name="parentId" value="" />
                             )}
+                            {!isSubCategory && <input type="hidden" name="parentId" value="" />}
 
+                            {/* ── Info banner — adapts copy based on choice ── */}
                             <div
                                 className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
                                 style={{
-                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
-                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
-                                    color: 'var(--app-info, #3b82f6)',
+                                    background: isSubCategory && !parentName
+                                        ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)'
+                                        : 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                    border: `1px solid ${isSubCategory && !parentName
+                                        ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)'
+                                        : 'color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)'}`,
+                                    color: isSubCategory && !parentName
+                                        ? 'var(--app-warning, #f59e0b)'
+                                        : 'var(--app-info, #3b82f6)',
                                 }}
                             >
                                 <Lightbulb size={12} className="mt-0.5 flex-shrink-0" />
                                 <span>
-                                    {isSubCategory
-                                        ? 'Sub-categories inherit barcode rules from their parent unless overridden in Identity.'
-                                        : 'Root categories appear at the top of the catalogue tree.'}
+                                    {isSubCategory && !parentName
+                                        ? 'Pick a parent above — sub-categories must nest under an existing branch.'
+                                        : isSubCategory
+                                            ? 'Sub-categories inherit barcode rules from their parent unless overridden in Identity.'
+                                            : 'Root categories appear at the top of the catalogue tree.'}
                                 </span>
                             </div>
                         </div>
@@ -704,6 +771,7 @@ export function CategoryFormModal({
                 </form>
 
                 {/* ── Footer ── */}
+                {/* PlacementPreview lives outside the form to keep render scope tight */}
                 <div
                     className="px-5 py-3 flex items-center gap-2 flex-shrink-0"
                     style={{
@@ -737,5 +805,111 @@ export function CategoryFormModal({
                 </div>
             </div>
         </div>
+    );
+}
+
+/**
+ * PlacementPreview — visual breadcrumb showing the chain of nodes the new
+ * category will live under. Renders three states:
+ *
+ *   • Root mode             →  [📁 New Category]
+ *   • Sub mode, no parent   →  [🏠 Root] → [? choose parent] → [📂 New Category]
+ *   • Sub mode, with parent →  [📁 Parent.full_path] → [📂 New Category]
+ *
+ * Pure presentation, no state. Adapts to whatever name the user is currently
+ * typing in the Identity pane via the `name` prop.
+ */
+function PlacementPreview({
+    isSub,
+    parent,
+    name,
+}: {
+    isSub: boolean;
+    parent: Record<string, any> | null | undefined;
+    name: string;
+}) {
+    type Crumb = { id: string; label: string; tone: 'root' | 'parent' | 'placeholder' | 'self' };
+    const crumbs: Crumb[] = [];
+
+    if (isSub) {
+        if (parent) {
+            const path: string[] = (parent.full_path || parent.name || '').split(' > ').filter(Boolean);
+            path.forEach((p, i) => {
+                crumbs.push({ id: `p-${i}`, label: p, tone: 'parent' });
+            });
+        } else {
+            crumbs.push({ id: 'placeholder', label: 'Choose a parent…', tone: 'placeholder' });
+        }
+    } else {
+        crumbs.push({ id: 'root', label: 'Catalogue Root', tone: 'root' });
+    }
+
+    crumbs.push({ id: 'self', label: name, tone: 'self' });
+
+    return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+            {crumbs.map((c, i) => (
+                <PreviewChip key={c.id} crumb={c} isFirst={i === 0} isLast={i === crumbs.length - 1} />
+            ))}
+        </div>
+    );
+}
+
+function PreviewChip({
+    crumb,
+    isFirst,
+    isLast,
+}: {
+    crumb: { id: string; label: string; tone: 'root' | 'parent' | 'placeholder' | 'self' };
+    isFirst: boolean;
+    isLast: boolean;
+}) {
+    const palette = {
+        root: {
+            bg: 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)',
+            color: 'var(--app-muted-foreground)',
+            border: 'color-mix(in srgb, var(--app-border) 80%, transparent)',
+        },
+        parent: {
+            bg: 'color-mix(in srgb, var(--app-foreground) 6%, transparent)',
+            color: 'var(--app-foreground)',
+            border: 'color-mix(in srgb, var(--app-border) 80%, transparent)',
+        },
+        placeholder: {
+            bg: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
+            color: 'var(--app-warning, #f59e0b)',
+            border: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)',
+            dashed: true,
+        },
+        self: {
+            bg: 'var(--app-primary)',
+            color: '#fff',
+            border: 'var(--app-primary)',
+        },
+    } as const;
+
+    const p = palette[crumb.tone];
+    return (
+        <>
+            {!isFirst && (
+                <ChevronRight size={11} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)', opacity: 0.5 }} />
+            )}
+            <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-tp-xs font-bold transition-all ${isLast ? 'animate-in fade-in zoom-in-95 duration-150' : ''}`}
+                style={{
+                    background: p.bg,
+                    color: p.color,
+                    border: `1.5px ${('dashed' in p && p.dashed) ? 'dashed' : 'solid'} ${p.border}`,
+                    boxShadow: crumb.tone === 'self'
+                        ? '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)'
+                        : undefined,
+                    maxWidth: '180px',
+                }}
+            >
+                {crumb.tone === 'self' && <Tag size={10} />}
+                {crumb.tone === 'root' && <FolderTree size={10} />}
+                <span className="truncate">{crumb.label}</span>
+            </span>
+        </>
     );
 }
