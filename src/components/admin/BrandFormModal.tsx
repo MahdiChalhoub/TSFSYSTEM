@@ -9,7 +9,7 @@ import {
 import { peekNextCode } from '@/lib/sequences-client';
 import { LockableCodeInput } from '@/components/admin/_shared/LockableCodeInput';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
-import { getCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
+import { getCatalogueLanguages, getCachedCatalogueLanguages, labelFor, placeholderFor, isRTL, type LocaleCode } from '@/lib/catalogue-languages';
 
 type BrandFormModalProps = {
     isOpen: boolean;
@@ -70,7 +70,13 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
     );
     const [suggestedCode, setSuggestedCode] = useState<string>('');
 
-    const [locales, setLocales] = useState<LocaleCode[]>([]);
+    // Seed from the module-level cache so the modal renders with the
+    // language tabs already in place on its very first paint — avoids
+    // the visible flicker where the modal opens "normal" and then a
+    // moment later re-renders with the EN/FR/AR strip. Falls back to
+    // [] only on the very first open in a session, before any other
+    // page has prefetched the catalogue languages.
+    const [locales, setLocales] = useState<LocaleCode[]>(() => getCachedCatalogueLanguages() ?? []);
     const [translations, setTranslations] = useState<Record<string, LangEntry>>({});
     const [activeLang, setActiveLang] = useState<string>('__default__');
 
@@ -98,7 +104,17 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
 
     useEffect(() => {
         if (!isOpen) return;
-        getCatalogueLanguages().then(setLocales).catch(() => setLocales([]));
+        // Re-confirm against the network in case the cached set changed
+        // (admin enabled a new language). Skips overwriting locales when
+        // the seed already had them — we only call setLocales when the
+        // fetched value differs, to avoid an unnecessary re-render.
+        getCatalogueLanguages().then(fresh => {
+            setLocales(prev => (
+                prev.length === fresh.length && prev.every((c, i) => c === fresh[i])
+                    ? prev
+                    : fresh
+            ));
+        }).catch(() => { /* keep whatever the seed gave us */ });
     }, [isOpen]);
 
     useEffect(() => {
