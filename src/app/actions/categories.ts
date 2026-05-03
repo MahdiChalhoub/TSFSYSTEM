@@ -32,12 +32,67 @@ function hasError(raw: any): boolean {
     return false;
 }
 
+/**
+ * Best-effort sync of M2M links from the category modal panes:
+ *
+ *   - `attributeIds[]`  — sent directly to the category endpoint as
+ *     `attributes: [...]` because Category has the M2M field declared.
+ *
+ *   - `brandIds[]`  — Brand owns the M2M (Brand.categories), so we have
+ *     to PATCH each brand individually. We diff the desired set against
+ *     the brand's current categories so we don't overwrite unrelated
+ *     links. Errors are swallowed (best-effort) so a brand-link failure
+ *     never blocks the main category save.
+ */
+async function syncBrandLinks(categoryId: number, brandIds: number[]) {
+    const desired = new Set(brandIds);
+    // Walk every brand to figure out which need this category added /
+    // removed. The brands list is small (<200 typically) so a single
+    // pass is fine; if it ever grows we can switch to a dedicated
+    // `categories/<id>/sync_brands/` endpoint.
+    let brands: any[] = [];
+    try {
+        const res: any = await erpFetch('inventory/brands/');
+        brands = Array.isArray(res) ? res : (res?.results ?? []);
+    } catch { return; }
+
+    const tasks = brands.map(async (b) => {
+        const currentIds: number[] = Array.isArray(b.categories)
+            ? b.categories.map((c: any) => typeof c === 'number' ? c : c.id)
+            : [];
+        const has = currentIds.includes(categoryId);
+        const wants = desired.has(b.id);
+        if (has === wants) return;
+        const next = wants
+            ? Array.from(new Set([...currentIds, categoryId]))
+            : currentIds.filter((id) => id !== categoryId);
+        try {
+            await erpFetch(`inventory/brands/${b.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categories: next }),
+            });
+        } catch (e) {
+            console.warn(`[syncBrandLinks] brand ${b.id} update failed:`, e);
+        }
+    });
+    await Promise.all(tasks);
+}
+
+function readIntList(formData: FormData, key: string): number[] {
+    return formData.getAll(key)
+        .map((v) => parseInt(String(v), 10))
+        .filter((n) => Number.isFinite(n) && n > 0);
+}
+
 export async function createCategory(prevState: CategoryState, formData: FormData): Promise<CategoryState> {
     const name = formData.get('name') as string;
     const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null;
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
+    const attributeIds = readIntList(formData, 'attributeIds');
+    const brandIds = readIntList(formData, 'brandIds');
     let translations: Record<string, { name?: string; short_name?: string }> = {};
     try {
         const raw = (formData.get('translationsJson') as string) || '';
@@ -63,6 +118,8 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
                 translations,
                 name_fr: nameFr,
                 name_ar: nameAr,
+                // Category owns the attributes M2M, so this writes through directly.
+                attributes: attributeIds,
             })
         });
 
@@ -75,6 +132,12 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
                 || 'Failed to create category';
             console.error('[createCategory] Backend error:', result);
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
+        }
+
+        // Brand links are reverse M2M — sync via per-brand PATCHes.
+        const newId = (result as any)?.id;
+        if (newId && brandIds.length > 0) {
+            await syncBrandLinks(Number(newId), brandIds);
         }
 
         revalidatePath('/inventory/categories');
@@ -97,6 +160,8 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     const code = (formData.get('code') as string) || null;
     const shortName = (formData.get('shortName') as string) || null;
     const barcodePrefix = (formData.get('barcodePrefix') as string) || '';
+    const attributeIds = readIntList(formData, 'attributeIds');
+    const brandIds = readIntList(formData, 'brandIds');
     let translations: Record<string, { name?: string; short_name?: string }> = {};
     try {
         const raw = (formData.get('translationsJson') as string) || '';
@@ -122,6 +187,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
                 translations,
                 name_fr: nameFr,
                 name_ar: nameAr,
+                attributes: attributeIds,
             })
         });
 
@@ -133,6 +199,9 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
                 || 'Failed to update category';
             return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), errors: fieldErrors };
         }
+
+        // Brand links live on the Brand model — sync via per-brand PATCHes.
+        await syncBrandLinks(id, brandIds);
 
         revalidatePath('/inventory/categories');
         return { message: 'success' };

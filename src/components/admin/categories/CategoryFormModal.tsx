@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import {
     X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight,
-    Layers, Check, Lightbulb, Barcode,
+    Layers, Check, Lightbulb, Barcode, Award, ListTree, Search,
 } from 'lucide-react';
 import { createCategory, updateCategory, CategoryState } from '@/app/actions/categories';
 import { CategoryCascader } from './CategoryCascader';
@@ -13,6 +13,8 @@ import {
     getCatalogueLanguages, getCachedCatalogueLanguages,
     labelFor, placeholderFor, isRTL, type LocaleCode,
 } from '@/lib/catalogue-languages';
+import { erpFetch } from '@/lib/erp-api';
+import { getAttributeTree } from '@/app/actions/inventory/attributes';
 
 type CategoryFormModalProps = {
     isOpen: boolean;
@@ -26,9 +28,12 @@ type LangEntry = { name?: string; short_name?: string };
 const coerce = (v: any): LangEntry =>
     typeof v === 'string' ? { name: v } : (v && typeof v === 'object' ? v : {});
 
-type PaneKey = 'identity' | 'hierarchy' | 'codes';
+type PaneKey = 'identity' | 'hierarchy' | 'brands' | 'attributes';
 
 const initialState: CategoryState = { message: '', errors: {} };
+
+type BrandLite = { id: number; name: string; code?: string };
+type AttrLite = { id: number; name: string; code?: string };
 
 export function CategoryFormModal({
     isOpen, onClose, category, parentId, potentialParents = [],
@@ -44,18 +49,12 @@ export function CategoryFormModal({
     const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
     const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
 
-    // Pre-filled code from /settings/sequences (peek only — sequence is
-    // consumed server-side on save).
     const [suggestedCode, setSuggestedCode] = useState<string>('');
 
-    // ── Tenant-configured catalogue locales ──
-    // Seed from module-level cache so the modal renders correct language tabs
-    // on its first paint — avoids the "tabs pop in 200ms later" flicker.
+    // ── Locales + translations ──
     const [locales, setLocales] = useState<LocaleCode[]>(
         () => getCachedCatalogueLanguages() ?? ['fr', 'ar'],
     );
-
-    // ── Translations (per-locale name + short_name) ──
     const [translations, setTranslations] = useState<Record<string, LangEntry>>(() => {
         const src: Record<string, any> = { ...(category?.translations || {}) };
         if (category?.name_fr && !src.fr) src.fr = { name: category.name_fr };
@@ -66,38 +65,67 @@ export function CategoryFormModal({
     });
     const patchT = (code: string, field: 'name' | 'short_name', value: string) =>
         setTranslations(t => ({ ...t, [code]: { ...(t[code] || {}), [field]: value } }));
-
-    // Active language tab above the Name field. `__default__` = the main
-    // `name` column (authoritative base value).
     const [activeLang, setActiveLang] = useState<string>('__default__');
-
-    // Live mirror of the default Name input — drives the header subtitle
-    // and the Identity pane badge so the user sees their typing reflected
-    // before they save.
     const [nameDraft, setNameDraft] = useState<string>(category?.name || '');
+
+    // ── Brand + Attribute selection (M2M, persisted via separate
+    //    PATCHes in the server action — see categories.ts).  Initial
+    //    state is hydrated from the category row when editing. ──
+    const [allBrands, setAllBrands] = useState<BrandLite[]>([]);
+    const [allAttributes, setAllAttributes] = useState<AttrLite[]>([]);
+    const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(
+        () => new Set<number>(
+            Array.isArray(category?.brand_ids) ? category!.brand_ids
+                : Array.isArray(category?.brands) ? category!.brands.map((b: any) => typeof b === 'number' ? b : b.id)
+                    : [],
+        ),
+    );
+    const [selectedAttrIds, setSelectedAttrIds] = useState<Set<number>>(
+        () => new Set<number>(
+            Array.isArray(category?.attribute_ids) ? category!.attribute_ids
+                : Array.isArray(category?.attributes) ? category!.attributes.map((a: any) => typeof a === 'number' ? a : a.id)
+                    : [],
+        ),
+    );
+    const [brandQuery, setBrandQuery] = useState('');
+    const [attrQuery, setAttrQuery] = useState('');
+    const [loadingLinks, setLoadingLinks] = useState(false);
 
     useEffect(() => { if (state.message === 'success') onClose(); }, [state, onClose]);
 
     useEffect(() => {
-        if (isOpen) {
-            setIsSubCategory(!!parentId || (category && !!category.parent));
-            setSelectedParent(parentId || category?.parent || '');
-            setActivePane('identity');
-            setNameDraft(category?.name || '');
-            if (!category) {
-                peekNextCode('CATEGORY').then(setSuggestedCode).catch(() => setSuggestedCode(''));
-            } else {
-                setSuggestedCode('');
-            }
-            getCatalogueLanguages().then(next => {
-                setLocales(prev =>
-                    prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next,
-                );
-            }).catch(() => { /* keep cached fallback */ });
+        if (!isOpen) return;
+        setIsSubCategory(!!parentId || (category && !!category.parent));
+        setSelectedParent(parentId || category?.parent || '');
+        setActivePane('identity');
+        setNameDraft(category?.name || '');
+        if (!category) {
+            peekNextCode('CATEGORY').then(setSuggestedCode).catch(() => setSuggestedCode(''));
+        } else {
+            setSuggestedCode('');
         }
+        getCatalogueLanguages().then(next => {
+            setLocales(prev =>
+                prev.length === next.length && prev.every((c, i) => c === next[i]) ? prev : next,
+            );
+        }).catch(() => { /* keep cached */ });
+
+        // Load brands + attributes lazily so the modal doesn't need new
+        // props from CategoriesClient. Both endpoints are fast (read-only
+        // lists) and the result is cached for the lifetime of the modal.
+        setLoadingLinks(true);
+        Promise.all([
+            erpFetch('inventory/brands/').then((r: any) =>
+                Array.isArray(r) ? r : (r?.results ?? [])
+            ).catch(() => []),
+            getAttributeTree().catch(() => []),
+        ]).then(([brands, attrs]) => {
+            setAllBrands((brands as any[]).map(b => ({ id: b.id, name: b.name, code: b.code })));
+            setAllAttributes((attrs as any[]).map(a => ({ id: a.id, name: a.name, code: a.code })));
+        }).finally(() => setLoadingLinks(false));
     }, [isOpen, parentId, category]);
 
-    // ── Tree exclusion (can't pick self or any descendant as parent) ──
+    // ── Tree exclusion (can't pick self or descendant as parent) ──
     const descendants = useMemo(() => {
         if (!category) return new Set<number>();
         const out = new Set<number>();
@@ -125,7 +153,24 @@ export function CategoryFormModal({
     const extras = locales.slice(1);
     const translatedCount = extras.filter(c => (translations[c]?.name || '').trim()).length;
 
-    // ── Pane definitions (sidebar + mobile tab strip) ──
+    const filteredBrands = brandQuery.trim()
+        ? allBrands.filter(b => b.name.toLowerCase().includes(brandQuery.toLowerCase()))
+        : allBrands;
+    const filteredAttrs = attrQuery.trim()
+        ? allAttributes.filter(a => a.name.toLowerCase().includes(attrQuery.toLowerCase()))
+        : allAttributes;
+
+    const toggleBrand = (id: number) => setSelectedBrandIds(s => {
+        const next = new Set(s);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+    });
+    const toggleAttr = (id: number) => setSelectedAttrIds(s => {
+        const next = new Set(s);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+    });
+
     const panes: { key: PaneKey; label: string; icon: React.ReactNode; badge: React.ReactNode; tone: string }[] = [
         {
             key: 'identity',
@@ -140,19 +185,22 @@ export function CategoryFormModal({
             key: 'hierarchy',
             label: 'Hierarchy',
             icon: <Layers size={13} />,
-            badge: isSubCategory
-                ? (parentName ? '↳' : '?')
-                : 'Root',
+            badge: isSubCategory ? (parentName ? '↳' : '?') : 'Root',
             tone: isSubCategory && !parentName ? 'var(--app-warning, #f59e0b)' : 'var(--app-primary)',
         },
         {
-            key: 'codes',
-            label: 'Codes',
-            icon: <Hash size={13} />,
-            badge: (category?.code || suggestedCode) ? (category?.barcode_prefix ? '✓' : '½') : '—',
-            tone: (category?.code || suggestedCode)
-                ? (category?.barcode_prefix ? 'var(--app-success)' : 'var(--app-muted-foreground)')
-                : 'var(--app-muted-foreground)',
+            key: 'brands',
+            label: 'Brands',
+            icon: <Award size={13} />,
+            badge: selectedBrandIds.size > 0 ? `${selectedBrandIds.size}` : 'Any',
+            tone: selectedBrandIds.size > 0 ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+        },
+        {
+            key: 'attributes',
+            label: 'Attributes',
+            icon: <ListTree size={13} />,
+            badge: selectedAttrIds.size > 0 ? `${selectedAttrIds.size}` : 'None',
+            tone: selectedAttrIds.size > 0 ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
         },
     ];
 
@@ -259,7 +307,6 @@ export function CategoryFormModal({
                             );
                         })}
 
-                        {/* Reference code preview — sidebar meta */}
                         <div
                             className="mt-3 p-2.5 rounded-xl"
                             style={{ background: 'var(--app-surface)', border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}
@@ -297,10 +344,7 @@ export function CategoryFormModal({
                         })}
                     </div>
 
-                    {/* Pane content — all panes stay mounted so the form
-                        captures every input regardless of which pane is open;
-                        min-h locks the body so swapping panes doesn't bounce
-                        the modal. */}
+                    {/* Pane content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-w-0"
                         style={{ minHeight: '460px' }}>
                         {hasError && (
@@ -317,16 +361,16 @@ export function CategoryFormModal({
                             </div>
                         )}
 
-                        {/* ═══ Pane: IDENTITY ═══ */}
+                        {/* ═══ Pane: IDENTITY (now also holds Codes) ═══ */}
                         <div className={activePane === 'identity' ? 'space-y-4' : 'hidden'}>
                             <div>
                                 <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Category Identity</h4>
                                 <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                    Name shown to operators across the catalogue. Translations are optional.
+                                    Name, codes and translations. Internal reference + barcode prefix below.
                                 </p>
                             </div>
 
-                            {/* Language tabs (only when 2+ locales configured) */}
+                            {/* Language tabs */}
                             {extras.length > 0 && (
                                 <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
                                     <button type="button"
@@ -359,6 +403,7 @@ export function CategoryFormModal({
                                 </div>
                             )}
 
+                            {/* Name + Short Name (per active language) */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                                 {activeLang === '__default__' ? (
                                     <>
@@ -416,12 +461,68 @@ export function CategoryFormModal({
                                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
                                             />
                                         </div>
-                                        {/* Keep default fields in form payload */}
                                         <input type="hidden" name="name" value={nameDraft} />
                                         <input type="hidden" name="shortName" value={category?.short_name || ''} />
                                     </>
                                 )}
                                 <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
+                            </div>
+
+                            {/* Codes — merged into Identity below the name fields */}
+                            <div className="pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                <h5 className="text-tp-xs font-bold uppercase tracking-widest text-app-muted-foreground mb-2 flex items-center gap-1.5">
+                                    <Hash size={10} /> Codes &amp; Barcode
+                                </h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                            Code (Unique)
+                                        </label>
+                                        <LockableCodeInput
+                                            name="code"
+                                            defaultValue={category?.code}
+                                            suggestedValue={suggestedCode}
+                                            isEdit={!!category}
+                                            placeholder="e.g. 1001 or CAT-BEV"
+                                            mono
+                                            className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                        />
+                                        <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                            Internal reference — not printed.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                            <Barcode size={9} className="inline mr-1" />Barcode Prefix
+                                        </label>
+                                        <LockableCodeInput
+                                            name="barcodePrefix"
+                                            defaultValue={category?.barcode_prefix}
+                                            isEdit={!!category?.barcode_prefix}
+                                            placeholder="e.g. 0410"
+                                            mono
+                                            maxLength={10}
+                                            inputFilter="digits"
+                                            warning="Changing the barcode prefix will break every product barcode already printed in this category. Only change this if you understand the impact. Continue?"
+                                            className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                            style={{
+                                                background: 'var(--app-background)',
+                                                border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
+                                            }}
+                                        />
+                                        {state.errors?.barcode_prefix ? (
+                                            <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
+                                                {state.errors.barcode_prefix[0]}
+                                            </p>
+                                        ) : (
+                                            <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
+                                                e.g. <code className="font-mono">0410</code> → <code className="font-mono">0410001</code>.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -434,7 +535,6 @@ export function CategoryFormModal({
                                 </p>
                             </div>
 
-                            {/* Root vs sub-category toggle (only when not pre-set via parentId prop) */}
                             {!parentId && (
                                 <div
                                     className="flex p-1 rounded-xl"
@@ -469,7 +569,6 @@ export function CategoryFormModal({
                                 </div>
                             )}
 
-                            {/* Parent picker */}
                             {isSubCategory ? (
                                 <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                     <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground block">
@@ -505,91 +604,157 @@ export function CategoryFormModal({
                                 <Lightbulb size={12} className="mt-0.5 flex-shrink-0" />
                                 <span>
                                     {isSubCategory
-                                        ? 'Sub-categories inherit barcode rules from their parent unless overridden in the Codes pane.'
-                                        : 'Root categories appear at the top of the catalogue. Move them under a parent later from the tree view.'}
+                                        ? 'Sub-categories inherit barcode rules from their parent unless overridden in Identity.'
+                                        : 'Root categories appear at the top of the catalogue tree.'}
                                 </span>
                             </div>
                         </div>
 
-                        {/* ═══ Pane: CODES ═══ */}
-                        <div className={activePane === 'codes' ? 'space-y-4' : 'hidden'}>
+                        {/* ═══ Pane: BRANDS ═══ */}
+                        <div className={activePane === 'brands' ? 'space-y-3' : 'hidden'}>
                             <div>
-                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Codes &amp; Barcodes</h4>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Linked Brands</h4>
                                 <p className="text-tp-xs font-bold text-app-muted-foreground">
-                                    Internal reference and the barcode prefix used when generating product barcodes.
+                                    Which brands carry products in this category. Empty = any brand can.
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                        <Hash size={9} className="inline mr-1" />Code (Unique)
-                                    </label>
-                                    <LockableCodeInput
-                                        name="code"
-                                        defaultValue={category?.code}
-                                        suggestedValue={suggestedCode}
-                                        isEdit={!!category}
-                                        placeholder="e.g. 1001 or CAT-BEV"
-                                        mono
-                                        className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                        style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
-                                    />
-                                    <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
-                                        Internal reference — not printed on barcodes.
-                                    </p>
-                                </div>
+                            <div className="relative">
+                                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input
+                                    value={brandQuery}
+                                    onChange={e => setBrandQuery(e.target.value)}
+                                    placeholder="Search brands…"
+                                    className="w-full pl-9 pr-3 py-2 text-tp-sm font-bold rounded-xl outline-none"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                />
+                            </div>
 
-                                <div>
-                                    <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                        <Barcode size={9} className="inline mr-1" />Barcode Prefix
-                                    </label>
-                                    <LockableCodeInput
-                                        name="barcodePrefix"
-                                        defaultValue={category?.barcode_prefix}
-                                        isEdit={!!category?.barcode_prefix}
-                                        placeholder="e.g. 0410"
-                                        mono
-                                        maxLength={10}
-                                        inputFilter="digits"
-                                        warning="Changing the barcode prefix will break every product barcode already printed in this category. Only change this if you understand the impact. Continue?"
-                                        className="w-full text-tp-sm px-3 py-2.5 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
-                                        style={{
-                                            background: 'var(--app-background)',
-                                            border: state.errors?.barcode_prefix ? '1px solid var(--app-error)' : '1px solid var(--app-border)',
-                                        }}
-                                    />
-                                    {state.errors?.barcode_prefix ? (
-                                        <p className="text-tp-xs font-bold mt-1" style={{ color: 'var(--app-error)' }}>
-                                            {state.errors.barcode_prefix[0]}
-                                        </p>
-                                    ) : (
-                                        <p className="text-tp-xs font-bold text-app-muted-foreground mt-1">
-                                            Auto-prefix for products — e.g. <code className="font-mono">0410</code> → <code className="font-mono">0410001</code>. Must be unique per category.{' '}
-                                            <a href="/inventory/barcode" className="underline text-app-primary">Rules</a>.
-                                        </p>
+                            {loadingLinks ? (
+                                <div className="py-8 flex items-center justify-center text-app-muted-foreground">
+                                    <Loader2 size={14} className="animate-spin mr-2" /> Loading brands…
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1.5 rounded-xl overflow-y-auto custom-scrollbar"
+                                    style={{ maxHeight: '320px', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)', border: '1px solid var(--app-border)' }}>
+                                    {filteredBrands.map(b => {
+                                        const sel = selectedBrandIds.has(b.id);
+                                        return (
+                                            <button key={b.id} type="button" onClick={() => toggleBrand(b.id)}
+                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-tp-xs font-bold transition-all text-left"
+                                                style={{
+                                                    background: sel ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-surface)',
+                                                    border: `1px solid ${sel ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'var(--app-border)'}`,
+                                                    color: sel ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                }}>
+                                                {sel && <Check size={10} />}
+                                                <span className="truncate flex-1">{b.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    {filteredBrands.length === 0 && (
+                                        <div className="col-span-full py-4 text-center text-tp-xs font-bold text-app-muted-foreground">
+                                            {brandQuery ? 'No matches' : 'No brands yet'}
+                                        </div>
                                     )}
                                 </div>
-                            </div>
+                            )}
+
+                            {Array.from(selectedBrandIds).map(id => (
+                                <input key={id} type="hidden" name="brandIds" value={id} />
+                            ))}
 
                             <div
                                 className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
                                 style={{
-                                    background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)',
-                                    border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)',
-                                    color: 'var(--app-warning, #f59e0b)',
+                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
+                                    color: 'var(--app-info, #3b82f6)',
                                 }}
                             >
-                                <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+                                <Lightbulb size={12} className="mt-0.5 flex-shrink-0" />
                                 <span>
-                                    Both fields are immutable once products exist in the category. Changing them later requires reprinting every barcode label.
+                                    {selectedBrandIds.size === 0
+                                        ? 'No brand linked — every brand can place products in this category.'
+                                        : `${selectedBrandIds.size} brand${selectedBrandIds.size === 1 ? '' : 's'} will be linked. Saving updates each brand's category list.`}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ═══ Pane: ATTRIBUTES ═══ */}
+                        <div className={activePane === 'attributes' ? 'space-y-3' : 'hidden'}>
+                            <div>
+                                <h4 className="text-tp-md font-bold text-app-foreground mb-0.5">Relevant Attributes</h4>
+                                <p className="text-tp-xs font-bold text-app-muted-foreground">
+                                    Attribute groups (Size, Color, Parfum, …) that products in this category can use.
+                                </p>
+                            </div>
+
+                            <div className="relative">
+                                <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input
+                                    value={attrQuery}
+                                    onChange={e => setAttrQuery(e.target.value)}
+                                    placeholder="Search attributes…"
+                                    className="w-full pl-9 pr-3 py-2 text-tp-sm font-bold rounded-xl outline-none"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                />
+                            </div>
+
+                            {loadingLinks ? (
+                                <div className="py-8 flex items-center justify-center text-app-muted-foreground">
+                                    <Loader2 size={14} className="animate-spin mr-2" /> Loading attributes…
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 p-1.5 rounded-xl overflow-y-auto custom-scrollbar"
+                                    style={{ maxHeight: '320px', background: 'color-mix(in srgb, var(--app-background) 50%, transparent)', border: '1px solid var(--app-border)' }}>
+                                    {filteredAttrs.map(a => {
+                                        const sel = selectedAttrIds.has(a.id);
+                                        return (
+                                            <button key={a.id} type="button" onClick={() => toggleAttr(a.id)}
+                                                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-tp-xs font-bold transition-all text-left"
+                                                style={{
+                                                    background: sel ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'var(--app-surface)',
+                                                    border: `1px solid ${sel ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'var(--app-border)'}`,
+                                                    color: sel ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                }}>
+                                                {sel && <Check size={10} />}
+                                                <span className="truncate flex-1">{a.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    {filteredAttrs.length === 0 && (
+                                        <div className="col-span-full py-4 text-center text-tp-xs font-bold text-app-muted-foreground">
+                                            {attrQuery ? 'No matches' : 'No attributes yet'}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {Array.from(selectedAttrIds).map(id => (
+                                <input key={id} type="hidden" name="attributeIds" value={id} />
+                            ))}
+
+                            <div
+                                className="p-3 rounded-xl flex items-start gap-2 text-tp-xs font-bold"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 20%, transparent)',
+                                    color: 'var(--app-info, #3b82f6)',
+                                }}
+                            >
+                                <Lightbulb size={12} className="mt-0.5 flex-shrink-0" />
+                                <span>
+                                    {selectedAttrIds.size === 0
+                                        ? 'No attribute selected — products in this category will have no dynamic fields.'
+                                        : `${selectedAttrIds.size} attribute${selectedAttrIds.size === 1 ? '' : 's'} will appear when creating products in this category.`}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </form>
 
-                {/* ── Footer (sticky, saves regardless of active pane) ── */}
+                {/* ── Footer ── */}
                 <div
                     className="px-5 py-3 flex items-center gap-2 flex-shrink-0"
                     style={{
