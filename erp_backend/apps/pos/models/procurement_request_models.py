@@ -93,6 +93,21 @@ class ProcurementRequest(TenantModel):
         help_text='The PO being created when this request was generated'
     )
 
+    # ── Recovery (terminal state cooldown — see ProcurementRecovery cron) ──
+    # Set when a REJECTED/CANCELLED/FAILED row has aged past the org's
+    # configured cooldown. Recovered rows are excluded from active filters
+    # so the product/request chip flips back to "Available" naturally.
+    is_recovered = models.BooleanField(
+        default=False, db_index=True,
+        help_text='Marked by the recover_terminal_procurement cron once the '
+                  'terminal-state cooldown matured. Recovered rows are hidden '
+                  'from active queries.',
+    )
+    recovered_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='When the cron archived this row. Pair with is_recovered.',
+    )
+
     # Audit
     requested_by = models.ForeignKey(
         'erp.User', on_delete=models.SET_NULL,

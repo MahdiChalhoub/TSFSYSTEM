@@ -5,8 +5,11 @@ import type {
 import {
     PIPELINE_STATUS_CONFIG,
     formatPipelineLabel,
+    applyRecoveryPolicy,
+    DEFAULT_RECOVERY_POLICY,
     type PipelineStatus,
     type ProcurementStatusMeta,
+    type PipelineRecoveryPolicy,
 } from '@/lib/procurement-status'
 
 /**
@@ -114,6 +117,38 @@ export function getRequestStatusMeta(
         // is easily distinguished from Rejected · Transfer.
         label: formatPipelineLabel(key, type),
         icon: ICON_BY_STATUS[status],
+        internal: INTERNAL_LABEL[status],
+    }
+}
+
+/** Live resolver that applies the org's procurement recovery policy
+ *  before formatting the chip. Use this in the row renderer so
+ *  REJECTED / CANCELLED / FAILED rows age out to "Available" on their
+ *  own per the per-tenant cooldown.
+ *
+ *  - `terminalSince`: when the row entered the terminal state. The
+ *    request record exposes `reviewed_at` (set on approve/reject/cancel)
+ *    — pass that. Falls back to `requested_at` if reviewed_at is null.
+ *  - `policy`: load via useProcurementRecoveryPolicy() in the component.
+ *  - `rejectionReason`: optional; lets per-reason overrides apply.
+ */
+export function getLiveRequestStatusMeta(
+    type: ProcurementRequestType,
+    status: ProcurementRequestStatus,
+    terminalSince: string | null | undefined,
+    policy: PipelineRecoveryPolicy = DEFAULT_RECOVERY_POLICY,
+    rejectionReason?: string,
+): RequestStatusMeta {
+    const rawKey = toPipelineKey(type, status)
+    const liveKey = applyRecoveryPolicy(rawKey, terminalSince ?? null, policy, rejectionReason)
+    const meta = PIPELINE_STATUS_CONFIG[liveKey] || PIPELINE_STATUS_CONFIG.NONE
+    return {
+        ...meta,
+        // No type suffix on NONE — Available is type-neutral.
+        label: liveKey === 'NONE' ? meta.label : formatPipelineLabel(liveKey, type),
+        // Reuse the original icon set so the row keeps its stage indicator.
+        // When recovered to NONE, swap to a check-style icon (CheckCircle2).
+        icon: liveKey === 'NONE' ? CheckCircle2 : ICON_BY_STATUS[status],
         internal: INTERNAL_LABEL[status],
     }
 }

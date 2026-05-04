@@ -41,9 +41,9 @@ export function BrandRow({
     // Category and Attribute look hidden / empty on first view.
     const [openFacets, setOpenFacets] = useState<Set<string>>(new Set(['category', 'country', 'attribute']))
 
-    const cats = brand.categories?.length || 0
-    const countries = brand.countries?.length || 0
-    const totalProducts = brand.product_count || 0
+    // No more raw count locals — everything visible on the row
+    // (product / category / country / attribute counts) now reads
+    // straight from brand.*_count via the StatChips below.
 
     // Refs mirror state so fetchProducts can stay a stable identity and
     // the useEffects below don't re-fire on every products/loading change
@@ -282,55 +282,16 @@ export function BrandRow({
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                            {(() => {
-                                // Prefer the count derived from products once
-                                // they're loaded — that reflects where the brand
-                                // is *actually* sold. Fall back to the M2M
-                                // brand.countries field only when products
-                                // haven't been fetched yet.
-                                const productCountries = byCountry.filter(c => c.id !== null).length
-                                const hasUniversal = byCountry.some(c => c.id === null)
-                                const linkedCount = products !== null ? productCountries : countries
-
-                                if (linkedCount > 0 && hasUniversal) {
-                                    return (
-                                        <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
-                                            <Globe size={9} /> {linkedCount} countr{linkedCount === 1 ? 'y' : 'ies'} + Universal
-                                        </span>
-                                    )
-                                }
-                                if (linkedCount > 0) {
-                                    return (
-                                        <span className="text-tp-xxs font-medium text-app-muted-foreground flex items-center gap-0.5">
-                                            <Globe size={9} /> {linkedCount} linked countr{linkedCount === 1 ? 'y' : 'ies'}
-                                        </span>
-                                    )
-                                }
-                                if (hasUniversal) {
-                                    return (
-                                        <span className="text-tp-xxs font-bold flex items-center gap-0.5 px-1.5 py-[1px] rounded-full"
-                                            style={{
-                                                background: 'color-mix(in srgb, var(--app-info) 12%, transparent)',
-                                                color: 'var(--app-info)'
-                                            }}>
-                                            <Globe size={9} /> Universal
-                                        </span>
-                                    )
-                                }
-                                // Products not loaded yet AND no M2M countries
-                                return (
-                                    <span className="text-tp-xxs font-medium text-app-muted-foreground italic">
-                                        Click to load
-                                    </span>
-                                )
-                            })()}
-                            {cats > 0 && (
-                                <span className="text-tp-xxs font-medium text-app-muted-foreground">
-                                    · {cats} categor{cats === 1 ? 'y' : 'ies'}
-                                </span>
-                            )}
-                        </div>
+                        {/* Subtitle removed — every fact it carried (linked
+                            countries, Universal flag, category count) is
+                            already shown in the colored chip strip on the
+                            right of the row, with the same numbers from
+                            the same server-side source. Repeating them
+                            here meant the user saw "1 categories" twice
+                            for every brand and an italic "Click to load"
+                            hint that was a remnant of the old lazy-fetch
+                            era — counts now come from the brand serializer
+                            directly and need no client-side fetch. */}
                     </div>
 
                     {/* Stat chips — counts come from the brand serializer,

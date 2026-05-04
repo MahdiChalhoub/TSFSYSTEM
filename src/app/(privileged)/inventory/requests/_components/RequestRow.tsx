@@ -9,7 +9,8 @@ import {
     bumpProcurementRequest,
     type ProcurementRequestRecord,
 } from '@/app/actions/inventory/procurement-requests'
-import { TYPE_META, PRIORITY_META, getRequestStatusMeta } from '../_lib/meta'
+import { TYPE_META, PRIORITY_META, getLiveRequestStatusMeta } from '../_lib/meta'
+import { useProcurementRecoveryPolicy } from '@/hooks/useProcurementRecoveryPolicy'
 import { runTimed } from '@/lib/perf-timing'
 
 type RunAction = (
@@ -25,9 +26,18 @@ export function RequestRow({ r, pending, runAction }: {
 }) {
     const tm = TYPE_META[r.request_type]
     const pm = PRIORITY_META[r.priority]
-    // Type-aware lookup so EXECUTED renders as "PO Sent" (purchase) or
-    // "In Transit" (transfer) — same vocabulary as /inventory/products.
-    const sm = getRequestStatusMeta(r.request_type, r.status)
+    // Type-aware lookup + tenant recovery policy applied: the chip walks
+    // the full /inventory/products vocabulary AND auto-recycles to
+    // "Available" once a terminal state ages out per the org's policy.
+    // Terminal-state entry time = reviewed_at (set on approve/reject/
+    // cancel); falls back to requested_at for legacy rows.
+    const recoveryPolicy = useProcurementRecoveryPolicy()
+    const sm = getLiveRequestStatusMeta(
+        r.request_type,
+        r.status,
+        r.reviewed_at || r.requested_at,
+        recoveryPolicy,
+    )
     const TypeIcon = tm.icon
     const StatusIcon = sm.icon
     const requestedAt = new Date(r.requested_at)
