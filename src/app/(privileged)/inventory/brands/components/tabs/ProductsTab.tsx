@@ -320,8 +320,20 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                             {filteredSorted.map(p => {
                                 const isChecked = selected.has(p.id)
                                 return (
+                                    /* Browser-native virtualization:
+                                       content-visibility:auto skips
+                                       layout/paint of off-screen rows,
+                                       contain-intrinsic-size reserves
+                                       the right height (52px ≈ row
+                                       padding + content) so the
+                                       scrollbar stays accurate. Zero
+                                       deps; handles a few thousand
+                                       rows comfortably. For 10k+ a
+                                       react-window pass would still
+                                       be needed. */
                                     <div key={p.id}
-                                        className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
+                                        className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover"
+                                        style={{ contentVisibility: 'auto', containIntrinsicSize: '0 52px' }}>
                                         <button type="button" onClick={(e) => { e.stopPropagation(); toggle(p.id) }}
                                             className="w-4 h-4 rounded border-2 flex items-center justify-center transition-all flex-shrink-0"
                                             style={{
