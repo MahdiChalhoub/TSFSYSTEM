@@ -38,7 +38,7 @@ const INITIAL_PAGE_SIZE = 100
 export default async function ProductMasterPage(props: {
   searchParams: Promise<{ unit?: string; category?: string; brand?: string }>
 }) {
-  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree, currentUser]] = await Promise.all([
+  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree, suppliers, currentUser]] = await Promise.all([
     props.searchParams,
     Promise.all([
       safeLoadPaginated(`products/?page_size=${INITIAL_PAGE_SIZE}`),
@@ -48,6 +48,10 @@ export default async function ProductMasterPage(props: {
       safeLoad('reference/countries/'),
       safeLoad('reference/sourcing-countries/'),
       safeLoad('inventory/product-attributes/tree/'),
+      // Suppliers — CRM contacts of type=SUPPLIER. Powers the Supplier filter
+      // in the FiltersPanel; without this lookup the filter renders an empty
+      // dropdown when the user toggles it on in Customize.
+      safeLoad('crm/contacts/?type=SUPPLIER'),
       import('@/app/actions/auth').then(m => m.getUser()),
     ]),
   ])
@@ -96,6 +100,13 @@ export default async function ProductMasterPage(props: {
           units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
           countries: countryLookup,
           parfums: parfumOptions,
+          suppliers: suppliers.map((s: any) => ({
+            id: s.id,
+            // CRM contacts can be either a person (name) or a company. Pick
+            // whichever is filled — falling back to a synthetic label so the
+            // dropdown never shows blank rows.
+            name: s.name || s.company_name || `#${s.id}`,
+          })),
         }}
       />
     </RequestFlowProvider>

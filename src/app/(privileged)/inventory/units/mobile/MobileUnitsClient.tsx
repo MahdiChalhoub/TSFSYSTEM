@@ -15,6 +15,7 @@ import { erpFetch } from '@/lib/erp-api'
 import { buildTree } from '@/lib/utils/tree'
 import { UnitFormModal } from '@/components/admin/UnitFormModal'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
+import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
 import { MobileMasterPage } from '@/components/mobile/MobileMasterPage'
 import { MobileBottomSheet } from '@/components/mobile/MobileBottomSheet'
 import { MobileActionSheet } from '@/components/mobile/MobileActionSheet'
@@ -321,7 +322,7 @@ export function MobileUnitsClient({ initialUnits, currentUser }: { initialUnits:
  * code / Base badge; the footer keeps the existing Edit + Add-derived
  * action bar so the operator's primary verbs stay one tap away.
  */
-type MobileTabId = 'overview' | 'packages' | 'calculator' | 'audit'
+type MobileTabId = 'overview' | 'products' | 'packages' | 'calculator' | 'audit'
 
 interface MobileUnitDetailProps {
     node: UnitNode
@@ -345,6 +346,7 @@ function MobileUnitDetail({ node, allUnits, onEdit, onAdd, onClose }: MobileUnit
 
     const tabs: { id: MobileTabId; label: string; icon: React.ReactNode; count?: number }[] = [
         { id: 'overview',   label: 'Overview',   icon: <Layers size={13} /> },
+        { id: 'products',   label: 'Products',   icon: <Package size={13} />,    count: productCount || undefined },
         { id: 'packages',   label: 'Packages',   icon: <Box size={13} />,        count: initialPackageCount || undefined },
         { id: 'calculator', label: 'Calc',       icon: <Calculator size={13} /> },
         { id: 'audit',      label: 'Audit',      icon: <History size={13} /> },
@@ -465,6 +467,20 @@ function MobileUnitDetail({ node, allUnits, onEdit, onAdd, onClose }: MobileUnit
                             </div>
                         ))}
                     </div>
+                )}
+
+                {tab === 'products' && (
+                    <EntityProductsTab config={{
+                        entityType: 'unit',
+                        entityId: node.id,
+                        entityName: node.name,
+                        exploreEndpoint: `units/${node.id}/explore/`,
+                        moveEndpoint: 'units/move_products/',
+                        moveTargetKey: 'target_unit_id',
+                        moveTargets: allUnits.filter((u) => u.id !== node.id),
+                        moveLabel: 'Move to Unit',
+                        moveIcon: <Ruler size={12} />,
+                    }} />
                 )}
 
                 {tab === 'packages' && <MobileUnitPackagesPanel unitId={node.id} />}
