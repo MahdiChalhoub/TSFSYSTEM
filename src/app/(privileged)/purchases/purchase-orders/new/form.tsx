@@ -193,6 +193,26 @@ export default function PurchaseForm({
         // belong to the chosen branch.
         return topbarBranchId && topbarLocationId ? topbarLocationId : ''
     })
+
+    // ── One-shot top-bar hydration ───────────────────────────────────
+    // BranchProvider reads localStorage in a useEffect, so on first
+    // render `topbarBranchId` is null. The lazy useState above runs once
+    // at mount and locks in that null value. This effect re-seeds the
+    // picker when the provider finishes hydrating — but only if the
+    // user hasn't picked anything yet (selectedSiteId === '') and we're
+    // on a fresh form (not edit, no recovered draft). The `seeded` ref
+    // makes sure later top-bar changes don't blow away the operator's
+    // explicit picks.
+    const topbarSeeded = useRef(false)
+    useEffect(() => {
+        if (isEdit) return
+        if (topbarSeeded.current) return
+        if (topbarBranchId === null) return
+        if (selectedSiteId !== '') return // user already has something
+        topbarSeeded.current = true
+        setSelectedSiteId(topbarBranchId)
+        if (topbarLocationId !== null) setWarehouseId(topbarLocationId)
+    }, [isEdit, topbarBranchId, topbarLocationId, selectedSiteId])
     const [assigneeId, setAssigneeId] = useState<number | ''>(() =>
         isEdit ? seedNumber(initialPO?.assignee?.id ?? initialPO?.assignee ?? initialPO?.assignee_id) : ''
     )
