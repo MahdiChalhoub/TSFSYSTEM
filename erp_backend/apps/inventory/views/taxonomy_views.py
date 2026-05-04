@@ -100,8 +100,29 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     search_fields = ['name']
 
     def destroy(self, request, *args, **kwargs):
-        """Guard: block delete when products reference this unit. Bypass with ?force=1."""
+        """Guard: block delete when products reference this unit. Bypass with ?force=1.
+
+        Base-unit safeguard: deleting a base unit cascades to every derived
+        unit AND every product that uses any of them. Limit base-unit deletion
+        to staff/superuser so a regular inventory editor can't accidentally
+        nuke an entire unit family. Defense-in-depth — the frontend also
+        hides the Delete button for non-staff on base units.
+        """
         instance = self.get_object()
+        is_base_unit = instance.base_unit_id is None
+        if is_base_unit and not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {
+                    'error': (
+                        'Only staff or superuser accounts can delete a base unit. '
+                        'Base units anchor the entire conversion family — deleting '
+                        f'"{instance.name}" would cascade to its derived units and '
+                        'every product that references them.'
+                    ),
+                    'code': 'base_unit_protected',
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if not _force_flag(request):
             qs = Product.objects.filter(
                 unit=instance, organization=instance.organization

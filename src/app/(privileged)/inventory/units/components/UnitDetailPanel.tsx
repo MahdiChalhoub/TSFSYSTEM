@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import {
     ChevronRight, Plus, Pencil, X, Ruler, Trash2, Layers, Package, GitBranch,
     Bookmark, Scale, Loader2, ArrowRightLeft, ArrowUpDown, Box, Calculator,
+    History, User as UserIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { listUnitPackages, deleteUnitPackage } from '@/app/actions/inventory/units'
@@ -14,9 +15,9 @@ import { TemplateFormModal } from '@/app/(privileged)/inventory/packages/_shared
 import type { UnitNode } from './UnitRow'
 
 /* ═══════════════════════════════════════════════════════════
- *  DETAIL PANEL — 4 tabs: Overview, Products, Packages, Calculator
+ *  DETAIL PANEL — 5 tabs: Overview, Products, Packages, Calculator, Audit
  * ═══════════════════════════════════════════════════════════ */
-type PanelTab = 'overview' | 'products' | 'packages' | 'calculator'
+type PanelTab = 'overview' | 'products' | 'packages' | 'calculator' | 'audit'
 
 type UnitPackageTemplate = {
     id: number
@@ -72,6 +73,8 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
         { key: 'products' as PanelTab, label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
         { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: unitPackages.length || undefined, color: 'var(--app-info)' },
         { key: 'calculator' as PanelTab, label: 'Calculator', icon: <Calculator size={13} />, color: 'var(--app-warning)' },
+        // History of who-changed-what on this unit. Fetches lazily on tab open.
+        { key: 'audit' as PanelTab, label: 'Audit', icon: <History size={13} />, color: 'var(--app-muted-foreground)' },
     ]
 
     return (
@@ -322,6 +325,11 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                         />
                     </div>
                 )}
+
+                {/* ─── AUDIT TAB ─── */}
+                {activeTab === 'audit' && (
+                    <UnitAuditTimeline unitId={node.id} />
+                )}
             </div>
 
             {/* Shared "New Template" modal — same backend as /inventory/packages.
@@ -355,6 +363,148 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                     }}
                 />
             )}
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  UNIT AUDIT TIMELINE
+ *  -------------------
+ *  Compact who-changed-what timeline scoped to a single unit.
+ *  Reads `audit-trail/?resource_type=unit&resource_id=<id>` from
+ *  the kernel AuditLog. Read-only by design — verify/confirm/undo
+ *  belong to the page-level governance panel; this tab just shows
+ *  history so an operator answering "who changed this?" can see it.
+ * ═══════════════════════════════════════════════════════════ */
+type AuditFieldChange = { field_name: string; old_value: string | null; new_value: string | null }
+type AuditEntry = {
+    id: number
+    action: string
+    resource_type: string
+    resource_id: number | null
+    resource_repr?: string
+    username?: string
+    timestamp: string
+    field_changes?: AuditFieldChange[]
+}
+
+function timeAgo(ts: string): string {
+    const ms = Date.now() - new Date(ts).getTime()
+    if (Number.isNaN(ms)) return ts
+    const m = Math.floor(ms / 60000)
+    if (m < 1) return 'just now'
+    if (m < 60) return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h ago`
+    const d = Math.floor(h / 24)
+    if (d < 30) return `${d}d ago`
+    return new Date(ts).toLocaleDateString()
+}
+
+function actionTone(action: string): { bg: string; fg: string } {
+    const tail = (action.split('.').pop() || '').toLowerCase()
+    if (tail === 'create') return { bg: 'color-mix(in srgb, var(--app-success) 12%, transparent)', fg: 'var(--app-success)' }
+    if (tail === 'delete') return { bg: 'color-mix(in srgb, var(--app-error) 12%, transparent)', fg: 'var(--app-error)' }
+    return { bg: 'color-mix(in srgb, var(--app-info) 12%, transparent)', fg: 'var(--app-info)' }
+}
+
+function UnitAuditTimeline({ unitId }: { unitId: number }) {
+    const [entries, setEntries] = useState<AuditEntry[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        setError(null)
+        // Endpoint is mounted at both `audit-trail/` (top-level) and
+        // `inventory/audit-trail/`; use the inventory one to match
+        // the route that runs through the inventory router middleware.
+        erpFetch(`inventory/audit-trail/?resource_type=unit&resource_id=${unitId}&limit=100`)
+            .then((data: unknown) => {
+                if (cancelled) return
+                const list = Array.isArray(data) ? data : ((data as { results?: AuditEntry[] })?.results ?? [])
+                setEntries(list as AuditEntry[])
+            })
+            .catch((e: unknown) => {
+                if (cancelled) return
+                setError(e instanceof Error ? e.message : 'Failed to load history')
+            })
+            .finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
+    }, [unitId])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-10">
+                <Loader2 size={16} className="animate-spin text-app-muted-foreground" />
+            </div>
+        )
+    }
+    if (error) {
+        return (
+            <div className="p-3 text-tp-sm text-app-muted-foreground">
+                {error.includes('audit') ? 'Audit log isn\'t available on this deployment.' : `Failed to load history: ${error}`}
+            </div>
+        )
+    }
+    if (entries.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+                <History size={20} className="text-app-muted-foreground mb-2 opacity-40" />
+                <p className="text-tp-md font-bold text-app-muted-foreground">No history yet</p>
+                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[260px]">
+                    Edits to this unit will show up here — who, when, and which fields changed.
+                </p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="p-3 space-y-2">
+            <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                {entries.length} event{entries.length === 1 ? '' : 's'} · most recent first
+            </p>
+            {entries.map(e => {
+                const tone = actionTone(e.action)
+                const tail = (e.action.split('.').pop() || '').toLowerCase()
+                return (
+                    <div key={e.id} className="rounded-xl p-2.5 space-y-1.5"
+                         style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-tp-xxs font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                  style={{ background: tone.bg, color: tone.fg }}>
+                                {tail || e.action}
+                            </span>
+                            <div className="flex items-center gap-1 text-tp-xxs text-app-muted-foreground">
+                                <UserIcon size={10} /><span className="truncate max-w-[120px]">{e.username || 'system'}</span>
+                            </div>
+                            <span className="text-tp-xxs text-app-muted-foreground" title={e.timestamp}>
+                                {timeAgo(e.timestamp)}
+                            </span>
+                        </div>
+                        {e.field_changes && e.field_changes.length > 0 && (
+                            <div className="space-y-0.5">
+                                {e.field_changes.map((fc, i) => (
+                                    <div key={i} className="text-tp-xs flex items-center gap-1.5 flex-wrap">
+                                        <span className="font-mono font-bold" style={{ color: 'var(--app-foreground)' }}>{fc.field_name}</span>
+                                        <span className="font-mono px-1 rounded" title="before"
+                                              style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-muted-foreground)', textDecoration: 'line-through' }}>
+                                            {fc.old_value ?? '∅'}
+                                        </span>
+                                        <ChevronRight size={9} className="opacity-50" />
+                                        <span className="font-mono px-1 rounded" title="after"
+                                              style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-foreground)' }}>
+                                            {fc.new_value ?? '∅'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
         </div>
     )
 }

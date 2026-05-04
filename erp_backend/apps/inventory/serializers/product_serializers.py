@@ -125,6 +125,9 @@ class ProductLiteSerializer(serializers.ModelSerializer):
             # serializer's N+1 SerializerMethodFields.
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc',
+            # Direct scalar columns the picker's customizable column set
+            # exposes. Both are plain DB columns — no extra queries.
+            'status', 'tva_rate',
         ]
         read_only_fields = fields
 

@@ -101,7 +101,20 @@ class AuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
         if resource_type:
             qs = qs.filter(resource_type=resource_type)
 
-        return qs.order_by('-timestamp')[:200]
+        # Per-record filter — used by the detail-panel "Audit" tab to scope
+        # to a specific row's history (e.g. unit id 42 only).
+        resource_id = self.request.query_params.get('resource_id')
+        if resource_id:
+            qs = qs.filter(resource_id=str(resource_id))
+
+        # Cap is configurable so detail panels can ask for fewer rows when
+        # they know the resource has a short history.
+        try:
+            limit = int(self.request.query_params.get('limit') or 200)
+        except (TypeError, ValueError):
+            limit = 200
+        limit = max(1, min(limit, 500))
+        return qs.order_by('-timestamp')[:limit]
 
     def list(self, request, *args, **kwargs):
         """Gracefully handle missing audit table (migration faked but table not created)."""

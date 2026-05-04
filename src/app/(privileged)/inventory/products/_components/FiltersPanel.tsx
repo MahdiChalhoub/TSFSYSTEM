@@ -44,6 +44,7 @@ export function FiltersPanel({ items, filters, setFilters, isOpen, lookups, visi
   const statuses = useMemo(() => Object.keys(STATUS_CONFIG), [])
   const parfumOptions = useMemo(() => (lookups.parfums || []).map(p => p.name).sort(), [lookups.parfums])
   const sourceCountries = useMemo(() => (lookups.countries || []).map(c => c.name).sort(), [lookups.countries])
+  const supplierOptions = useMemo(() => (lookups.suppliers || []).map(s => s.name).sort(), [lookups.suppliers])
   // ── DATA-DERIVED FILTERS ─────────────────────────────────────────────
   // No clean master exists; derive from the current set so the filter is at
   // least usable. Replace with a master fetch when one is available.
@@ -108,6 +109,9 @@ export function FiltersPanel({ items, filters, setFilters, isOpen, lookups, visi
 
         {vf.parfum !== false && <SearchableDropdown label="Parfum" value={filters.parfum} onChange={v => upd({ parfum: v })}
           options={[{ value: '__NONE__', label: '— No Parfum —' }, ...parfumOptions.map(p => ({ value: p, label: p }))]} placeholder="All Parfums" />}
+
+        {vf.supplier !== false && <SearchableDropdown label="Supplier" value={filters.supplier} onChange={v => upd({ supplier: v })}
+          options={[{ value: '__NONE__', label: '— No Supplier —' }, ...supplierOptions.map(s => ({ value: s, label: s }))]} placeholder="All Suppliers" />}
 
         {vf.lotMgmt !== false && <SearchableDropdown label="Lot Management" value={filters.lotMgmt} onChange={v => upd({ lotMgmt: v })}
           options={[{ value: '__NONE__', label: '— None —' }, ...lotMgmtModes.map(m => ({ value: m, label: m }))]} placeholder="All" />}

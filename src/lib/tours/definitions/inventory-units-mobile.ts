@@ -2,7 +2,7 @@
  *  TOUR: Inventory — Units (Mobile)
  * ═══════════════════════════════════════════════════════════ */
 
-import { Ruler, Sparkles, Search, Plus, Package, Menu, RefreshCcw, Scale, Layers } from 'lucide-react'
+import { Ruler, Sparkles, Search, Plus, Package, RefreshCcw, Scale, Layers, ArrowRightLeft, Database } from 'lucide-react'
 import { createElement } from 'react'
 import { registerTour } from '@/lib/tours/registry'
 import type { TourConfig } from '@/lib/tours/types'
@@ -57,10 +57,16 @@ const tour: TourConfig = {
             icon: createElement(Scale, { size: 16 }), color: 'var(--app-warning, #f59e0b)',
         },
         {
-            target: null, isWelcome: true,
-            title: 'More Tools via ⋯',
-            description: 'Tap the overflow menu in the header for the Calculator (convert between any two units), Barcode config, and Maintenance cleanup.',
-            icon: createElement(Menu, { size: 16 }), color: 'var(--app-muted-foreground)',
+            target: '[data-tour="unit-calc-btn"]',
+            title: 'Floating Calculator', placement: 'bottom',
+            description: 'Tap to toggle a quick converter that works across every unit on the page — no detail sheet needed. Great for "how many pieces in 3 pallets?" math.',
+            icon: createElement(ArrowRightLeft, { size: 16 }), color: 'var(--app-info, #3b82f6)',
+        },
+        {
+            target: '[data-tour="data-menu-btn"]',
+            title: 'Import / Export / Print', placement: 'bottom',
+            description: 'Round-trip your unit catalog as CSV / Excel. Export carries `id` so re-importing updates rows in place; the 2-pass importer wires the parent unit after every row exists, so CSV order doesn\'t matter.',
+            icon: createElement(Database, { size: 16 }), color: 'var(--app-success, #22c55e)',
         },
         {
             target: null, isWelcome: true,

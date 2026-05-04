@@ -20,6 +20,7 @@ import { erpFetch } from '@/lib/erp-api'
 
 import { UnitRow, type UnitNode } from './components/UnitRow'
 import { UnitDetailPanel } from './components/UnitDetailPanel'
+import { buildUnitsDataTools } from './_lib/dataTools'
 
 type DeleteUnitResult = {
     success: boolean
@@ -42,7 +43,8 @@ type RenderPropsRef = {
  *  KPI filtering, tree build, and empty-state. This file only
  *  supplies data + row + modals + delete-conflict flow.
  * ═══════════════════════════════════════════════════════════ */
-export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[] }) {
+export default function UnitsClient({ initialUnits, currentUser }: { initialUnits: UnitNode[]; currentUser?: { is_staff?: boolean; is_superuser?: boolean } | null }) {
+    const canDeleteBaseUnit = !!(currentUser?.is_staff || currentUser?.is_superuser)
     const router = useRouter()
     const [, startTransition] = useTransition()
     const data = initialUnits
@@ -54,6 +56,27 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
     const [editingUnit, setEditingUnit] = useState<(UnitNode & { _parentId?: number }) | null>(null)
     const [formKey, setFormKey] = useState(0)
     const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null)
+    // Bulk-delete confirmation. The `clear` callback wipes the toolbar
+    // selection after a run; we keep it on the request so the dialog can
+    // call it without re-deriving from current state.
+    const [bulkDeleteRequest, setBulkDeleteRequest] = useState<{ ids: number[]; clear: () => void } | null>(null)
+    const [bulkDeleting, setBulkDeleting] = useState(false)
+    const handleBulkDelete = async () => {
+        if (!bulkDeleteRequest) return
+        const { ids, clear } = bulkDeleteRequest
+        setBulkDeleting(true)
+        let ok = 0, fail = 0
+        for (const id of ids) {
+            const res = await deleteUnit(id) as DeleteUnitResult
+            if (res?.success) ok++; else fail++
+        }
+        setBulkDeleting(false)
+        setBulkDeleteRequest(null)
+        if (ok) toast.success(`Deleted ${ok} unit${ok === 1 ? '' : 's'}`)
+        if (fail) toast.error(`${fail} unit${fail === 1 ? '' : 's'} failed — usually products still reference them`)
+        clear()
+        router.refresh()
+    }
     const [deleteConflict, setDeleteConflict] = useState<DeleteConflictState | null>(null)
 
     const openForm = useCallback((parentId?: number) => {
@@ -129,213 +152,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
                 tourId: 'inventory-units',
                 searchPlaceholder: 'Search by name, code, or type...',
                 primaryAction: { label: 'New Unit', icon: <Plus size={14} />, onClick: () => openForm() },
-                dataTools: {
-                    title: 'Unit Data',
-                    exportFilename: 'units',
-                    exportColumns: [
-                        // `id` and `base_unit_id` are the immutable round-trip
-                        // keys — a re-import on the same instance updates the
-                        // matching rows by id, and the base-unit FK is wired
-                        // by id (not by code) so renaming a code can't break
-                        // the linkage. Both are also exported as `code` for
-                        // human-readable cross-instance imports.
-                        { key: 'id', label: 'ID', format: (item) => asUnit(item).id ?? '' },
-                        { key: 'name', label: 'Name' },
-                        { key: 'code', label: 'Code' },
-                        { key: 'short_name', label: 'Short Name', format: (item) => asUnit(item).short_name || '' },
-                        { key: 'type', label: 'Type' },
-                        { key: 'conversion_factor', label: 'Conversion', format: (item) => asUnit(item).conversion_factor ?? 1 },
-                        { key: 'base_unit_id', label: 'Base Unit ID', format: (item) => asUnit(item).base_unit ?? '' },
-                        { key: 'base_unit_code', label: 'Base Unit', format: (item) => {
-                            const u = asUnit(item)
-                            const base = u.base_unit ? data.find((x) => x.id === u.base_unit) : null
-                            return base ? (base.code || base.name || '') : ''
-                        }},
-                        { key: 'allow_fraction', label: 'Allow Fraction', format: (item) => (item as { allow_fraction?: boolean }).allow_fraction ? 'true' : 'false' },
-                        { key: 'needs_balance', label: 'Needs Balance', format: (item) => asUnit(item).needs_balance ? 'true' : 'false' },
-                        { key: 'product_count', label: 'Products', format: (item) => asUnit(item).product_count || 0 },
-                    ],
-                    print: {
-                        title: 'Units of Measure',
-                        subtitle: 'Conversion Tree',
-                        prefKey: 'print.units',
-                        sortBy: 'code',
-                        columns: [
-                            { key: 'name', label: 'Name', defaultOn: true },
-                            { key: 'code', label: 'Code', mono: true, defaultOn: true, width: '90px' },
-                            { key: 'short', label: 'Short', mono: true, defaultOn: true, width: '80px' },
-                            { key: 'type', label: 'Type', defaultOn: true, width: '80px' },
-                            { key: 'conv', label: 'Conv.', mono: true, align: 'right', defaultOn: true, width: '80px' },
-                            { key: 'base', label: 'Base Unit', mono: true, defaultOn: true, width: '90px' },
-                            { key: 'products', label: 'Products', align: 'right', defaultOn: true, width: '80px' },
-                        ],
-                        rowMapper: (item) => {
-                            const u = asUnit(item)
-                            return {
-                                name: u.name,
-                                code: u.code || '',
-                                short: u.short_name || '',
-                                type: u.type || '',
-                                conv: u.conversion_factor ?? 1,
-                                base: (() => {
-                                    const base = u.base_unit ? data.find((x) => x.id === u.base_unit) : null
-                                    return base ? (base.code || base.name || '') : ''
-                                })(),
-                                products: u.product_count || 0,
-                            }
-                        },
-                    },
-                    import: {
-                        entity: 'unit',
-                        endpoint: 'units/',
-                        columns: [
-                            { name: 'id',                required: false, desc: 'Existing unit id — when set, the row is updated (PATCH) instead of created (POST). Leave blank for new rows.', example: '42' },
-                            { name: 'name',              required: true,  desc: 'Display name',                                            example: 'Kilogram' },
-                            { name: 'code',              required: true,  desc: 'Unique unit code',                                        example: 'KG' },
-                            { name: 'short_name',        required: false, desc: 'Short label (e.g. on labels)',                            example: 'kg' },
-                            { name: 'type',              required: false, desc: 'COUNT / WEIGHT / VOLUME / LENGTH / AREA / TIME / OTHER',  example: 'WEIGHT' },
-                            { name: 'conversion_factor', required: false, desc: 'How many base units this is worth (default 1)',           example: '1' },
-                            { name: 'base_unit_id',      required: false, desc: 'Parent unit id — preferred over base_unit_code when both are present; immune to code renames.', example: '17' },
-                            { name: 'base_unit_code',    required: false, desc: 'Parent unit code (fallback if base_unit_id is empty). Leave blank for base units.', example: 'G' },
-                            { name: 'allow_fraction',    required: false, desc: 'true / false — allow decimal qtys (default true)',        example: 'true' },
-                            { name: 'needs_balance',     required: false, desc: 'true / false — uses scale at POS (default false)',         example: 'false' },
-                        ],
-                        sampleCsv:
-                            'id,name,code,short_name,type,conversion_factor,base_unit_id,base_unit_code,allow_fraction,needs_balance\n' +
-                            ',Gram,G,g,WEIGHT,1,,,true,false\n' +
-                            ',Kilogram,KG,kg,WEIGHT,1000,,G,true,true\n' +
-                            ',Piece,PC,pc,COUNT,1,,,false,false',
-                        previewColumns: [
-                            { key: 'name',        label: 'Name' },
-                            { key: 'code',        label: 'Code', mono: true },
-                            { key: 'type',        label: 'Type', mono: true },
-                            { key: 'conversion_factor', label: 'Conv.', mono: true },
-                            { key: 'base_unit_code',    label: 'Base', mono: true },
-                        ],
-                        // Used only when no id/peer-FK logic is needed — kept
-                        // as the legacy single-row body builder. The 2-pass
-                        // `runImport` below uses its own builder so it can
-                        // strip `base_unit` for pass 1.
-                        buildPayload: (row: Record<string, string>) => {
-                            const baseCode = (row.base_unit_code || '').trim()
-                            const baseId = (row.base_unit_id || '').trim()
-                            const baseUnit = baseId
-                                ? Number(baseId)
-                                : baseCode
-                                    ? (data.find((u) => (u.code || '').toLowerCase() === baseCode.toLowerCase())?.id ?? null)
-                                    : null
-                            const truthy = (v: string | undefined, def: boolean) => {
-                                if (v == null || v === '') return def
-                                return /^(true|1|yes|y)$/i.test(v.trim())
-                            }
-                            return {
-                                name: row.name,
-                                code: row.code,
-                                short_name: row.short_name || null,
-                                type: (row.type || 'COUNT').toUpperCase(),
-                                conversion_factor: row.conversion_factor ? Number(row.conversion_factor) : 1,
-                                base_unit: baseUnit,
-                                allow_fraction: truthy(row.allow_fraction, true),
-                                needs_balance: truthy(row.needs_balance, false),
-                            }
-                        },
-                        // Two-pass runner: solves the forward-reference and
-                        // code-rename problems baked into the simple loop.
-                        //   Pass 1 — POST/PATCH each row WITHOUT base_unit so
-                        //            no row depends on a peer that hasn't
-                        //            been created yet. PATCH when the row
-                        //            carries an `id` (upsert), POST otherwise.
-                        //            Capture the resulting id in code→id and
-                        //            id→id maps.
-                        //   Pass 2 — wire `base_unit` per row using id-first,
-                        //            code-fallback. Failures here don't flip
-                        //            the row's pass-1 result — the row was
-                        //            created/updated successfully; only the
-                        //            FK wiring failed (and we log it).
-                        runImport: async (rows) => {
-                            const truthy = (v: string | undefined, def: boolean) => {
-                                if (v == null || v === '') return def
-                                return /^(true|1|yes|y)$/i.test(v.trim())
-                            }
-                            const codeToId: Record<string, number> = {}
-                            for (const u of data) {
-                                if (u.code) codeToId[u.code.toLowerCase()] = u.id
-                            }
-                            const pass1: { row: Record<string, string>; id: number | null; result: { name: string; ok: boolean; error?: string } }[] = []
-                            // ── Pass 1: create / update rows without FK ──
-                            for (const row of rows) {
-                                const csvId = (row.id || '').trim()
-                                const baseShallow = {
-                                    name: row.name,
-                                    code: row.code,
-                                    short_name: row.short_name || null,
-                                    type: (row.type || 'COUNT').toUpperCase(),
-                                    conversion_factor: row.conversion_factor ? Number(row.conversion_factor) : 1,
-                                    base_unit: null as number | null,
-                                    allow_fraction: truthy(row.allow_fraction, true),
-                                    needs_balance: truthy(row.needs_balance, false),
-                                }
-                                try {
-                                    let resultId: number
-                                    if (csvId) {
-                                        const updated = await erpFetch(`units/${csvId}/`, {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(baseShallow),
-                                        })
-                                        resultId = Number(updated?.id ?? csvId)
-                                    } else {
-                                        const created = await erpFetch('units/', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(baseShallow),
-                                        })
-                                        resultId = Number(created?.id)
-                                    }
-                                    if (row.code) codeToId[row.code.toLowerCase()] = resultId
-                                    pass1.push({ row, id: resultId, result: { name: row.name, ok: true } })
-                                } catch (e: unknown) {
-                                    const msg = e instanceof Error ? e.message : String(e ?? 'failed')
-                                    pass1.push({ row, id: null, result: { name: row.name, ok: false, error: msg } })
-                                }
-                            }
-                            // ── Pass 2: wire base_unit FK ──
-                            for (const p of pass1) {
-                                if (!p.id) continue
-                                const baseId = (p.row.base_unit_id || '').trim()
-                                const baseCode = (p.row.base_unit_code || '').trim()
-                                const resolved = baseId
-                                    ? Number(baseId)
-                                    : baseCode
-                                        ? codeToId[baseCode.toLowerCase()]
-                                        : null
-                                if (!resolved) continue // row is a base unit (no parent)
-                                if (resolved === p.id) continue // a unit can't be its own parent
-                                try {
-                                    await erpFetch(`units/${p.id}/`, {
-                                        method: 'PATCH',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ base_unit: resolved }),
-                                    })
-                                } catch (e: unknown) {
-                                    // Record the FK failure on the row that was
-                                    // otherwise saved — pass-1 success but FK
-                                    // wiring failed, so the operator can fix it.
-                                    const msg = e instanceof Error ? e.message : String(e ?? 'FK failed')
-                                    p.result.ok = false
-                                    p.result.error = `Saved, but base_unit wiring failed: ${msg}`
-                                }
-                            }
-                            return pass1.map(p => p.result)
-                        },
-                        tip: (
-                            <>
-                                <strong>Tip:</strong> Order doesn't matter — the importer wires <code>base_unit</code> in a second pass.
-                                Re-importing an exported CSV updates rows by <code>id</code>; <code>base_unit_id</code> is preferred over <code>base_unit_code</code>.
-                            </>
-                        ),
-                    },
-                },
+                dataTools: buildUnitsDataTools(data),
                 secondaryActions: [
                     { label: 'Calculator', icon: <ArrowRightLeft size={13} />, onClick: () => setShowCalc(p => !p), active: showCalc, activeColor: 'var(--app-info)', dataTour: 'unit-calc-btn' },
                     { label: 'Variable Barcode', icon: <Scale size={13} />, onClick: () => setShowBarcodeConfig(true), dataTour: 'unit-barcode-btn' },
@@ -358,16 +175,12 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
                 searchFields: ['name', 'code', 'short_name', 'type'],
                 treeParentKey: 'base_unit',
                 selectable: true,
-                onBulkDelete: async (ids, clear) => {
-                    if (!confirm(`Delete ${ids.length} unit(s)? This cannot be undone.`)) return
-                    let ok = 0, fail = 0
-                    for (const id of ids) {
-                        const res = await deleteUnit(id) as DeleteUnitResult
-                        if (res?.success) ok++; else fail++
-                    }
-                    if (ok) toast.success(`Deleted ${ok} unit(s)`)
-                    if (fail) toast.error(`${fail} unit(s) failed to delete`)
-                    clear(); router.refresh()
+                onBulkDelete: (ids, clear) => {
+                    // Stash the selection so the confirmation dialog can act
+                    // on the same set even if the user changes selection while
+                    // the modal is open. `clear` is captured so the dialog can
+                    // wipe the toolbar after a successful run.
+                    setBulkDeleteRequest({ ids, clear })
                 },
                 kpiPredicates: {
                     base: (u) => !asUnit(u).base_unit,
@@ -442,6 +255,14 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
                 />
                 <ConfirmDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }} onConfirm={handleConfirmDelete}
                     title={`Delete "${deleteTarget?.name}"?`} description="This will permanently remove this unit. Make sure no products are using it." confirmText="Delete" variant="danger" />
+                <ConfirmDialog
+                    open={bulkDeleteRequest !== null}
+                    onOpenChange={(open) => { if (!open && !bulkDeleting) setBulkDeleteRequest(null) }}
+                    onConfirm={handleBulkDelete}
+                    title={`Delete ${bulkDeleteRequest?.ids.length ?? 0} unit${(bulkDeleteRequest?.ids.length ?? 0) === 1 ? '' : 's'}?`}
+                    description="Each unit is checked individually — units with linked products are kept (and reported back) so you can fix them and retry. Base units require staff to delete."
+                    confirmText={bulkDeleting ? 'Deleting…' : 'Delete'}
+                    variant="danger" />
             </>}
             aboveTree={showCalc ? (
                 <div className="animate-in slide-in-from-top-2 duration-200 px-4 pt-3 pb-2"
@@ -476,6 +297,7 @@ export default function UnitsClient({ initialUnits }: { initialUnits: UnitNode[]
                             selectable
                             isCheckedFn={(id: number) => selectedIds.has(id)}
                             onToggleCheck={toggleSelect}
+                            canDeleteBaseUnit={canDeleteBaseUnit}
                         />
                     </div>
                     )

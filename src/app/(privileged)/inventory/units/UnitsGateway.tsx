@@ -43,9 +43,9 @@ type GatewayUnit = {
     [key: string]: unknown
 }
 
-export function UnitsGateway({ initialUnits }: { initialUnits: GatewayUnit[] }) {
+export function UnitsGateway({ initialUnits, currentUser }: { initialUnits: GatewayUnit[]; currentUser?: { is_staff?: boolean; is_superuser?: boolean } | null }) {
     const isMobile = useIsMobile()
     return isMobile
-        ? <MobileErrorBoundary><MobileClient initialUnits={initialUnits} /></MobileErrorBoundary>
-        : <DesktopClient initialUnits={initialUnits} />
+        ? <MobileErrorBoundary><MobileClient initialUnits={initialUnits} currentUser={currentUser} /></MobileErrorBoundary>
+        : <DesktopClient initialUnits={initialUnits} currentUser={currentUser} />
 }

@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart, RotateCcw } from 'lucide-react'
+import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart, RotateCcw, Settings2 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
 
 // Reuse the rich filter UI + filter shape from the inventory products page so
@@ -31,7 +31,86 @@ import {
     EMPTY_LOOKUPS,
     DEFAULT_VISIBLE_FILTERS,
     COMPLETENESS_LEVELS,
+    ALL_FILTERS,
 } from '../../../../inventory/products/_lib/constants'
+
+// Shared Customize panel — same one /inventory/products uses. Same UX, same
+// profile model, just tailored CATALOGUE_COLUMNS for the picker's narrow grid.
+import { CustomizePanel as SharedCustomizePanel } from '@/components/ui/CustomizePanel/CustomizePanel'
+import type { ColumnDef, ViewProfile } from '@/components/ui/CustomizePanel/types'
+
+/* ── Catalogue column definitions ────────────────────────────────────────
+ *
+ * The picker is a wide row (Product info on the left, Add on the right) with
+ * toggleable cells in the middle. `product` and `add` are alwaysVisible so
+ * the user can't hide the things they need to identify and act on a product.
+ */
+type CatalogueColumnKey =
+    | 'product' | 'brand' | 'barcode' | 'stock' | 'available' | 'incoming'
+    | 'daily_sales' | 'cost' | 'cost_ht' | 'selling' | 'selling_ht'
+    | 'margin' | 'tva' | 'pipeline' | 'status' | 'add'
+
+const CATALOGUE_COLUMNS: ColumnDef<CatalogueColumnKey>[] = [
+    { key: 'product',     label: 'Product',     alwaysVisible: true, defaultVisible: true },
+    { key: 'brand',       label: 'Brand',       defaultVisible: false },
+    { key: 'barcode',     label: 'Barcode',     defaultVisible: false },
+    { key: 'stock',       label: 'Stock',       defaultVisible: true },
+    { key: 'available',   label: 'Available',   defaultVisible: false },
+    { key: 'incoming',    label: 'Incoming',    defaultVisible: false },
+    { key: 'daily_sales', label: 'Daily Sales', defaultVisible: true },
+    { key: 'cost',        label: 'Cost',        defaultVisible: true },
+    { key: 'cost_ht',     label: 'Cost HT',     defaultVisible: false },
+    { key: 'selling',     label: 'Selling TTC', defaultVisible: false },
+    { key: 'selling_ht',  label: 'Selling HT',  defaultVisible: false },
+    { key: 'margin',      label: 'Margin %',    defaultVisible: true },
+    { key: 'tva',         label: 'TVA Rate',    defaultVisible: false },
+    { key: 'pipeline',    label: 'Pipeline',    defaultVisible: false },
+    { key: 'status',      label: 'Status',      defaultVisible: false },
+    { key: 'add',         label: 'Add',         alwaysVisible: true, defaultVisible: true },
+]
+
+const DEFAULT_VISIBLE_COLS: Record<CatalogueColumnKey, boolean> =
+    Object.fromEntries(CATALOGUE_COLUMNS.map(c => [c.key, !!c.defaultVisible || !!c.alwaysVisible])) as Record<CatalogueColumnKey, boolean>
+const DEFAULT_COLUMN_ORDER: CatalogueColumnKey[] = CATALOGUE_COLUMNS.map(c => c.key)
+
+/* ── Profile persistence (localStorage) ─────────────────────────────────
+ *
+ * Same shape as inventory/products' profiles, scoped to this picker via the
+ * `pcat_*` keys so the two don't collide. Backend sync is a Phase 2.5 follow-
+ * up; localStorage alone gives instant per-user persistence in dev.
+ */
+const PCAT_PROFILES_KEY = 'pcat_view_profiles'
+const PCAT_ACTIVE_KEY   = 'pcat_active_profile'
+
+function loadCatalogueProfiles(): ViewProfile<CatalogueColumnKey>[] {
+    if (typeof window === 'undefined') return []
+    try {
+        const raw = localStorage.getItem(PCAT_PROFILES_KEY)
+        if (raw) return JSON.parse(raw)
+    } catch { /* noop */ }
+    return [{
+        id: 'default',
+        name: 'Default',
+        columns: DEFAULT_VISIBLE_COLS,
+        filters: DEFAULT_VISIBLE_FILTERS,
+        columnOrder: DEFAULT_COLUMN_ORDER,
+    }]
+}
+
+function saveCatalogueProfiles(p: ViewProfile<CatalogueColumnKey>[]) {
+    if (typeof window === 'undefined') return
+    try { localStorage.setItem(PCAT_PROFILES_KEY, JSON.stringify(p)) } catch { /* noop */ }
+}
+
+function loadCatalogueActiveId(): string {
+    if (typeof window === 'undefined') return 'default'
+    return localStorage.getItem(PCAT_ACTIVE_KEY) || 'default'
+}
+
+function saveCatalogueActiveId(id: string) {
+    if (typeof window === 'undefined') return
+    try { localStorage.setItem(PCAT_ACTIVE_KEY, id) } catch { /* noop */ }
+}
 
 type CatalogueItem = {
     id: number
@@ -39,12 +118,18 @@ type CatalogueItem = {
     sku: string
     barcode: string
     category_name: string
+    brand_name: string
+    status: string
     stock: number
+    available_qty: number
+    incoming_qty: number
     daily_sales: number
     cost_price: number
     effective_cost: number
     cost_price_ht: number
     selling_price: number
+    selling_price_ht: number
+    tva_rate: number
     margin_pct: number
     safety_tag: string
     pipeline_status: string | null
@@ -65,12 +150,18 @@ function mapProductToCatalogueItem(p: Record<string, any>): CatalogueItem {
         sku: String(p.sku || p.code || ''),
         barcode: String(p.barcode || ''),
         category_name: String(p.category_name || ''),
+        brand_name: String(p.brand_name || ''),
+        status: String(p.status || ''),
         stock: num(p.on_hand_qty ?? p.available_qty ?? p.stock_qty ?? 0),
+        available_qty: num(p.available_qty ?? 0),
+        incoming_qty: num(p.incoming_transfer_qty ?? 0),
         daily_sales: num(p.daily_sales ?? 0),
         cost_price: cost,
         effective_cost: num(p.effective_cost ?? cost),
         cost_price_ht: num(p.cost_price_ht ?? cost),
         selling_price: sell,
+        selling_price_ht: num(p.selling_price_ht ?? 0),
+        tva_rate: num(p.tva_rate ?? 0),
         margin_pct: marginPct,
         safety_tag: String(p.safety_tag || ''),
         pipeline_status: (p.pipeline_status as string) ?? null,
@@ -98,15 +189,130 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
     const [loading, setLoading] = useState(false)
     const [query, setQuery] = useState('')
     const [filterValues, setFilterValues] = useState<Filters>(EMPTY_FILTERS)
-    // Which filters appear in the FiltersPanel grid. Same defaults as the
-    // /inventory/products page; a future Customize button can let the user
-    // toggle individual filters in/out and persist that choice as a profile.
-    const [visibleFilters] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_FILTERS)
+    const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_FILTERS)
+    const [visibleColumns, setVisibleColumns] = useState<Record<CatalogueColumnKey, boolean>>(DEFAULT_VISIBLE_COLS)
+    const [columnOrder, setColumnOrder] = useState<CatalogueColumnKey[]>(DEFAULT_COLUMN_ORDER)
+    const [profiles, setProfiles] = useState<ViewProfile<CatalogueColumnKey>[]>(() => loadCatalogueProfiles())
+    const [activeProfileId, setActiveProfileId] = useState<string>(() => loadCatalogueActiveId())
+    const [customizeOpen, setCustomizeOpen] = useState(false)
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(false)
     const [filtersOpen, setFiltersOpen] = useState(false)
     const [showSupplierOnly, setShowSupplierOnly] = useState(!!supplierId)
     const searchRef = useRef<HTMLInputElement>(null)
+
+    // Hydrate visibleColumns/visibleFilters/columnOrder from the active profile
+    // on mount and whenever profiles or activeProfileId change.
+    useEffect(() => {
+        const p = profiles.find(pr => pr.id === activeProfileId)
+        if (!p) return
+        if (p.columns) setVisibleColumns(p.columns as Record<CatalogueColumnKey, boolean>)
+        if (p.filters) setVisibleFilters(p.filters)
+        if (p.columnOrder) setColumnOrder(p.columnOrder as CatalogueColumnKey[])
+    }, [profiles, activeProfileId])
+
+    // Profile persistence helpers — write to localStorage on every change.
+    const persistColumns = useCallback((next: Record<CatalogueColumnKey, boolean>) => {
+        setVisibleColumns(next)
+        const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columns: next } : p)
+        setProfiles(updated); saveCatalogueProfiles(updated)
+    }, [profiles, activeProfileId])
+
+    const persistFilters = useCallback((next: Record<string, boolean>) => {
+        setVisibleFilters(next)
+        const updated = profiles.map(p => p.id === activeProfileId ? { ...p, filters: next } : p)
+        setProfiles(updated); saveCatalogueProfiles(updated)
+    }, [profiles, activeProfileId])
+
+    const persistOrder = useCallback((next: CatalogueColumnKey[]) => {
+        setColumnOrder(next)
+        const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: next } : p)
+        setProfiles(updated); saveCatalogueProfiles(updated)
+    }, [profiles, activeProfileId])
+
+    const switchProfile = useCallback((id: string) => {
+        const p = profiles.find(pr => pr.id === id)
+        if (!p) return
+        setActiveProfileId(id); saveCatalogueActiveId(id)
+        if (p.columns) setVisibleColumns(p.columns as Record<CatalogueColumnKey, boolean>)
+        if (p.filters) setVisibleFilters(p.filters)
+        setColumnOrder((p.columnOrder as CatalogueColumnKey[]) || DEFAULT_COLUMN_ORDER)
+    }, [profiles])
+
+    /* ── Column rendering helpers ──────────────────────────────────────── */
+
+    const visibleOrderedColumns = useMemo(
+        () => columnOrder.filter(k => visibleColumns[k]),
+        [columnOrder, visibleColumns]
+    )
+
+    /** Per-column flex sizing. Product gets the slack so the row stays
+     *  readable; toggleable cells take a tight fixed width so adding more
+     *  columns doesn't squeeze identifying info to nothing. */
+    const columnCellStyle = (key: CatalogueColumnKey): React.CSSProperties => {
+        if (key === 'product') return { flex: '1 1 220px', minWidth: 0 }
+        if (key === 'add') return { flex: '0 0 78px', display: 'flex', justifyContent: 'center' }
+        // Wider cells for text columns
+        if (key === 'pipeline' || key === 'status' || key === 'brand' || key === 'barcode') {
+            return { flex: '0 0 90px', textAlign: 'center' }
+        }
+        // Standard numeric/short cells
+        return { flex: '0 0 70px', textAlign: 'center' }
+    }
+
+    /** Render a single cell. Centralized so header + row stay in lockstep
+     *  and adding a column is a one-liner here. */
+    const renderCell = (key: CatalogueColumnKey, item: CatalogueItem, isAdded: boolean): React.ReactNode => {
+        const num = (n: number, frac = 0) => n.toLocaleString(undefined, { maximumFractionDigits: frac })
+        switch (key) {
+            case 'product':
+                return (
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                             style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                            <Package size={13} />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-[12px] font-bold text-app-foreground truncate">{item.name}</div>
+                            <div className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider truncate">
+                                {item.sku}{item.category_name ? ` · ${item.category_name}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                )
+            case 'brand':       return <span className="text-[11px] font-bold text-app-foreground truncate block">{item.brand_name || '—'}</span>
+            case 'barcode':     return <span className="text-[10px] font-mono text-app-muted-foreground tabular-nums truncate block">{item.barcode || '—'}</span>
+            case 'stock':       return <span className={`text-[11px] font-black tabular-nums ${item.stock <= 0 ? 'text-app-error' : 'text-app-foreground'}`}>{num(item.stock)}</span>
+            case 'available':   return <span className="text-[11px] font-bold tabular-nums text-app-foreground">{num(item.available_qty)}</span>
+            case 'incoming':    return <span className="text-[11px] font-bold tabular-nums text-app-muted-foreground">{num(item.incoming_qty)}</span>
+            case 'daily_sales': return <span className="text-[11px] font-bold tabular-nums text-app-muted-foreground">{item.daily_sales.toFixed(1)}</span>
+            case 'cost':        return <span className="text-[11px] font-black tabular-nums text-app-foreground">{num(item.cost_price)}</span>
+            case 'cost_ht':     return <span className="text-[11px] font-bold tabular-nums text-app-foreground">{num(item.cost_price_ht)}</span>
+            case 'selling':     return <span className="text-[11px] font-black tabular-nums text-app-foreground">{num(item.selling_price)}</span>
+            case 'selling_ht':  return <span className="text-[11px] font-bold tabular-nums text-app-foreground">{num(item.selling_price_ht)}</span>
+            case 'margin':
+                return (
+                    <span className={`text-[10px] font-black tabular-nums ${item.margin_pct >= 20 ? 'text-app-success' : item.margin_pct >= 0 ? 'text-app-warning' : 'text-app-error'}`}>
+                        {item.margin_pct.toFixed(1)}%
+                    </span>
+                )
+            case 'tva':         return <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">{item.tva_rate ? `${item.tva_rate}%` : '—'}</span>
+            case 'pipeline':    return <span className="text-[10px] font-bold text-app-muted-foreground truncate block">{item.pipeline_status || '—'}</span>
+            case 'status':      return <span className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{item.status || '—'}</span>
+            case 'add':
+                return isAdded ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black text-app-success"
+                          style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>
+                        <Check size={10} /> Added
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black text-app-primary hover:bg-app-primary/10 transition-all"
+                          style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
+                        <Plus size={10} /> Add
+                    </span>
+                )
+        }
+    }
 
     // Resolve filter NAME → backend FK ID. The FiltersPanel sends
     // `filterValues.category = "Soft Drinks"` (the human label), but DRF's
@@ -116,12 +322,13 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         category: new Map(lookups.categories.map(c => [c.name, c.id])),
         brand:    new Map(lookups.brands.map(b => [b.name, b.id])),
         unit:     new Map(lookups.units.map(u => [u.name, u.id])),
+        supplier: new Map((lookups.suppliers || []).map(s => [s.name, s.id])),
     }), [lookups])
 
     // Has-any-active for the chip Reset button
     const hasActiveFilters = useMemo(() => {
         const f = filterValues
-        return Boolean(f.type || f.category || f.brand || f.unit || f.country || f.parfum
+        return Boolean(f.type || f.category || f.brand || f.unit || f.country || f.parfum || f.supplier
             || f.status || f.completeness || f.verified || f.isActive || f.catalogReady
             || f.expiryTracked || f.tracksLots || f.tracksSerials
             || f.lotMgmt || f.valuation || f.productGroup || f.pricingSource || f.syncStatus)
@@ -143,7 +350,10 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             erpFetch('units/').catch(() => []),
             erpFetch('reference/sourcing-countries/').catch(() => []),
             erpFetch('parfums/').catch(() => []),
-        ]).then(([catsRaw, brandsRaw, unitsRaw, countriesRaw, parfumsRaw]) => {
+            // Suppliers are CRM contacts of type=SUPPLIER. Same endpoint
+            // /access/supplier-access uses, so naming is consistent.
+            erpFetch('crm/contacts/?type=SUPPLIER').catch(() => []),
+        ]).then(([catsRaw, brandsRaw, unitsRaw, countriesRaw, parfumsRaw, suppliersRaw]) => {
             if (cancelled) return
             const toList = (raw: unknown): Array<Record<string, unknown>> => {
                 if (Array.isArray(raw)) return raw
@@ -156,6 +366,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 units: toList(unitsRaw).map(u => ({ id: Number(u.id), name: String(u.name || ''), short_name: String(u.short_name || '') })),
                 countries: toList(countriesRaw).map(c => ({ id: Number(c.id), name: String(c.name || c.country_name || '') })),
                 parfums: toList(parfumsRaw).map(p => ({ id: Number(p.id), name: String(p.name || '') })),
+                suppliers: toList(suppliersRaw).map(s => ({ id: Number(s.id), name: String(s.name || s.company_name || '') })),
             })
         })
         return () => { cancelled = true }
@@ -196,6 +407,13 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             setFkParam('category', f.category, idByName.category)
             setFkParam('brand',    f.brand,    idByName.brand)
             setFkParam('unit',     f.unit,     idByName.unit)
+            // Supplier — handled by ProductViewSet's custom `?supplier=<id>`
+            // path (qualified_suppliers__supplier_id). Runs AFTER the
+            // contextual "Supplier Only" toggle above so an explicit
+            // dropdown choice overrides the PO-context default. setFkParam
+            // is a no-op when f.supplier is empty, leaving the toggle's
+            // value intact.
+            setFkParam('supplier', f.supplier, idByName.supplier)
 
             // Enum / scalar filters — pass values directly.
             if (f.type)   params.set('product_type', f.type)
@@ -255,6 +473,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
     const addedSet = new Set(existingProductIds)
 
     return (
+        <>
         <div className="fixed inset-0 z-[200] flex items-center justify-center animate-in fade-in duration-200"
              style={{ background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(6px)' }}
              onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -303,6 +522,12 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                         Filters
                         <ChevronDown size={10} className={`transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
                     </button>
+
+                    <button type="button" onClick={() => setCustomizeOpen(true)}
+                            className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[11px] font-bold border text-app-muted-foreground border-app-border hover:bg-app-background transition-all">
+                        <Settings2 size={12} />
+                        Customize
+                    </button>
                 </div>
 
                 {/* Filters grid — same FiltersPanel as /inventory/products so the
@@ -335,15 +560,19 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
 
                 {/* Product list */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    {/* Column header */}
+                    {/* Column header — driven by visible+ordered columns */}
                     <div className="flex items-center gap-0 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-app-muted-foreground border-b sticky top-0 z-10"
                          style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
-                        <div className="w-[40%] px-2">Product</div>
-                        <div className="w-[12%] px-2 text-center">Stock</div>
-                        <div className="w-[12%] px-2 text-center hidden sm:block">Daily Sales</div>
-                        <div className="w-[12%] px-2 text-center">Cost</div>
-                        <div className="w-[12%] px-2 text-center hidden sm:block">Margin</div>
-                        <div className="w-[12%] px-2 text-center">Add</div>
+                        {visibleOrderedColumns.map(key => {
+                            const col = CATALOGUE_COLUMNS.find(c => c.key === key)!
+                            const style = columnCellStyle(key)
+                            const align = key === 'product' ? 'text-left' : 'text-center'
+                            return (
+                                <div key={key} className={`px-2 ${align}`} style={style}>
+                                    {col.label}
+                                </div>
+                            )
+                        })}
                     </div>
 
                     {loading && items.length === 0 ? (
@@ -376,53 +605,13 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                                              // Forward the canonical pipeline state so the line
                                              // status column shows "Requested · Purchase" (etc.)
                                              // instead of always "Available".
-                                             pipeline_status: (item as any).pipeline_status,
+                                             pipeline_status: item.pipeline_status,
                                          })}>
-                                        {/* Product */}
-                                        <div className="w-[40%] px-2 flex items-center gap-2.5">
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
-                                                <Package size={13} />
+                                        {visibleOrderedColumns.map(key => (
+                                            <div key={key} className="px-2" style={columnCellStyle(key)}>
+                                                {renderCell(key, item, isAdded)}
                                             </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[12px] font-bold text-app-foreground truncate">{item.name}</div>
-                                                <div className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">{item.sku}{item.category_name ? ` · ${item.category_name}` : ''}</div>
-                                            </div>
-                                        </div>
-                                        {/* Stock */}
-                                        <div className="w-[12%] px-2 text-center">
-                                            <span className={`text-[11px] font-black tabular-nums ${item.stock <= 0 ? 'text-app-error' : 'text-app-foreground'}`}>
-                                                {item.stock.toLocaleString()}
-                                            </span>
-                                        </div>
-                                        {/* Daily Sales */}
-                                        <div className="w-[12%] px-2 text-center hidden sm:block">
-                                            <span className="text-[11px] font-bold tabular-nums text-app-muted-foreground">{item.daily_sales.toFixed(1)}</span>
-                                        </div>
-                                        {/* Cost */}
-                                        <div className="w-[12%] px-2 text-center">
-                                            <span className="text-[11px] font-black tabular-nums text-app-foreground">{item.cost_price.toLocaleString()}</span>
-                                        </div>
-                                        {/* Margin */}
-                                        <div className="w-[12%] px-2 text-center hidden sm:block">
-                                            <span className={`text-[10px] font-black tabular-nums ${item.margin_pct >= 20 ? 'text-app-success' : item.margin_pct >= 0 ? 'text-app-warning' : 'text-app-error'}`}>
-                                                {item.margin_pct.toFixed(1)}%
-                                            </span>
-                                        </div>
-                                        {/* Add button */}
-                                        <div className="w-[12%] px-2 flex justify-center">
-                                            {isAdded ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black text-app-success"
-                                                      style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>
-                                                    <Check size={10} /> Added
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black text-app-primary hover:bg-app-primary/10 transition-all"
-                                                      style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}>
-                                                    <Plus size={10} /> Add
-                                                </span>
-                                            )}
-                                        </div>
+                                        ))}
                                     </div>
                                 )
                             })}
@@ -456,5 +645,35 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 </div>
             </div>
         </div>
+
+        {/* Customize panel — slides over the modal. Same shared component as
+            /inventory/products. zIndexBase=250 so it sits above the modal's
+            z-200 backdrop. */}
+        <SharedCustomizePanel<CatalogueColumnKey, string>
+            isOpen={customizeOpen}
+            onClose={() => setCustomizeOpen(false)}
+            title="Catalogue Picker"
+            zIndexBase={250}
+            allColumns={CATALOGUE_COLUMNS}
+            allFilters={ALL_FILTERS}
+            profiles={profiles}
+            setProfiles={setProfiles}
+            activeProfileId={activeProfileId}
+            switchProfile={switchProfile}
+            visibleColumns={visibleColumns}
+            visibleFilters={visibleFilters}
+            columnOrder={columnOrder}
+            onToggleColumn={(key) => persistColumns({ ...visibleColumns, [key]: !visibleColumns[key] })}
+            onToggleFilter={(key) => persistFilters({ ...visibleFilters, [key]: !visibleFilters[key] })}
+            onReorderColumns={persistOrder}
+            onResetColumns={() => {
+                persistColumns(DEFAULT_VISIBLE_COLS)
+                persistOrder(DEFAULT_COLUMN_ORDER)
+            }}
+            onResetFilters={() => persistFilters(DEFAULT_VISIBLE_FILTERS)}
+            onSaveProfiles={saveCatalogueProfiles}
+            onSaveActiveId={saveCatalogueActiveId}
+        />
+        </>
     )
 }

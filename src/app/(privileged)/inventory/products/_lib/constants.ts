@@ -39,7 +39,7 @@ export const fmt = (n: number | string | null | undefined) => {
 /* ─── Empty Defaults ─── */
 
 export const EMPTY_FILTERS: Filters = {
-  type: '', category: '', brand: '', unit: '', country: '', parfum: '',
+  type: '', category: '', brand: '', unit: '', country: '', parfum: '', supplier: '',
   status: '', completeness: '', verified: '', isActive: '', catalogReady: '',
   expiryTracked: '', tracksLots: '', tracksSerials: '',
   lotMgmt: '', valuation: '', productGroup: '', pricingSource: '', syncStatus: '',
@@ -117,6 +117,7 @@ export const ALL_FILTERS: FilterDef[] = [
   { key: 'unit', label: 'Unit', defaultVisible: true },
   { key: 'country', label: 'Country', defaultVisible: true },
   { key: 'parfum', label: 'Parfum', defaultVisible: false },
+  { key: 'supplier', label: 'Supplier', defaultVisible: true },
   // ── Status & Governance ──
   { key: 'status', label: 'Status', defaultVisible: true },
   { key: 'completeness', label: 'Completeness', defaultVisible: true },

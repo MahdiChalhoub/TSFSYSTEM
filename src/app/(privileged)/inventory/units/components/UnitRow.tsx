@@ -41,12 +41,18 @@ type UnitRowProps = {
     selectable?: boolean
     isCheckedFn?: (id: number) => boolean
     onToggleCheck?: (id: number) => void
+    /** When false, base-unit deletion is hidden — base units anchor the
+     *  whole conversion family and a regular inventory editor shouldn't be
+     *  able to delete them. The backend enforces the same check (returns
+     *  403 base_unit_protected). */
+    canDeleteBaseUnit?: boolean
 }
 
 export const UnitRow = ({
     node, level, onEdit, onAdd, onDelete, searchQuery, forceExpanded,
     onViewProducts, onSelect, allUnits,
     selectable, isCheckedFn, onToggleCheck,
+    canDeleteBaseUnit = true,
 }: UnitRowProps) => {
     const rowChecked = isCheckedFn ? isCheckedFn(node.id) : false
     const isParent = node.children && node.children.length > 0
@@ -179,11 +185,16 @@ export const UnitRow = ({
                                 className="p-1.5 hover:bg-app-border/40 rounded-lg text-app-muted-foreground hover:text-app-info transition-colors" title="Add derived">
                                 <Plus size={13} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete derived units first.'); return } onDelete(node) }}
-                                className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
-                                style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}>
-                                {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
-                            </button>
+                            {/* Base-unit delete is staff-only (backend enforces with
+                             *  403 base_unit_protected; UI hides the button so users
+                             *  don't bother trying). */}
+                            {(node.base_unit !== null || canDeleteBaseUnit) && (
+                                <button onClick={(e) => { e.stopPropagation(); if (isParent) { toast.error('Delete derived units first.'); return } onDelete(node) }}
+                                    className="p-1.5 hover:bg-app-border/40 rounded-lg transition-colors"
+                                    style={{ color: isParent ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: isParent ? 'not-allowed' : 'pointer' }}>
+                                    {isParent ? <AlertCircle size={12} /> : <Trash2 size={12} />}
+                                </button>
+                            )}
                         </>
                     }
                 />
@@ -195,7 +206,8 @@ export const UnitRow = ({
                             onEdit={onEdit} onAdd={onAdd} onDelete={onDelete}
                             onViewProducts={onViewProducts} onSelect={onSelect}
                             searchQuery={searchQuery} forceExpanded={forceExpanded} allUnits={allUnits}
-                            selectable={selectable} isCheckedFn={isCheckedFn} onToggleCheck={onToggleCheck} />
+                            selectable={selectable} isCheckedFn={isCheckedFn} onToggleCheck={onToggleCheck}
+                            canDeleteBaseUnit={canDeleteBaseUnit} />
                     ))}
                 </div>
             )}

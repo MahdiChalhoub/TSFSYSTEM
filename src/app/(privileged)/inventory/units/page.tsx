@@ -1,5 +1,6 @@
 import { erpFetch } from "@/lib/erp-api";
 import { UnitsGateway } from "./UnitsGateway";
+import { getUser } from "@/app/actions/auth";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,6 @@ async function getUnitsData() {
 }
 
 export default async function UnitsPage() {
-    const flatUnits = await getUnitsData();
-    return <UnitsGateway initialUnits={flatUnits} />;
+    const [flatUnits, currentUser] = await Promise.all([getUnitsData(), getUser()]);
+    return <UnitsGateway initialUnits={flatUnits} currentUser={currentUser} />;
 }

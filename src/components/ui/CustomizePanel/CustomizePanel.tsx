@@ -42,6 +42,12 @@ interface CustomizePanelProps<CK extends string = string, FK extends string = st
   
   footerContent?: React.ReactNode
   otherTabContent?: React.ReactNode
+
+  /** Z-index for the backdrop. The panel sits at zIndexBase + 1.
+   *  Default 60 matches the page-embedded usage. Modals that mount the
+   *  panel need to pass a value above their own z-index (e.g. catalogue
+   *  picker uses z-200, so it passes 250). */
+  zIndexBase?: number
 }
 
 const TABS = [
@@ -57,7 +63,8 @@ export function CustomizePanel<CK extends string, FK extends string>({
   visibleColumns, visibleFilters, columnOrder,
   onToggleColumn, onToggleFilter, onReorderColumns, onResetColumns, onResetFilters,
   onSaveProfiles, onSaveActiveId, onShareProfile, isStaff,
-  footerContent, otherTabContent
+  footerContent, otherTabContent,
+  zIndexBase = 60,
 }: CustomizePanelProps<CK, FK>) {
   const [activeTab, setActiveTab] = useState<'layout' | 'filter' | 'other'>('layout')
 
@@ -69,15 +76,16 @@ export function CustomizePanel<CK extends string, FK extends string>({
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/30 z-[60] animate-in fade-in duration-150" 
-        onClick={onClose} 
+      <div
+        className="fixed inset-0 bg-black/30 animate-in fade-in duration-150"
+        style={{ zIndex: zIndexBase }}
+        onClick={onClose}
       />
-      
+
       {/* Panel */}
-      <div 
-        className="fixed right-0 top-0 bottom-0 w-[340px] max-w-full z-[61] flex flex-col animate-in slide-in-from-right duration-200 shadow-2xl"
-        style={{ background: 'var(--app-bg, var(--app-surface))', borderLeft: '1px solid var(--app-border)' }}
+      <div
+        className="fixed right-0 top-0 bottom-0 w-[340px] max-w-full flex flex-col animate-in slide-in-from-right duration-200 shadow-2xl"
+        style={{ zIndex: zIndexBase + 1, background: 'var(--app-bg, var(--app-surface))', borderLeft: '1px solid var(--app-border)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-app-border/50">

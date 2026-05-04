@@ -93,7 +93,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             if val and val.startswith('!'):
                 exclude_params[key] = val[1:]
                 params.pop(key)
-        
+
         # 2. Let standard backends handle the rest (search, ordering, inclusion filters)
         from django.http import QueryDict
         original_params = self.request._request.GET
@@ -109,7 +109,31 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
                 queryset = queryset.exclude(**{f"{key}__isnull": True})
             else:
                 queryset = queryset.exclude(**{key: val})
-        
+
+        # 4. Supplier filter — products are linked to suppliers via the
+        #    pos_product_supplier through-table (`qualified_suppliers`
+        #    related_name). The PO catalogue picker passes `?supplier=<id>`
+        #    to narrow the list to vendors who actually quote that product.
+        #    Supports `!<id>` to exclude and `__NONE__` for "no qualified
+        #    supplier yet" (parity with the FK filters above).
+        supplier_val = self.request.query_params.get('supplier')
+        if supplier_val:
+            negate = supplier_val.startswith('!')
+            clean = supplier_val[1:] if negate else supplier_val
+            if clean == '__NONE__':
+                # `__NONE__`  → products with zero qualified suppliers
+                # `!__NONE__` → products with at least one qualified supplier
+                if negate:
+                    queryset = queryset.exclude(qualified_suppliers__isnull=True).distinct()
+                else:
+                    queryset = queryset.filter(qualified_suppliers__isnull=True)
+            elif clean.isdigit():
+                supplier_id = int(clean)
+                if negate:
+                    queryset = queryset.exclude(qualified_suppliers__supplier_id=supplier_id)
+                else:
+                    queryset = queryset.filter(qualified_suppliers__supplier_id=supplier_id).distinct()
+
         return queryset
 
     def perform_update(self, serializer):

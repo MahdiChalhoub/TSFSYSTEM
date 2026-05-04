@@ -16,6 +16,7 @@ export interface Filters {
   unit: string
   country: string
   parfum: string
+  supplier: string
   status: string
   completeness: string
   verified: string
@@ -53,6 +54,9 @@ export type Lookups = {
    *  options should reflect what's available, not what's already been
    *  assigned to products. */
   parfums?: Lookup[]
+  /** CRM contacts of type=SUPPLIER. Powers the Supplier filter so the user
+   *  can narrow a product list to items quoted by a specific vendor. */
+  suppliers?: Lookup[]
 }
 
 export type ViewProfile = {

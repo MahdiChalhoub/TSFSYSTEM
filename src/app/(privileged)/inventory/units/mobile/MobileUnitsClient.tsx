@@ -21,6 +21,7 @@ import { MobileUnitRow } from './MobileUnitRow'
 import { PageTour } from '@/components/ui/PageTour'
 import '@/lib/tours/definitions/inventory-units-mobile'
 import type { UnitNode } from '../components/UnitRow'
+import { buildUnitsDataTools } from '../_lib/dataTools'
 
 type DeleteUnitResult = {
     success: boolean
@@ -31,7 +32,8 @@ type DeleteUnitResult = {
 
 type DeleteConflictState = { conflict: unknown; source: UnitNode } | null
 
-export function MobileUnitsClient({ initialUnits }: { initialUnits: UnitNode[] }) {
+export function MobileUnitsClient({ initialUnits, currentUser }: { initialUnits: UnitNode[]; currentUser?: { is_staff?: boolean; is_superuser?: boolean } | null }) {
+    const canDeleteBaseUnit = !!(currentUser?.is_staff || currentUser?.is_superuser)
     const router = useRouter()
     const [, startTransition] = useTransition()
     const [isFormOpen, setIsFormOpen] = useState(false)
@@ -124,6 +126,9 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: UnitNode[] }
     const actionItems = useMemo(() => {
         if (!actionNode) return []
         const isParent = !!(actionNode.children && actionNode.children.length > 0)
+        const isBaseUnit = actionNode.base_unit == null
+        // Base-unit deletion is staff-only (backend mirrors this with a 403).
+        const showDelete = !isBaseUnit || canDeleteBaseUnit
         return [
             { key: 'view', label: 'Details', hint: 'Info & stats', icon: <Eye size={16} />, variant: 'grid' as const, onClick: () => openSheet(actionNode) },
             { key: 'add', label: 'Add derived', hint: 'Sub-unit', icon: <Plus size={16} />, variant: 'grid' as const, onClick: () => openForm(actionNode.id) },
@@ -132,9 +137,11 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: UnitNode[] }
                 try { navigator.clipboard?.writeText(actionNode.code || String(actionNode.id)); toast.success('Copied') }
                 catch { toast.error('Copy failed') }
             } },
-            { key: 'delete', label: isParent ? 'Delete (locked)' : 'Delete', hint: isParent ? 'Remove derived units first' : undefined, icon: <Trash2 size={16} />, destructive: true, disabled: isParent, onClick: () => requestDelete(actionNode) },
+            ...(showDelete ? [
+                { key: 'delete', label: isParent ? 'Delete (locked)' : 'Delete', hint: isParent ? 'Remove derived units first' : undefined, icon: <Trash2 size={16} />, destructive: true, disabled: isParent, onClick: () => requestDelete(actionNode) },
+            ] : []),
         ]
-    }, [actionNode, openSheet, openForm, openEditForm, requestDelete])
+    }, [actionNode, openSheet, openForm, openEditForm, requestDelete, canDeleteBaseUnit])
 
     return (
         <MobileMasterPage
@@ -150,11 +157,17 @@ export function MobileUnitsClient({ initialUnits }: { initialUnits: UnitNode[] }
                     icon: <Plus size={16} strokeWidth={2.6} />,
                     onClick: () => openForm(),
                 },
+                // Mobile reuses the desktop dataTools factory verbatim — same
+                // 2-pass importer, same id round-trip export, same column
+                // specs. Keeps both surfaces in lockstep so a CSV exported
+                // from mobile re-imports cleanly on desktop and vice versa.
+                dataTools: buildUnitsDataTools(data),
                 secondaryActions: [
                     {
                         label: showCalc ? 'Hide Calculator' : 'Calculator',
                         icon: <ArrowRightLeft size={14} />,
                         onClick: () => setShowCalc(s => !s),
+                        dataTour: 'unit-calc-btn',
                     },
                     { label: 'Cleanup', icon: <Wrench size={14} />, href: '/inventory/maintenance?tab=unit' },
                 ],
