@@ -224,44 +224,55 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
-            {/* Header — count + search */}
-            <div className="flex-shrink-0 px-4 py-2 flex items-center gap-2"
-                style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <p className="text-tp-sm font-medium text-app-muted-foreground flex-shrink-0">
+            {/* Header — same shape as the categories side-panel
+                ProductsTab: master select-all checkbox · search input
+                using the parent's name as placeholder · compact sort
+                pills (A-Z / SKU / $) on the right. The count text
+                lives below the row, not above it. */}
+            <div className="flex-shrink-0 px-4 py-2.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <div className="flex items-center gap-1.5">
+                    {filteredSorted.length > 0 && (
+                        <button type="button" onClick={toggleAll}
+                            className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"
+                            style={{
+                                borderColor: selected.size > 0 ? 'var(--app-primary)' : 'var(--app-border)',
+                                background: allChecked ? 'var(--app-primary)' : 'transparent',
+                            }}
+                            aria-checked={allChecked ? true : selected.size > 0 ? 'mixed' : false}
+                            role="checkbox">
+                            {allChecked && <Check size={10} className="text-white" strokeWidth={3} />}
+                            {selected.size > 0 && !allChecked && <div className="w-1.5 h-1.5 rounded-sm" style={{ background: 'var(--app-primary)' }} />}
+                        </button>
+                    )}
+                    <div className="relative flex-1">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder={`Search in "${brandName}"...`}
+                            className="w-full pl-8 pr-3 py-1.5 text-tp-md bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
+                    </div>
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {(['name', 'sku', 'price'] as SortBy[]).map(s => {
+                            const active = sortBy === s
+                            const label = s === 'name' ? 'A-Z' : s === 'sku' ? 'SKU' : '₵'
+                            return (
+                                <button key={s} type="button" onClick={() => cycleSort(s)}
+                                    className="text-tp-xxs font-bold px-1.5 py-1 rounded-lg transition-all"
+                                    style={{
+                                        background: active ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                                        color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                    }}>
+                                    {label}
+                                    {active && <span className="ml-0.5">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+                <p className="mt-1.5 text-tp-xxs font-medium text-app-muted-foreground">
                     {filteredSorted.length === totalCount
                         ? `${totalCount} product${totalCount === 1 ? '' : 's'}`
-                        : `${filteredSorted.length} of ${totalCount} product${totalCount === 1 ? '' : 's'} loaded`}
+                        : `${filteredSorted.length} of ${totalCount} product${totalCount === 1 ? '' : 's'}`}
                 </p>
-                <div className="flex-1" />
-                <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
-                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
-                    <Search size={11} className="text-app-muted-foreground" />
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search…"
-                        className="text-tp-xs bg-transparent outline-none w-32 text-app-foreground placeholder:text-app-muted-foreground/50"
-                    />
-                </div>
-            </div>
-
-            {/* Sort row */}
-            <div className="flex-shrink-0 flex items-center gap-1 px-4 py-1.5"
-                style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 40%, transparent)' }}>
-                {(['name', 'sku', 'price'] as SortBy[]).map(col => {
-                    const active = sortBy === col
-                    return (
-                        <button key={col} type="button" onClick={() => cycleSort(col)}
-                            className="flex items-center gap-1 text-tp-xxs font-bold uppercase tracking-wide px-2 py-1 rounded transition-colors"
-                            style={{
-                                color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                background: active ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent',
-                            }}>
-                            {col}
-                            {active && <ArrowUpDown size={9} style={{ transform: sortDir === 'desc' ? 'scaleY(-1)' : undefined }} />}
-                        </button>
-                    )
-                })}
             </div>
 
             {/* Bulk action bar — visible when at least one is selected */}
@@ -298,24 +309,9 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                     </div>
                 ) : (
                     <>
-                        {/* Select-all header */}
-                        <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-1.5"
-                            style={{ background: 'color-mix(in srgb, var(--app-surface) 95%, transparent)', borderBottom: '1px solid var(--app-border)', backdropFilter: 'blur(4px)' }}>
-                            <button type="button" onClick={toggleAll}
-                                className="w-4 h-4 rounded border-2 flex items-center justify-center transition-all"
-                                style={{
-                                    borderColor: allChecked ? 'var(--app-primary)' : 'var(--app-border)',
-                                    background: allChecked ? 'var(--app-primary)' : 'transparent',
-                                }}
-                                aria-checked={allChecked}
-                                role="checkbox">
-                                {allChecked && <Check size={10} className="text-white" strokeWidth={3} />}
-                            </button>
-                            <span className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">
-                                Select all
-                            </span>
-                        </div>
-
+                        {/* Master select-all moved into the header row above —
+                            avoids the duplicate "Select all" strip the user
+                            flagged. List starts straight into the rows. */}
                         <div className="divide-y divide-app-border/30">
                             {filteredSorted.map(p => {
                                 const isChecked = selected.has(p.id)
