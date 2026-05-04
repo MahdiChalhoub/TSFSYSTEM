@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react'
 import type { Product, Filters, Lookups } from '../_lib/types'
-import { TYPE_CONFIG, STATUS_CONFIG, COMPLETENESS_LEVELS } from '../_lib/constants'
+import { TYPE_CONFIG, STATUS_CONFIG, COMPLETENESS_LEVELS, PIPELINE_STATUS_CONFIG } from '../_lib/constants'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { NumericRangeFilter } from '@/components/ui/NumericRangeFilter'
 
@@ -42,6 +42,17 @@ export function FiltersPanel({ items, filters, setFilters, isOpen, lookups, visi
   // from the loaded `items` slice. That way the dropdown shows every
   // possible value, not just what's already in use among visible products.
   const statuses = useMemo(() => Object.keys(STATUS_CONFIG), [])
+  // Pipeline statuses come from the canonical PIPELINE_STATUS_CONFIG. The
+  // legacy aliases (PO_SENT, PO_ACCEPTED) and the type-qualified variants
+  // (REQUESTED_PURCHASE, REQUESTED_TRANSFER, REQUESTED_BOTH) are filtered out
+  // — surfacing them in a picker confuses users since the canonical keys
+  // already cover the same lifecycle stages with cleaner labels.
+  const pipelineStages = useMemo(() => {
+    const HIDDEN = new Set(['PO_SENT', 'PO_ACCEPTED'])
+    return Object.entries(PIPELINE_STATUS_CONFIG)
+      .filter(([k]) => !HIDDEN.has(k))
+      .map(([k, meta]) => ({ value: k, label: meta.label }))
+  }, [])
   const parfumOptions = useMemo(() => (lookups.parfums || []).map(p => p.name).sort(), [lookups.parfums])
   const sourceCountries = useMemo(() => (lookups.countries || []).map(c => c.name).sort(), [lookups.countries])
   const supplierOptions = useMemo(() => (lookups.suppliers || []).map(s => s.name).sort(), [lookups.suppliers])
@@ -81,6 +92,9 @@ export function FiltersPanel({ items, filters, setFilters, isOpen, lookups, visi
 
         {vf.status !== false && <SearchableDropdown label="Status" value={filters.status} onChange={v => upd({ status: v })}
           options={[{ value: '__NONE__', label: '— No Status —' }, ...statuses.map(s => ({ value: s, label: STATUS_CONFIG[s]?.label || s }))]} placeholder="All Statuses" />}
+
+        {vf.pipeline !== false && <SearchableDropdown label="Pipeline" value={filters.pipeline} onChange={v => upd({ pipeline: v })}
+          options={pipelineStages} placeholder="All Pipeline Stages" />}
 
         {vf.completeness !== false && <SearchableDropdown label="Completeness" value={filters.completeness} onChange={v => upd({ completeness: v })}
           options={[{ value: '__NONE__', label: '— No Level —' }, ...COMPLETENESS_LEVELS]} placeholder="All Levels" />}

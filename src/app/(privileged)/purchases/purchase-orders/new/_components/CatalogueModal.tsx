@@ -329,10 +329,32 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
     const hasActiveFilters = useMemo(() => {
         const f = filterValues
         return Boolean(f.type || f.category || f.brand || f.unit || f.country || f.parfum || f.supplier
-            || f.status || f.completeness || f.verified || f.isActive || f.catalogReady
+            || f.status || f.pipeline || f.completeness || f.verified || f.isActive || f.catalogReady
             || f.expiryTracked || f.tracksLots || f.tracksSerials
             || f.lotMgmt || f.valuation || f.productGroup || f.pricingSource || f.syncStatus)
     }, [filterValues])
+
+    /** Client-side filter applied AFTER the server returns its page.
+     *
+     * Same philosophy as /inventory/products: filters whose backend support
+     * isn't there yet (or is computed-only, like `pipeline_status`) are
+     * applied in the browser. The catalogue page already paginates server-
+     * side via the FK/enum/boolean filters, so this only prunes within the
+     * already-narrowed page. Caveat: with pagination, a filtered-out result
+     * doesn't pull the next page automatically — the user may need to
+     * "Load more" to see additional matches. Acceptable for the picker.
+     */
+    const visibleItems = useMemo(() => {
+        const pipelineFilter = filterValues.pipeline
+        if (!pipelineFilter) return items
+        const isNot = pipelineFilter.startsWith('!')
+        const target = isNot ? pipelineFilter.slice(1) : pipelineFilter
+        return items.filter(it => {
+            const ps = it.pipeline_status || 'NONE'
+            const matches = ps === target
+            return isNot ? !matches : matches
+        })
+    }, [items, filterValues.pipeline])
 
     // Sync showSupplierOnly with prop if it changes
     useEffect(() => {
@@ -575,12 +597,12 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                         })}
                     </div>
 
-                    {loading && items.length === 0 ? (
+                    {loading && visibleItems.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-app-muted-foreground">
                             <Loader2 size={24} className="animate-spin mb-2" />
                             <p className="text-[11px] font-bold">Loading catalogue...</p>
                         </div>
-                    ) : items.length === 0 ? (
+                    ) : visibleItems.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-app-muted-foreground">
                             <Package size={32} className="mb-2 opacity-40" />
                             <p className="text-[12px] font-bold">No products found</p>
@@ -588,7 +610,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                         </div>
                     ) : (
                         <>
-                            {items.map(item => {
+                            {visibleItems.map(item => {
                                 const isAdded = addedSet.has(item.id)
                                 return (
                                     <div key={item.id}
@@ -636,7 +658,9 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 <div className="px-5 py-3 border-t flex items-center justify-between"
                      style={{ borderColor: 'var(--app-border)', background: 'var(--app-background)' }}>
                     <span className="text-[10px] font-bold text-app-muted-foreground">
-                        {items.length} products shown · {existingProductIds.length} in order
+                        {visibleItems.length} products shown
+                        {visibleItems.length !== items.length ? ` (of ${items.length} loaded)` : ''}
+                        {' · '}{existingProductIds.length} in order
                     </span>
                     <button type="button" onClick={onClose}
                             className="px-4 py-1.5 text-[11px] font-bold rounded-xl bg-app-primary text-white hover:brightness-110 transition-all">

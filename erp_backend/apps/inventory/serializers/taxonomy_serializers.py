@@ -25,10 +25,21 @@ class UnitSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['organization']
 
+    # Both counts read from a context-prefilled dict when the viewset
+    # supplies one — that's the list path (`/units/`), where N+1 would
+    # otherwise mean 2 × number-of-units COUNT queries per request.
+    # Falls back to the raw filter for detail views where the viewset
+    # serializes a single instance and the per-row cost is fine.
     def get_product_count(self, obj):
+        pre = (self.context or {}).get('product_counts')
+        if pre is not None:
+            return int(pre.get(obj.id, 0))
         return Product.objects.filter(unit=obj).count()
 
     def get_package_count(self, obj):
+        pre = (self.context or {}).get('package_counts')
+        if pre is not None:
+            return int(pre.get(obj.id, 0))
         return UnitPackage.objects.filter(unit=obj).count()
 
 

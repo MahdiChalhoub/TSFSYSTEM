@@ -59,6 +59,11 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
     const children = allUnits.filter((u) => u.base_unit === node.id)
     const parent = allUnits.find((u) => u.id === node.base_unit)
     const productCount = node.product_count ?? 0
+    // Use the count baked into the unit row (server-prefilled in the list
+    // payload) so the tab badge is right on first paint. After the tab is
+    // opened we replace it with the live `unitPackages.length` so a
+    // create/delete inside the panel reflects immediately.
+    const initialPackageCount = (node.package_count as number | undefined) ?? 0
     const childCount = children.length
 
     useEffect(() => { setActiveTab((initialTab as PanelTab) ?? 'overview') }, [node.id, initialTab])
@@ -71,7 +76,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
     const tabs = [
         { key: 'overview' as PanelTab, label: 'Overview', icon: <Layers size={13} />, color: 'var(--app-info)' },
         { key: 'products' as PanelTab, label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
-        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: unitPackages.length || undefined, color: 'var(--app-info)' },
+        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: (unitPackages.length || initialPackageCount) || undefined, color: 'var(--app-info)' },
         { key: 'calculator' as PanelTab, label: 'Calculator', icon: <Calculator size={13} />, color: 'var(--app-warning)' },
         // History of who-changed-what on this unit. Fetches lazily on tab open.
         { key: 'audit' as PanelTab, label: 'Audit', icon: <History size={13} />, color: 'var(--app-muted-foreground)' },

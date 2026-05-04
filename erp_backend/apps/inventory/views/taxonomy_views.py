@@ -99,6 +99,39 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     filterset_fields = ['name']
     search_fields = ['name']
 
+    def get_serializer_context(self):
+        """Prefill product / package counts as id→count maps on the LIST
+        path. Two GROUP BY queries replace 2N count() round trips —
+        with ~50-100 units per tenant that's the difference between a
+        snappy page and a 1-2 second freeze.
+
+        Detail views (retrieve / create / update) skip the prefetch —
+        the serializer falls back to its per-instance COUNT, which is
+        fine for one row.
+        """
+        ctx = super().get_serializer_context()
+        if self.action == 'list':
+            from apps.inventory.models import UnitPackage as _UnitPackage
+            from django.db.models import Count
+            unit_ids = list(self.filter_queryset(self.get_queryset()).values_list('id', flat=True))
+            if unit_ids:
+                product_pairs = (
+                    Product.objects.filter(unit_id__in=unit_ids)
+                    .values('unit_id')
+                    .annotate(c=Count('id'))
+                )
+                package_pairs = (
+                    _UnitPackage.objects.filter(unit_id__in=unit_ids)
+                    .values('unit_id')
+                    .annotate(c=Count('id'))
+                )
+                ctx['product_counts'] = {row['unit_id']: row['c'] for row in product_pairs}
+                ctx['package_counts'] = {row['unit_id']: row['c'] for row in package_pairs}
+            else:
+                ctx['product_counts'] = {}
+                ctx['package_counts'] = {}
+        return ctx
+
     def destroy(self, request, *args, **kwargs):
         """Guard: block delete when products reference this unit. Bypass with ?force=1.
 

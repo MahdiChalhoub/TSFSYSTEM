@@ -42,6 +42,7 @@ export async function createExternalDriver(input: {
     phone?: string
     vehicle_plate?: string
     vehicle_info?: string
+    notes?: string
 }): Promise<ExternalDriver | { error: string }> {
     const name = input.name?.trim()
     if (!name) return { error: 'Name is required.' }
@@ -54,12 +55,14 @@ export async function createExternalDriver(input: {
                 phone: input.phone || null,
                 vehicle_plate: input.vehicle_plate || null,
                 vehicle_info: input.vehicle_info || null,
+                notes: input.notes || null,
             }),
         })
         // Bust the new-PO route caches so the next page render picks up
         // the new row in the picker without a hard refresh.
         revalidatePath('/purchases/purchase-orders/new')
         revalidatePath('/purchases/invoices/new')
+        revalidatePath('/delivery')
         return created as ExternalDriver
     } catch (error: any) {
         handleAuthError(error)
@@ -67,5 +70,48 @@ export async function createExternalDriver(input: {
         // on (organization, name) is the most likely failure (duplicate).
         const msg = error?.data?.detail || error?.data?.name?.[0] || error?.message || 'Failed to save driver.'
         return { error: typeof msg === 'string' ? msg : 'Failed to save driver.' }
+    }
+}
+
+/** Patch an existing external driver. Used by the /delivery settings tab
+ *  to edit name/phone/plate/notes without going through the PO form. */
+export async function updateExternalDriver(id: number, patch: Partial<{
+    name: string
+    phone: string | null
+    vehicle_plate: string | null
+    vehicle_info: string | null
+    notes: string | null
+    is_active: boolean
+}>): Promise<ExternalDriver | { error: string }> {
+    try {
+        const updated = await erpFetch(`pos/external-drivers/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch),
+        })
+        revalidatePath('/purchases/purchase-orders/new')
+        revalidatePath('/purchases/invoices/new')
+        revalidatePath('/delivery')
+        return updated as ExternalDriver
+    } catch (error: any) {
+        handleAuthError(error)
+        const msg = error?.data?.detail || error?.data?.name?.[0] || error?.message || 'Failed to update driver.'
+        return { error: typeof msg === 'string' ? msg : 'Failed to update driver.' }
+    }
+}
+
+/** Remove an external driver. The backend FK on PurchaseOrder is SET_NULL
+ *  so historical POs survive — they just lose the driver name link. */
+export async function deleteExternalDriver(id: number): Promise<{ ok: true } | { error: string }> {
+    try {
+        await erpFetch(`pos/external-drivers/${id}/`, { method: 'DELETE' })
+        revalidatePath('/purchases/purchase-orders/new')
+        revalidatePath('/purchases/invoices/new')
+        revalidatePath('/delivery')
+        return { ok: true }
+    } catch (error: any) {
+        handleAuthError(error)
+        const msg = error?.data?.detail || error?.message || 'Failed to delete driver.'
+        return { error: typeof msg === 'string' ? msg : 'Failed to delete driver.' }
     }
 }

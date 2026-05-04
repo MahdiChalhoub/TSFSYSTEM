@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, useCallback, useTransition } from 'react'
+import { useState, useMemo, useCallback, useEffect, useTransition } from 'react'
 import {
     Ruler, Plus, Layers, GitBranch, Package, Scale, Search,
-    Eye, Pencil, Trash2, Copy, ArrowRightLeft, Wrench,
+    Eye, Pencil, Trash2, Copy, ArrowRightLeft, Wrench, X,
+    Box, Calculator, History, Loader2, ChevronRight, User as UserIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -240,6 +241,7 @@ export function MobileUnitsClient({ initialUnits, currentUser }: { initialUnits:
                     {sheetNode && (
                         <MobileUnitDetail
                             node={sheetNode}
+                            allUnits={data}
                             onEdit={(n) => { setSheetNode(null); openEditForm(n) }}
                             onAdd={(pid) => { setSheetNode(null); openForm(pid) }}
                             onDelete={(n) => { setSheetNode(null); requestDelete(n) }}
@@ -306,23 +308,51 @@ export function MobileUnitsClient({ initialUnits, currentUser }: { initialUnits:
     )
 }
 
-/* Inline minimal detail sheet — keeps Phase 3 scope tight */
+/**
+ * MobileUnitDetail — full-parity sheet for a single unit
+ *
+ * Five tabs mirroring the desktop UnitDetailPanel:
+ *   - Overview   (key/value list)
+ *   - Packages   (UnitPackage templates linked to this unit)
+ *   - Calculator (embedded UnitCalculator preset to this unit)
+ *   - Audit      (kernel audit-trail timeline scoped to this unit)
+ *
+ * Each tab lazy-loads on first activation. The header carries the title /
+ * code / Base badge; the footer keeps the existing Edit + Add-derived
+ * action bar so the operator's primary verbs stay one tap away.
+ */
+type MobileTabId = 'overview' | 'packages' | 'calculator' | 'audit'
+
 interface MobileUnitDetailProps {
     node: UnitNode
+    allUnits: UnitNode[]
     onEdit: (n: UnitNode) => void
     onAdd: (parentId?: number) => void
     onDelete: (n: UnitNode) => void   // wired by caller; not consumed here yet
     onClose: () => void
 }
 
-function MobileUnitDetail({ node, onEdit, onAdd, onClose }: MobileUnitDetailProps) {
+function MobileUnitDetail({ node, allUnits, onEdit, onAdd, onClose }: MobileUnitDetailProps) {
     const isBase = !node.base_unit
     const productCount = node.product_count ?? 0
+    const initialPackageCount = (node as { package_count?: number }).package_count ?? 0
     const childCount = node.children?.length ?? 0
     const conv = node.conversion_factor ?? 1
+    const [tab, setTab] = useState<MobileTabId>('overview')
+
+    // Reset to Overview whenever the operator opens a different unit.
+    useEffect(() => { setTab('overview') }, [node.id])
+
+    const tabs: { id: MobileTabId; label: string; icon: React.ReactNode; count?: number }[] = [
+        { id: 'overview',   label: 'Overview',   icon: <Layers size={13} /> },
+        { id: 'packages',   label: 'Packages',   icon: <Box size={13} />,        count: initialPackageCount || undefined },
+        { id: 'calculator', label: 'Calc',       icon: <Calculator size={13} /> },
+        { id: 'audit',      label: 'Audit',      icon: <History size={13} /> },
+    ]
 
     return (
         <div className="flex flex-col h-full">
+            {/* ── Header ── */}
             <div className="flex-shrink-0 px-3 pt-2 pb-3 flex items-center gap-2"
                 style={{
                     background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-info, #3b82f6) 10%, var(--app-surface)), var(--app-surface))',
@@ -367,36 +397,90 @@ function MobileUnitDetail({ node, onEdit, onAdd, onClose }: MobileUnitDetailProp
                         background: 'color-mix(in srgb, var(--app-border) 25%, transparent)',
                     }}
                     aria-label="Close">
-                    <Package size={16} />
+                    <X size={16} />
                 </button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-                <div className="rounded-2xl overflow-hidden"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
-                        border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
-                    }}>
-                    {[
-                        ['Type', node.type || '—'],
-                        ['Conversion', isBase ? '×1 (base)' : `×${conv}`],
-                        ['Short name', node.short_name || '—'],
-                        ['Derived units', String(childCount)],
-                        ['Products using', String(productCount)],
-                        ['Needs balance', node.needs_balance ? 'Yes (scale)' : 'No'],
-                    ].map(([label, value], i) => (
-                        <div key={label}
-                            className="flex items-center justify-between gap-3 px-3 py-2.5"
-                            style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
-                            <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
-                                style={{ fontSize: 'var(--tp-xxs)' }}>{label}</span>
-                            <span className="font-bold text-app-foreground truncate text-right"
-                                style={{ fontSize: 'var(--tp-md)' }}>{value}</span>
-                        </div>
-                    ))}
-                </div>
+            {/* ── Tab strip ── */}
+            <div className="flex-shrink-0 px-2 py-2 flex items-center gap-1 overflow-x-auto custom-scrollbar"
+                style={{
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                    background: 'var(--app-surface)',
+                }}>
+                {tabs.map(t => {
+                    const active = tab === t.id
+                    return (
+                        <button key={t.id} type="button" onClick={() => setTab(t.id)}
+                            className="flex-shrink-0 flex items-center gap-1.5 rounded-xl font-bold active:scale-[0.97] transition-all"
+                            style={{
+                                padding: '6px 11px',
+                                fontSize: 'var(--tp-xs)',
+                                background: active
+                                    ? 'color-mix(in srgb, var(--app-info, #3b82f6) 14%, transparent)'
+                                    : 'transparent',
+                                color: active ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)',
+                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-info, #3b82f6) 35%, transparent)' : 'transparent'}`,
+                            }}>
+                            {t.icon}
+                            {t.label}
+                            {typeof t.count === 'number' && (
+                                <span className="font-mono rounded-full px-1.5 py-0.5"
+                                    style={{
+                                        fontSize: 'var(--tp-xxs)',
+                                        background: 'color-mix(in srgb, var(--app-foreground) 8%, transparent)',
+                                        color: active ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)',
+                                    }}>
+                                    {t.count}
+                                </span>
+                            )}
+                        </button>
+                    )
+                })}
             </div>
 
+            {/* ── Tab body ── */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+                {tab === 'overview' && (
+                    <div className="rounded-2xl overflow-hidden"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 40%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                        }}>
+                        {[
+                            ['Type', node.type || '—'],
+                            ['Conversion', isBase ? '×1 (base)' : `×${conv}`],
+                            ['Short name', node.short_name || '—'],
+                            ['Derived units', String(childCount)],
+                            ['Products using', String(productCount)],
+                            ['Packages', String(initialPackageCount)],
+                            ['Needs balance', node.needs_balance ? 'Yes (scale)' : 'No'],
+                        ].map(([label, value], i) => (
+                            <div key={label}
+                                className="flex items-center justify-between gap-3 px-3 py-2.5"
+                                style={{ borderTop: i === 0 ? undefined : '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}>
+                                <span className="font-bold uppercase tracking-wide text-app-muted-foreground"
+                                    style={{ fontSize: 'var(--tp-xxs)' }}>{label}</span>
+                                <span className="font-bold text-app-foreground truncate text-right"
+                                    style={{ fontSize: 'var(--tp-md)' }}>{value}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {tab === 'packages' && <MobileUnitPackagesPanel unitId={node.id} />}
+
+                {tab === 'calculator' && (
+                    <UnitCalculator
+                        units={allUnits.map((u) => ({ ...u, code: u.code ?? '' }))}
+                        defaultUnit={{ ...node, code: node.code ?? '' }}
+                        variant="embedded"
+                    />
+                )}
+
+                {tab === 'audit' && <MobileUnitAuditPanel unitId={node.id} />}
+            </div>
+
+            {/* ── Action bar ── */}
             <div className="flex-shrink-0 px-3 py-2 flex items-center gap-2"
                 style={{
                     borderTop: '1px solid color-mix(in srgb, var(--app-border) 55%, transparent)',
@@ -427,6 +511,164 @@ function MobileUnitDetail({ node, onEdit, onAdd, onClose }: MobileUnitDetailProp
                     <Pencil size={14} /> Edit
                 </button>
             </div>
+        </div>
+    )
+}
+
+
+/* ─── Packages tab body ─── */
+type UnitPackageRow = {
+    id: number
+    name?: string
+    code?: string
+    ratio?: number | string
+    is_default?: boolean
+}
+function MobileUnitPackagesPanel({ unitId }: { unitId: number }) {
+    const [rows, setRows] = useState<UnitPackageRow[]>([])
+    const [loading, setLoading] = useState(true)
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        erpFetch(`unit-packages/?unit=${unitId}`)
+            .then((d: unknown) => {
+                if (cancelled) return
+                const list = Array.isArray(d) ? d : ((d as { results?: UnitPackageRow[] })?.results ?? [])
+                setRows(list as UnitPackageRow[])
+            })
+            .catch(() => { if (!cancelled) setRows([]) })
+            .finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
+    }, [unitId])
+    if (loading) return <div className="flex items-center justify-center py-8"><Loader2 size={16} className="animate-spin text-app-muted-foreground" /></div>
+    if (rows.length === 0) return (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Box size={22} className="text-app-muted-foreground mb-2 opacity-40" />
+            <p className="font-bold text-app-muted-foreground" style={{ fontSize: 'var(--tp-md)' }}>No package templates yet</p>
+            <p className="text-app-muted-foreground mt-1 max-w-[260px]" style={{ fontSize: 'var(--tp-xs)' }}>
+                Define standard pack sizes for this unit (e.g. Pack of 6) so products can adopt them.
+            </p>
+        </div>
+    )
+    return (
+        <div className="rounded-2xl overflow-hidden divide-y" style={{ border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+            {rows.map(r => (
+                <div key={r.id} className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="flex-shrink-0 rounded-lg flex items-center justify-center"
+                         style={{ width: 32, height: 32, background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                        <Box size={13} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-md)' }}>{r.name || `Template ${r.id}`}</div>
+                        <div className="flex items-center gap-2 text-app-muted-foreground mt-0.5" style={{ fontSize: 'var(--tp-xxs)' }}>
+                            <span className="font-mono">×{r.ratio}</span>
+                            {r.code && <span className="font-mono">{r.code}</span>}
+                            {r.is_default && (
+                                <span className="font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>
+                                    Default
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
+
+/* ─── Audit tab body ─── */
+type MobileAuditEntry = {
+    id: number
+    action: string
+    timestamp: string
+    username?: string
+    field_changes?: { field_name: string; old_value: string | null; new_value: string | null }[]
+}
+function timeAgoMobile(ts: string): string {
+    const ms = Date.now() - new Date(ts).getTime()
+    if (Number.isNaN(ms)) return ts
+    const m = Math.floor(ms / 60000)
+    if (m < 1) return 'just now'
+    if (m < 60) return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h ago`
+    const d = Math.floor(h / 24)
+    if (d < 30) return `${d}d ago`
+    return new Date(ts).toLocaleDateString()
+}
+function MobileUnitAuditPanel({ unitId }: { unitId: number }) {
+    const [rows, setRows] = useState<MobileAuditEntry[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        setError(null)
+        erpFetch(`inventory/audit-trail/?resource_type=unit&resource_id=${unitId}&limit=80`)
+            .then((d: unknown) => {
+                if (cancelled) return
+                const list = Array.isArray(d) ? d : ((d as { results?: MobileAuditEntry[] })?.results ?? [])
+                setRows(list as MobileAuditEntry[])
+            })
+            .catch((e: unknown) => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load') })
+            .finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
+    }, [unitId])
+    if (loading) return <div className="flex items-center justify-center py-8"><Loader2 size={16} className="animate-spin text-app-muted-foreground" /></div>
+    if (error) return <div className="text-app-muted-foreground py-4 text-center" style={{ fontSize: 'var(--tp-sm)' }}>Audit log unavailable.</div>
+    if (rows.length === 0) return (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+            <History size={20} className="text-app-muted-foreground mb-2 opacity-40" />
+            <p className="font-bold text-app-muted-foreground" style={{ fontSize: 'var(--tp-md)' }}>No history yet</p>
+        </div>
+    )
+    return (
+        <div className="space-y-2">
+            <p className="font-bold uppercase tracking-wide text-app-muted-foreground" style={{ fontSize: 'var(--tp-xxs)' }}>
+                {rows.length} event{rows.length === 1 ? '' : 's'}
+            </p>
+            {rows.map(e => {
+                const tail = (e.action.split('.').pop() || '').toLowerCase()
+                const tone =
+                    tail === 'create' ? { bg: 'var(--app-success)', label: 'create' }
+                    : tail === 'delete' ? { bg: 'var(--app-error)', label: 'delete' }
+                    : { bg: 'var(--app-info, #3b82f6)', label: tail || e.action }
+                return (
+                    <div key={e.id} className="rounded-2xl p-2.5 space-y-1.5"
+                         style={{ background: 'var(--app-bg)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold uppercase tracking-widest rounded-full px-2 py-0.5"
+                                style={{ fontSize: 'var(--tp-xxs)', background: `color-mix(in srgb, ${tone.bg} 14%, transparent)`, color: tone.bg }}>
+                                {tone.label}
+                            </span>
+                            <span className="flex items-center gap-1 text-app-muted-foreground" style={{ fontSize: 'var(--tp-xxs)' }}>
+                                <UserIcon size={10} /><span className="truncate max-w-[100px]">{e.username || 'system'}</span>
+                            </span>
+                            <span className="text-app-muted-foreground" style={{ fontSize: 'var(--tp-xxs)' }}>
+                                {timeAgoMobile(e.timestamp)}
+                            </span>
+                        </div>
+                        {e.field_changes && e.field_changes.length > 0 && (
+                            <div className="space-y-0.5">
+                                {e.field_changes.map((fc, i) => (
+                                    <div key={i} className="flex items-center gap-1 flex-wrap" style={{ fontSize: 'var(--tp-xs)' }}>
+                                        <span className="font-mono font-bold text-app-foreground">{fc.field_name}</span>
+                                        <span className="font-mono px-1 rounded text-app-muted-foreground" style={{ background: 'color-mix(in srgb, var(--app-error) 6%, transparent)', textDecoration: 'line-through' }}>
+                                            {fc.old_value ?? '∅'}
+                                        </span>
+                                        <ChevronRight size={9} className="opacity-50" />
+                                        <span className="font-mono px-1 rounded text-app-foreground" style={{ background: 'color-mix(in srgb, var(--app-success) 6%, transparent)' }}>
+                                            {fc.new_value ?? '∅'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
         </div>
     )
 }

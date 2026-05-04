@@ -18,6 +18,7 @@ export interface Filters {
   parfum: string
   supplier: string
   status: string
+  pipeline: string
   completeness: string
   verified: string
   isActive: string

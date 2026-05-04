@@ -87,6 +87,11 @@ export function applyFilters(items: Product[], search: string, filters: Filters)
       }
       if (isNot ? matches : !matches) return false
     }
+    // Pipeline status — the canonical procurement-lifecycle key resolved
+    // server-side (see ProductSerializer.get_pipeline_status). matchStr
+    // gives us '!key' negation and `__NONE__` for "no active pipeline" out
+    // of the box.
+    if (!matchStr(filters.pipeline, p.pipeline_status)) return false
     if (!matchStr(filters.lotMgmt, p.lot_management)) return false
     if (!matchStr(filters.valuation, p.cost_valuation_method)) return false
     if (!matchStr(filters.productGroup, p.product_group_name)) return false

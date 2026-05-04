@@ -28,6 +28,7 @@ import DriverProfileModal from './_components/DriverProfileModal';
 import DriverDashboard from './_components/DriverDashboard';
 import DriverStatement from './_components/DriverStatement';
 import LogExpenseModal from './_components/LogExpenseModal';
+import { ExternalDriversTab } from './_components/ExternalDriversTab';
 import {
     ModulePage, PageHeader, KPIStrip, EmptyState, Loading,
     GhostButton, PrimaryButton, StatusPill,
@@ -68,12 +69,16 @@ const initials = (u: OrgUser) => {
     return p.length >= 2 ? `${p[0][0]}${p[1][0]}`.toUpperCase() : n.slice(0, 2).toUpperCase();
 };
 
-type TabId = 'zones' | 'drivers' | 'shipping';
+type TabId = 'zones' | 'drivers' | 'external-drivers' | 'shipping';
 
 const TABS: { id: TabId; label: string; icon: typeof MapPin }[] = [
-    { id: 'zones',    label: 'Delivery Zones', icon: MapPin },
-    { id: 'drivers',  label: 'Drivers',        icon: Truck },
-    { id: 'shipping', label: 'Shipping Rates', icon: Package },
+    { id: 'zones',            label: 'Delivery Zones',     icon: MapPin },
+    { id: 'drivers',          label: 'Drivers',            icon: Truck },
+    // External drivers are one-off contractors (no User row, no commission).
+    // They show up on the PO form when source = EXTERNAL; this tab is the
+    // settings UI for managing the saved roster.
+    { id: 'external-drivers', label: 'External Drivers',   icon: User },
+    { id: 'shipping',         label: 'Shipping Rates',     icon: Package },
 ];
 
 // Shared input class — used by all three tab forms. Conforms to §12.
@@ -873,9 +878,10 @@ export default function DeliveryPage() {
 
             {/* Tab content */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-                {activeTab === 'zones'    && <ZonesTab zones={zones} onReload={loadAll} loading={loading} />}
-                {activeTab === 'drivers'  && <DriversTab users={users} drivers={drivers} roles={roles} onReload={loadAll} loading={loading} />}
-                {activeTab === 'shipping' && <ShippingTab zones={zones} rates={rates} onReload={loadAll} loading={loading} />}
+                {activeTab === 'zones'            && <ZonesTab zones={zones} onReload={loadAll} loading={loading} />}
+                {activeTab === 'drivers'          && <DriversTab users={users} drivers={drivers} roles={roles} onReload={loadAll} loading={loading} />}
+                {activeTab === 'external-drivers' && <ExternalDriversTab />}
+                {activeTab === 'shipping'         && <ShippingTab zones={zones} rates={rates} onReload={loadAll} loading={loading} />}
             </div>
         </ModulePage>
     );

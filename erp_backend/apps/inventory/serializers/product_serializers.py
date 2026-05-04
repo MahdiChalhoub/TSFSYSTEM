@@ -105,6 +105,59 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             total=Sum('quantity'))['total'] or 0)
 
 
+def resolve_pipeline_status_for(serializer_self, obj):
+    """Batch-cached resolver for `pipeline_status`.
+
+    Both `ProductSerializer` and `ProductLiteSerializer` need the canonical
+    pipeline key. The naive "call the service per row" path runs 3 queries ×
+    N rows; this helper batches once per request and caches in
+    `request._procurement_status_cache`, so a 30-row page costs 3 queries
+    total regardless of which serializer asked.
+    """
+    from apps.inventory.services.procurement_status_service import (
+        get_procurement_status_batch, get_product_display_status
+    )
+    cache_key = '_procurement_status_cache'
+    request = serializer_self.context.get('request')
+    if not request:
+        return 'NONE'
+
+    if not hasattr(request, cache_key):
+        setattr(request, cache_key, {})
+    cache = getattr(request, cache_key)
+    if obj.id in cache:
+        return cache[obj.id]
+
+    sibling_ids = [obj.id]
+    parent = getattr(serializer_self, 'parent', None)
+    if parent is not None and hasattr(parent, 'instance'):
+        instances = parent.instance
+        if instances is not None and hasattr(instances, '__iter__'):
+            sibling_ids = [getattr(p, 'id', None) for p in instances]
+            sibling_ids = [pid for pid in sibling_ids if pid is not None]
+
+    batch_res = get_procurement_status_batch(obj.organization, sibling_ids)
+
+    id_to_product = {}
+    if parent is not None and hasattr(parent, 'instance') and parent.instance is not None and hasattr(parent.instance, '__iter__'):
+        for p in parent.instance:
+            if getattr(p, 'id', None) is not None:
+                id_to_product[p.id] = p
+    id_to_product[obj.id] = obj
+
+    for pid, p in id_to_product.items():
+        entry = batch_res.get(pid)
+        status, _detail = get_product_display_status(
+            entry,
+            float(getattr(p, 'on_hand_qty', 0) or 0),
+            float(getattr(p, 'incoming_transfer_qty', 0) or 0),
+            getattr(p, 'min_stock_level', 0)
+        )
+        cache[pid] = _PROCUREMENT_LABEL_TO_KEY.get(status, 'NONE')
+
+    return cache.get(obj.id, 'NONE')
+
+
 class ProductLiteSerializer(serializers.ModelSerializer):
     """
     Lightweight product payload for pickers / dropdowns. Drops the
@@ -115,6 +168,17 @@ class ProductLiteSerializer(serializers.ModelSerializer):
     """
     brand_name = serializers.CharField(source='brand.name', read_only=True, default=None)
     category_name = serializers.CharField(source='category.name', read_only=True, default=None)
+    # ── Pipeline status — the only SerializerMethodField in lite ──
+    # Pickers (PO catalogue) filter by procurement lifecycle, so we need
+    # the canonical key. Cost is bounded: `resolve_pipeline_status_for` does
+    # ONE batch lookup per page (3 queries total) thanks to the
+    # request-level cache, regardless of page size. This is acceptable for
+    # picker UX; if it ever needs to be cheaper, gate behind a
+    # `with_pipeline=1` opt-in query param in the viewset.
+    pipeline_status = serializers.SerializerMethodField()
+
+    def get_pipeline_status(self, obj):
+        return resolve_pipeline_status_for(self, obj)
 
     class Meta:
         model = Product
@@ -128,6 +192,8 @@ class ProductLiteSerializer(serializers.ModelSerializer):
             # Direct scalar columns the picker's customizable column set
             # exposes. Both are plain DB columns — no extra queries.
             'status', 'tva_rate',
+            # Pipeline lifecycle — see the SerializerMethodField above.
+            'pipeline_status',
         ]
         read_only_fields = fields
 
@@ -205,62 +271,9 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.is_complete
 
     def get_pipeline_status(self, obj):
-        from apps.inventory.services.procurement_status_service import (
-            get_procurement_status_batch, get_product_display_status
-        )
-        # Use request-level cache if available to avoid N+1 in list views.
-        # Previously this called get_procurement_status_batch with [obj.id]
-        # PER PRODUCT — 3 SQL queries × N products = 300+ queries on a 100-
-        # product page. Now: on first call we batch-resolve every product in
-        # the parent ListSerializer instance and seed the cache, so we run
-        # 3 queries total regardless of page size.
-        cache_key = '_procurement_status_cache'
-        request = self.context.get('request')
-
-        if request:
-            if not hasattr(request, cache_key):
-                setattr(request, cache_key, {})
-
-            cache = getattr(request, cache_key)
-            if obj.id in cache:
-                return cache[obj.id]
-
-            # Pre-warm: gather ids from the parent ListSerializer if we're
-            # serializing a queryset (list view). Falls back to single-product
-            # batch when called from detail view.
-            sibling_ids = [obj.id]
-            parent = getattr(self, 'parent', None)
-            if parent is not None and hasattr(parent, 'instance'):
-                instances = parent.instance
-                if instances is not None and hasattr(instances, '__iter__'):
-                    sibling_ids = [getattr(p, 'id', None) for p in instances]
-                    sibling_ids = [pid for pid in sibling_ids if pid is not None]
-
-            batch_res = get_procurement_status_batch(obj.organization, sibling_ids)
-
-            # Resolve & cache every sibling so the remaining N-1 calls are
-            # cache hits. Stock tier inputs (on_hand, in_transit, min_stock)
-            # are resolved from each sibling's product instance.
-            id_to_product = {}
-            if parent is not None and hasattr(parent, 'instance') and parent.instance is not None and hasattr(parent.instance, '__iter__'):
-                for p in parent.instance:
-                    if getattr(p, 'id', None) is not None:
-                        id_to_product[p.id] = p
-            id_to_product[obj.id] = obj  # always include current
-
-            for pid, p in id_to_product.items():
-                entry = batch_res.get(pid)
-                status, _detail = get_product_display_status(
-                    entry,
-                    float(getattr(p, 'on_hand_qty', 0) or 0),
-                    float(getattr(p, 'incoming_transfer_qty', 0) or 0),
-                    getattr(p, 'min_stock_level', 0)
-                )
-                cache[pid] = _PROCUREMENT_LABEL_TO_KEY.get(status, 'NONE')
-
-            return cache.get(obj.id, 'NONE')
-
-        return 'NONE'
+        # Shared helper (defined above). Same batch-cache pattern as
+        # ProductLiteSerializer; both serializers see the same canonical key.
+        return resolve_pipeline_status_for(self, obj)
 
     def _resolve_warehouse(self, obj):
         """Resolve warehouse from request query param ?warehouse=<id>."""
