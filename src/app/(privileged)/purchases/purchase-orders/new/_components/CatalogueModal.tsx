@@ -152,6 +152,12 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             const params = new URLSearchParams({
                 page: String(pageNum),
                 page_size: '30',
+                // Picker-grade payload: drops nested variants / packaging
+                // levels and the SerializerMethodFields that turn a 30-row
+                // page into ~1200 queries. Catalogue only needs id/sku/
+                // name/category + price columns, all of which the lite
+                // serializer now exposes.
+                lite: '1',
             })
             if (query) params.set('search', query)
             if (category) params.set('category', category.startsWith('!') ? `!${category.slice(1)}` : category)

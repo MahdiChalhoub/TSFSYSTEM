@@ -70,6 +70,7 @@ export function DataMenu({ onExport, onExportExcel, onImport, onPrint, title = '
         <DM.Root>
             <DM.Trigger asChild>
                 <button
+                    data-tour="data-menu-btn"
                     className="flex items-center gap-1.5 text-tp-sm font-bold px-2.5 py-1.5 rounded-xl border transition-all hover:bg-app-surface data-[state=open]:bg-app-surface"
                     style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
                 >

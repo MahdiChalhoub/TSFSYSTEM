@@ -107,6 +107,16 @@ export interface DataToolsImportConfig {
     buildPayload: (row: Record<string, string>) => Record<string, unknown>
     /** Optional extra tutorial hint text. */
     tip?: ReactNode
+    /**
+     * Optional override for the entire import run. When set, the dialog
+     * delegates to this callback instead of looping POST per row. Used by
+     * entities that need multi-pass logic (e.g. self-referencing FKs that
+     * must be wired in a second pass once peer ids are known) or upsert
+     * semantics (PATCH when the row carries an `id`, POST otherwise).
+     *
+     * Must return a result row per input row, in the same order.
+     */
+    runImport?: (rows: Record<string, string>[]) => Promise<{ name: string; ok: boolean; error?: string }[]>
 }
 
 /**

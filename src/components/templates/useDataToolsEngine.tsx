@@ -150,6 +150,7 @@ export function useDataToolsEngine({ dataTools, data, titleFallback }: EngineInp
                     previewColumns={dt.import.previewColumns}
                     buildPayload={dt.import.buildPayload}
                     tip={dt.import.tip}
+                    runImport={dt.import.runImport}
                 />
             )}
             {printSpec && (

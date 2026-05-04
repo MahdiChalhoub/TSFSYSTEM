@@ -17,7 +17,7 @@
 import {
     Ruler, Plus, Search, Sparkles, Keyboard, Layers, Package,
     Box, Calculator, MousePointerClick, ChevronRight, ArrowRightLeft,
-    LayoutPanelLeft, GitBranch
+    LayoutPanelLeft, GitBranch, Scale, Database,
 } from 'lucide-react'
 import { createElement } from 'react'
 import { registerTour } from '@/lib/tours/registry'
@@ -37,8 +37,11 @@ import type { TourConfig } from '@/lib/tours/types'
  *  9 = Switch to Packages tab (ACTION)
  * 10 = Switch to Calculator tab (ACTION)
  * 11 = Close sidebar (ACTION) → spotlight split-panel button
- * 12 = Keyboard shortcuts (centered)
- * 13 = Complete (centered)
+ * 12 = Standalone Calculator toggle (info)
+ * 13 = Variable Barcode button (info)
+ * 14 = Data menu — Import / Export / Print (info)
+ * 15 = Keyboard shortcuts (centered)
+ * 16 = Complete (centered)
  */
 
 const unitsTour: TourConfig = {
@@ -162,7 +165,36 @@ const unitsTour: TourConfig = {
             placement: 'bottom',
             behavior: 'action',
         },
-        // 12 — Keyboard shortcuts
+        // 12 — Standalone Calculator toggle (separate from the per-unit
+        //      Calculator tab in the detail panel — this one floats over
+        //      the page without picking a unit first).
+        {
+            target: '[data-tour="unit-calc-btn"]',
+            title: 'Floating Calculator',
+            description: 'Toggle a free-floating unit converter that works across every unit in the page — no detail panel needed. Useful for quick "how many pieces in 3 pallets?" math while editing.',
+            icon: createElement(ArrowRightLeft, { size: 16 }),
+            color: 'var(--app-info, #3b82f6)',
+            placement: 'bottom',
+        },
+        // 13 — Variable Barcode (scale/balance config)
+        {
+            target: '[data-tour="unit-barcode-btn"]',
+            title: 'Variable Barcode',
+            description: 'Configure how scale-printed barcodes (variable-weight items) are parsed: prefix, weight digits, price digits, check digit. Drives how the POS reads barcodes from the scale.',
+            icon: createElement(Scale, { size: 16 }),
+            color: 'var(--app-warning, #f59e0b)',
+            placement: 'bottom',
+        },
+        // 14 — Data menu (Export / Import / Print)
+        {
+            target: '[data-tour="data-menu-btn"]',
+            title: 'Import / Export / Print',
+            description: 'Round-trip your unit catalog as CSV / Excel: export carries `id` + `base_unit_id` so a re-import updates rows in place. The 2-pass importer wires `base_unit` after all rows exist, so order in the CSV doesn\'t matter.',
+            icon: createElement(Database, { size: 16 }),
+            color: 'var(--app-success, #22c55e)',
+            placement: 'bottom',
+        },
+        // 15 — Keyboard shortcuts
         {
             target: null,
             isWelcome: true,

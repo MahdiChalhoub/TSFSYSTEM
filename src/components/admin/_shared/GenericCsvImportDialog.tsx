@@ -59,6 +59,13 @@ export interface GenericCsvImportDialogProps {
     buildPayload: (row: Record<string, string>) => Record<string, any>;
     /** Optional extra tutorial hint text (shown in the amber tip banner). */
     tip?: React.ReactNode;
+    /**
+     * Optional custom run — when provided, the dialog delegates the whole
+     * batch to this callback instead of looping POST per row. Used by
+     * entities that need multi-pass / upsert logic (e.g. units must wire
+     * `base_unit` FKs in pass 2 once peer ids are known).
+     */
+    runImport?: (rows: Record<string, string>[]) => Promise<Result[]>;
 }
 
 type Result = { name: string; ok: boolean; error?: string };
@@ -69,7 +76,7 @@ export function GenericCsvImportDialog({
     isOpen, onClose, onDone,
     entity, entityPlural,
     columns, sampleCsv, previewColumns,
-    endpoint, buildPayload, tip,
+    endpoint, buildPayload, tip, runImport,
 }: GenericCsvImportDialogProps) {
     const plural = entityPlural || `${entity}s`;
     const fileRef = useRef<HTMLInputElement | null>(null);
@@ -144,17 +151,29 @@ export function GenericCsvImportDialog({
 
     const run = async () => {
         setImporting(true);
-        const out: Result[] = [];
-        for (const r of rows) {
+        let out: Result[];
+        if (runImport) {
+            // Caller-supplied multi-pass / upsert flow. They own ordering
+            // and per-row error handling; we just surface the result list.
             try {
-                await erpFetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(buildPayload(r)),
-                });
-                out.push({ name: r.name, ok: true });
+                out = await runImport(rows);
             } catch (e: any) {
-                out.push({ name: r.name, ok: false, error: e?.message || 'failed' });
+                out = rows.map(r => ({ name: r.name, ok: false, error: e?.message || 'import failed' }));
+            }
+        } else {
+            // Default per-row POST loop.
+            out = [];
+            for (const r of rows) {
+                try {
+                    await erpFetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(buildPayload(r)),
+                    });
+                    out.push({ name: r.name, ok: true });
+                } catch (e: any) {
+                    out.push({ name: r.name, ok: false, error: e?.message || 'failed' });
+                }
             }
         }
         setResults(out);

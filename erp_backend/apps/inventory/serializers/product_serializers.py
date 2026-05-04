@@ -118,7 +118,14 @@ class ProductLiteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'sku', 'barcode', 'brand_name', 'category_name', 'is_active']
+        fields = [
+            'id', 'name', 'sku', 'barcode', 'brand_name', 'category_name', 'is_active',
+            # Direct price columns — needed by pickers (PO catalogue, etc.) so
+            # they can show cost / selling / margin without paying for the full
+            # serializer's N+1 SerializerMethodFields.
+            'cost_price', 'cost_price_ht', 'cost_price_ttc',
+            'selling_price_ht', 'selling_price_ttc',
+        ]
         read_only_fields = fields
 
 

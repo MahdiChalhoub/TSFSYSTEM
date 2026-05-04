@@ -6,7 +6,7 @@ import {
     Bookmark, Scale, Loader2, ArrowRightLeft, ArrowUpDown, Box, Calculator,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getUnitPackaging, listUnitPackages, deleteUnitPackage } from '@/app/actions/inventory/units'
+import { listUnitPackages, deleteUnitPackage } from '@/app/actions/inventory/units'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { EntityProductsTab } from '@/components/templates/EntityProductsTab'
 import { erpFetch } from '@/lib/erp-api'
@@ -17,17 +17,6 @@ import type { UnitNode } from './UnitRow'
  *  DETAIL PANEL — 4 tabs: Overview, Products, Packages, Calculator
  * ═══════════════════════════════════════════════════════════ */
 type PanelTab = 'overview' | 'products' | 'packages' | 'calculator'
-
-type LinkedPackage = {
-    id: number
-    name?: string
-    ratio?: number | string
-    product_name?: string
-    barcode?: string
-    selling_price?: number | string
-    is_default_sale?: boolean
-    is_default_purchase?: boolean
-}
 
 type UnitPackageTemplate = {
     id: number
@@ -50,9 +39,8 @@ interface UnitDetailPanelProps {
 
 export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initialTab, onClose, onPin }: UnitDetailPanelProps) {
     const [activeTab, setActiveTab] = useState<PanelTab>((initialTab as PanelTab) ?? 'overview')
-    const [packages, setPackages] = useState<LinkedPackage[]>([])
-    const [pkgLoading, setPkgLoading] = useState(false)
-    const [pkgLoaded, setPkgLoaded] = useState(false)
+    // The "Linked Product Packaging" sub-section was removed — `unitPackages`
+    // (templates on this unit) is the only list this panel still tracks.
     const [unitPackages, setUnitPackages] = useState<UnitPackageTemplate[]>([])
     const [unitPkgLoading, setUnitPkgLoading] = useState(false)
     const [showNewPkg, setShowNewPkg] = useState(false)
@@ -73,22 +61,16 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
     const childCount = children.length
 
     useEffect(() => { setActiveTab((initialTab as PanelTab) ?? 'overview') }, [node.id, initialTab])
-    useEffect(() => { setPkgLoaded(false); setPackages([]); setUnitPackages([]); setShowNewPkg(false) }, [node.id])
+    useEffect(() => { setUnitPackages([]); setShowNewPkg(false) }, [node.id])
 
     useEffect(() => {
-        if (activeTab === 'packages' && !pkgLoaded) {
-            setPkgLoading(true)
-            getUnitPackaging(node.id)
-                .then((data) => { setPackages((data ?? []) as LinkedPackage[]); setPkgLoaded(true); setPkgLoading(false) })
-                .catch(() => setPkgLoading(false))
-            reloadUnitPackages()
-        }
-    }, [activeTab, node.id, pkgLoaded, reloadUnitPackages])
+        if (activeTab === 'packages') reloadUnitPackages()
+    }, [activeTab, node.id, reloadUnitPackages])
 
     const tabs = [
         { key: 'overview' as PanelTab, label: 'Overview', icon: <Layers size={13} />, color: 'var(--app-info)' },
         { key: 'products' as PanelTab, label: 'Products', icon: <Package size={13} />, count: productCount, color: 'var(--app-success)' },
-        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: packages.length || undefined, color: 'var(--app-info)' },
+        { key: 'packages' as PanelTab, label: 'Packages', icon: <Box size={13} />, count: unitPackages.length || undefined, color: 'var(--app-info)' },
         { key: 'calculator' as PanelTab, label: 'Calculator', icon: <Calculator size={13} />, color: 'var(--app-warning)' },
     ]
 
