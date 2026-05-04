@@ -125,3 +125,59 @@ class AIScopeReview(models.Model):
 
     def __str__(self):
         return f'AI review {self.value_id}/{self.input_hash[:8]} = {self.verdict}'
+
+
+class AICategoryRuleReview(models.Model):
+    """
+    Cache for AI verdicts on category-creation-rule suggestions.
+
+    Sibling of AIScopeReview, but FKed to Category instead of
+    ProductAttribute, so the two suggester pipelines can share a single
+    AIScopeSuggesterConfig (same opt-in toggle, same daily token cap)
+    while keeping their cache rows cleanly partitioned by what they
+    review.
+
+    `input_hash` covers: category name + observed product completeness
+    stats (does every product here have a barcode? brand? unit? etc.)
+    + the rule fields the deterministic pass proposed. Same shape ⇒
+    same hash ⇒ cached.
+    """
+    VERDICT_CHOICES = AIScopeReview.VERDICT_CHOICES
+
+    organization = models.ForeignKey(
+        'erp.Organization',
+        on_delete=models.CASCADE,
+        related_name='+',
+        db_column='tenant_id',
+    )
+    category = models.ForeignKey(
+        'inventory.Category',
+        on_delete=models.CASCADE,
+        related_name='ai_rule_reviews',
+    )
+    input_hash = models.CharField(max_length=64, db_index=True)
+
+    verdict = models.CharField(max_length=10, choices=VERDICT_CHOICES)
+    confidence = models.FloatField(default=0.0)
+    rationale = models.TextField(blank=True)
+    # Per-field verdict for partials. JSON of {requires_barcode: bool, ...}
+    # where True = LLM endorses that field's proposed value.
+    field_verdicts = models.JSONField(default=dict, blank=True)
+
+    provider_name = models.CharField(max_length=50, blank=True)
+    model_name    = models.CharField(max_length=100, blank=True)
+    input_tokens  = models.IntegerField(default=0)
+    output_tokens = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'inventory_ai_category_rule_review'
+        indexes = [
+            models.Index(fields=['organization', 'category', 'input_hash']),
+            models.Index(fields=['created_at']),
+        ]
+        unique_together = [('category', 'input_hash')]
+
+    def __str__(self):
+        return f'AI rule review {self.category_id}/{self.input_hash[:8]} = {self.verdict}'

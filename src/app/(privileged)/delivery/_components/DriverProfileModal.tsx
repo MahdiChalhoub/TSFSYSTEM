@@ -22,6 +22,10 @@ interface Driver {
     commission_type: 'FLAT' | 'PERCENT';
     commission_value: string;
     is_active: boolean;
+    /** Per-module visibility — drives `users/?driver_for=…` filtering on
+     *  the PO and POS pickers. Defaults to true server-side. */
+    available_for_purchase?: boolean;
+    available_for_sales?: boolean;
 }
 
 interface DriverProfileModalProps {
@@ -41,6 +45,8 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
         commission_type: 'FLAT',
         commission_value: '0',
         is_active: true,
+        available_for_purchase: true,
+        available_for_sales: true,
     });
 
     const [saving, setSaving] = useState(false);
@@ -217,6 +223,40 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                                     className="w-full px-3 py-2 bg-app-surface border border-app-border rounded-xl text-xs font-bold"
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* ── Module availability ────────────────────────
+                     *  Lets a tenant ring-fence a driver to one module.
+                     *  Both default to true so the existing fleet keeps
+                     *  showing up everywhere; flip off to remove this
+                     *  driver from that module's picker without deleting
+                     *  the row. */}
+                    <div className="bg-app-background/50 rounded-3xl border border-app-border p-6 space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-app-primary/10 flex items-center justify-center text-app-primary">
+                                <Zap size={16} />
+                            </div>
+                            <h3 className="text-sm font-black text-app-foreground">Available For</h3>
+                        </div>
+                        <p className="text-xs text-app-muted-foreground -mt-1">
+                            Controls which module pickers list this driver. Both on = visible everywhere.
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="flex items-center gap-3 px-4 py-3 bg-app-surface border border-app-border rounded-2xl cursor-pointer hover:border-app-primary/40 transition-all">
+                                <input type="checkbox"
+                                    checked={form.available_for_sales !== false}
+                                    onChange={e => setForm({ ...form, available_for_sales: e.target.checked })}
+                                    className="w-4 h-4 accent-app-primary" />
+                                <span className="text-xs font-bold text-app-foreground">Sales / POS</span>
+                            </label>
+                            <label className="flex items-center gap-3 px-4 py-3 bg-app-surface border border-app-border rounded-2xl cursor-pointer hover:border-app-primary/40 transition-all">
+                                <input type="checkbox"
+                                    checked={form.available_for_purchase !== false}
+                                    onChange={e => setForm({ ...form, available_for_purchase: e.target.checked })}
+                                    className="w-4 h-4 accent-app-primary" />
+                                <span className="text-xs font-bold text-app-foreground">Purchases</span>
+                            </label>
                         </div>
                     </div>
 

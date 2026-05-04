@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useTransition, useRef, useEffect } from 'react'
 import { prefetchNextCode } from '@/lib/sequences-client'
 import {
-    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search,
+    FolderTree, Plus, Layers, GitBranch, Box, Paintbrush, Search, Sparkles,
 } from 'lucide-react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
@@ -242,6 +242,10 @@ export function CategoriesClient({ initialCategories }: { initialCategories: Cat
                 },
                 secondaryActions: [
                     { label: 'Cleanup', icon: <FolderTree size={13} />, href: '/inventory/maintenance?tab=category' },
+                    // Phase 7: AI-ranked rule-suggestion wizard. Surfaces
+                    // candidate creation rules for categories that have
+                    // 3+ products and no rule yet.
+                    { label: 'Rule Wizard', icon: <Sparkles size={13} />, href: '/inventory/categories/rule-wizard' },
                 ],
                 columnHeaders: [
                     { label: 'Category', width: 'auto', sortKey: 'name' },

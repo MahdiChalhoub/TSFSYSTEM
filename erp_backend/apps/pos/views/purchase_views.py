@@ -196,6 +196,34 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         if lines_data:
             po.recalculate_totals()
 
+        # ── Auto-create a "Follow up PO" Task for the assignee ──
+        # Surfacing the PO in the workspace task board removes the
+        # silent ownership problem (operators used to forget about
+        # assigned POs because there was no inbox push). Any failure
+        # here is intentionally swallowed — task creation must NEVER
+        # break a successful PO save.
+        if po.assignee_id:
+            try:
+                from apps.workspace.models import Task
+                Task.objects.create(
+                    organization=organization,
+                    title=f'Follow up {po.po_number or f"PO-{po.pk}"}',
+                    description=(
+                        f'Track this purchase order from {po.supplier.name if po.supplier_id else "supplier"} '
+                        f'through the lifecycle (approve → send → confirm → receive → invoice).'
+                    ),
+                    status='PENDING',
+                    priority='NORMAL',
+                    source='AUTO',
+                    assigned_by=self.request.user if self.request.user.is_authenticated else None,
+                    assigned_to_id=po.assignee_id,
+                    due_date=po.expected_date,
+                )
+            except Exception:
+                # Workspace app might be uninstalled / Task schema drift /
+                # tenant has no role for the assignee — never block save.
+                pass
+
     @action(detail=False, methods=['post'], url_path='auto-replenish')
     def auto_replenish(self, request):
         """Run the Min/Max Automated Replenishment Engine."""

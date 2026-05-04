@@ -187,6 +187,107 @@ def send_templated_notification(user_id, template_code, variables=None, link=Non
         return {'status': 'failed', 'error': str(e)}
 
 
+# ── AI Assistant Nightly Digest (Phase 7) ─────────────────────
+
+@shared_task(name='erp.tasks.send_ai_assistant_digest')
+def send_ai_assistant_digest():
+    """
+    Per-tenant overnight job that runs the AI scope + category-rule
+    suggesters and emails an admin a summary so the wizard never has to
+    be opened "just to check".
+
+    Only runs for organizations that have explicitly opted into AI
+    ranking (`AIScopeSuggesterConfig.enabled=True`). The token-cap
+    guard in `enrich_suggestions` still applies — a runaway budget
+    can't drain past the daily ceiling even from this task.
+
+    Email body lists:
+      • Scope suggestions: total / high-confidence accepts / partial / risky
+      • Category-rule suggestions: total / high-confidence accepts
+      • A deep link to each wizard so one click reaches the work
+
+    Privacy: cross-tenant data NEVER appears in any single email. Each
+    org's digest only carries its own product / value / category names.
+    """
+    from apps.inventory.models import AIScopeSuggesterConfig
+    from apps.inventory.services.scope_suggester import suggest_scopes
+    from apps.inventory.services.scope_ai_ranker import enrich_suggestions
+    from apps.inventory.services.category_rule_suggester import suggest_category_rules
+    from apps.inventory.services.category_rule_ai_ranker import enrich_category_rule_suggestions
+    from erp.models import User
+    from erp.notification_service import NotificationService
+
+    sent_count = 0
+    org_count  = 0
+
+    for cfg in AIScopeSuggesterConfig.objects.filter(enabled=True).select_related('organization', 'provider'):
+        org = cfg.organization
+        org_count += 1
+
+        # Both suggesters share the same opt-in toggle + token budget.
+        # Capping at top_n=20 each keeps this overnight job under
+        # ~6k tokens per org per night even on a chatty model.
+        try:
+            scope = suggest_scopes(org)
+            scope_enriched = enrich_suggestions(org, list(scope), top_n=20) if scope else []
+            rules = suggest_category_rules(org)
+            rules_enriched = enrich_category_rule_suggestions(org, list(rules), top_n=20) if rules else []
+        except Exception as e:  # noqa: BLE001 — never fail the loop on one org
+            logger.warning(f'[Task] AI digest skipped for {org}: {e}')
+            continue
+
+        threshold = cfg.min_ai_confidence
+
+        # Tally by AI verdict — only count rows that actually got an AI
+        # review (others are deterministic-only and not "high confidence").
+        scope_high = sum(1 for s in scope_enriched if (s.get('ai_review') or {}).get('verdict') == 'accept' and (s['ai_review'].get('confidence') or 0) >= threshold)
+        scope_partial = sum(1 for s in scope_enriched if (s.get('ai_review') or {}).get('verdict') == 'partial')
+        scope_reject = sum(1 for s in scope_enriched if (s.get('ai_review') or {}).get('verdict') == 'reject')
+        rules_high = sum(1 for s in rules_enriched if (s.get('ai_review') or {}).get('verdict') == 'accept' and (s['ai_review'].get('confidence') or 0) >= threshold)
+
+        # Nothing actionable → don't bother sending an email.
+        if scope_high + rules_high + scope_partial + scope_reject == 0:
+            continue
+
+        # Recipients: every active admin user in the org with an email.
+        recipients = User.objects.filter(
+            organization=org, is_active=True,
+        ).exclude(email='').filter(is_superuser=True)
+        # Fall back to the org owner / first active user if no superuser exists.
+        if not recipients.exists():
+            recipients = User.objects.filter(organization=org, is_active=True).exclude(email='')[:1]
+
+        body_lines = [
+            f"AI Assistant Digest for {org.name}",
+            "",
+            f"Scope suggestions ({len(scope_enriched)} reviewed):",
+            f"  • {scope_high} high-confidence accepts (≥ {int(threshold*100)}%)",
+            f"  • {scope_partial} partial — some axes need attention",
+            f"  • {scope_reject} the AI thinks are wrong",
+            "",
+            f"Category creation-rule suggestions ({len(rules_enriched)} reviewed):",
+            f"  • {rules_high} high-confidence accepts (≥ {int(threshold*100)}%)",
+            "",
+            "Open the wizards to review:",
+            "  /inventory/attributes/scope-wizard",
+            "  /inventory/categories/rule-wizard",
+            "",
+            f"Tokens used today: {cfg.tokens_used_today:,} / {cfg.daily_token_cap:,}",
+        ]
+        body = "\n".join(body_lines)
+        subject = f"AI Assistant: {scope_high + rules_high} high-confidence picks ready for review"
+
+        for user in recipients:
+            try:
+                NotificationService._send_email(user=user, subject=subject, body=body)
+                sent_count += 1
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f'[Task] AI digest email failed for {user}: {e}')
+
+    logger.info(f'[Task] send_ai_assistant_digest: {sent_count} emails across {org_count} opted-in orgs')
+    return {'sent_count': sent_count, 'org_count': org_count}
+
+
 # ── Daily Digest ──────────────────────────────────────────────
 
 @shared_task(name='erp.tasks.send_daily_digest')

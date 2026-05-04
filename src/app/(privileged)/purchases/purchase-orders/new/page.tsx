@@ -3,7 +3,7 @@ import { getContactsByType } from "@/app/actions/crm/contacts";
 import { getFinancialSettings } from "@/app/actions/finance/settings";
 import PurchaseForm from "./form";
 import { serializeDecimals } from "@/lib/utils/serialization";
-import { getUsers } from "@/app/actions/users";
+import { getAssignableUsers, getDrivers } from "@/app/actions/users";
 import { getAnalyticsProfiles } from "@/app/actions/settings/analytics-profiles";
 
 export const dynamic = 'force-dynamic';
@@ -63,11 +63,17 @@ export default async function NewPurchasePage({
     const params = (await searchParams) ?? {}
     const editId = params.edit && /^\d+$/.test(params.edit) ? params.edit : null
 
-    const [suppliers, sites, financialSettings, users, profilesData, initialPO, currentUser] = await Promise.all([
+    const [suppliers, sites, financialSettings, assignees, drivers, profilesData, initialPO, currentUser] = await Promise.all([
         getContactsByType('SUPPLIER'),
         getSitesAndWarehouses(),
         getFinancialSettings(),
-        getUsers(),
+        // Two narrowed user lists for the form's Ownership step:
+        //   - assignees: people who can be made owner of a PO (purchase-perm
+        //     roles, staff, superuser).
+        //   - drivers:   users with a Driver row, scoped to module=purchase
+        //     when the per-module flag exists.
+        getAssignableUsers('purchase'),
+        getDrivers('purchase'),
         getAnalyticsProfiles('purchase-order'),
         editId ? getEditableOrder(editId) : Promise.resolve(null),
         import('@/app/actions/auth').then(m => m.getUser()),
@@ -78,7 +84,8 @@ export default async function NewPurchasePage({
             suppliers={serializeDecimals(suppliers)}
             sites={sites}
             financialSettings={serializeDecimals(financialSettings)}
-            users={users}
+            assignees={assignees}
+            drivers={drivers}
             profilesData={profilesData}
             currentUser={currentUser}
             mode={initialPO ? 'edit' : 'create'}

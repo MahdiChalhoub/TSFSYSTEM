@@ -137,6 +137,17 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
     const allowedCreateStatuses = ['DRAFT', 'SUBMITTED', 'APPROVED'];
     const initialStatus = allowedCreateStatuses.includes(rawStatus) ? rawStatus : 'DRAFT';
 
+    // Ownership + driver source — all four are nullable and the viewset
+    // ignores any field not present in the model, so this stays
+    // forwards-compatible if someone POSTs without them.
+    const assigneeId = formData.get('assigneeId')
+    const driverId = formData.get('driverId')
+    const rawDriverSource = (orUndef(formData.get('driverSource')) || 'INTERNAL').toUpperCase()
+    const driverSource: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL' =
+        rawDriverSource === 'SUPPLIER' || rawDriverSource === 'EXTERNAL' ? rawDriverSource as any : 'INTERNAL'
+    const externalDriverName = orUndef(formData.get('externalDriverName'))
+    const externalDriverPhone = orUndef(formData.get('externalDriverPhone'))
+
     const payload = {
         supplier: Number(supplierId),
         site: siteId ? Number(siteId) : null,
@@ -147,6 +158,11 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         supplier_ref: orUndef(formData.get('supplierRef')),
         notes: orUndef(formData.get('notes')),
         status: initialStatus,
+        assignee: assigneeId ? Number(assigneeId) : null,
+        driver_source: driverSource,
+        driver_user: driverSource === 'INTERNAL' && driverId ? Number(driverId) : null,
+        external_driver_name: driverSource === 'EXTERNAL' ? externalDriverName : null,
+        external_driver_phone: driverSource === 'EXTERNAL' ? externalDriverPhone : null,
         lines: rawLines
             .filter(l => l && (l as any).productId)
             .map(l => {

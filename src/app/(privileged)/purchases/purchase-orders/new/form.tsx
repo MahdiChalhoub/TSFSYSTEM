@@ -53,7 +53,12 @@ interface PurchaseFormProps {
     suppliers: Record<string, any>[]
     sites: Record<string, any>[]
     financialSettings: Record<string, any>
-    users: Record<string, any>[]
+    /** Users who can be made the PO owner — pre-filtered server-side
+     *  to roles with purchase-permissions, staff, and superusers. */
+    assignees: Record<string, any>[]
+    /** Users with a Driver row (and `available_for_purchase=true` once
+     *  the per-module flag exists). Pre-filtered server-side. */
+    drivers: Record<string, any>[]
     profilesData: AnalyticsProfilesData
     currentUser?: any
     /** When 'edit', the form prefills from `initialPO` and submits via
@@ -66,7 +71,8 @@ export default function PurchaseForm({
     suppliers,
     sites,
     financialSettings,
-    users,
+    assignees,
+    drivers,
     profilesData,
     currentUser,
     mode = 'create',
@@ -219,7 +225,22 @@ export default function PurchaseForm({
         isEdit ? seedNumber(initialPO?.assignee?.id ?? initialPO?.assignee ?? initialPO?.assignee_id) : ''
     )
     const [driverId, setDriverId] = useState<number | ''>(() =>
-        isEdit ? seedNumber(initialPO?.driver?.id ?? initialPO?.driver ?? initialPO?.driver_id) : ''
+        isEdit ? seedNumber(initialPO?.driver?.id ?? initialPO?.driver_user?.id ?? initialPO?.driver ?? initialPO?.driver_id ?? initialPO?.driver_user_id) : ''
+    )
+    // Driver source — three modes:
+    //   INTERNAL → pick from our drivers (Driver-row users)
+    //   SUPPLIER → supplier provides their own; we don't collect details
+    //   EXTERNAL → free-text name + phone (one-off contractor)
+    type DriverSource = 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL'
+    const [driverSource, setDriverSource] = useState<DriverSource>(() => {
+        const raw = initialPO?.driver_source as string | undefined
+        return raw === 'SUPPLIER' || raw === 'EXTERNAL' ? raw : 'INTERNAL'
+    })
+    const [externalDriverName, setExternalDriverName] = useState<string>(() =>
+        isEdit ? String(initialPO?.external_driver_name ?? '') : ''
+    )
+    const [externalDriverPhone, setExternalDriverPhone] = useState<string>(() =>
+        isEdit ? String(initialPO?.external_driver_phone ?? '') : ''
     )
     const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
 
@@ -753,6 +774,9 @@ export default function PurchaseForm({
                             <input type="hidden" name="warehouseId" value={warehouseId} />
                             <input type="hidden" name="assigneeId" value={assigneeId} />
                             <input type="hidden" name="driverId" value={driverId} />
+                            <input type="hidden" name="driverSource" value={driverSource} />
+                            <input type="hidden" name="externalDriverName" value={externalDriverName} />
+                            <input type="hidden" name="externalDriverPhone" value={externalDriverPhone} />
                             <input type="hidden" name="reference" value={reference} />
                             <input type="hidden" name="supplierRef" value={supplierRef} />
                             <input type="hidden" name="orderDate" value={date} />
@@ -985,7 +1009,8 @@ export default function PurchaseForm({
                             style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)' }}
                         >
                              <AdminSidebar
-                                suppliers={suppliers} sites={sites} users={users}
+                                suppliers={suppliers} sites={sites}
+                                assignees={assignees} drivers={drivers}
                                 allowedSiteIds={allowedSiteIds}
                                 siteLockedByTopbar={siteLockedByTopbar}
                                 warehouseLockedByTopbar={warehouseLockedByTopbar}
@@ -995,6 +1020,9 @@ export default function PurchaseForm({
                                 scope={scope} onScopeChange={setScope}
                                 assigneeId={assigneeId} onAssigneeChange={setAssigneeId}
                                 driverId={driverId} onDriverChange={setDriverId}
+                                driverSource={driverSource} onDriverSourceChange={setDriverSource}
+                                externalDriverName={externalDriverName} onExternalDriverNameChange={setExternalDriverName}
+                                externalDriverPhone={externalDriverPhone} onExternalDriverPhoneChange={setExternalDriverPhone}
                                 reference={reference} onReferenceChange={(v) => { setReferenceTouched(true); setReference(v) }}
                                 supplierRef={supplierRef} onSupplierRefChange={setSupplierRef}
                                 date={date} onDateChange={setDate}

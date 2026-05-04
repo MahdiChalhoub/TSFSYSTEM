@@ -86,7 +86,8 @@ export default function PvSwitcher({
                         suppliers={suppliers as React.ComponentProps<typeof PurchaseForm>['suppliers']}
                         sites={sites as React.ComponentProps<typeof PurchaseForm>['sites']}
                         financialSettings={(financialSettings ?? {}) as React.ComponentProps<typeof PurchaseForm>['financialSettings']}
-                        users={[] as React.ComponentProps<typeof PurchaseForm>['users']}
+                        assignees={[] as React.ComponentProps<typeof PurchaseForm>['assignees']}
+                        drivers={[] as React.ComponentProps<typeof PurchaseForm>['drivers']}
                         profilesData={{
                             profiles: [],
                             defaultProfileId: null,

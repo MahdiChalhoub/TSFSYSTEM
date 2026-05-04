@@ -154,6 +154,36 @@ class PurchaseOrder(TenantModel):
         help_text='Which qty the invoice is validated against'
     )
 
+    # Ownership — the user who's responsible for following this PO through
+    # the lifecycle (chasing supplier, confirming receipt, escalating).
+    # Different from `created_by` (audit only) and `submitted_by`/`approved_by`
+    # (lifecycle-event recorders). On create the PO viewset opens a Task
+    # in the workspace board for this user so it's visible immediately.
+    assignee = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='assigned_purchase_orders',
+                                  help_text='User responsible for tracking this PO through to completion.')
+
+    # Driver source — three exclusive ways to identify who's collecting/
+    # delivering the goods.
+    DRIVER_SOURCE_CHOICES = (
+        ('INTERNAL', 'Our driver'),
+        ('SUPPLIER', 'Supplier-provided'),
+        ('EXTERNAL', 'External / one-off'),
+    )
+    driver_source = models.CharField(max_length=10, choices=DRIVER_SOURCE_CHOICES,
+                                      default='INTERNAL',
+                                      help_text='Who is providing the driver for this PO.')
+    # When source = INTERNAL, this points at our Driver-row user; when
+    # SUPPLIER or EXTERNAL, this stays null (and external_* / supplier
+    # portal data fills the gap).
+    driver_user = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='delivered_purchase_orders',
+                                     help_text='Internal driver — only set when driver_source=INTERNAL.')
+    external_driver_name = models.CharField(max_length=120, null=True, blank=True,
+        help_text='Free-text name for a one-off external driver.')
+    external_driver_phone = models.CharField(max_length=50, null=True, blank=True,
+        help_text='Free-text phone for a one-off external driver.')
+
     # Notes
     notes = models.TextField(null=True, blank=True)
     internal_notes = models.TextField(null=True, blank=True, help_text='Internal notes not shared with supplier')

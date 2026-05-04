@@ -21,9 +21,21 @@ class Driver(TenantModel):
     phone = models.CharField(max_length=50, blank=True, null=True)
     license_number = models.CharField(max_length=100, blank=True, null=True)
     vehicle_info = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. Toyota Corolla (ABC-123)")
-    
+    # Plate is queried separately from `vehicle_info` so settings UI / GR
+    # documents / handover slips can format it consistently.
+    vehicle_plate = models.CharField(max_length=50, blank=True, null=True,
+        help_text="Numeric plate printed on dispatch slips and PO handover.")
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OFFLINE')
     is_active_fleet = models.BooleanField(default=True, help_text="Set to False to exclude from auto-dispatch")
+    # Per-module availability — a tenant may have a driver who only does
+    # store deliveries (sales) or only handles purchase pickups. The
+    # `users/?driver_for=…` filter reads these to scope each module's
+    # picker. Defaults to True so existing rows keep showing up everywhere.
+    available_for_sales = models.BooleanField(default=True,
+        help_text="Show this driver in the sales/POS delivery picker.")
+    available_for_purchase = models.BooleanField(default=True,
+        help_text="Show this driver in the purchase-order driver picker.")
 
     commission_type = models.CharField(max_length=10, choices=COMMISSION_TYPE_CHOICES, default='FLAT')
     commission_value = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))

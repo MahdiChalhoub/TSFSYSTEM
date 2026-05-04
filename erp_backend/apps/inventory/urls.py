@@ -16,6 +16,7 @@ from apps.inventory.views import (
 )
 from apps.inventory.views.taxonomy_views import ProductPackagingViewSet
 from apps.inventory.views.attribute_views import ProductAttributeViewSet
+from apps.inventory.views.category_rule_views import CategoryCreationRuleViewSet
 from apps.inventory.views.counting_views import (
     InventorySessionViewSet, InventorySessionLineViewSet,
 )
@@ -34,6 +35,7 @@ router.register(r'units', UnitViewSet)
 router.register(r'unit-packages', UnitPackageViewSet, basename='unit-packages')
 router.register(r'product-packaging', ProductPackagingViewSet, basename='product-packaging')
 router.register(r'product-attributes', ProductAttributeViewSet, basename='product-attributes')
+router.register(r'category-rules', CategoryCreationRuleViewSet, basename='category-rules')
 router.register(r'packaging-suggestions', PackagingSuggestionRuleViewSet, basename='packaging-suggestions')
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)

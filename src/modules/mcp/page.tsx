@@ -1,58 +1,42 @@
 'use client'
 
 /**
- * MCP AI Connector - Dashboard
- * ============================
- * Overview of AI integration status, providers, and usage.
+ * MCP AI Connector — Dashboard (Dajingo Pro redesign)
+ * ====================================================
+ * Overview of AI integration status, providers, conversations and
+ * 30-day usage. Every visual element conforms to design-language.md.
  */
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-    Bot, Cloud, Wrench, MessageSquare, BarChart3,
-    ArrowRight, RefreshCw, Zap, Settings
-} from 'lucide-react'
 import { toast } from 'sonner'
+import {
+    Bot, Cloud, Wrench, MessageSquare, BarChart3, RefreshCw, Settings as SettingsIcon,
+    Plus, Zap, ArrowRight, Sparkles,
+} from 'lucide-react'
 import { getMCPDashboard } from '@/app/actions/saas/mcp'
+import {
+    ModulePage, PageHeader, KPIStrip, NavTile, SectionCard,
+    EmptyState, Loading, GhostButton, PrimaryButton,
+} from './_design'
 
 interface DashboardData {
-    connection: {
-        status: string
-        provider_name: string
-        total_requests: number
-        total_tokens_used: number
-    } | null
+    connection: { status: string; provider_name: string; total_requests: number; total_tokens_used: number } | null
     providers_count: number
     tools_count: number
-    usage_30d: {
-        requests: number
-        tokens: number
-        cost: number
-    }
-    recent_conversations: Array<{
-        id: number
-        title: string
-        message_count: number
-        updated_at: string
-    }>
+    usage_30d: { requests: number; tokens: number; cost: number }
+    recent_conversations: { id: number; title: string; message_count: number; updated_at: string }[]
 }
 
 export default function MCPDashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        loadData()
-    }, [])
+    useEffect(() => { loadData() }, [])
 
     async function loadData() {
         setLoading(true)
         try {
-            const result = await getMCPDashboard()
-            setData(result)
+            setData(await getMCPDashboard())
         } catch {
             toast.error('Failed to load dashboard')
         } finally {
@@ -60,280 +44,103 @@ export default function MCPDashboardPage() {
         }
     }
 
+    const kpis = [
+        { label: 'Providers', value: data?.providers_count ?? 0, icon: <Cloud size={14} />, color: 'var(--app-primary)', href: '/mcp/providers' },
+        { label: 'Tools',     value: data?.tools_count ?? 0,     icon: <Wrench size={14} />, color: 'var(--app-info, #3b82f6)', href: '/mcp/tools' },
+        { label: 'Requests 30d', value: (data?.usage_30d?.requests ?? 0).toLocaleString(), icon: <Zap size={14} />, color: 'var(--app-success, #22c55e)', href: '/mcp/usage' },
+        { label: 'Tokens 30d',   value: `${((data?.usage_30d?.tokens ?? 0) / 1000).toFixed(1)}K`, icon: <BarChart3 size={14} />, color: 'var(--app-warning, #f59e0b)', href: '/mcp/usage' },
+        { label: 'Cost 30d',     value: `$${(data?.usage_30d?.cost ?? 0).toFixed(2)}`, icon: <BarChart3 size={14} />, color: '#8b5cf6' },
+    ]
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
-                            <Bot size={28} />
-                        </div>
-                    </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">AI Integration</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
-                        MCP Connector for AI-powered automation
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button
-                        onClick={loadData}
-                        disabled={loading}
-                        variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold"
-                    >
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    </Button>
-                    <Link href="/mcp/settings">
-                        <Button variant="outline" className="rounded-2xl px-6 py-5 font-bold">
-                            <Settings size={18} />
-                            Settings
-                        </Button>
-                    </Link>
-                </div>
+        <ModulePage>
+            <PageHeader
+                icon={<Bot size={20} className="text-white" />}
+                title="AI Integration"
+                subtitle={`${data?.providers_count ?? 0} Providers · ${data?.tools_count ?? 0} Tools · MCP Connector`}
+                actions={
+                    <>
+                        <GhostButton icon={<RefreshCw size={13} className={loading ? 'animate-spin' : ''} />} label="Refresh" onClick={loadData} disabled={loading} />
+                        <GhostButton icon={<SettingsIcon size={13} />} label="Settings" href="/mcp/settings" />
+                        <PrimaryButton icon={<Plus size={14} />} label="New Provider" href="/mcp/providers/new" />
+                    </>
+                }
+            />
+
+            <KPIStrip items={kpis} />
+
+            {/* Navigation grid — auto-fit, no hardcoded breakpoints. */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}
+                className="mb-4 flex-shrink-0">
+                <NavTile href="/mcp/chat"          icon={<Bot size={16} />}          color="var(--app-primary)"          title="AI Chat"           caption="Start a conversation with your AI provider." />
+                <NavTile href="/mcp/agents"        icon={<Sparkles size={16} />}     color="#8b5cf6"                     title="Virtual Agents"    caption="Autonomous agents that run on a schedule." />
+                <NavTile href="/mcp/conversations" icon={<MessageSquare size={16} />} color="var(--app-success, #22c55e)" title="Conversations"     caption="Browse history of past AI sessions." />
+                <NavTile href="/mcp/providers"     icon={<Cloud size={16} />}        color="var(--app-primary)"          title="AI Providers"      caption="OpenAI, Anthropic, Gemini, Azure, Ollama." />
+                <NavTile href="/mcp/tools"         icon={<Wrench size={16} />}       color="var(--app-info, #3b82f6)"    title="MCP Tools"         caption="Define ERP capabilities the AI can call." />
+                <NavTile href="/mcp/agent-logs"    icon={<BarChart3 size={16} />}    color="var(--app-warning, #f59e0b)" title="Agent Logs"        caption="Decisions, thoughts and actions per agent." />
+                <NavTile href="/mcp/usage"         icon={<Zap size={16} />}          color="var(--app-warning, #f59e0b)" title="Usage & Billing"   caption="Track tokens, requests and cost." />
+                <NavTile href="/mcp/settings"      icon={<SettingsIcon size={16} />} color="var(--app-muted-foreground)" title="MCP Settings"      caption="Connector status, rate limits, defaults." />
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="rounded-2xl shadow-lg border-gray-100">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 rounded-xl bg-purple-100 text-purple-600">
-                                <Cloud size={24} />
-                            </div>
-                            <Badge variant="outline" className="text-purple-600 border-purple-200">
-                                Providers
-                            </Badge>
-                        </div>
-                        <div className="text-3xl font-black text-gray-900">
-                            {data?.providers_count || 0}
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">AI providers configured</p>
-                    </CardContent>
-                </Card>
+            {loading ? (
+                <Loading />
+            ) : (
+                <div className="flex-1 min-h-0 grid gap-3"
+                    style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                    {/* Recent conversations */}
+                    <SectionCard
+                        title="Recent Conversations"
+                        icon={<MessageSquare size={11} />}
+                        action={<a href="/mcp/conversations" className="text-[10px] font-bold text-app-primary hover:brightness-110 inline-flex items-center gap-0.5">View all <ArrowRight size={10} /></a>}>
+                        {data?.recent_conversations?.length ? (
+                            <ul className="space-y-1">
+                                {data.recent_conversations.map(c => (
+                                    <li key={c.id}>
+                                        <a href={`/mcp/conversations/${c.id}`}
+                                            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-app-surface transition-all">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-[12px] font-bold text-app-foreground truncate">
+                                                    {c.title || 'Untitled'}
+                                                </div>
+                                                <div className="text-[10px] text-app-muted-foreground font-medium">
+                                                    {c.message_count} message{c.message_count === 1 ? '' : 's'}
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-app-muted-foreground tabular-nums whitespace-nowrap">
+                                                {new Date(c.updated_at).toLocaleDateString()}
+                                            </span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <EmptyState
+                                icon={<MessageSquare size={28} />}
+                                title="No conversations yet"
+                                description="Start a chat under AI Chat to see history appear here." />
+                        )}
+                    </SectionCard>
 
-                <Card className="rounded-2xl shadow-lg border-gray-100">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 rounded-xl bg-blue-100 text-blue-600">
-                                <Wrench size={24} />
-                            </div>
-                            <Badge variant="outline" className="text-blue-600 border-blue-200">
-                                Tools
-                            </Badge>
-                        </div>
-                        <div className="text-3xl font-black text-gray-900">
-                            {data?.tools_count || 0}
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">Tools exposed to AI</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="rounded-2xl shadow-lg border-gray-100">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 rounded-xl bg-green-100 text-green-600">
-                                <Zap size={24} />
-                            </div>
-                            <Badge variant="outline" className="text-green-600 border-green-200">
-                                30 Days
-                            </Badge>
-                        </div>
-                        <div className="text-3xl font-black text-gray-900">
-                            {data?.usage_30d?.requests?.toLocaleString() || 0}
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">API requests</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="rounded-2xl shadow-lg border-gray-100">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 rounded-xl bg-amber-100 text-amber-600">
-                                <BarChart3 size={24} />
-                            </div>
-                            <Badge variant="outline" className="text-amber-600 border-amber-200">
-                                Tokens
-                            </Badge>
-                        </div>
-                        <div className="text-3xl font-black text-gray-900">
-                            {((data?.usage_30d?.tokens || 0) / 1000).toFixed(1)}K
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">Tokens used (30d)</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Navigation Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <Link href="/mcp/chat">
-                    <Card className="rounded-2xl shadow-lg border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-xl transition-shadow cursor-pointer group">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
-                                    <Bot size={24} />
-                                </div>
-                                <ArrowRight className="text-purple-300 group-hover:text-purple-500 transition-colors" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardTitle className="text-lg mb-1 text-purple-900">AI Chat</CardTitle>
-                            <p className="text-sm text-purple-600">
-                                Start a conversation with AI
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/mcp/providers">
-                    <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="p-3 rounded-xl bg-purple-100 text-purple-600">
-                                    <Cloud size={24} />
-                                </div>
-                                <ArrowRight className="text-gray-300 group-hover:text-purple-500 transition-colors" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardTitle className="text-lg mb-1">AI Providers</CardTitle>
-                            <p className="text-sm text-gray-500">
-                                Configure OpenAI, Claude, Gemini, etc.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/mcp/tools">
-                    <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="p-3 rounded-xl bg-blue-100 text-blue-600">
-                                    <Wrench size={24} />
-                                </div>
-                                <ArrowRight className="text-gray-300 group-hover:text-blue-500 transition-colors" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardTitle className="text-lg mb-1">MCP Tools</CardTitle>
-                            <p className="text-sm text-gray-500">
-                                Define tools AI can use
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/mcp/conversations">
-                    <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="p-3 rounded-xl bg-green-100 text-green-600">
-                                    <MessageSquare size={24} />
-                                </div>
-                                <ArrowRight className="text-gray-300 group-hover:text-green-500 transition-colors" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardTitle className="text-lg mb-1">Conversations</CardTitle>
-                            <p className="text-sm text-gray-500">
-                                View AI chat history
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/mcp/usage">
-                    <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="p-3 rounded-xl bg-amber-100 text-amber-600">
-                                    <BarChart3 size={24} />
-                                </div>
-                                <ArrowRight className="text-gray-300 group-hover:text-amber-500 transition-colors" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <CardTitle className="text-lg mb-1">Usage & Billing</CardTitle>
-                            <p className="text-sm text-gray-500">
-                                Track token usage and costs
-                            </p>
-                        </CardContent>
-                    </Card>
-                </Link>
-            </div>
-
-            {/* Recent Conversations */}
-            <Card className="rounded-2xl shadow-lg border-gray-100">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <MessageSquare size={20} />
-                        Recent Conversations
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {data?.recent_conversations?.length ? (
-                        <div className="space-y-3">
-                            {data.recent_conversations.map((conv) => (
-                                <Link
-                                    key={conv.id}
-                                    href={`/mcp/conversations/${conv.id}`}
-                                    className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
-                                >
-                                    <div>
-                                        <p className="font-medium text-gray-900">
-                                            {conv.title || 'Untitled'}
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                            {conv.message_count} messages
-                                        </p>
-                                    </div>
-                                    <span className="text-xs text-gray-400">
-                                        {new Date(conv.updated_at).toLocaleDateString()}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-gray-400">
-                            <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No conversations yet</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Getting Started */}
-            {!data?.providers_count && (
-                <Card className="rounded-2xl shadow-lg border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50">
-                    <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 rounded-xl bg-purple-100 text-purple-600">
-                                <Bot size={24} />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-gray-900 mb-2">Get Started with AI Integration</h3>
-                                <p className="text-gray-600 mb-4">
-                                    Connect your AI providers to enable intelligent automation across your platform.
+                    {/* Getting started — only when no provider exists */}
+                    {(!data?.providers_count || data.providers_count === 0) && (
+                        <SectionCard
+                            title="Get Started"
+                            icon={<Sparkles size={11} />}>
+                            <div className="px-2 py-1.5">
+                                <p className="text-[12px] font-medium text-app-foreground leading-relaxed">
+                                    Add at least one AI provider to start using AI features
+                                    across the platform — chat, scope-suggester wizard,
+                                    category-rule wizard, virtual agents, and more.
                                 </p>
-                                <div className="flex gap-3">
-                                    <Link href="/mcp/providers">
-                                        <Button className="rounded-xl bg-purple-600 hover:bg-purple-500">
-                                            <Cloud size={16} />
-                                            Add Provider
-                                        </Button>
-                                    </Link>
-                                    <Link href="/mcp/tools">
-                                        <Button variant="outline" className="rounded-xl">
-                                            <Wrench size={16} />
-                                            Configure Tools
-                                        </Button>
-                                    </Link>
+                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                    <PrimaryButton icon={<Cloud size={12} />} label="Add Provider" href="/mcp/providers/new" />
+                                    <GhostButton icon={<Wrench size={13} />} label="Configure Tools" href="/mcp/tools" />
                                 </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </SectionCard>
+                    )}
+                </div>
             )}
-        </div>
+        </ModulePage>
     )
 }

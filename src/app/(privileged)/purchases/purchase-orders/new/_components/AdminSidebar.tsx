@@ -13,7 +13,11 @@ import { POLifecycle, type POStatus } from './POLifecycle'
 type Props = {
     suppliers: Record<string, any>[]
     sites: Record<string, any>[]
-    users: Record<string, any>[]
+    /** People who can be set as the PO owner (purchase-perm roles, staff,
+     *  superuser) — already filtered server-side in the page action. */
+    assignees: Record<string, any>[]
+    /** Users with a Driver row, scoped to module=purchase server-side. */
+    drivers: Record<string, any>[]
     /** When set, the Site dropdown is filtered to these site ids only —
      *  used to scope non-admin users to their assigned branch (currently
      *  `currentUser.home_site`). `null` = no filter (org-wide access). */
@@ -37,6 +41,15 @@ type Props = {
     onAssigneeChange: (id: number | '') => void
     driverId: number | ''
     onDriverChange: (id: number | '') => void
+    /** Three-way driver source toggle. INTERNAL = our drivers list,
+     *  SUPPLIER = supplier picks one (no details collected here),
+     *  EXTERNAL = one-off contractor (free text name + phone). */
+    driverSource: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL'
+    onDriverSourceChange: (next: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL') => void
+    externalDriverName: string
+    onExternalDriverNameChange: (v: string) => void
+    externalDriverPhone: string
+    onExternalDriverPhoneChange: (v: string) => void
     reference: string
     onReferenceChange: (val: string) => void
     /** Optional second reference — supplier's PO/quote number, internal
@@ -84,7 +97,8 @@ const SOFT_DIVIDER = 'color-mix(in srgb, var(--app-border) 35%, transparent)'
 const FIRM_DIVIDER = 'color-mix(in srgb, var(--app-border) 60%, transparent)'
 
 export function AdminSidebar({
-    suppliers, sites, users,
+    suppliers, sites,
+    assignees, drivers,
     allowedSiteIds = null,
     siteLockedByTopbar = false,
     warehouseLockedByTopbar = false,
@@ -94,6 +108,9 @@ export function AdminSidebar({
     scope, onScopeChange,
     assigneeId, onAssigneeChange,
     driverId, onDriverChange,
+    driverSource, onDriverSourceChange,
+    externalDriverName, onExternalDriverNameChange,
+    externalDriverPhone, onExternalDriverPhoneChange,
     /* Reference is read-only in the panel; the prop stays in the API for
      * the parent's auto-fill effect (scope toggle rewrites the value
      * through the parent's setReference, not via this prop). Underscored
@@ -135,9 +152,17 @@ export function AdminSidebar({
         () => warehouses.map((w: any) => ({ value: String(w.id), label: w.name })),
         [warehouses],
     )
-    const userOptions = useMemo(
-        () => users.map(u => ({ value: String(u.id), label: u.username || u.email })),
-        [users],
+    // Two distinct dropdowns drive the Ownership step: the assignee list
+    // is for "who owns this PO" (purchase-perm users), the driver list is
+    // for "who's physically picking it up" (Driver-row users). Each is
+    // pre-filtered server-side, so we just map them to the dropdown shape.
+    const assigneeOptions = useMemo(
+        () => assignees.map(u => ({ value: String(u.id), label: u.username || u.email })),
+        [assignees],
+    )
+    const driverOptions = useMemo(
+        () => drivers.map(u => ({ value: String(u.id), label: u.username || u.email })),
+        [drivers],
     )
 
     /* Per-step completion. Powers the progress bar AND the per-section
@@ -169,9 +194,9 @@ export function AdminSidebar({
         [warehouses, warehouseId],
     )
     const assigneeName = useMemo(() => {
-        const u = users.find(u => Number(u.id) === Number(assigneeId))
+        const u = assignees.find(u => Number(u.id) === Number(assigneeId))
         return u?.username || u?.email
-    }, [users, assigneeId])
+    }, [assignees, assigneeId])
 
     return (
         <div className="h-full flex flex-col overflow-hidden"
@@ -440,22 +465,87 @@ export function AdminSidebar({
                         label="Assignee"
                         value={assigneeId === '' ? '' : String(assigneeId)}
                         onChange={v => onAssigneeChange(v === '' ? '' : Number(v))}
-                        options={userOptions}
-                        placeholder="Search assignee…"
+                        options={assigneeOptions}
+                        placeholder={assigneeOptions.length === 0 ? 'No purchase users — assign roles first' : 'Search assignee…'}
                     />
-                    <div className="mt-2">
-                        <SearchableDropdown
-                            label="Driver"
-                            value={driverId === '' ? '' : String(driverId)}
-                            onChange={v => onDriverChange(v === '' ? '' : Number(v))}
-                            options={userOptions}
-                            placeholder="Search driver…"
-                        />
+
+                    {/* ── Driver source toggle ─────────────────────────
+                     *  Three mutually-exclusive ways to identify who
+                     *  picks up the goods. INTERNAL keeps the picker
+                     *  shape we had; SUPPLIER hides all driver inputs
+                     *  (the supplier nominates a driver later via the
+                     *  portal); EXTERNAL surfaces name + phone for a
+                     *  one-off contractor we don't store as a User. */}
+                    <div className="mt-3">
+                        <label className={labelCls}>Driver source</label>
+                        <div className="flex gap-1 p-1 rounded-xl"
+                             style={{ background: 'var(--app-bg)', border: `1px solid ${FIRM_DIVIDER}` }}>
+                            {(['INTERNAL', 'SUPPLIER', 'EXTERNAL'] as const).map(src => {
+                                const active = driverSource === src
+                                return (
+                                    <button key={src} type="button"
+                                            onClick={() => {
+                                                onDriverSourceChange(src)
+                                                // Reset the linked field so the
+                                                // payload doesn't carry stale data
+                                                // from the source we just left.
+                                                if (src !== 'INTERNAL') onDriverChange('')
+                                                if (src !== 'EXTERNAL') {
+                                                    onExternalDriverNameChange('')
+                                                    onExternalDriverPhoneChange('')
+                                                }
+                                            }}
+                                            className="flex-1 py-1.5 text-tp-xxs font-bold uppercase tracking-widest rounded-lg transition-all active:scale-[0.97]"
+                                            style={active
+                                                ? { background: 'var(--app-primary)', color: 'white' }
+                                                : { color: 'var(--app-muted-foreground)' }}>
+                                        {src === 'INTERNAL' ? 'Ours' : src === 'SUPPLIER' ? 'Supplier' : 'External'}
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
+
+                    {driverSource === 'INTERNAL' && (
+                        <div className="mt-2">
+                            <SearchableDropdown
+                                label="Driver"
+                                value={driverId === '' ? '' : String(driverId)}
+                                onChange={v => onDriverChange(v === '' ? '' : Number(v))}
+                                options={driverOptions}
+                                placeholder={driverOptions.length === 0 ? 'No drivers — add one in /delivery' : 'Search driver…'}
+                            />
+                        </div>
+                    )}
+                    {driverSource === 'SUPPLIER' && (
+                        <p className="text-tp-xxs font-medium text-app-muted-foreground/80 mt-2 flex items-start gap-1.5">
+                            <UserCheck size={10} className="mt-0.5 flex-shrink-0" />
+                            Supplier will nominate the driver from their portal — no details needed here.
+                        </p>
+                    )}
+                    {driverSource === 'EXTERNAL' && (
+                        <div className="mt-2 space-y-2">
+                            <div>
+                                <label className={labelCls}>Driver name</label>
+                                <input type="text" className={fieldBase} style={fieldStyle}
+                                    value={externalDriverName}
+                                    onChange={e => onExternalDriverNameChange(e.target.value)}
+                                    placeholder="e.g. Ahmad" />
+                            </div>
+                            <div>
+                                <label className={labelCls}>Driver phone</label>
+                                <input type="tel" className={fieldBase} style={fieldStyle}
+                                    value={externalDriverPhone}
+                                    onChange={e => onExternalDriverPhoneChange(e.target.value)}
+                                    placeholder="+961 …" />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Tiny hints — make optional fields explicit. */}
                     <p className="text-tp-xxs font-medium text-app-muted-foreground/70 mt-2 flex items-start gap-1">
                         <UserCheck size={10} className="mt-0.5 flex-shrink-0" />
-                        Optional. Defaults: assignee = creator; driver = none.
+                        Assignee defaults to creator; driver source defaults to Ours.
                     </p>
                 </Step>
 

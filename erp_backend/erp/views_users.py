@@ -84,10 +84,39 @@ class UserViewSet(TenantModelViewSet):
         status_filter = self.request.query_params.get('registration_status')
         if status_filter:
             qs = qs.filter(registration_status=status_filter)
-        # Filter by is_driver tag (e.g. ?is_driver=true)
+        # Filter by driver tag.
+        # The User model has NO `is_driver` column — drivers are users
+        # who own a `Driver` row (OneToOneField). The previous lookup
+        # silently raised at runtime; this is the source-of-truth check.
         is_driver = self.request.query_params.get('is_driver')
         if is_driver is not None:
-            qs = qs.filter(is_driver=(is_driver.lower() == 'true'))
+            want = is_driver.lower() == 'true'
+            qs = qs.filter(driver_profile__isnull=not want)
+        # `?driver_for=purchase|sales` — drivers a tenant has marked as
+        # available for that module. Falls back to `is_driver=true` if
+        # the new boolean fields don't exist yet (pre-migration).
+        driver_for = (self.request.query_params.get('driver_for') or '').strip().lower()
+        if driver_for in ('purchase', 'sales'):
+            from apps.pos.models import Driver as _Driver
+            field_name = f'available_for_{driver_for}'
+            has_module_flag = any(f.name == field_name for f in _Driver._meta.get_fields())
+            qs = qs.filter(driver_profile__isnull=False)
+            if has_module_flag:
+                qs = qs.filter(**{f'driver_profile__{field_name}': True})
+        # `?can_assign=purchase|sales` — users who can be assigned to
+        # follow a record in that module. A user qualifies if any of
+        # their role's permissions starts with the module prefix; staff
+        # and superusers always qualify.
+        can_assign = (self.request.query_params.get('can_assign') or '').strip().lower()
+        if can_assign:
+            module_prefixes = {
+                'purchase': ['purchase', 'procurement', 'purchases'],
+                'sales': ['sales', 'pos', 'order'],
+            }.get(can_assign, [can_assign])
+            perm_q = Q()
+            for prefix in module_prefixes:
+                perm_q |= Q(role__permissions__code__startswith=f'{prefix}.')
+            qs = qs.filter(perm_q | Q(is_staff=True) | Q(is_superuser=True)).distinct()
         # Filter by role name (e.g. ?role=Admin) — kept for admin tooling
         role_name = self.request.query_params.get('role')
         if role_name:

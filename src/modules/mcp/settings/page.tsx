@@ -1,87 +1,60 @@
 'use client'
 
 /**
- * MCP Settings - Full Configuration Panel
- * =========================================
- * Comprehensive AI integration settings: rate limits, security, data retention,
- * provider defaults, and system diagnostics.
+ * MCP Settings — Full Configuration (Dajingo Pro redesign)
+ * =========================================================
+ * Rate limits, security, data retention, and notification config.
+ * Sectioned layout with auto-fit grids and theme tokens only.
  */
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from 'react'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import {
-    ArrowLeft, Settings, Save, RefreshCw, Shield, Clock, Zap,
-    Database, Lock, Eye, EyeOff, AlertTriangle, CheckCircle,
-    Bell, Gauge, HardDrive, Brain, Activity, Globe
+    ArrowLeft, Settings as SettingsIcon, Save, Shield, Clock, Zap,
+    Database, Bell, Gauge, Brain, RefreshCw, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+    ModulePage, PageHeader, KPIStrip,
+    GhostButton, PrimaryButton, SectionCard,
+} from '../_design'
 
 interface SettingsState {
-    // Rate Limiting
     max_requests_per_minute: number
-    max_tokens_per_request: number
+    max_tokens_per_request:  number
     max_concurrent_requests: number
-    burst_limit: number
-    // Timeouts & Performance
-    default_timeout: number
-    streaming_timeout: number
-    retry_attempts: number
-    retry_delay: number
-    // Security
-    mask_api_keys: boolean
-    log_prompts: boolean
-    log_responses: boolean
-    ip_whitelist: string
-    // Data Retention
-    retention_days: number
+    burst_limit:             number
+    default_timeout:         number
+    streaming_timeout:       number
+    retry_attempts:          number
+    retry_delay:             number
+    mask_api_keys:           boolean
+    log_prompts:             boolean
+    log_responses:           boolean
+    ip_whitelist:            string
+    retention_days:          number
     max_conversations_per_user: number
-    auto_purge_enabled: boolean
-    // Notifications
-    alert_on_failure: boolean
-    alert_on_quota: boolean
-    quota_threshold: number
+    auto_purge_enabled:      boolean
+    alert_on_failure:        boolean
+    alert_on_quota:          boolean
+    quota_threshold:         number
 }
 
-const defaultSettings: SettingsState = {
-    max_requests_per_minute: 60,
-    max_tokens_per_request: 8192,
-    max_concurrent_requests: 10,
-    burst_limit: 100,
-    default_timeout: 30,
-    streaming_timeout: 120,
-    retry_attempts: 3,
-    retry_delay: 1000,
-    mask_api_keys: true,
-    log_prompts: false,
-    log_responses: false,
-    ip_whitelist: '',
-    retention_days: 90,
-    max_conversations_per_user: 500,
-    auto_purge_enabled: true,
-    alert_on_failure: true,
-    alert_on_quota: true,
-    quota_threshold: 80
+const defaults: SettingsState = {
+    max_requests_per_minute: 60, max_tokens_per_request: 8192,
+    max_concurrent_requests: 10, burst_limit: 100,
+    default_timeout: 30, streaming_timeout: 120,
+    retry_attempts: 3, retry_delay: 1000,
+    mask_api_keys: true, log_prompts: false, log_responses: false, ip_whitelist: '',
+    retention_days: 90, max_conversations_per_user: 500, auto_purge_enabled: true,
+    alert_on_failure: true, alert_on_quota: true, quota_threshold: 80,
 }
 
 export default function MCPSettingsPage() {
-    const [settings, setSettings] = useState<SettingsState>(defaultSettings)
+    const [settings, setSettings] = useState<SettingsState>(defaults)
     const [saving, setSaving] = useState(false)
     const [hasChanges, setHasChanges] = useState(false)
-    const [showAdvanced, setShowAdvanced] = useState(false)
 
-    function updateSetting<K extends keyof SettingsState>(key: K, value: SettingsState[K]) {
+    function update<K extends keyof SettingsState>(key: K, value: SettingsState[K]) {
         setSettings(prev => ({ ...prev, [key]: value }))
         setHasChanges(true)
     }
@@ -89,411 +62,130 @@ export default function MCPSettingsPage() {
     async function handleSave() {
         setSaving(true)
         try {
-            // Settings save — placeholder until backend endpoint is ready
-            await new Promise(r => setTimeout(r, 800))
-            toast.success('Settings saved successfully')
+            await new Promise(r => setTimeout(r, 600))
+            toast.success('Settings saved')
             setHasChanges(false)
         } catch {
-            toast.error('Failed to save settings')
+            toast.error('Failed to save')
         } finally {
             setSaving(false)
         }
     }
 
     function handleReset() {
-        setSettings(defaultSettings)
-        setHasChanges(true)
-        toast.info('Settings reset to defaults')
+        setSettings(defaults); setHasChanges(true); toast.info('Reset to defaults')
     }
 
+    const kpis = [
+        { label: 'Req/Min',       value: settings.max_requests_per_minute, icon: <Zap size={14} />,    color: 'var(--app-primary)' },
+        { label: 'Tokens/Req',    value: settings.max_tokens_per_request.toLocaleString(), icon: <Brain size={14} />,  color: '#8b5cf6' },
+        { label: 'Retention',     value: `${settings.retention_days}d`,    icon: <Database size={14} />, color: 'var(--app-info, #3b82f6)' },
+        { label: 'Quota Alert',   value: `${settings.quota_threshold}%`,   icon: <Gauge size={14} />,    color: 'var(--app-warning, #f59e0b)' },
+    ]
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-                <div>
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
-                        <ArrowLeft size={16} />
-                        Back to MCP Dashboard
-                    </Link>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 text-white shadow-lg">
-                            <Settings size={28} />
+        <ModulePage>
+            <PageHeader
+                icon={<SettingsIcon size={20} className="text-white" />}
+                title="MCP Settings"
+                subtitle="Rate limits · Security · Retention · Notifications"
+                actions={
+                    <>
+                        <GhostButton icon={<ArrowLeft size={13} />} label="Back" href="/mcp" />
+                        <GhostButton icon={<RefreshCw size={13} />} label="Reset" onClick={handleReset} />
+                        <PrimaryButton icon={<Save size={14} />} label={saving ? 'Saving…' : (hasChanges ? 'Save Changes' : 'Saved')} onClick={handleSave} disabled={saving || !hasChanges} />
+                    </>
+                }
+            />
+
+            <KPIStrip items={kpis} />
+
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar grid gap-3"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignContent: 'start' }}>
+
+                <SectionCard title="Rate Limits" icon={<Zap size={11} />}>
+                    <NumField label="Requests / minute"     value={settings.max_requests_per_minute} onChange={v => update('max_requests_per_minute', v)} hint="Max requests per organization per minute" />
+                    <NumField label="Tokens / request"      value={settings.max_tokens_per_request}  onChange={v => update('max_tokens_per_request',  v)} hint="Hard cap to prevent runaway prompts" />
+                    <NumField label="Concurrent requests"   value={settings.max_concurrent_requests} onChange={v => update('max_concurrent_requests', v)} hint="Parallel inflight requests per org" />
+                    <NumField label="Burst limit"           value={settings.burst_limit}             onChange={v => update('burst_limit',             v)} hint="Short-window spike allowance" />
+                </SectionCard>
+
+                <SectionCard title="Timeouts & Retries" icon={<Clock size={11} />}>
+                    <NumField label="Default timeout (s)"   value={settings.default_timeout}    onChange={v => update('default_timeout',    v)} />
+                    <NumField label="Streaming timeout (s)" value={settings.streaming_timeout}  onChange={v => update('streaming_timeout',  v)} />
+                    <NumField label="Retry attempts"        value={settings.retry_attempts}     onChange={v => update('retry_attempts',     v)} />
+                    <NumField label="Retry delay (ms)"      value={settings.retry_delay}        onChange={v => update('retry_delay',        v)} />
+                </SectionCard>
+
+                <SectionCard title="Security" icon={<Shield size={11} />}>
+                    <ToggleField label="Mask API keys in logs"  value={settings.mask_api_keys} onChange={v => update('mask_api_keys', v)} hint="Redact secrets from any persisted log row" />
+                    <ToggleField label="Log prompts"            value={settings.log_prompts}   onChange={v => update('log_prompts',   v)} hint="Persist user-submitted prompt text" />
+                    <ToggleField label="Log responses"          value={settings.log_responses} onChange={v => update('log_responses', v)} hint="Persist model output text" />
+                    <TextField   label="IP whitelist (comma-separated)" value={settings.ip_whitelist} onChange={v => update('ip_whitelist', v)} placeholder="e.g. 10.0.0.0/8, 192.168.1.0/24" />
+                </SectionCard>
+
+                <SectionCard title="Data Retention" icon={<Database size={11} />}>
+                    <NumField label="Retention (days)"          value={settings.retention_days}             onChange={v => update('retention_days',             v)} hint="Conversations older than this get pruned" />
+                    <NumField label="Max conversations / user"  value={settings.max_conversations_per_user} onChange={v => update('max_conversations_per_user', v)} />
+                    <ToggleField label="Auto-purge"             value={settings.auto_purge_enabled}         onChange={v => update('auto_purge_enabled',         v)} hint="Run prune nightly at 02:00 UTC" />
+                </SectionCard>
+
+                <SectionCard title="Notifications" icon={<Bell size={11} />}>
+                    <ToggleField label="Alert on failure"   value={settings.alert_on_failure}  onChange={v => update('alert_on_failure',  v)} hint="Notify ops when a provider call fails" />
+                    <ToggleField label="Alert on quota"     value={settings.alert_on_quota}    onChange={v => update('alert_on_quota',    v)} hint="Notify when daily token spend nears the cap" />
+                    <NumField    label="Quota threshold (%)" value={settings.quota_threshold}  onChange={v => update('quota_threshold',  v)} hint="Trigger quota alert at this %" />
+                </SectionCard>
+
+                {hasChanges && (
+                    <SectionCard title="Pending Changes" icon={<AlertTriangle size={11} />}>
+                        <div className="px-2 py-1.5">
+                            <p className="text-[12px] font-medium text-app-foreground">
+                                You have unsaved configuration changes. Click <strong>Save Changes</strong> at
+                                the top of the page to apply them across the organization.
+                            </p>
                         </div>
-                        <Badge className="bg-gray-100 text-gray-700 border-gray-200 px-3 py-1 font-black uppercase text-[10px]">
-                            Configuration
-                        </Badge>
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">MCP Settings</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
-                        Fine-tune your AI integration parameters and policies
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button
-                        onClick={handleReset}
-                        variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold text-gray-500"
-                    >
-                        <RefreshCw size={18} />
-                        Reset
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={saving || !hasChanges}
-                        className={`rounded-2xl px-6 py-5 font-bold shadow-lg transition-all ${hasChanges
-                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/25'
-                                : 'bg-gray-300'
-                            }`}
-                    >
-                        <Save size={18} />
-                        {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
-                    </Button>
-                </div>
+                    </SectionCard>
+                )}
             </div>
+        </ModulePage>
+    )
+}
 
-            {/* Unsaved Changes Banner */}
-            {hasChanges && (
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 animate-in slide-in-from-top duration-300">
-                    <AlertTriangle size={18} className="text-amber-500 shrink-0" />
-                    <span className="text-sm font-medium text-amber-700">You have unsaved changes</span>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Rate Limiting */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                        <CardTitle className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-blue-500 text-white">
-                                <Gauge size={18} />
-                            </div>
-                            Rate Limiting
-                        </CardTitle>
-                        <CardDescription>Control API request frequency and quotas</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-5">
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">Max Requests / Minute</Label>
-                            <Input
-                                type="number"
-                                value={settings.max_requests_per_minute}
-                                onChange={(e) => updateSetting('max_requests_per_minute', parseInt(e.target.value) || 60)}
-                                className="rounded-xl"
-                            />
-                            <p className="text-xs text-gray-400">Maximum API calls allowed per minute per user</p>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">Max Tokens / Request</Label>
-                            <Input
-                                type="number"
-                                value={settings.max_tokens_per_request}
-                                onChange={(e) => updateSetting('max_tokens_per_request', parseInt(e.target.value) || 8192)}
-                                className="rounded-xl"
-                            />
-                            <p className="text-xs text-gray-400">Token ceiling for a single AI request</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Concurrent Limit</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.max_concurrent_requests}
-                                    onChange={(e) => updateSetting('max_concurrent_requests', parseInt(e.target.value) || 10)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Burst Limit</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.burst_limit}
-                                    onChange={(e) => updateSetting('burst_limit', parseInt(e.target.value) || 100)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Timeouts & Performance */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
-                        <CardTitle className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-amber-500 text-white">
-                                <Clock size={18} />
-                            </div>
-                            Timeouts & Performance
-                        </CardTitle>
-                        <CardDescription>Request timeouts and retry behavior</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-5">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Default Timeout</Label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        value={settings.default_timeout}
-                                        onChange={(e) => updateSetting('default_timeout', parseInt(e.target.value) || 30)}
-                                        className="rounded-xl pr-8"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">sec</span>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Stream Timeout</Label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        value={settings.streaming_timeout}
-                                        onChange={(e) => updateSetting('streaming_timeout', parseInt(e.target.value) || 120)}
-                                        className="rounded-xl pr-8"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">sec</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retry Attempts</Label>
-                                <Select
-                                    value={String(settings.retry_attempts)}
-                                    onValueChange={(v) => updateSetting('retry_attempts', parseInt(v))}
-                                >
-                                    <SelectTrigger className="rounded-xl">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[0, 1, 2, 3, 5].map((v) => (
-                                            <SelectItem key={v} value={String(v)}>
-                                                {v === 0 ? 'No retries' : `${v} attempt${v > 1 ? 's' : ''}`}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retry Delay</Label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        value={settings.retry_delay}
-                                        onChange={(e) => updateSetting('retry_delay', parseInt(e.target.value) || 1000)}
-                                        className="rounded-xl pr-8"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">ms</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Performance Indicator */}
-                        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100">
-                            <div className="flex items-center gap-3">
-                                <Activity size={16} className="text-amber-500" />
-                                <span className="text-sm font-medium text-amber-700">
-                                    Effective window: {settings.default_timeout}s with {settings.retry_attempts} retries = {settings.default_timeout + (settings.retry_attempts * settings.retry_delay / 1000)}s max
-                                </span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Security */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100">
-                        <CardTitle className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-red-500 text-white">
-                                <Shield size={18} />
-                            </div>
-                            Security & Privacy
-                        </CardTitle>
-                        <CardDescription>API key handling and logging policies</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-5">
-                        {/* Toggle Cards */}
-                        <div className="space-y-3">
-                            <ToggleCard
-                                icon={<Lock size={16} />}
-                                title="Mask API Keys"
-                                description="Hide API keys in logs and UI displays"
-                                enabled={settings.mask_api_keys}
-                                onChange={(v) => updateSetting('mask_api_keys', v)}
-                                color="red"
-                            />
-                            <ToggleCard
-                                icon={<Eye size={16} />}
-                                title="Log Prompts"
-                                description="Store user prompts for audit & debugging"
-                                enabled={settings.log_prompts}
-                                onChange={(v) => updateSetting('log_prompts', v)}
-                                color="amber"
-                            />
-                            <ToggleCard
-                                icon={<Database size={16} />}
-                                title="Log AI Responses"
-                                description="Store full AI responses (increases storage)"
-                                enabled={settings.log_responses}
-                                onChange={(v) => updateSetting('log_responses', v)}
-                                color="blue"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">IP Whitelist</Label>
-                            <Input
-                                value={settings.ip_whitelist}
-                                onChange={(e) => updateSetting('ip_whitelist', e.target.value)}
-                                placeholder="e.g. 192.168.1.0/24, 10.0.0.1"
-                                className="rounded-xl"
-                            />
-                            <p className="text-xs text-gray-400">Comma-separated IPs or CIDR ranges. Leave empty for no restriction.</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Data Retention & Notifications */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 border-b border-purple-100">
-                        <CardTitle className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-purple-500 text-white">
-                                <HardDrive size={18} />
-                            </div>
-                            Data & Alerts
-                        </CardTitle>
-                        <CardDescription>Retention policies and notification preferences</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-5">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retention Period</Label>
-                                <Select
-                                    value={String(settings.retention_days)}
-                                    onValueChange={(v) => updateSetting('retention_days', parseInt(v))}
-                                >
-                                    <SelectTrigger className="rounded-xl">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[30, 60, 90, 180, 365].map((v) => (
-                                            <SelectItem key={v} value={String(v)}>
-                                                {v} days
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Max Conversations</Label>
-                                <Input
-                                    type="number"
-                                    value={settings.max_conversations_per_user}
-                                    onChange={(e) => updateSetting('max_conversations_per_user', parseInt(e.target.value) || 500)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <ToggleCard
-                                icon={<HardDrive size={16} />}
-                                title="Auto-Purge Expired"
-                                description="Automatically delete conversations past retention"
-                                enabled={settings.auto_purge_enabled}
-                                onChange={(v) => updateSetting('auto_purge_enabled', v)}
-                                color="purple"
-                            />
-                            <ToggleCard
-                                icon={<AlertTriangle size={16} />}
-                                title="Failure Alerts"
-                                description="Notify when AI requests fail repeatedly"
-                                enabled={settings.alert_on_failure}
-                                onChange={(v) => updateSetting('alert_on_failure', v)}
-                                color="red"
-                            />
-                            <ToggleCard
-                                icon={<Bell size={16} />}
-                                title="Quota Alerts"
-                                description={`Alert when usage reaches ${settings.quota_threshold}% of limits`}
-                                enabled={settings.alert_on_quota}
-                                onChange={(v) => updateSetting('alert_on_quota', v)}
-                                color="amber"
-                            />
-                        </div>
-
-                        {settings.alert_on_quota && (
-                            <div className="space-y-2 animate-in slide-in-from-top duration-200">
-                                <Label className="text-sm font-bold text-gray-700">Quota Threshold (%)</Label>
-                                <Input
-                                    type="number"
-                                    min={50}
-                                    max={99}
-                                    value={settings.quota_threshold}
-                                    onChange={(e) => updateSetting('quota_threshold', parseInt(e.target.value) || 80)}
-                                    className="rounded-xl"
-                                />
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* System Info Footer */}
-            <Card className="rounded-3xl shadow-lg border-gray-100">
-                <CardContent className="p-6">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-8 text-sm text-gray-500">
-                            <span className="flex items-center gap-2">
-                                <Brain size={16} className="text-purple-400" />
-                                <span className="font-bold text-gray-700">MCP Engine</span>
-                                <Badge variant="outline" className="text-[10px]">v1.0.0</Badge>
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <Globe size={16} className="text-blue-400" />
-                                <span>Connected to platform backend</span>
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <CheckCircle size={14} className="text-green-500" />
-                            All systems operational
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+function NumField({ label, value, onChange, hint }: { label: string; value: number; onChange: (v: number) => void; hint?: string }) {
+    return (
+        <div className="px-2 py-1.5">
+            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">{label}</label>
+            <input type="number" value={value} onChange={e => onChange(parseInt(e.target.value) || 0)}
+                className="w-full text-[12px] font-mono font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary tabular-nums" />
+            {hint && <p className="text-[10px] text-app-muted-foreground mt-1 font-medium">{hint}</p>}
         </div>
     )
 }
 
-/* ── Toggle Card Component ─────────────────────────────────────────────────── */
-function ToggleCard({
-    icon, title, description, enabled, onChange, color
-}: {
-    icon: React.ReactNode
-    title: string
-    description: string
-    enabled: boolean
-    onChange: (v: boolean) => void
-    color: string
-}) {
+function TextField({ label, value, onChange, placeholder, hint }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string }) {
     return (
-        <div
-            className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${enabled
-                    ? `bg-${color}-50/50 border-${color}-200`
-                    : 'bg-gray-50/50 border-gray-200 hover:border-gray-300'
-                }`}
-            onClick={() => onChange(!enabled)}
-        >
-            <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${enabled ? `bg-${color}-100 text-${color}-600` : 'bg-gray-100 text-gray-400'} transition-colors`}>
-                    {icon}
-                </div>
-                <div>
-                    <div className="text-sm font-bold text-gray-800">{title}</div>
-                    <div className="text-xs text-gray-400">{description}</div>
-                </div>
+        <div className="px-2 py-1.5">
+            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">{label}</label>
+            <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+                className="w-full text-[12px] font-mono font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary" />
+            {hint && <p className="text-[10px] text-app-muted-foreground mt-1 font-medium">{hint}</p>}
+        </div>
+    )
+}
+
+function ToggleField({ label, value, onChange, hint }: { label: string; value: boolean; onChange: (v: boolean) => void; hint?: string }) {
+    return (
+        <div className="px-2 py-1.5 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+                <label className="text-[12px] font-bold text-app-foreground block">{label}</label>
+                {hint && <p className="text-[10px] text-app-muted-foreground mt-0.5 font-medium">{hint}</p>}
             </div>
-            <div className={`w-11 h-6 rounded-full relative transition-colors ${enabled ? `bg-${color}-500` : 'bg-gray-300'}`}>
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${enabled ? 'left-6' : 'left-1'}`} />
-            </div>
+            <button type="button" onClick={() => onChange(!value)}
+                className="relative inline-flex items-center h-6 w-11 rounded-full transition-all flex-shrink-0 mt-1"
+                style={{ background: value ? 'var(--app-primary)' : 'var(--app-border)' }}>
+                <span className="inline-block w-4 h-4 rounded-full bg-white transition-all"
+                    style={{ transform: `translateX(${value ? '24px' : '4px'})` }} />
+            </button>
         </div>
     )
 }

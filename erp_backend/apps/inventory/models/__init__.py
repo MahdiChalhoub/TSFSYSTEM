@@ -41,7 +41,7 @@ from .grouping_models import GroupingRule, InventoryGroup, InventoryGroupMember
 # ── Cross-cutting business events (moved from tax engine) ───────
 from .gift_sample_models import GiftSampleEvent
 from .internal_consumption_models import InternalConsumptionEvent
-from .scope_ai_models import AIScopeSuggesterConfig, AIScopeReview
+from .scope_ai_models import AIScopeSuggesterConfig, AIScopeReview, AICategoryRuleReview
 
 __all__ = [
     # Product Catalog
@@ -94,6 +94,6 @@ __all__ = [
     'GroupingRule', 'InventoryGroup', 'InventoryGroupMember',
     # Business Events (moved from tax engine)
     'GiftSampleEvent', 'InternalConsumptionEvent',
-    # AI scope-suggester (Phase 6)
-    'AIScopeSuggesterConfig', 'AIScopeReview',
+    # AI scope-suggester (Phase 6) + category-rule suggester (Phase 7)
+    'AIScopeSuggesterConfig', 'AIScopeReview', 'AICategoryRuleReview',
 ]

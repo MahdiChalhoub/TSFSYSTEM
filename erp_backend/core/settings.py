@@ -304,6 +304,15 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'erp.tasks.send_daily_digest',
         'schedule': crontab(minute=0, hour=8),       # Daily 08:00
     },
+    # AI Assistant: nightly suggestion-quality digest. Runs an hour before
+    # the regular daily digest so high-confidence accepts surface in
+    # the same morning email window. Only opted-in orgs (with
+    # AIScopeSuggesterConfig.enabled=True) are touched, and the
+    # per-org daily token cap prevents runaway spend.
+    'send-ai-assistant-digest': {
+        'task': 'erp.tasks.send_ai_assistant_digest',
+        'schedule': crontab(minute=0, hour=7),       # Daily 07:00
+    },
     # ── Workspace auto-task engine ──────────────────────────────
     'fire-recurring-auto-tasks': {
         'task': 'apps.workspace.tasks.fire_recurring_auto_tasks',
