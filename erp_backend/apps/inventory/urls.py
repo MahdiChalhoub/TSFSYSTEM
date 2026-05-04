@@ -12,6 +12,7 @@ from apps.inventory.views import (
     StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
     OperationalRequestViewSet, ProductSerialViewSet, SerialLogViewSet,
     StockAlertViewSet,
+    InventoryGroupViewSet, InventoryGroupMemberViewSet,
 )
 from apps.inventory.views.taxonomy_views import ProductPackagingViewSet
 from apps.inventory.views.attribute_views import ProductAttributeViewSet
@@ -50,6 +51,8 @@ router.register(r'serials', ProductSerialViewSet)
 router.register(r'serial-logs', SerialLogViewSet)
 router.register(r'stock-alerts', StockAlertViewSet, basename='stock-alerts')
 router.register(r'audit-trail', AuditTrailViewSet, basename='audit-trail')
+router.register(r'inventory-groups', InventoryGroupViewSet, basename='inventory-groups')
+router.register(r'inventory-group-members', InventoryGroupMemberViewSet, basename='inventory-group-members')
 
 # Warehouse Location System
 router.register(r'zones', WarehouseZoneViewSet, basename='warehouse-zones')

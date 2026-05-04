@@ -63,7 +63,7 @@ export default function ProductsDetailPage() {
       const data = await erpFetch(`products/${id}/`)
       setItem(data)
       try {
-        const memberships = await erpFetch(`inventory-group-members/?product=${id}`)
+        const memberships = await erpFetch(`inventory/inventory-group-members/?product=${id}`)
         setInvMemberships(Array.isArray(memberships) ? memberships : (memberships?.results || []))
       } catch { setInvMemberships([]) }
     } catch (error) {

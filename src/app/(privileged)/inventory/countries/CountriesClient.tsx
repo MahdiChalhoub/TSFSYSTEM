@@ -104,6 +104,13 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
     const [, startTransition] = useTransition()
     const [pickerOpen, setPickerOpen] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState<SourcingCountry | null>(null)
+    // Reference-count preview: fetched when the remove dialog opens so
+    // the user can see how many products carry this country FK before
+    // confirming. Disabling a SourcingCountry doesn't break those
+    // references (the FK is to Country, not SourcingCountry), but
+    // showing the impact is the same guard pattern brands/categories
+    // /attributes use for their delete flow.
+    const [removePreview, setRemovePreview] = useState<{ products: number | null; loading: boolean }>({ products: null, loading: false })
     const [editingNotes, setEditingNotes] = useState<SourcingCountry | null>(null)
 
     const sourcing = initialSourcing
@@ -153,6 +160,26 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
             toast.error(res?.error || 'Failed to enable sourcing countries')
         }
     }
+
+    // Fetch the reference-count preview the moment the user opens the
+    // remove dialog so the count is ready before they decide. We use
+    // page_size=1 + DRF's `count` field to avoid pulling actual rows.
+    useEffect(() => {
+        if (!deleteTarget) {
+            setRemovePreview({ products: null, loading: false })
+            return
+        }
+        let cancelled = false
+        setRemovePreview({ products: null, loading: true })
+        erpFetch(`inventory/products/?country=${deleteTarget.country}&page_size=1`)
+            .then((res: any) => {
+                if (cancelled) return
+                const total = typeof res?.count === 'number' ? res.count : (Array.isArray(res) ? res.length : (res?.results?.length || 0))
+                setRemovePreview({ products: total, loading: false })
+            })
+            .catch(() => { if (!cancelled) setRemovePreview({ products: null, loading: false }) })
+        return () => { cancelled = true }
+    }, [deleteTarget])
 
     const handleRemove = () => {
         const t = deleteTarget
@@ -308,7 +335,15 @@ export function CountriesClient({ initialSourcing, initialRefCountries }: Props)
                         onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
                         onConfirm={handleRemove}
                         title={`Remove "${deleteTarget?.country_name}"?`}
-                        description="This country will no longer be available as a product-origin option. Existing products that already reference it are not affected."
+                        description={
+                            removePreview.loading
+                                ? 'Checking how many products reference this country…'
+                                : removePreview.products === null
+                                    ? 'This country will no longer be available as a product-origin option. Existing products that already reference it are not affected.'
+                                    : removePreview.products === 0
+                                        ? 'No products currently reference this country. Safe to disable — it will be hidden from the picker; you can re-enable later.'
+                                        : `${removePreview.products} product${removePreview.products === 1 ? '' : 's'} currently reference this country. They will keep their country FK (no data lost) — disabling only hides this country from picker dropdowns, and you can re-enable it any time.`
+                        }
                         confirmText="Remove"
                         variant="danger"
                     />

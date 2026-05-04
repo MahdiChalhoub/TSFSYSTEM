@@ -147,9 +147,16 @@ class InventoryGroupMemberViewSet(TenantModelViewSet):
     search_fields = ['product__name', 'origin_label']
 
     def get_queryset(self):
-        return InventoryGroupMember.objects.filter(
+        qs = InventoryGroupMember.objects.filter(
             organization=self.request.tenant
         ).select_related('product', 'product__country_of_origin', 'product__size_unit')
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            qs = qs.filter(product_id=product_id)
+        group_id = self.request.query_params.get('group')
+        if group_id:
+            qs = qs.filter(group_id=group_id)
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(organization=self.request.tenant)
