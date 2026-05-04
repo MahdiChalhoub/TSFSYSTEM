@@ -99,8 +99,11 @@ def suggest_scopes(organization, *, value_ids: Iterable[int] | None = None) -> l
     if value_ids is not None:
         values_qs = values_qs.filter(id__in=list(value_ids))
 
-    # Build product-keyed lookup once: {value_id -> [(category_id, country_id, brand_id), ...]}
-    # via the Product.attribute_values M2M through table.
+    # Build product-keyed lookup once: {value_id -> [(category_id, country_id, brand_id, product_id, product_name), ...]}
+    # via the Product.attribute_values M2M through table. Pull the
+    # product id+name too so each suggestion can show a sample of which
+    # products actually use the value — operators won't accept a
+    # suggestion they can't verify.
     M2M = Product.attribute_values.through
     rows = (
         M2M.objects
@@ -110,11 +113,13 @@ def suggest_scopes(organization, *, value_ids: Iterable[int] | None = None) -> l
             'product__category_id',
             'product__country_of_origin_id',
             'product__brand_id',
+            'product_id',
+            'product__name',
         )
     )
     usage: dict[int, list[tuple]] = defaultdict(list)
-    for value_id, cat_id, cou_id, bra_id in rows:
-        usage[value_id].append((cat_id, cou_id, bra_id))
+    for value_id, cat_id, cou_id, bra_id, prod_id, prod_name in rows:
+        usage[value_id].append((cat_id, cou_id, bra_id, prod_id, prod_name))
 
     # Resolve names in bulk — single query per axis instead of N+1.
     Category = django_apps.get_model('inventory', 'Category')
@@ -135,11 +140,26 @@ def suggest_scopes(organization, *, value_ids: Iterable[int] | None = None) -> l
         if not records:
             continue  # No products use this value yet → no signal to suggest from.
 
-        cats_used = {c for c, _, _ in records if c is not None}
-        cous_used = {c for _, c, _ in records if c is not None}
-        bras_used = {b for _, _, b in records if b is not None}
+        cats_used = {r[0] for r in records if r[0] is not None}
+        cous_used = {r[1] for r in records if r[1] is not None}
+        bras_used = {r[2] for r in records if r[2] is not None}
 
         product_count = len(records)
+        # First 8 products that use this value, ordered by name for a
+        # stable preview. The wizard renders these in an expandable
+        # details element so the operator can verify which products
+        # they're actually scoping before clicking Accept.
+        seen_pids: set[int] = set()
+        products_sample: list[dict] = []
+        for r in records:
+            pid = r[3]
+            if pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            products_sample.append({'id': pid, 'name': r[4] or f'#{pid}'})
+            if len(products_sample) >= 8:
+                break
+        products_sample.sort(key=lambda p: p['name'].lower())
 
         # Read current scope (post-migration only). Pre-migration → empty
         # everywhere means "universal", suggestion has the most to add.
@@ -167,6 +187,8 @@ def suggest_scopes(organization, *, value_ids: Iterable[int] | None = None) -> l
             'group_id':    value.parent_id,
             'group_name':  value.parent.name if value.parent else '',
             'product_count': product_count,
+            'products_sample': products_sample,
+            'products_sample_truncated': product_count > len(products_sample),
             'current_scope': {
                 'categories': [{'id': i, 'name': cat_names.get(i, '?')} for i in sorted(cur_cats)],
                 'countries':  [{'id': i, 'name': cou_names.get(i, '?')} for i in sorted(cur_cous)],

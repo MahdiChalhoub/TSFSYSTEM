@@ -25,6 +25,13 @@ export type ScopeSuggestion = {
     group_id: number
     group_name: string
     product_count: number
+    /** First 8 products using this value, ordered by name. The wizard
+     *  shows these in an expandable details element so the operator
+     *  can verify which products they're scoping before clicking Accept. */
+    products_sample: { id: number; name: string }[]
+    /** True when product_count > products_sample.length — UI shows
+     *  "+N more" rather than implying the sample is exhaustive. */
+    products_sample_truncated: boolean
     current_scope: { categories: ScopeRef[]; countries: ScopeRef[]; brands: ScopeRef[] }
     suggested_scope: { categories: ScopeRef[]; countries: ScopeRef[]; brands: ScopeRef[] }
     confidence: { categories: number; countries: number; brands: number }

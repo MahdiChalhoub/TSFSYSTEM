@@ -414,9 +414,31 @@ function SuggestionRow({
             <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                     <div className="text-tp-md font-bold text-app-foreground">{s.value_name}</div>
-                    <div className="text-tp-xs text-app-muted-foreground">
-                        Used by {s.product_count} product{s.product_count === 1 ? '' : 's'}
-                    </div>
+                    {/* Used-by line is now an expandable details element
+                        so the operator can verify exactly which products
+                        the suggestion is derived from before clicking
+                        Accept. Closed by default to keep the row compact. */}
+                    <details className="text-tp-xs text-app-muted-foreground group/used">
+                        <summary className="cursor-pointer hover:text-app-foreground transition-colors list-none flex items-center gap-1">
+                            <span className="text-[9px] inline-block transition-transform group-open/used:rotate-90">▶</span>
+                            <span>Used by {s.product_count} product{s.product_count === 1 ? '' : 's'}</span>
+                            {s.products_sample.length > 0 && (
+                                <span className="text-app-muted-foreground/60">· click to inspect</span>
+                            )}
+                        </summary>
+                        {s.products_sample.length > 0 && (
+                            <ul className="mt-1 ml-4 space-y-0.5 text-tp-xs text-app-foreground">
+                                {s.products_sample.map(p => (
+                                    <li key={p.id}>· {p.name}</li>
+                                ))}
+                                {s.products_sample_truncated && (
+                                    <li className="text-app-muted-foreground italic">
+                                        … +{s.product_count - s.products_sample.length} more
+                                    </li>
+                                )}
+                            </ul>
+                        )}
+                    </details>
 
                     {/* Per-axis suggested chips */}
                     <div className="mt-2 space-y-1.5">
