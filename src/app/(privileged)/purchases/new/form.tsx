@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { PurchaseLine } from '@/types/erp'
-import { createPurchaseOrder, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
+import { createPurchaseOrder, createPurchaseInvoice, updatePurchaseInvoice, transitionPurchaseOrderStatus } from '@/app/actions/commercial/purchases'
 import {
     ShoppingCart, ArrowLeft, Settings2,
     Plus, ArrowRight, BookOpen,
@@ -35,7 +35,18 @@ import type { AnalyticsProfilesData } from '@/app/actions/settings/analytics-pro
 import { peekNextCode, prefetchNextCode, resolveDocSeqKey } from '@/lib/sequences-client'
 import { Package, Trash2, Maximize2 } from 'lucide-react'
 
-type PurchaseFormMode = 'create' | 'edit'
+/**
+ * Form modes:
+ *   - 'create' → builds a TRUE Purchase Order (DRAFT, no GL impact;
+ *                later receipt + invoice steps post the journals).
+ *   - 'edit'   → PATCHes an existing PO via updatePurchaseInvoice.
+ *   - 'quick'  → fuses PO + GRN + Invoice in one shot via the legacy
+ *                `quick_purchase` endpoint. Use for cash-and-carry-style
+ *                purchases where the goods + invoice are present at the
+ *                same moment and the operator doesn't need a separate
+ *                approval lifecycle.
+ */
+type PurchaseFormMode = 'create' | 'edit' | 'quick'
 
 interface PurchaseFormProps {
     suppliers: Record<string, any>[]
@@ -63,14 +74,20 @@ export default function PurchaseForm({
     const isStaff = currentUser?.is_staff || currentUser?.is_superuser;
 
     const isEdit = mode === 'edit' && !!initialPO
+    const isQuick = mode === 'quick'
     const editId = isEdit ? Number(initialPO?.id) : null
     const initialState = { message: '', errors: {} }
     // Pick the right server action up-front so we don't change hook
     // identity on a subsequent re-render. The `useActionState` contract
     // assumes a stable function reference per mount.
-    // Create path = true PO (DRAFT, no GL impact). Edit path keeps the
-    // existing PATCH-to-purchase-orders flow.
-    const submitAction = isEdit ? updatePurchaseInvoice : createPurchaseOrder
+    //   create → true PO (DRAFT, no GL impact; later GRN + invoice post)
+    //   edit   → PATCH the existing PO row
+    //   quick  → fuse PO + GRN + Invoice in one shot via quick_purchase
+    const submitAction = isEdit
+        ? updatePurchaseInvoice
+        : isQuick
+            ? createPurchaseInvoice
+            : createPurchaseOrder
     const [state, formAction, isPending] = useActionState(submitAction, initialState)
     const router = useRouter()
     const searchRef = useRef<HTMLInputElement>(null)
@@ -559,9 +576,23 @@ export default function PurchaseForm({
                         <div className="min-w-0 flex-1">
                             <h1 className="font-black text-app-foreground tracking-tight leading-none truncate"
                                 style={{ fontSize: 'var(--tp-lg)' }}
-                                title={isEdit ? `Edit PO ${reference || `#${editId}`}` : 'New Purchase Order'}>
-                                {isEdit ? `Edit PO ${reference || `#${editId}`}` : 'New Purchase Order'}
+                                title={isEdit
+                                    ? `Edit PO ${reference || `#${editId}`}`
+                                    : isQuick ? 'Quick Purchase' : 'New Purchase Order'}>
+                                {isEdit
+                                    ? `Edit PO ${reference || `#${editId}`}`
+                                    : isQuick ? 'Quick Purchase' : 'New Purchase Order'}
                             </h1>
+                            {/* Quick-purchase banner — surfaces what's about to happen.
+                                Quick mode posts the full journal in one shot (no
+                                separate GRN/Invoice steps) so the user shouldn't
+                                use it for a paper-trail PO workflow. */}
+                            {isQuick && (
+                                <div className="mt-1 text-tp-xxs font-bold uppercase tracking-wider"
+                                    style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                    Posts inventory + AP + VAT immediately · no separate Receive/Invoice steps
+                                </div>
+                            )}
                             {/* Subtitle is conditional:
                              *   - When the user hasn't configured anything yet → soft hint.
                              *   - Once Reference / Supplier / Site are set → show them as

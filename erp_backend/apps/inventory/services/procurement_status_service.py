@@ -161,10 +161,14 @@ def get_procurement_status_batch(organization, product_ids):
         from apps.pos.models.procurement_request_models import ProcurementRequest
 
         if ProcurementRequest:
+            # Exclude is_recovered=True so the product chip naturally
+            # flips back to "Available" once the recover_terminal_procurement
+            # cron archives an old terminal row.
             active_reqs = ProcurementRequest.objects.filter(
                 organization=organization,
                 product_id__in=product_ids,
-                status__in=['PENDING', 'APPROVED']
+                status__in=['PENDING', 'APPROVED'],
+                is_recovered=False,
             ).order_by('product_id', '-requested_at')
 
             # Group by product so we can detect "both purchase AND transfer

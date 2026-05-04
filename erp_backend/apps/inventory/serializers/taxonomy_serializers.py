@@ -335,17 +335,23 @@ class BrandSerializer(serializers.ModelSerializer):
         pre = (self.context or {}).get('attribute_counts')
         if pre is not None:
             return pre.get(obj.id, 0)
-        # Attributes only come from products (no brand↔attribute M2M in
-        # the schema). Plus a "No attributes" bucket if any product has
-        # zero attribute_values.
-        if not obj.products.exists():
-            return 0
+        # Union of (1) Brand.attributes M2M and (2) every distinct
+        # ProductAttribute leaf any of the brand's products references
+        # via Product.attribute_values. Plus a "No attributes" +1
+        # bucket when any product carries zero attribute_values.
+        # Mirrors the bulk prefetch_counts formula exactly so the
+        # cached and uncached paths agree on every brand.
+        m2m_ids = set(obj.attributes.values_list('id', flat=True))
         from apps.inventory.models import ProductAttribute
-        real = ProductAttribute.objects.filter(
-            products_with_attribute__brand=obj
-        ).distinct().count()
+        product_ids = set(
+            ProductAttribute.objects
+                .filter(products_with_attribute__brand=obj)
+                .values_list('id', flat=True)
+                .distinct()
+        )
+        union_ids = m2m_ids | product_ids
         has_unattributed = obj.products.filter(attribute_values__isnull=True).exists()
-        return real + (1 if has_unattributed else 0)
+        return len(union_ids) + (1 if has_unattributed else 0)
 
     @classmethod
     def prefetch_counts(cls, organization):
@@ -368,101 +374,151 @@ class BrandSerializer(serializers.ModelSerializer):
         formula used by the matching getter — see those getters for
         the semantics.
         """
-        from django.db.models import Count
-        from apps.inventory.models import Product, Brand, ProductAttribute
+        from django.db.models import Count, Q
+        from apps.inventory.models import Product, Brand
 
         scope = Product.objects.filter(organization=organization)
 
-        # Product counts — one row per (brand_id) with .count.
-        product_rows = (
-            scope.values('brand_id').annotate(count=Count('id'))
-                 .filter(brand_id__isnull=False)
+        # All counts are pushed into the database as GROUP BY queries.
+        # The earlier implementation pulled every (brand_id, fk_id)
+        # tuple back to Python and looped — fine at 1k products,
+        # painful at 100k. Here each query returns at most one row
+        # per brand (~hundreds, not 100k), regardless of catalogue
+        # size, so wall-time stays roughly flat as products grow.
+
+        # Product count + per-brand "has a product with NULL category /
+        # country" flags. Single GROUP BY against the products table,
+        # no JOINs — the FKs live on Product itself so we don't trigger
+        # row-multiplying joins. The unattributed-brand check goes in a
+        # separate query below because it walks the M2M through-table
+        # and combining it here would explode the row count (one row
+        # per product × attribute_value pair, inflating Count('id')).
+        product_rows = list(
+            scope.exclude(brand_id__isnull=True)
+                 .values('brand_id')
+                 .annotate(
+                     n_products=Count('id'),
+                     n_null_cat=Count('id', filter=Q(category__isnull=True)),
+                     n_null_country=Count('id', filter=Q(country__isnull=True)),
+                 )
         )
-        product_counts = {r['brand_id']: r['count'] for r in product_rows}
+        product_counts: dict[int, int] = {r['brand_id']: r['n_products'] for r in product_rows}
+        cat_has_null: set[int] = {r['brand_id'] for r in product_rows if r['n_null_cat']}
+        country_has_null: set[int] = {r['brand_id'] for r in product_rows if r['n_null_country']}
 
-        # Category & country: collect (brand_id, fk_id) pairs once,
-        # then derive distinct sets per brand. Also tracks which brands
-        # have at least one product with the FK NULL ("Universal" /
-        # "Uncategorized" bucket — adds +1 to the count).
-        cat_pairs = scope.values_list('brand_id', 'category')
-        country_pairs = scope.values_list('brand_id', 'country')
-
-        cat_sets: dict[int, set] = {}
-        cat_has_null: set[int] = set()
-        for b, c in cat_pairs:
-            if b is None:
-                continue
-            if c is None:
-                cat_has_null.add(b)
-            else:
-                cat_sets.setdefault(b, set()).add(c)
-
-        country_sets: dict[int, set] = {}
-        country_has_null: set[int] = set()
-        for b, c in country_pairs:
-            if b is None:
-                continue
-            if c is None:
-                country_has_null.add(b)
-            else:
-                country_sets.setdefault(b, set()).add(c)
-
-        # Fold in the M2M brand.categories / brand.countries (counts
-        # are the union of M2M-linked AND product-derived).
-        cat_m2m = Brand.categories.through.objects.filter(
-            brand__organization=organization
-        ).values_list('brand_id', 'category_id')
-        for b, c in cat_m2m:
-            cat_sets.setdefault(b, set()).add(c)
-
-        country_m2m = Brand.countries.through.objects.filter(
-            brand__organization=organization
-        ).values_list('brand_id', 'country_id')
-        for b, c in country_m2m:
-            country_sets.setdefault(b, set()).add(c)
-
-        category_counts = {
-            b: len(s) + (1 if b in cat_has_null else 0)
-            for b, s in cat_sets.items()
-        }
-        # Brands with only-uncategorized products (and no real cats)
-        # still need the +1 bucket recorded.
-        for b in cat_has_null:
-            category_counts.setdefault(b, 1)
-
-        country_counts = {
-            b: len(s) + (1 if b in country_has_null else 0)
-            for b, s in country_sets.items()
-        }
-        for b in country_has_null:
-            country_counts.setdefault(b, 1)
-
-        # Attributes: distinct ProductAttribute leaves used by each
-        # brand's products (via the Product.attribute_values M2M),
-        # plus a +1 "No attributes" bucket per brand that has any
-        # product with zero attribute_values.
-        attr_pairs = ProductAttribute.objects.filter(
-            products_with_attribute__brand__organization=organization
-        ).values_list('products_with_attribute__brand_id', 'id')
-
-        attr_sets: dict[int, set] = {}
-        for b, a in attr_pairs:
-            if b is None:
-                continue
-            attr_sets.setdefault(b, set()).add(a)
-
-        # Brands with at least one fully-unattributed product.
-        unattr_brands = set(
+        # Brands with at least one product that carries zero attribute
+        # values. Separate query — the M2M join inflates row counts,
+        # so it can't share the GROUP BY above.
+        unattr_brands: set[int] = set(
             scope.filter(attribute_values__isnull=True)
                  .exclude(brand_id__isnull=True)
                  .values_list('brand_id', flat=True)
                  .distinct()
         )
 
-        attribute_counts = {
-            b: len(s) + (1 if b in unattr_brands else 0)
-            for b, s in attr_sets.items()
-        }
+        # Distinct categories / countries / attributes per brand —
+        # SQL Count(distinct=True) does the dedupe inside Postgres.
+        # One GROUP BY each, no per-row Python work.
+        cat_distinct_rows = (
+            scope.exclude(brand_id__isnull=True).exclude(category__isnull=True)
+                 .values('brand_id')
+                 .annotate(n=Count('category', distinct=True))
+        )
+        cat_distinct: dict[int, int] = {r['brand_id']: r['n'] for r in cat_distinct_rows}
+
+        country_distinct_rows = (
+            scope.exclude(brand_id__isnull=True).exclude(country__isnull=True)
+                 .values('brand_id')
+                 .annotate(n=Count('country', distinct=True))
+        )
+        country_distinct: dict[int, int] = {r['brand_id']: r['n'] for r in country_distinct_rows}
+
+        attr_distinct_rows = (
+            scope.exclude(brand_id__isnull=True)
+                 .values('brand_id')
+                 .annotate(n=Count('attribute_values', distinct=True))
+        )
+        attr_distinct: dict[int, int] = {r['brand_id']: r['n'] for r in attr_distinct_rows}
+
+        # M2M-side counts: through-tables are tiny (one row per link)
+        # so this stays cheap regardless of product count. We need
+        # distinct over the UNION of M2M-linked and product-derived,
+        # but a brand rarely has many M2M-only categories outside what
+        # its products use, so we approximate the union by summing
+        # (M2M_distinct - intersection_with_product_set) + product_distinct.
+        # To keep this tractable in pure SQL, fall back to fetching the
+        # ids of the M2M side only (typically 1-10 per brand) and
+        # XOR-merging in Python.
+        cat_m2m_rows = (
+            Brand.categories.through.objects
+                .filter(brand__organization=organization)
+                .values_list('brand_id', 'category_id')
+        )
+        country_m2m_rows = (
+            Brand.countries.through.objects
+                .filter(brand__organization=organization)
+                .values_list('brand_id', 'country_id')
+        )
+        attr_m2m_rows = (
+            Brand.attributes.through.objects
+                .filter(brand__organization=organization)
+                .values_list('brand_id', 'productattribute_id')
+        )
+
+        # For the union we need to know which product-side fk ids are
+        # already covered. Fetch the unique pairs (1 row per
+        # (brand, fk) — orders of magnitude smaller than products).
+        cat_pair_rows = (
+            scope.exclude(brand_id__isnull=True).exclude(category__isnull=True)
+                 .values_list('brand_id', 'category').distinct()
+        )
+        country_pair_rows = (
+            scope.exclude(brand_id__isnull=True).exclude(country__isnull=True)
+                 .values_list('brand_id', 'country').distinct()
+        )
+        attr_pair_rows = (
+            scope.exclude(brand_id__isnull=True)
+                 .exclude(attribute_values__isnull=True)
+                 .values_list('brand_id', 'attribute_values').distinct()
+        )
+
+        def union_count(
+            distinct_per_brand: dict[int, int],
+            m2m_rows,
+            pair_rows,
+        ) -> dict[int, int]:
+            # Count m2m ids that aren't already in the product-derived
+            # set for that brand. distinct_per_brand already has the
+            # product-side count; we just add the M2M-only ids.
+            covered: dict[int, set] = {}
+            for b, fk in pair_rows:
+                covered.setdefault(b, set()).add(fk)
+            extra: dict[int, int] = {}
+            for b, fk in m2m_rows:
+                if b in covered and fk in covered[b]:
+                    continue
+                extra[b] = extra.get(b, 0) + 1
+                covered.setdefault(b, set()).add(fk)
+            out = dict(distinct_per_brand)
+            for b, n in extra.items():
+                out[b] = out.get(b, 0) + n
+            return out
+
+        cat_union   = union_count(cat_distinct,     cat_m2m_rows,     cat_pair_rows)
+        country_union = union_count(country_distinct, country_m2m_rows, country_pair_rows)
+        attr_union  = union_count(attr_distinct,    attr_m2m_rows,    attr_pair_rows)
+
+        # Apply the +1 "Universal / Uncategorized / No-attributes"
+        # bucket per the user-visible facet semantics.
+        category_counts: dict[int, int] = {b: n + (1 if b in cat_has_null else 0) for b, n in cat_union.items()}
+        for b in cat_has_null:
+            category_counts.setdefault(b, 1)
+
+        country_counts: dict[int, int] = {b: n + (1 if b in country_has_null else 0) for b, n in country_union.items()}
+        for b in country_has_null:
+            country_counts.setdefault(b, 1)
+
+        attribute_counts: dict[int, int] = {b: n + (1 if b in unattr_brands else 0) for b, n in attr_union.items()}
         for b in unattr_brands:
             attribute_counts.setdefault(b, 1)
 
