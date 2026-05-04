@@ -110,11 +110,29 @@ export const platformDashboard: MenuItem = {
     module: 'core',
 };
 
+// Tenant-scoped AI menu. Every page below uses MCPProvider/MCPAgent/etc.,
+// all of which carry an `organization` FK with db_column='tenant_id' —
+// they belong to the customer, not the SaaS operator. Previously the
+// MCP children sat under SaaS Control by mistake; that hid them from
+// every regular tenant user even though their org had its own keys.
 export const aiAgents: MenuItem = {
-    title: 'AI Agents',
+    title: 'AI & Automation',
     icon: Bot,
-    path: '/agents',
     module: 'core',
+    children: [
+        // Virtual employees dashboard — the operator-facing landing page.
+        { title: 'Virtual Employees', path: '/agents', icon: Bot },
+        // MCP suite (tenant-scoped: each org configures its own provider keys).
+        { title: 'MCP Dashboard',     path: '/mcp' },
+        { title: 'MCP Chat',          path: '/mcp/chat' },
+        { title: 'Conversations',     path: '/mcp/conversations' },
+        { title: 'Agents',            path: '/mcp/agents' },
+        { title: 'Agent Logs',        path: '/mcp/agent-logs' },
+        { title: 'Providers',         path: '/mcp/providers' },
+        { title: 'Tools',             path: '/mcp/tools' },
+        { title: 'Usage',             path: '/mcp/usage' },
+        { title: 'MCP Settings',      path: '/mcp/settings' },
+    ],
 };
 
 export const delivery: MenuItem = {

@@ -322,8 +322,17 @@ export function BrandsClient({ brands, countries, categories, attributes }: Prop
                     selectionRef.current = { selectedIds, clearSelection: renderProps.clearSelection }
 
                     return tree.map((node: Brand) => (
+                        /* content-visibility:auto defers layout/paint of
+                           off-screen brand rows so the page stays snappy
+                           even at 1000+ brands. contain-intrinsic-size
+                           reserves 60px (approx collapsed row height)
+                           for the scrollbar; the browser computes the
+                           real size when the row enters the viewport,
+                           so an expanded row with its facet tree still
+                           shows correctly. */
                         <div key={node.id}
-                            className={`rounded-xl transition-all duration-200 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}>
+                            className={`rounded-xl transition-all duration-200 ${isSelected(node) ? 'ring-2 ring-app-primary/40 bg-app-primary/[0.03] shadow-sm' : ''}`}
+                            style={{ contentVisibility: 'auto', containIntrinsicSize: '0 60px' }}>
                             <BrandRow
                                 brand={node}
                                 onEdit={openEdit}

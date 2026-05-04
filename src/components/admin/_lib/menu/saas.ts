@@ -5,7 +5,6 @@ import {
     Building2,
     Shield,
     ServerCog,
-    Bot,
     Wrench,
     CreditCard,
 } from 'lucide-react';
@@ -61,21 +60,12 @@ export const saasControl: MenuItem = {
                 },
             ],
         },
-        {
-            title: 'AI & Automation',
-            icon: Bot,
-            children: [
-                { title: 'MCP Dashboard', path: '/mcp' },
-                { title: 'MCP Chat', path: '/mcp/chat' },
-                { title: 'Conversations', path: '/mcp/conversations' },
-                { title: 'Agents', path: '/mcp/agents' },
-                { title: 'Agent Logs', path: '/mcp/agent-logs' },
-                { title: 'Providers', path: '/mcp/providers' },
-                { title: 'Tools', path: '/mcp/tools' },
-                { title: 'Usage', path: '/mcp/usage' },
-                { title: 'MCP Settings', path: '/mcp/settings' },
-            ],
-        },
+        // NOTE: "AI & Automation" used to live here, but every MCP table
+        // (MCPProvider, MCPAgent, MCPConversation, MCPUsageLog, MCPRateLimit)
+        // is tenant-scoped via `organization` FK. Each customer brings
+        // their own API keys and runs their own agents — the SaaS owner
+        // doesn't manage those. The whole AI & Automation section now
+        // lives in the tenant-level menu (core.ts → aiAgents).
         {
             title: 'Developer',
             icon: Wrench,

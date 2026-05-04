@@ -348,7 +348,7 @@ export function ScopeWizardClient({
                                     ? 'Each suggestion is scored by your AI provider for commonsense plausibility. Cached for 7 days per row.'
                                     : aiConfig.has_provider
                                         ? 'Add a confidence + rationale to each row using your configured AI provider.'
-                                        : 'No AI provider configured. Add one under /agents to enable ranking.'}
+                                        : 'No AI provider configured. Add one under MCP → Providers to enable ranking.'}
                             </div>
                         </div>
                     </div>
@@ -362,10 +362,10 @@ export function ScopeWizardClient({
                                 style={{ transform: `translateX(${aiOn ? '24px' : '4px'})` }} />
                         </button>
                     ) : (
-                        <Link href="/agents"
+                        <Link href="/mcp/providers"
                             className="px-3 py-1.5 rounded-lg text-tp-xs font-bold border flex items-center gap-1.5"
                             style={{ borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}>
-                            <SettingsIcon size={11} /> Configure
+                            <SettingsIcon size={11} /> Configure provider
                         </Link>
                     )}
 
