@@ -319,41 +319,13 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                             </div>
                         </section>
 
-                        {/* Linked Product Packaging (read-only) */}
-                        {(pkgLoading || packages.length > 0) && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-2 px-1">
-                                    <Package size={12} style={{ color: 'var(--app-muted-foreground)' }} />
-                                    <span className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>Linked Product Packaging</span>
-                                    <span className="text-tp-xxs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--app-background)', color: 'var(--app-muted-foreground)' }}>{packages.length}</span>
-                                </div>
-                                {pkgLoading ? (
-                                    <div className="flex items-center justify-center py-6"><Loader2 size={14} className="animate-spin text-app-muted-foreground" /></div>
-                                ) : (
-                                    <div className="rounded-lg overflow-hidden divide-y divide-app-border/30" style={{ border: '1px solid var(--app-border)' }}>
-                                        {packages.map((pkg) => (
-                                            <div key={pkg.id} className="flex items-center gap-2 px-3 py-2">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-tp-md font-semibold text-app-foreground truncate">{pkg.name}</div>
-                                                    <div className="flex items-center gap-2 text-tp-xxs text-app-muted-foreground">
-                                                        <span className="font-mono">×{pkg.ratio}</span>
-                                                        {pkg.product_name && <span>• {pkg.product_name}</span>}
-                                                        {pkg.barcode && <span className="font-mono">• {pkg.barcode}</span>}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right flex-shrink-0">
-                                                    <div className="text-tp-sm font-bold tabular-nums text-app-foreground">{Number(pkg.selling_price || 0).toLocaleString()}</div>
-                                                    <div className="flex items-center gap-1 text-tp-xxs font-semibold">
-                                                        {pkg.is_default_sale && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>SALE</span>}
-                                                        {pkg.is_default_purchase && <span className="px-1 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>BUY</span>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </section>
-                        )}
+                        {/* The "Linked Product Packaging" section that used to
+                         *  live here was misleading: it listed per-product
+                         *  ProductPackaging rows in a way that read like
+                         *  templates. The Package Templates section above
+                         *  is the right home for unit-level data. Per-product
+                         *  rows belong on the Products tab (which already
+                         *  scopes its list to this unit). */}
                     </div>
                 )}
 
