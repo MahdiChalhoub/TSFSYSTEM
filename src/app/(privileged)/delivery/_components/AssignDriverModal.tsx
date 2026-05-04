@@ -16,9 +16,9 @@ interface Driver {
     full_name: string;
     status: 'ONLINE' | 'BUSY' | 'OFFLINE';
     vehicle_type: string;
-    vehicle_license_plate: string;
-    phone_number: string;
-    is_active: boolean;
+    vehicle_plate: string;
+    phone: string;
+    is_active_fleet: boolean;
 }
 
 interface DeliveryOrder {
@@ -162,7 +162,7 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
                                                 <Truck size={10} /> {driver.vehicle_type}
                                             </span>
                                             <span className="text-[10px] font-bold text-app-muted-foreground">•</span>
-                                            <span className="text-[10px] font-mono text-app-muted-foreground">{driver.phone_number}</span>
+                                            <span className="text-[10px] font-mono text-app-muted-foreground">{driver.phone}</span>
                                         </div>
                                     </div>
 

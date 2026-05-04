@@ -2,20 +2,32 @@ from .base import (
     Response, action, timezone, TenantModelViewSet
 )
 from django.db.models import Avg, F
-from apps.pos.models import DeliveryZone, DeliveryOrder, Driver
-from apps.pos.serializers import DeliveryZoneSerializer, DeliveryOrderSerializer, DriverSerializer
+from apps.pos.models import DeliveryZone, DeliveryOrder, Driver, ExternalDriver
+from apps.pos.serializers import DeliveryZoneSerializer, DeliveryOrderSerializer, DriverSerializer, ExternalDriverSerializer
 from apps.pos.models.delivery_models import generate_confirmation_code
 from apps.pos.services import sms_service
 from apps.pos.services.delivery_fleet_service import DeliveryFleetService
 from decimal import Decimal
 
 
+class ExternalDriverViewSet(TenantModelViewSet):
+    """CRUD for the per-tenant roster of one-off / contractor drivers.
+    Drives the PO form's picker when driver_source = EXTERNAL."""
+    queryset = ExternalDriver.objects.all()
+    serializer_class = ExternalDriverSerializer
+    filterset_fields = ['is_active']
+    search_fields = ['name', 'phone', 'vehicle_plate']
+
+
 class DriverViewSet(TenantModelViewSet):
     """CRUD for drivers."""
     queryset = Driver.objects.select_related('user').all()
     serializer_class = DriverSerializer
-    filterset_fields = ['status', 'is_active']
-    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone_number']
+    # Fields below MUST exist on the Driver model — otherwise DRF's filter
+    # backend raises a 500 at request time. Names match the model:
+    # `is_active_fleet` (not `is_active`) and `phone` (not `phone_number`).
+    filterset_fields = ['status', 'is_active_fleet', 'available_for_purchase', 'available_for_sales']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name', 'phone']
 
     @action(detail=True, methods=['post'])
     def set_status(self, request, pk=None):
@@ -31,7 +43,7 @@ class DriverViewSet(TenantModelViewSet):
     @action(detail=False, methods=['get'])
     def active(self, request):
         """Returns all ONLINE and active drivers."""
-        drivers = self.get_queryset().filter(status='ONLINE', is_active=True)
+        drivers = self.get_queryset().filter(status='ONLINE', is_active_fleet=True)
         return Response(DriverSerializer(drivers, many=True).data)
 
     @action(detail=True, methods=['get'])

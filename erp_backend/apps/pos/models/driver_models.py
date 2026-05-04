@@ -17,10 +17,27 @@ class Driver(TenantModel):
         ('PERCENT', 'Percentage of Order Total'),
     )
 
+    # Structured vehicle category — drives icon/badge rendering and per-type
+    # filtering (e.g. "find me a TRUCK driver for this big PO"). The
+    # free-text `vehicle_info` field stays for human-readable details
+    # (make/model). Default MOTORCYCLE matches what the UI used to send
+    # when the form silently dropped the field.
+    VEHICLE_TYPE_CHOICES = (
+        ('MOTORCYCLE', 'Motorcycle'),
+        ('CAR', 'Car'),
+        ('VAN', 'Van'),
+        ('TRUCK', 'Truck'),
+        ('BICYCLE', 'Bicycle'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='driver_profile')
     phone = models.CharField(max_length=50, blank=True, null=True)
     license_number = models.CharField(max_length=100, blank=True, null=True)
     vehicle_info = models.CharField(max_length=200, blank=True, null=True, help_text="e.g. Toyota Corolla (ABC-123)")
+    # Structured category — see VEHICLE_TYPE_CHOICES above.
+    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPE_CHOICES,
+        default='MOTORCYCLE',
+        help_text="Vehicle category — drives icon/badge rendering.")
     # Plate is queried separately from `vehicle_info` so settings UI / GR
     # documents / handover slips can format it consistently.
     vehicle_plate = models.CharField(max_length=50, blank=True, null=True,
@@ -63,3 +80,44 @@ class Driver(TenantModel):
     def mark_available(self):
         self.status = 'ONLINE'
         self.save(update_fields=['status'])
+
+
+class ExternalDriver(TenantModel):
+    """
+    A reusable contractor / one-off driver the tenant uses for pickups
+    or deliveries but doesn't onboard as a User. Holds just enough info
+    to identify and contact them — name + phone — plus optional vehicle
+    details for dispatch slips.
+
+    Distinct from `Driver`: external drivers have NO User row and earn
+    no commission rows in our books (they invoice us externally). They
+    show up in the PO form's driver picker when source = EXTERNAL, so
+    the operator picks instead of re-typing name + phone every time.
+    """
+    name = models.CharField(max_length=120,
+        help_text='Display name on dispatch slips and the picker.')
+    phone = models.CharField(max_length=50, blank=True, null=True)
+    vehicle_plate = models.CharField(max_length=50, blank=True, null=True,
+        help_text='License plate printed on the handover document.')
+    vehicle_info = models.CharField(max_length=200, blank=True, null=True,
+        help_text='Free-text vehicle description, e.g. "White Hilux".')
+    notes = models.TextField(blank=True, null=True,
+        help_text='Operator notes — preferred routes, working hours, etc.')
+    is_active = models.BooleanField(default=True,
+        help_text='Hides from the picker without deleting the row.')
+
+    class Meta:
+        db_table = 'pos_external_driver'
+        verbose_name = 'External Driver'
+        verbose_name_plural = 'External Drivers'
+        # One name per tenant — stops accidental duplicates from
+        # repeated typos when adding inline from the PO form.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'name'],
+                name='unique_external_driver_name_per_org',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} (external)"

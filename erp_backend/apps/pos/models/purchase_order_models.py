@@ -174,15 +174,19 @@ class PurchaseOrder(TenantModel):
                                       default='INTERNAL',
                                       help_text='Who is providing the driver for this PO.')
     # When source = INTERNAL, this points at our Driver-row user; when
-    # SUPPLIER or EXTERNAL, this stays null (and external_* / supplier
-    # portal data fills the gap).
+    # SUPPLIER or EXTERNAL, this stays null (the supplier portal /
+    # external_driver FK fill the gap).
     driver_user = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='delivered_purchase_orders',
                                      help_text='Internal driver — only set when driver_source=INTERNAL.')
-    external_driver_name = models.CharField(max_length=120, null=True, blank=True,
-        help_text='Free-text name for a one-off external driver.')
-    external_driver_phone = models.CharField(max_length=50, null=True, blank=True,
-        help_text='Free-text phone for a one-off external driver.')
+    # When source = EXTERNAL, this points at a saved ExternalDriver row.
+    # Picking from a roster (instead of free-text every time) avoids
+    # duplicate typing for repeat contractors and keeps phone numbers
+    # consistent across POs.
+    external_driver = models.ForeignKey('pos.ExternalDriver', on_delete=models.SET_NULL,
+                                         null=True, blank=True,
+                                         related_name='purchase_orders',
+                                         help_text='Saved one-off / contractor driver — only set when driver_source=EXTERNAL.')
 
     # Notes
     notes = models.TextField(null=True, blank=True)

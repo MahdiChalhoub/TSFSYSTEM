@@ -9,6 +9,7 @@ import {
 import AnalyticsProfileSelector from '@/components/analytics/AnalyticsProfileSelector'
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 import { POLifecycle, type POStatus } from './POLifecycle'
+import { ExternalDriverPicker } from './ExternalDriverPicker'
 
 type Props = {
     suppliers: Record<string, any>[]
@@ -43,13 +44,13 @@ type Props = {
     onDriverChange: (id: number | '') => void
     /** Three-way driver source toggle. INTERNAL = our drivers list,
      *  SUPPLIER = supplier picks one (no details collected here),
-     *  EXTERNAL = one-off contractor (free text name + phone). */
+     *  EXTERNAL = pick from saved external roster (or add inline). */
     driverSource: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL'
     onDriverSourceChange: (next: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL') => void
-    externalDriverName: string
-    onExternalDriverNameChange: (v: string) => void
-    externalDriverPhone: string
-    onExternalDriverPhoneChange: (v: string) => void
+    /** Saved external/contractor drivers — picker source when source=EXTERNAL. */
+    externalDrivers: Record<string, any>[]
+    externalDriverId: number | ''
+    onExternalDriverChange: (id: number | '') => void
     reference: string
     onReferenceChange: (val: string) => void
     /** Optional second reference — supplier's PO/quote number, internal
@@ -109,8 +110,7 @@ export function AdminSidebar({
     assigneeId, onAssigneeChange,
     driverId, onDriverChange,
     driverSource, onDriverSourceChange,
-    externalDriverName, onExternalDriverNameChange,
-    externalDriverPhone, onExternalDriverPhoneChange,
+    externalDrivers, externalDriverId, onExternalDriverChange,
     /* Reference is read-only in the panel; the prop stays in the API for
      * the parent's auto-fill effect (scope toggle rewrites the value
      * through the parent's setReference, not via this prop). Underscored
@@ -490,10 +490,7 @@ export function AdminSidebar({
                                                 // payload doesn't carry stale data
                                                 // from the source we just left.
                                                 if (src !== 'INTERNAL') onDriverChange('')
-                                                if (src !== 'EXTERNAL') {
-                                                    onExternalDriverNameChange('')
-                                                    onExternalDriverPhoneChange('')
-                                                }
+                                                if (src !== 'EXTERNAL') onExternalDriverChange('')
                                             }}
                                             className="flex-1 py-1.5 text-tp-xxs font-bold uppercase tracking-widest rounded-lg transition-all active:scale-[0.97]"
                                             style={active
@@ -524,21 +521,15 @@ export function AdminSidebar({
                         </p>
                     )}
                     {driverSource === 'EXTERNAL' && (
-                        <div className="mt-2 space-y-2">
-                            <div>
-                                <label className={labelCls}>Driver name</label>
-                                <input type="text" className={fieldBase} style={fieldStyle}
-                                    value={externalDriverName}
-                                    onChange={e => onExternalDriverNameChange(e.target.value)}
-                                    placeholder="e.g. Ahmad" />
-                            </div>
-                            <div>
-                                <label className={labelCls}>Driver phone</label>
-                                <input type="tel" className={fieldBase} style={fieldStyle}
-                                    value={externalDriverPhone}
-                                    onChange={e => onExternalDriverPhoneChange(e.target.value)}
-                                    placeholder="+961 …" />
-                            </div>
+                        <div className="mt-2">
+                            <ExternalDriverPicker
+                                drivers={externalDrivers}
+                                value={externalDriverId}
+                                onChange={onExternalDriverChange}
+                                fieldBase={fieldBase}
+                                fieldStyle={fieldStyle}
+                                labelCls={labelCls}
+                            />
                         </div>
                     )}
 

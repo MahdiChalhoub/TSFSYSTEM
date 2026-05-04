@@ -59,6 +59,10 @@ interface PurchaseFormProps {
     /** Users with a Driver row (and `available_for_purchase=true` once
      *  the per-module flag exists). Pre-filtered server-side. */
     drivers: Record<string, any>[]
+    /** Saved external/contractor drivers — picked when source=EXTERNAL.
+     *  Kept separate from `drivers` because they're a different entity
+     *  (no User row, no commission). */
+    externalDrivers: Record<string, any>[]
     profilesData: AnalyticsProfilesData
     currentUser?: any
     /** When 'edit', the form prefills from `initialPO` and submits via
@@ -73,6 +77,7 @@ export default function PurchaseForm({
     financialSettings,
     assignees,
     drivers,
+    externalDrivers,
     profilesData,
     currentUser,
     mode = 'create',
@@ -236,11 +241,10 @@ export default function PurchaseForm({
         const raw = initialPO?.driver_source as string | undefined
         return raw === 'SUPPLIER' || raw === 'EXTERNAL' ? raw : 'INTERNAL'
     })
-    const [externalDriverName, setExternalDriverName] = useState<string>(() =>
-        isEdit ? String(initialPO?.external_driver_name ?? '') : ''
-    )
-    const [externalDriverPhone, setExternalDriverPhone] = useState<string>(() =>
-        isEdit ? String(initialPO?.external_driver_phone ?? '') : ''
+    // Picked from the saved roster (pos.ExternalDriver). Replaces the
+    // free-text name/phone fields — operators select instead of re-typing.
+    const [externalDriverId, setExternalDriverId] = useState<number | ''>(() =>
+        isEdit ? seedNumber(initialPO?.external_driver?.id ?? initialPO?.external_driver) : ''
     )
     const [lines, setLines] = useState<PurchaseLine[]>(seededLines)
 
@@ -775,8 +779,7 @@ export default function PurchaseForm({
                             <input type="hidden" name="assigneeId" value={assigneeId} />
                             <input type="hidden" name="driverId" value={driverId} />
                             <input type="hidden" name="driverSource" value={driverSource} />
-                            <input type="hidden" name="externalDriverName" value={externalDriverName} />
-                            <input type="hidden" name="externalDriverPhone" value={externalDriverPhone} />
+                            <input type="hidden" name="externalDriverId" value={externalDriverId} />
                             <input type="hidden" name="reference" value={reference} />
                             <input type="hidden" name="supplierRef" value={supplierRef} />
                             <input type="hidden" name="orderDate" value={date} />
@@ -1021,8 +1024,8 @@ export default function PurchaseForm({
                                 assigneeId={assigneeId} onAssigneeChange={setAssigneeId}
                                 driverId={driverId} onDriverChange={setDriverId}
                                 driverSource={driverSource} onDriverSourceChange={setDriverSource}
-                                externalDriverName={externalDriverName} onExternalDriverNameChange={setExternalDriverName}
-                                externalDriverPhone={externalDriverPhone} onExternalDriverPhoneChange={setExternalDriverPhone}
+                                externalDrivers={externalDrivers}
+                                externalDriverId={externalDriverId} onExternalDriverChange={setExternalDriverId}
                                 reference={reference} onReferenceChange={(v) => { setReferenceTouched(true); setReference(v) }}
                                 supplierRef={supplierRef} onSupplierRefChange={setSupplierRef}
                                 date={date} onDateChange={setDate}

@@ -17,11 +17,11 @@ interface Driver {
     full_name: string;
     status: 'ONLINE' | 'BUSY' | 'OFFLINE';
     vehicle_type: string;
-    vehicle_license_plate: string;
-    phone_number: string;
+    vehicle_plate: string;
+    phone: string;
     commission_type: 'FLAT' | 'PERCENT';
     commission_value: string;
-    is_active: boolean;
+    is_active_fleet: boolean;
     /** Per-module visibility — drives `users/?driver_for=…` filtering on
      *  the PO and POS pickers. Defaults to true server-side. */
     available_for_purchase?: boolean;
@@ -40,11 +40,11 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
         user: userId,
         status: 'OFFLINE',
         vehicle_type: 'MOTORCYCLE',
-        vehicle_license_plate: '',
-        phone_number: '',
+        vehicle_plate: '',
+        phone: '',
         commission_type: 'FLAT',
         commission_value: '0',
-        is_active: true,
+        is_active_fleet: true,
         available_for_purchase: true,
         available_for_sales: true,
     });
@@ -142,8 +142,8 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                                     </div>
                                     <input
                                         type="text"
-                                        value={form.vehicle_license_plate}
-                                        onChange={(e) => setForm({ ...form, vehicle_license_plate: e.target.value.toUpperCase() })}
+                                        value={form.vehicle_plate}
+                                        onChange={(e) => setForm({ ...form, vehicle_plate: e.target.value.toUpperCase() })}
                                         placeholder="ABC-1234"
                                         className={clsx(inputClass, "pl-11 uppercase font-mono tracking-widest")}
                                     />
@@ -161,8 +161,8 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                                     </div>
                                     <input
                                         type="tel"
-                                        value={form.phone_number}
-                                        onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+                                        value={form.phone}
+                                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
                                         placeholder="+225 ..."
                                         className={clsx(inputClass, "pl-11")}
                                     />

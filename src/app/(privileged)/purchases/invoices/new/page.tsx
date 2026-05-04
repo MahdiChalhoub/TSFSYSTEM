@@ -18,6 +18,7 @@ import { erpFetch } from '@/lib/erp-api';
 import { getContactsByType } from '@/app/actions/crm/contacts';
 import { getFinancialSettings } from '@/app/actions/finance/settings';
 import { getAssignableUsers, getDrivers } from '@/app/actions/users';
+import { getExternalDrivers } from '@/app/actions/commercial/external-drivers';
 import { getAnalyticsProfiles } from '@/app/actions/settings/analytics-profiles';
 import { serializeDecimals } from '@/lib/utils/serialization';
 // Reuse the PO form — same fields, different submit action driven by mode='quick'
@@ -41,12 +42,13 @@ async function getSitesAndWarehouses() {
 }
 
 export default async function QuickPurchasePage() {
-    const [suppliers, sites, financialSettings, assignees, drivers, profilesData, currentUser] = await Promise.all([
+    const [suppliers, sites, financialSettings, assignees, drivers, externalDrivers, profilesData, currentUser] = await Promise.all([
         getContactsByType('SUPPLIER'),
         getSitesAndWarehouses(),
         getFinancialSettings(),
         getAssignableUsers('purchase'),
         getDrivers('purchase'),
+        getExternalDrivers(),
         getAnalyticsProfiles('purchase-order'),
         import('@/app/actions/auth').then(m => m.getUser()),
     ]);
@@ -58,6 +60,7 @@ export default async function QuickPurchasePage() {
             financialSettings={serializeDecimals(financialSettings)}
             assignees={assignees}
             drivers={drivers}
+            externalDrivers={externalDrivers}
             profilesData={profilesData}
             currentUser={currentUser}
             mode='quick'

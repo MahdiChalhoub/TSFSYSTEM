@@ -6,7 +6,7 @@ from .returns_serializers import (
     PurchaseReturnSerializer, PurchaseReturnLineSerializer
 )
 from .quotation_serializers import QuotationSerializer, QuotationLineSerializer
-from .delivery_serializers import DriverSerializer, DeliveryZoneSerializer, DeliveryOrderSerializer
+from .delivery_serializers import DriverSerializer, ExternalDriverSerializer, DeliveryZoneSerializer, DeliveryOrderSerializer
 from .discount_serializers import DiscountRuleSerializer, DiscountUsageLogSerializer
 from .consignment_serializers import ConsignmentSettlementSerializer, ConsignmentSettlementLineSerializer
 from .sourcing_serializers import ProductSupplierSerializer, SupplierPriceHistorySerializer

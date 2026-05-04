@@ -145,8 +145,7 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
     const rawDriverSource = (orUndef(formData.get('driverSource')) || 'INTERNAL').toUpperCase()
     const driverSource: 'INTERNAL' | 'SUPPLIER' | 'EXTERNAL' =
         rawDriverSource === 'SUPPLIER' || rawDriverSource === 'EXTERNAL' ? rawDriverSource as any : 'INTERNAL'
-    const externalDriverName = orUndef(formData.get('externalDriverName'))
-    const externalDriverPhone = orUndef(formData.get('externalDriverPhone'))
+    const externalDriverId = formData.get('externalDriverId')
 
     const payload = {
         supplier: Number(supplierId),
@@ -161,8 +160,7 @@ export async function createPurchaseOrder(prevState: PurchaseFormState, formData
         assignee: assigneeId ? Number(assigneeId) : null,
         driver_source: driverSource,
         driver_user: driverSource === 'INTERNAL' && driverId ? Number(driverId) : null,
-        external_driver_name: driverSource === 'EXTERNAL' ? externalDriverName : null,
-        external_driver_phone: driverSource === 'EXTERNAL' ? externalDriverPhone : null,
+        external_driver: driverSource === 'EXTERNAL' && externalDriverId ? Number(externalDriverId) : null,
         lines: rawLines
             .filter(l => l && (l as any).productId)
             .map(l => {

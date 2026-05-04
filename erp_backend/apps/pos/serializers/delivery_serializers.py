@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.models import DeliveryZone, DeliveryOrder, Driver
+from apps.pos.models import DeliveryZone, DeliveryOrder, Driver, ExternalDriver
 
 
 class DriverSerializer(serializers.ModelSerializer):
@@ -14,6 +14,17 @@ class DriverSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         name = f"{obj.user.first_name} {obj.user.last_name}".strip()
         return name or obj.user.username
+
+
+class ExternalDriverSerializer(serializers.ModelSerializer):
+    """Saved one-off / contractor driver — picked from the PO form when
+    driver_source=EXTERNAL. The viewset stamps `organization` from the
+    request tenant, so it's read-only here."""
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ExternalDriver
+        fields = '__all__'
 
 
 class DeliveryZoneSerializer(serializers.ModelSerializer):

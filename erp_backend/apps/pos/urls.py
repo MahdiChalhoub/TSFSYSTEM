@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from apps.pos.views import (
     POSViewSet, PosTicketViewSet, PurchaseViewSet,
     SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet,
-    QuotationViewSet, DeliveryZoneViewSet, DriverViewSet, DeliveryOrderViewSet,
+    QuotationViewSet, DeliveryZoneViewSet, DriverViewSet, ExternalDriverViewSet, DeliveryOrderViewSet,
     DiscountRuleViewSet, OrderViewSet,
     ConsignmentSettlementViewSet,
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
@@ -36,6 +36,7 @@ router.register(r'purchase-returns', PurchaseReturnViewSet)
 router.register(r'quotations', QuotationViewSet)
 router.register(r'delivery-zones', DeliveryZoneViewSet)
 router.register(r'drivers', DriverViewSet, basename='drivers')
+router.register(r'external-drivers', ExternalDriverViewSet, basename='external-drivers')
 router.register(r'deliveries', DeliveryOrderViewSet)
 router.register(r'discount-rules', DiscountRuleViewSet)
 router.register(r'consignment-settlements', ConsignmentSettlementViewSet)

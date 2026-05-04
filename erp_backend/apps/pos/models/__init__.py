@@ -3,7 +3,7 @@ from .register_models import POSRegister, RegisterSession, CashierAddressBook, S
 from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 from .quotation_models import Quotation, QuotationLine
 from .delivery_models import DeliveryZone, DeliveryOrder
-from .driver_models import Driver
+from .driver_models import Driver, ExternalDriver
 from .discount_models import DiscountRule, DiscountUsageLog
 from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
 from .sourcing_models import ProductSupplier, SupplierPriceHistory
@@ -22,7 +22,7 @@ __all__ = [
     'POSRegister', 'RegisterSession', 'CashierAddressBook', 'SessionAccountReconciliation', 'POSSettings', 'DailyAddressBookSnapshot',
     'SalesReturn', 'SalesReturnLine', 'CreditNote', 'PurchaseReturn', 'PurchaseReturnLine',
     'Quotation', 'QuotationLine',
-    'DeliveryZone', 'DeliveryOrder', 'Driver',
+    'DeliveryZone', 'DeliveryOrder', 'Driver', 'ExternalDriver',
     'DiscountRule', 'DiscountUsageLog',
     'ConsignmentSettlement', 'ConsignmentSettlementLine',
     'ProductSupplier', 'SupplierPriceHistory',

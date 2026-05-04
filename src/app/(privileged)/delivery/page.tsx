@@ -72,11 +72,13 @@ interface DriverProfile {
     full_name: string;
     status: 'ONLINE' | 'BUSY' | 'OFFLINE';
     vehicle_type: string;
-    vehicle_license_plate: string;
-    phone_number: string;
+    vehicle_plate: string;
+    phone: string;
     commission_type: 'FLAT' | 'PERCENT';
     commission_value: string;
-    is_active: boolean;
+    is_active_fleet: boolean;
+    available_for_purchase?: boolean;
+    available_for_sales?: boolean;
 }
 
 interface Role {
@@ -541,7 +543,7 @@ function DriversTab({ users, drivers, roles, onReload, loading }: {
                                                 <span className="text-[10px] font-black text-app-foreground flex items-center gap-1">
                                                     <Truck size={10} className="text-app-primary" /> {p.vehicle_type}
                                                 </span>
-                                                <span className="text-[9px] font-mono text-app-muted-foreground">{p.vehicle_license_plate}</span>
+                                                <span className="text-[9px] font-mono text-app-muted-foreground">{p.vehicle_plate}</span>
                                             </div>
                                         );
                                     })() : <span className="text-app-muted-foreground text-xs">—</span>}
@@ -882,7 +884,7 @@ export default function DeliveryPage() {
         try {
             const [zonesRes, usersRes, driversRes, rolesRes, ratesRes] = await Promise.all([
                 erpFetch('pos/delivery-zones/').catch(() => []),
-                erpFetch('erp/users/').catch(() => []),
+                erpFetch('users/').catch(() => []),
                 erpFetch('pos/drivers/').catch(() => []),
                 erpFetch('roles/').catch(() => []),
                 erpFetch('client-portal/shipping-rates/').catch(() => []),
