@@ -1,36 +1,56 @@
-
-"use client"
+'use client'
 
 /**
- * Virtual Employees — V2 Dajingo Pro Redesign
- * =============================================
- * Autonomous AI agents dashboard with live console,
- * role-based cards, and permission scopes.
+ * Virtual Employees — Dajingo Pro redesign
+ * =========================================
+ * Autonomous AI agents dashboard with live console, role-based cards,
+ * and permission scopes. Theme tokens, KPI strip, auto-fit grids.
  */
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useCallback } from 'react'
 import {
-    Cpu, Brain, Sparkles, Activity, Play, Pause,
-    RefreshCw, Terminal, Clock, CheckCircle2, Search,
-    ShieldCheck, Zap, Package, LineChart, Wallet,
-    MessageSquare, ShieldAlert
-} from "lucide-react"
-import { getAgents, getAgentLogs, runAgentNow, updateAgent } from "@/app/actions/agents"
-import { formatDistanceToNow } from 'date-fns'
+    Cpu, Brain, Sparkles, Activity, Play, Pause, RefreshCw, Terminal,
+    Clock, CheckCircle2, Search, ShieldCheck, Zap, Package, LineChart,
+    Wallet, MessageSquare, ShieldAlert,
+} from 'lucide-react'
+import { getAgents, getAgentLogs, runAgentNow, updateAgent } from '@/app/actions/agents'
+import {
+    ModulePage, PageHeader, KPIStrip, EmptyState, Loading,
+    GhostButton, PrimaryButton, StatusPill, SectionCard,
+} from '@/modules/mcp/_design'
 
 interface Agent {
-    id: number; name: string; role: string; role_display: string;
-    persona: string; is_active: boolean; status: 'idle' | 'running' | 'paused' | 'error';
-    auto_execute: boolean; frequency_minutes: number;
-    last_run_at: string | null; next_run_at: string | null;
+    id: number; name: string; role: string; role_display: string
+    persona: string; is_active: boolean; status: 'idle' | 'running' | 'paused' | 'error'
+    auto_execute: boolean; frequency_minutes: number
+    last_run_at: string | null; next_run_at: string | null
 }
 interface AgentLog {
-    id: number; agent: number; agent_name: string;
-    level: 'info' | 'thought' | 'action' | 'error' | 'decision';
-    message: string; data: any; created_at: string;
+    id: number; agent: number; agent_name: string
+    level: 'info' | 'thought' | 'action' | 'error' | 'decision'
+    message: string; data: any; created_at: string
+}
+
+const AGENT_ICON: Record<string, any> = {
+    inventory_manager: Package,
+    finance_specialist: Wallet,
+    sales_analyst: LineChart,
+    customer_support: MessageSquare,
+}
+
+const STATUS_META: Record<string, { color: string; label: string }> = {
+    running: { color: 'var(--app-success, #22c55e)', label: 'Running' },
+    error:   { color: 'var(--app-error, #ef4444)',   label: 'Error' },
+    paused:  { color: 'var(--app-warning, #f59e0b)', label: 'Paused' },
+    idle:    { color: 'var(--app-info, #3b82f6)',    label: 'Idle' },
+}
+
+const LOG_COLOR: Record<string, string> = {
+    error:    'var(--app-error, #ef4444)',
+    thought:  '#A78BFA',
+    action:   'var(--app-warning, #f59e0b)',
+    decision: 'var(--app-primary)',
+    info:     'var(--app-muted-foreground)',
 }
 
 export default function AgentDashboard() {
@@ -38,285 +58,225 @@ export default function AgentDashboard() {
     const [logs, setLogs] = useState<AgentLog[]>([])
     const [loading, setLoading] = useState(true)
     const [runningMap, setRunningMap] = useState<Record<number, boolean>>({})
+    const [logFilter, setLogFilter] = useState('')
 
     const fetchData = useCallback(async () => {
         try {
-            const [agentsData, logsData] = await Promise.all([getAgents(), getAgentLogs()])
-            setAgents(agentsData)
-            setLogs(logsData)
-        } catch (e) { console.error(e) } finally { setLoading(false) }
+            const [a, l] = await Promise.all([getAgents(), getAgentLogs()])
+            setAgents(a); setLogs(l)
+        } catch (e) { console.error(e) }
+        finally { setLoading(false) }
     }, [])
 
     useEffect(() => {
         fetchData()
-        const interval = setInterval(fetchData, 10000)
-        return () => clearInterval(interval)
+        const i = setInterval(fetchData, 10000)
+        return () => clearInterval(i)
     }, [fetchData])
 
     const handleRunNow = async (id: number) => {
-        setRunningMap(prev => ({ ...prev, [id]: true }))
+        setRunningMap(p => ({ ...p, [id]: true }))
         try { await runAgentNow(id); fetchData() } catch (e) { console.error(e) }
-        finally { setRunningMap(prev => ({ ...prev, [id]: false })) }
+        finally { setRunningMap(p => ({ ...p, [id]: false })) }
     }
-    const toggleAgent = async (agent: Agent) => {
-        try { await updateAgent(agent.id, { is_active: !agent.is_active }); fetchData() } catch (e) { console.error(e) }
-    }
-
-    const getAgentIcon = (role: string) => {
-        switch (role) {
-            case 'inventory_manager': return Package
-            case 'finance_specialist': return Wallet
-            case 'sales_analyst': return LineChart
-            case 'customer_support': return MessageSquare
-            default: return Brain
-        }
+    const toggleAgent = async (a: Agent) => {
+        try { await updateAgent(a.id, { is_active: !a.is_active }); fetchData() } catch (e) { console.error(e) }
     }
 
-    const getStatusInfo = (status: string) => {
-        switch (status) {
-            case 'running': return { color: 'var(--app-success)', label: 'Running' }
-            case 'error': return { color: 'var(--app-error)', label: 'Error' }
-            case 'paused': return { color: 'var(--app-warning)', label: 'Paused' }
-            default: return { color: 'var(--app-info)', label: 'Idle' }
-        }
-    }
+    const activeCount  = agents.filter(a => a.is_active).length
+    const runningCount = agents.filter(a => a.status === 'running').length
+    const errorCount   = agents.filter(a => a.status === 'error').length
 
-    const getLogLevelColor = (level: string) => {
-        switch (level) {
-            case 'error': return 'var(--app-error)'
-            case 'thought': return '#A78BFA'
-            case 'action': return 'var(--app-warning)'
-            case 'decision': return 'var(--app-primary)'
-            default: return 'var(--app-text-muted)'
-        }
-    }
+    const kpis = [
+        { label: 'Agents',  value: agents.length,  icon: <Cpu size={14} />,        color: 'var(--app-primary)' },
+        { label: 'Active',  value: activeCount,    icon: <CheckCircle2 size={14} />, color: 'var(--app-success, #22c55e)' },
+        { label: 'Running', value: runningCount,   icon: <Activity size={14} />,   color: 'var(--app-info, #3b82f6)' },
+        { label: 'Errors',  value: errorCount,     icon: <ShieldAlert size={14} />, color: 'var(--app-error, #ef4444)' },
+        { label: 'Logs',    value: logs.length,    icon: <Terminal size={14} />,   color: '#8b5cf6' },
+    ]
+
+    const filteredLogs = logFilter
+        ? logs.filter(l =>
+            l.message.toLowerCase().includes(logFilter.toLowerCase())
+            || l.agent_name.toLowerCase().includes(logFilter.toLowerCase()))
+        : logs
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* ── Page Header ──────────────────────────────────────── */}
-            <div
-                className="rounded-[28px] p-6 md:p-8"
-                style={{
-                    background: 'linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-2) 100%)',
-                    border: '1px solid var(--app-border)',
-                    boxShadow: 'var(--app-shadow-lg)',
-                }}
-            >
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                    <div className="flex items-center gap-4">
-                        <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--app-primary), var(--app-primary-hover))',
-                                boxShadow: '0 8px 24px var(--app-primary-glow)',
-                            }}
-                        >
-                            <Sparkles className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
-                                Virtual Employees
-                            </h1>
-                            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
-                                {agents.length} autonomous agents · {agents.filter(a => a.is_active).length} active
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button variant="outline" onClick={fetchData}
-                            className="rounded-xl px-4 h-11 font-bold" style={{ borderColor: 'var(--app-border)' }}>
-                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        </Button>
-                        <Button className="rounded-xl px-5 h-11 font-bold text-white"
-                            style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}>
-                            <Cpu className="w-4 h-4 mr-2" />
-                            Hire New Agent
-                        </Button>
-                    </div>
-                </div>
-            </div>
+        <ModulePage>
+            <PageHeader
+                icon={<Sparkles size={20} className="text-white" />}
+                title="Virtual Employees"
+                subtitle={`${agents.length} autonomous agent${agents.length === 1 ? '' : 's'} · ${activeCount} active`}
+                actions={
+                    <>
+                        <GhostButton icon={<RefreshCw size={13} className={loading ? 'animate-spin' : ''} />} label="Refresh" onClick={fetchData} disabled={loading} />
+                        <PrimaryButton icon={<Cpu size={14} />} label="Hire Agent" href="/mcp/agents/new" />
+                    </>
+                }
+            />
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* ── Left: Agent Cards ─────────────────────────────── */}
-                <div className="xl:col-span-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <KPIStrip items={kpis} />
+
+            <div className="flex-1 min-h-0 grid gap-3"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignContent: 'start' }}>
+
+                {/* Agent cards */}
+                <div className="lg:col-span-2 flex flex-col gap-3 min-h-0"
+                    style={{ gridColumn: 'span 2 / span 2' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px' }}>
                         {loading && agents.length === 0 ? (
                             Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-[200px] rounded-[20px] animate-pulse"
-                                    style={{ background: 'var(--app-surface-2)' }} />
+                                <div key={i} className="h-44 rounded-xl animate-pulse"
+                                    style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }} />
                             ))
-                        ) : (
-                            agents.map(agent => {
-                                const Icon = getAgentIcon(agent.role)
-                                const status = getStatusInfo(agent.status)
-                                return (
-                                    <div
-                                        key={agent.id}
-                                        className="rounded-[20px] overflow-hidden transition-all duration-300 hover:translate-y-[-2px] group"
-                                        style={{
-                                            background: 'var(--app-surface)',
-                                            border: '1px solid var(--app-border)',
-                                            boxShadow: 'var(--app-shadow-md)',
-                                        }}
-                                    >
-                                        <div className="p-5">
-                                            {/* Header */}
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                                        style={{ background: 'var(--app-primary-light)' }}>
-                                                        <Icon size={18} style={{ color: 'var(--app-primary)' }} />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-black text-[15px]" style={{ color: 'var(--app-text)' }}>
-                                                            {agent.name}
-                                                        </h3>
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider"
-                                                            style={{ color: 'var(--app-text-muted)' }}>
-                                                            {agent.role_display}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 rounded-full"
-                                                        style={{
-                                                            background: status.color,
-                                                            boxShadow: agent.status === 'running' ? `0 0 8px ${status.color}` : 'none',
-                                                            animation: agent.status === 'running' ? 'pulse 2s infinite' : 'none',
-                                                        }} />
-                                                    <span className="text-[10px] font-bold uppercase"
-                                                        style={{ color: status.color }}>{status.label}</span>
-                                                </div>
+                        ) : agents.length === 0 ? (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <EmptyState icon={<Cpu size={36} />} title="No virtual employees yet"
+                                    description="Hire your first agent to start automating recurring tasks."
+                                    action={<PrimaryButton icon={<Cpu size={13} />} label="Hire Agent" href="/mcp/agents/new" />} />
+                            </div>
+                        ) : agents.map(agent => {
+                            const Icon = AGENT_ICON[agent.role] || Brain
+                            const status = STATUS_META[agent.status] || STATUS_META.idle
+                            return (
+                                <div key={agent.id} className="rounded-xl p-3 transition-all hover:-translate-y-0.5"
+                                    style={{
+                                        background: 'var(--app-surface)',
+                                        border: '1px solid var(--app-border)',
+                                    }}>
+                                    <div className="flex items-start justify-between mb-2 gap-2">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                                                <Icon size={16} />
                                             </div>
-
-                                            <p className="text-xs italic line-clamp-2 mb-3 leading-relaxed"
-                                                style={{ color: 'var(--app-text-muted)' }}>
-                                                &ldquo;{agent.persona}&rdquo;
-                                            </p>
-
-                                            <div className="flex items-center gap-3 mb-4 text-[11px] font-bold"
-                                                style={{ color: 'var(--app-text-muted)' }}>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock size={12} /> {agent.frequency_minutes}m
+                                            <div className="min-w-0">
+                                                <h3 className="text-[13px] font-black text-app-foreground truncate">{agent.name}</h3>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">
+                                                    {agent.role_display}
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Activity size={12} /> {agent.status}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant={agent.is_active ? "outline" : "default"}
-                                                    size="sm"
-                                                    className="flex-1 rounded-xl h-9 font-bold text-xs"
-                                                    style={!agent.is_active ? { background: 'var(--app-primary)', color: '#fff' } : { borderColor: 'var(--app-border)' }}
-                                                    onClick={() => toggleAgent(agent)}
-                                                >
-                                                    {agent.is_active ? <><Pause size={13} className="mr-1.5" /> Pause</> : <><Play size={13} className="mr-1.5" /> Activate</>}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    className="rounded-xl h-9 px-4 font-bold text-xs text-white"
-                                                    style={{ background: 'var(--app-primary)', boxShadow: '0 3px 10px var(--app-primary-glow)' }}
-                                                    onClick={() => handleRunNow(agent.id)}
-                                                    disabled={runningMap[agent.id] || agent.status === 'running'}
-                                                >
-                                                    {runningMap[agent.id] ? <RefreshCw size={13} className="animate-spin" /> : <Zap size={13} />}
-                                                    <span className="ml-1.5 hidden sm:inline">Run</span>
-                                                </Button>
                                             </div>
                                         </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            <span className="w-2 h-2 rounded-full"
+                                                style={{
+                                                    background: status.color,
+                                                    boxShadow: agent.status === 'running' ? `0 0 8px ${status.color}` : 'none',
+                                                    animation: agent.status === 'running' ? 'pulse 2s infinite' : 'none',
+                                                }} />
+                                            <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: status.color }}>
+                                                {status.label}
+                                            </span>
+                                        </div>
                                     </div>
-                                )
-                            })
-                        )}
+
+                                    <p className="text-[11px] italic text-app-muted-foreground line-clamp-2 mb-2 leading-relaxed">
+                                        “{agent.persona}”
+                                    </p>
+
+                                    <div className="flex items-center gap-3 mb-2 text-[10px] font-bold text-app-muted-foreground">
+                                        <span className="flex items-center gap-1"><Clock size={10} /> {agent.frequency_minutes}m</span>
+                                        <span className="flex items-center gap-1"><Activity size={10} /> {agent.status}</span>
+                                    </div>
+
+                                    <div className="flex gap-1.5">
+                                        <button onClick={() => toggleAgent(agent)}
+                                            className="flex-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all flex items-center justify-center gap-1"
+                                            style={{
+                                                borderColor: 'var(--app-border)',
+                                                background: agent.is_active ? 'transparent' : 'var(--app-primary)',
+                                                color: agent.is_active ? 'var(--app-foreground)' : 'white',
+                                            }}>
+                                            {agent.is_active ? <><Pause size={11} /> Pause</> : <><Play size={11} /> Activate</>}
+                                        </button>
+                                        <button onClick={() => handleRunNow(agent.id)}
+                                            disabled={runningMap[agent.id] || agent.status === 'running'}
+                                            className="text-[11px] font-bold bg-app-primary text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:brightness-110 transition-all disabled:opacity-50"
+                                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                            {runningMap[agent.id] ? <RefreshCw size={11} className="animate-spin" /> : <Zap size={11} />}
+                                            <span className="hidden sm:inline">Run</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
 
-                    {/* Permission Scopes */}
-                    <div className="rounded-[20px] overflow-hidden"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-md)' }}>
-                        <div className="p-4" style={{ background: 'var(--app-surface-2)' }}>
-                            <h3 className="text-[11px] font-black uppercase tracking-wider flex items-center gap-2"
-                                style={{ color: 'var(--app-text-muted)' }}>
-                                <ShieldCheck size={14} /> Agent Permission Scopes
-                            </h3>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: '1px solid var(--app-border)' }}>
+                    {/* Permission scopes */}
+                    <SectionCard title="Agent Permission Scopes" icon={<ShieldCheck size={11} />}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }} className="px-1 py-1">
                             {[
-                                { label: 'Read Context', icon: Search, color: 'var(--app-info)' },
-                                { label: 'Tool Execution', icon: Zap, color: 'var(--app-warning)' },
-                                { label: 'Write Access', icon: Sparkles, color: 'var(--app-primary)' },
-                                { label: 'Self Improvement', icon: Brain, color: 'var(--app-success)' },
-                            ].map((item, i) => (
-                                <div key={item.label} className="p-5 flex flex-col items-center gap-2 text-center"
-                                    style={{ borderRight: i < 3 ? '1px solid var(--app-border)' : 'none' }}>
-                                    <item.icon size={20} style={{ color: item.color }} />
-                                    <span className="text-[10px] font-black uppercase" style={{ color: 'var(--app-text-muted)' }}>{item.label}</span>
-                                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md"
-                                        style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
-                                        Authorized
-                                    </span>
+                                { label: 'Read Context',     icon: Search,   color: 'var(--app-info, #3b82f6)' },
+                                { label: 'Tool Execution',   icon: Zap,      color: 'var(--app-warning, #f59e0b)' },
+                                { label: 'Write Access',     icon: Sparkles, color: 'var(--app-primary)' },
+                                { label: 'Self Improvement', icon: Brain,    color: 'var(--app-success, #22c55e)' },
+                            ].map(item => (
+                                <div key={item.label} className="flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-lg"
+                                    style={{ background: 'color-mix(in srgb, var(--app-border) 15%, transparent)' }}>
+                                    <item.icon size={18} style={{ color: item.color }} />
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-app-muted-foreground text-center">{item.label}</span>
+                                    <StatusPill label="Authorized" color={item.color} />
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </SectionCard>
                 </div>
 
-                {/* ── Right: Live Console ───────────────────────────── */}
-                <div className="space-y-4">
-                    <div
-                        className="rounded-[20px] h-[660px] flex flex-col overflow-hidden"
+                {/* Right: Live console */}
+                <div className="flex flex-col gap-3 min-h-0">
+                    <div className="rounded-2xl flex flex-col min-h-0"
                         style={{
-                            background: 'var(--app-surface)',
-                            border: '1px solid var(--app-border)',
-                            boxShadow: 'var(--app-shadow-lg)',
-                        }}
-                    >
-                        <div className="p-4 flex items-center justify-between"
-                            style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
-                            <h3 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2"
-                                style={{ color: 'var(--app-text-muted)' }}>
-                                <Terminal size={14} style={{ color: 'var(--app-primary)' }} />
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            height: '660px',
+                        }}>
+                        <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
+                            style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <Terminal size={11} className="text-app-primary" />
                                 Live Agent Intelligence
                             </h3>
-                            <div className="flex gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--app-error)', opacity: 0.3 }} />
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--app-warning)', opacity: 0.3 }} />
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--app-success)', opacity: 0.3 }} />
+                            <div className="flex gap-1">
+                                <span className="w-2 h-2 rounded-full" style={{ background: 'var(--app-error, #ef4444)', opacity: 0.4 }} />
+                                <span className="w-2 h-2 rounded-full" style={{ background: 'var(--app-warning, #f59e0b)', opacity: 0.4 }} />
+                                <span className="w-2 h-2 rounded-full" style={{ background: 'var(--app-success, #22c55e)', opacity: 0.4 }} />
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto p-4 font-mono text-[11px] space-y-3">
-                            {logs.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center gap-3">
-                                    <Brain className="w-10 h-10 animate-pulse" style={{ color: 'var(--app-text-faint)', opacity: 0.3 }} />
-                                    <p className="text-center text-xs" style={{ color: 'var(--app-text-faint)' }}>
-                                        Waiting for agent activity...
+                        <div className="flex-1 overflow-auto custom-scrollbar p-3 font-mono text-[11px] space-y-2">
+                            {loading && filteredLogs.length === 0 ? (
+                                <Loading />
+                            ) : filteredLogs.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center gap-2">
+                                    <Brain size={32} className="text-app-muted-foreground opacity-30 animate-pulse" />
+                                    <p className="text-[11px] text-app-muted-foreground font-medium">
+                                        {logFilter ? 'No matching logs' : 'Waiting for agent activity…'}
                                     </p>
                                 </div>
                             ) : (
-                                logs.map(log => (
+                                filteredLogs.map(log => (
                                     <div key={log.id} className="animate-in slide-in-from-right duration-300">
                                         <div className="flex items-start gap-2">
-                                            <span style={{ color: 'var(--app-text-faint)', opacity: 0.4 }} className="shrink-0">
+                                            <span className="flex-shrink-0 text-app-muted-foreground opacity-60">
                                                 [{new Date(log.created_at).toLocaleTimeString()}]
                                             </span>
-                                            <span className="shrink-0 font-bold" style={{ color: 'var(--app-primary)' }}>
+                                            <span className="flex-shrink-0 font-bold text-app-primary">
                                                 {log.agent_name} »
                                             </span>
                                             <div className="min-w-0 flex-1 space-y-1">
-                                                <p style={{ color: getLogLevelColor(log.level) }}>{log.message}</p>
+                                                <p style={{ color: LOG_COLOR[log.level] || LOG_COLOR.info }}>{log.message}</p>
                                                 {log.level === 'decision' && (
-                                                    <div className="p-2 rounded-lg" style={{
-                                                        background: 'var(--app-primary-light)',
-                                                        border: '1px solid var(--app-primary)',
-                                                        color: 'var(--app-primary)',
-                                                    }}>
-                                                        <div className="flex items-center gap-1.5 mb-0.5">
-                                                            <CheckCircle2 size={12} />
-                                                            <span className="font-black uppercase tracking-widest text-[8px]">Decision</span>
+                                                    <div className="px-2 py-1.5 rounded-lg flex items-start gap-1.5"
+                                                        style={{
+                                                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                                            border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                                            color: 'var(--app-primary)',
+                                                        }}>
+                                                        <CheckCircle2 size={11} className="mt-0.5 flex-shrink-0" />
+                                                        <div>
+                                                            <div className="font-black uppercase tracking-widest text-[8px] mb-0.5">Decision</div>
+                                                            {log.message}
                                                         </div>
-                                                        {log.message}
                                                     </div>
                                                 )}
                                             </div>
@@ -326,37 +286,42 @@ export default function AgentDashboard() {
                             )}
                         </div>
 
-                        <div className="p-3" style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
-                            <div className="flex items-center gap-3 rounded-xl px-3 py-2"
+                        <div className="p-2 border-t flex-shrink-0"
+                            style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
                                 style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
-                                <Search size={14} style={{ color: 'var(--app-text-faint)' }} />
+                                <Search size={12} className="text-app-muted-foreground" />
                                 <input
-                                    className="bg-transparent border-none text-xs w-full focus:outline-none"
-                                    style={{ color: 'var(--app-text)' }}
-                                    placeholder="Filter logs or query agent..."
+                                    value={logFilter}
+                                    onChange={e => setLogFilter(e.target.value)}
+                                    className="bg-transparent border-none text-[11px] w-full outline-none text-app-foreground placeholder:text-app-muted-foreground"
+                                    placeholder="Filter logs by message or agent…"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Security Banner */}
-                    <div className="p-5 rounded-[20px] flex items-start gap-3"
-                        style={{ background: 'var(--app-warning-light)', border: '1px solid var(--app-warning)' }}>
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: 'var(--app-warning-light)' }}>
-                            <ShieldAlert size={18} style={{ color: 'var(--app-warning)' }} />
+                    {/* Security banner */}
+                    <div className="p-3 rounded-2xl flex items-start gap-2.5 flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)',
+                        }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)' }}>
+                            <ShieldAlert size={15} style={{ color: 'var(--app-warning, #f59e0b)' }} />
                         </div>
                         <div>
-                            <h4 className="font-black text-xs uppercase tracking-tight" style={{ color: 'var(--app-warning)' }}>
+                            <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning, #f59e0b)' }}>
                                 Agent Safeguards Active
                             </h4>
-                            <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: 'var(--app-warning)', opacity: 0.7 }}>
+                            <p className="text-[11px] mt-0.5 leading-relaxed font-medium" style={{ color: 'var(--app-foreground)', opacity: 0.85 }}>
                                 All virtual employees are sandboxed. Data modifications require audit logs and role-based permissions.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </ModulePage>
     )
 }

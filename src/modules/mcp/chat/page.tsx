@@ -2,93 +2,46 @@
 'use client'
 
 /**
- * MCP AI Chat Interface - Enhanced with Charts & Analytics
+ * MCP AI Chat — Analytics Assistant (Dajingo Pro redesign)
  * =========================================================
- * Full AI capabilities: charts, analysis, dynamic interfaces, saved reports.
+ * Charts, analysis, dynamic interfaces, saved reports. Two-pane
+ * laptop+ layout (history sidebar + chat); single column on mobile
+ * per design-language §18.
  */
 
-import { useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useRef, useState } from 'react'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import {
-    ArrowLeft, Send, Bot, User, Loader2, RefreshCw, Plus,
-    MessageSquare, Wrench, Sparkles, AlertCircle, BarChart3,
-    TrendingUp, Save, Download, Lightbulb, Target, FileText
+    ArrowLeft, Send, Bot, User, Loader2, Plus, Wrench, Sparkles,
+    AlertCircle, BarChart3, TrendingUp, Save, Download, Target, FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-    getMCPProviders, getMCPConversations, sendMCPChat
-} from '@/app/actions/saas/mcp'
-import { AIChart, AIInsightCard, AIStrategyCard, parseChartFromResponse } from '@/components/ai/AICharts'
+import { getMCPProviders, getMCPConversations, sendMCPChat } from '@/app/actions/saas/mcp'
+import { AIChart, parseChartFromResponse } from '@/components/ai/AICharts'
+import { ModulePage, PageHeader, EmptyState, Loading, GhostButton, PrimaryButton, StatusPill } from '../_design'
 
 interface Message {
     id: string
-    role: 'user' | 'assistant' | 'tool' | 'chart' | 'insight' | 'strategy'
+    role: 'user' | 'assistant' | 'tool' | 'chart'
     content: string
     data?: Record<string, any>
-    tool_calls?: ToolCall[]
+    tool_calls?: { name: string; arguments: Record<string, any>; result?: string }[]
     timestamp: Date
 }
+interface Provider { id: number; name: string; provider_type: string; model_name: string; is_default: boolean }
+interface Conversation { id: number; title: string; created_at: string; message_count: number }
 
-interface ToolCall {
-    name: string
-    arguments: Record<string, any>
-    result?: string
-}
-
-interface Provider {
-    id: number
-    name: string
-    provider_type: string
-    model_name: string
-    is_default: boolean
-}
-
-interface Conversation {
-    id: number
-    title: string
-    created_at: string
-    message_count: number
-}
-
-// Quick action templates
 const QUICK_ACTIONS = [
-    {
-        label: '📊 Sales Trend',
-        prompt: 'Show me a chart of sales trends for the last 6 months. Include analysis and recommendations.'
-    },
-    {
-        label: '📦 Low Stock Alert',
-        prompt: 'Create a report of products with low stock levels. Show as a chart and suggest reorder strategy.'
-    },
-    {
-        label: '💰 Financial Review',
-        prompt: 'Analyze my financial performance this quarter. Show revenue vs expenses chart and strategic recommendations.'
-    },
-    {
-        label: '👥 Customer Insights',
-        prompt: 'Analyze my top customers and their purchase patterns. Create a pie chart of revenue by customer segment.'
-    },
-    {
-        label: '🎯 Strategy',
-        prompt: 'Based on my current inventory, sales, and financial data, provide 5 strategic recommendations for growth.'
-    },
-    {
-        label: '📈 Forecast',
-        prompt: 'Create a sales forecast for the next 3 months based on historical data. Show as a trend chart.'
-    },
+    { emoji: '📊', label: 'Sales Trend',      prompt: 'Show me a chart of sales trends for the last 6 months. Include analysis and recommendations.' },
+    { emoji: '📦', label: 'Low Stock Alert',  prompt: 'Create a report of products with low stock levels. Show as a chart and suggest reorder strategy.' },
+    { emoji: '💰', label: 'Financial Review', prompt: 'Analyze my financial performance this quarter. Show revenue vs expenses chart and strategic recommendations.' },
+    { emoji: '👥', label: 'Customer Insights', prompt: 'Analyze my top customers and their purchase patterns. Create a pie chart of revenue by customer segment.' },
+    { emoji: '🎯', label: 'Strategy',          prompt: 'Based on my current inventory, sales, and financial data, provide 5 strategic recommendations for growth.' },
+    { emoji: '📈', label: 'Forecast',          prompt: 'Create a sales forecast for the next 3 months based on historical data. Show as a trend chart.' },
 ]
+
+const PROVIDER_LABEL: Record<string, string> = {
+    openai: 'OpenAI', anthropic: 'Claude', google: 'Gemini', azure: 'Azure', ollama: 'Ollama', custom: 'Custom',
+}
 
 export default function MCPChatPage() {
     const [providers, setProviders] = useState<Provider[]>([])
@@ -102,71 +55,33 @@ export default function MCPChatPage() {
     const [showQuickActions, setShowQuickActions] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        loadInitialData()
-    }, [])
-
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
+    useEffect(() => { loadInitialData() }, [])
+    useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
     async function loadInitialData() {
         setLoading(true)
         try {
-            const [providersData, convsData] = await Promise.all([
-                getMCPProviders(),
-                getMCPConversations()
-            ])
-            setProviders(providersData)
-            setConversations(convsData)
-
-            const defaultProvider = providersData.find((p: Provider) => p.is_default)
-            if (defaultProvider) {
-                setSelectedProvider(defaultProvider.id)
-            } else if (providersData.length > 0) {
-                setSelectedProvider(providersData[0].id)
-            }
+            const [pData, cData] = await Promise.all([getMCPProviders(), getMCPConversations()])
+            setProviders(pData); setConversations(cData)
+            const def = pData.find((p: Provider) => p.is_default)
+            if (def) setSelectedProvider(def.id)
+            else if (pData.length) setSelectedProvider(pData[0].id)
         } catch {
             toast.error('Failed to load data')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    function scrollToBottom() {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        } finally { setLoading(false) }
     }
 
     function startNewConversation() {
-        setCurrentConversation(null)
-        setMessages([])
-        setShowQuickActions(true)
-    }
-
-    function handleQuickAction(prompt: string) {
-        setInput(prompt)
-        setShowQuickActions(false)
+        setCurrentConversation(null); setMessages([]); setShowQuickActions(true)
     }
 
     async function handleSend() {
-        if (!input.trim() || !selectedProvider) return
-        if (sending) return
-
+        if (!input.trim() || !selectedProvider || sending) return
         setShowQuickActions(false)
-
-        const userMessage: Message = {
-            id: `user-${Date.now()}`,
-            role: 'user',
-            content: input.trim(),
-            timestamp: new Date()
-        }
-
-        setMessages(prev => [...prev, userMessage])
-        setInput('')
-        setSending(true)
+        const userMessage: Message = { id: `user-${Date.now()}`, role: 'user', content: input.trim(), timestamp: new Date() }
+        setMessages(p => [...p, userMessage]); setInput(''); setSending(true)
 
         try {
-            // Enhanced system prompt for analytics
             const enhancedPrompt = `${userMessage.content}
 
 IMPORTANT: When providing data analysis:
@@ -174,401 +89,270 @@ IMPORTANT: When providing data analysis:
    \`\`\`chart
    {"type": "bar|line|pie|area", "title": "Chart Title", "data": [...], "xKey": "name", "yKeys": ["value"]}
    \`\`\`
-
 2. If providing insights, format them as:
    **Key Insight:** [insight title]
    - [detail]
-
-3. If making strategic recommendations, format as numbered list with:
-   - Priority (High/Medium/Low)
-   - Action item
-   - Expected impact
-   - Timeline
-
+3. If making strategic recommendations, format as numbered list with priority, action, impact, timeline.
 Always be specific with numbers and actionable recommendations.`
 
             const response = await sendMCPChat({
-                message: enhancedPrompt,
-                provider_id: selectedProvider,
-                conversation_id: currentConversation || undefined,
-                include_tools: true
+                message: enhancedPrompt, provider_id: selectedProvider,
+                conversation_id: currentConversation || undefined, include_tools: true,
             })
+            if (!response.success) throw new Error(response.error || 'Failed to get response')
+            if (response.conversation_id && !currentConversation) setCurrentConversation(response.conversation_id)
 
-            if (!response.success) {
-                throw new Error(response.error || 'Failed to get response')
+            if (response.tool_calls?.length) {
+                setMessages(p => [...p, { id: `tool-${Date.now()}`, role: 'tool', content: 'Executed tools', tool_calls: response.tool_calls, timestamp: new Date() }])
             }
-
-            if (response.conversation_id && !currentConversation) {
-                setCurrentConversation(response.conversation_id)
-            }
-
-            // Add tool calls if any
-            if (response.tool_calls && response.tool_calls.length > 0) {
-                const toolMessage: Message = {
-                    id: `tool-${Date.now()}`,
-                    role: 'tool',
-                    content: 'Executed tools',
-                    tool_calls: response.tool_calls,
-                    timestamp: new Date()
-                }
-                setMessages(prev => [...prev, toolMessage])
-            }
-
-            // Parse response for charts
             const chartData = parseChartFromResponse(response.content || '')
             if (chartData) {
-                const chartMessage: Message = {
-                    id: `chart-${Date.now()}`,
-                    role: 'chart',
-                    content: 'Generated visualization',
-                    data: chartData,
-                    timestamp: new Date()
-                }
-                setMessages(prev => [...prev, chartMessage])
+                setMessages(p => [...p, { id: `chart-${Date.now()}`, role: 'chart', content: 'Generated visualization', data: chartData, timestamp: new Date() }])
             }
+            setMessages(p => [...p, { id: `assistant-${Date.now()}`, role: 'assistant', content: response.content || 'No response', timestamp: new Date() }])
 
-            // Add assistant response
-            const assistantMessage: Message = {
-                id: `assistant-${Date.now()}`,
-                role: 'assistant',
-                content: response.content || 'No response',
-                timestamp: new Date()
-            }
-            setMessages(prev => [...prev, assistantMessage])
-
-            // Refresh conversations
-            const convsData = await getMCPConversations()
-            setConversations(convsData)
-
+            const cData = await getMCPConversations(); setConversations(cData)
         } catch (e: unknown) {
-            toast.error((e instanceof Error ? e.message : String(e)))
-            setMessages(prev => prev.filter(m => m.id !== userMessage.id))
-        } finally {
-            setSending(false)
-        }
+            toast.error(e instanceof Error ? e.message : String(e))
+            setMessages(p => p.filter(m => m.id !== userMessage.id))
+        } finally { setSending(false) }
     }
 
     function handleKeyDown(e: React.KeyboardEvent) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            handleSend()
-        }
-    }
-
-    async function handleSaveReport() {
-        // TODO: Implement saving conversation as report
-        toast.success('Report saved to your documents')
-    }
-
-    async function handleExport() {
-        // TODO: Implement export to PDF/Excel
-        toast.info('Export feature coming soon')
-    }
-
-    const getProviderLabel = (type: string) => {
-        const labels: Record<string, string> = {
-            openai: 'OpenAI',
-            anthropic: 'Claude',
-            google: 'Gemini',
-            azure: 'Azure',
-            ollama: 'Ollama',
-            custom: 'Custom'
-        }
-        return labels[type] || type
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
     }
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-[80vh]">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-            </div>
-        )
+        return (<ModulePage><Loading /></ModulePage>)
     }
 
     if (providers.length === 0) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-medium">
-                    <ArrowLeft size={16} />
-                    Back to MCP Dashboard
-                </Link>
-
-                <Card className="rounded-3xl shadow-xl border-gray-100">
-                    <CardContent className="p-12 text-center">
-                        <AlertCircle className="w-16 h-16 mx-auto mb-4 text-amber-500" />
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">No AI Providers Configured</h2>
-                        <p className="text-gray-500 mb-6">
-                            Configure an AI provider to unlock full analytics capabilities.
-                        </p>
-                        <Link href="/mcp/providers">
-                            <Button className="bg-purple-600 hover:bg-purple-500">
-                                <Plus size={16} />
-                                Add AI Provider
-                            </Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-            </div>
+            <ModulePage>
+                <PageHeader icon={<Sparkles size={20} className="text-white" />}
+                    title="AI Analytics Assistant"
+                    subtitle="No provider configured yet"
+                    actions={<GhostButton icon={<ArrowLeft size={13} />} label="Back" href="/mcp" />} />
+                <div className="flex-1 flex items-center justify-center">
+                    <EmptyState
+                        icon={<AlertCircle size={42} style={{ color: 'var(--app-warning, #f59e0b)' }} />}
+                        title="No AI Providers Configured"
+                        description="Configure an AI provider to unlock chat, analytics and the scope-suggester wizards."
+                        action={<PrimaryButton icon={<Plus size={13} />} label="Add AI Provider" href="/mcp/providers/new" />} />
+                </div>
+            </ModulePage>
         )
     }
 
     return (
-        <div className="h-[calc(100vh-120px)] flex flex-col animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600">
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-900">AI Analytics Assistant</h1>
-                            <p className="text-xs text-gray-500">Charts • Analysis • Strategy</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Select
-                        value={selectedProvider?.toString()}
-                        onValueChange={(v) => setSelectedProvider(parseInt(v))}
-                    >
-                        <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Select provider" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {providers.map((p) => (
-                                <SelectItem key={p.id} value={p.id.toString()}>
-                                    {p.name} ({getProviderLabel(p.provider_type)})
-                                </SelectItem>
+        <ModulePage>
+            <PageHeader
+                icon={<Sparkles size={20} className="text-white" />}
+                title="AI Analytics Assistant"
+                subtitle="Charts · Analysis · Strategy · Forecasts"
+                actions={
+                    <>
+                        <GhostButton icon={<ArrowLeft size={13} />} label="Back" href="/mcp" />
+                        {/* Provider selector */}
+                        <select value={selectedProvider ?? ''}
+                            onChange={e => setSelectedProvider(parseInt(e.target.value))}
+                            className="text-[11px] font-bold px-2.5 py-1.5 bg-app-surface border border-app-border rounded-xl text-app-foreground outline-none focus:border-app-primary">
+                            {providers.map(p => (
+                                <option key={p.id} value={p.id}>{p.name} ({PROVIDER_LABEL[p.provider_type] || p.provider_type})</option>
                             ))}
-                        </SelectContent>
-                    </Select>
+                        </select>
+                        {messages.length > 0 && (
+                            <>
+                                <GhostButton icon={<Save size={13} />} label="Save" onClick={() => toast.success('Report saved')} />
+                                <GhostButton icon={<Download size={13} />} label="Export" onClick={() => toast.info('Coming soon')} />
+                            </>
+                        )}
+                        <PrimaryButton icon={<Plus size={14} />} label="New Chat" onClick={startNewConversation} />
+                    </>
+                }
+            />
 
-                    {messages.length > 0 && (
-                        <>
-                            <Button variant="outline" size="sm" onClick={handleSaveReport}>
-                                <Save size={14} />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={handleExport}>
-                                <Download size={14} />
-                            </Button>
-                        </>
-                    )}
+            <div className="flex-1 min-h-0 flex gap-3">
+                {/* History sidebar — hidden on mobile */}
+                <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 rounded-2xl"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    }}>
+                    <div className="px-3 py-2 border-b flex-shrink-0"
+                        style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                            Recent Analysis
+                        </h3>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5">
+                        {conversations.length === 0 ? (
+                            <p className="text-[11px] text-app-muted-foreground text-center py-6 font-medium">No conversations yet</p>
+                        ) : (
+                            <ul className="space-y-1">
+                                {conversations.slice(0, 12).map(c => {
+                                    const active = currentConversation === c.id
+                                    return (
+                                        <li key={c.id}>
+                                            <button onClick={() => setCurrentConversation(c.id)}
+                                                className="w-full text-left px-2 py-1.5 rounded-lg transition-all"
+                                                style={{
+                                                    background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                                    color: active ? 'var(--app-primary)' : 'var(--app-foreground)',
+                                                }}>
+                                                <div className="flex items-center gap-1.5">
+                                                    <BarChart3 size={11} className="flex-shrink-0" />
+                                                    <span className="text-[12px] font-bold truncate">{c.title || 'Analysis'}</span>
+                                                </div>
+                                                <p className="text-[10px] text-app-muted-foreground tabular-nums mt-0.5">{c.message_count} messages</p>
+                                            </button>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        )}
+                    </div>
+                </aside>
 
-                    <Button
-                        variant="outline"
-                        onClick={startNewConversation}
-                        className="rounded-xl"
-                    >
-                        <Plus size={16} />
-                        New
-                    </Button>
-                </div>
-            </div>
-
-            {/* Main Chat Area */}
-            <div className="flex-1 flex gap-4 min-h-0">
-                {/* Sidebar - Conversations */}
-                <div className="w-64 flex-shrink-0 hidden lg:block">
-                    <Card className="h-full rounded-2xl shadow-lg border-gray-100">
-                        <CardContent className="p-3 h-full overflow-y-auto">
-                            <p className="text-xs font-semibold text-gray-400 uppercase mb-2 px-2">
-                                Recent Analysis
-                            </p>
-
-                            {conversations.length === 0 ? (
-                                <p className="text-sm text-gray-400 text-center py-8">
-                                    No conversations yet
-                                </p>
-                            ) : (
-                                <div className="space-y-1">
-                                    {conversations.slice(0, 10).map((conv) => (
-                                        <button
-                                            key={conv.id}
-                                            onClick={() => setCurrentConversation(conv.id)}
-                                            className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${currentConversation === conv.id
-                                                ? 'bg-purple-100 text-purple-700'
-                                                : 'hover:bg-gray-100 text-gray-700'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <BarChart3 size={14} />
-                                                <span className="truncate">{conv.title || 'Analysis'}</span>
-                                            </div>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {conv.message_count} messages
-                                            </p>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Chat Messages */}
-                <Card className="flex-1 rounded-2xl shadow-lg border-gray-100 flex flex-col min-h-0">
-                    <CardContent className="flex-1 p-4 overflow-y-auto">
+                {/* Chat panel */}
+                <div className="flex-1 min-w-0 rounded-2xl flex flex-col"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    }}>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
                         {messages.length === 0 && showQuickActions ? (
                             <div className="h-full flex flex-col items-center justify-center">
-                                <div className="text-center mb-8">
-                                    <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 inline-block mb-4">
-                                        <Sparkles className="w-12 h-12 text-purple-600" />
+                                <div className="text-center mb-6">
+                                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 mx-auto"
+                                        style={{
+                                            background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                                            color: 'var(--app-primary)',
+                                        }}>
+                                        <Sparkles size={28} />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Business Analytics</h2>
-                                    <p className="text-gray-500 max-w-md">
-                                        Get instant charts, data analysis, and strategic recommendations powered by AI
+                                    <h2 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">AI Business Analytics</h2>
+                                    <p className="text-[12px] text-app-muted-foreground mt-1 max-w-md font-medium">
+                                        Get instant charts, data analysis, and strategic recommendations powered by AI.
                                     </p>
                                 </div>
-
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl">
-                                    {QUICK_ACTIONS.map((action, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => handleQuickAction(action.prompt)}
-                                            className="p-4 bg-white border border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all text-left group"
-                                        >
-                                            <span className="text-lg">{action.label.split(' ')[0]}</span>
-                                            <p className="text-sm font-medium text-gray-700 group-hover:text-purple-700 mt-1">
-                                                {action.label.split(' ').slice(1).join(' ')}
-                                            </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}
+                                    className="w-full max-w-2xl">
+                                    {QUICK_ACTIONS.map((a, i) => (
+                                        <button key={i} onClick={() => { setInput(a.prompt); setShowQuickActions(false) }}
+                                            className="p-3 rounded-xl border text-left transition-all hover:bg-app-surface group"
+                                            style={{
+                                                background: 'var(--app-surface)',
+                                                borderColor: 'var(--app-border)',
+                                            }}>
+                                            <div className="text-lg">{a.emoji}</div>
+                                            <p className="text-[12px] font-bold text-app-foreground mt-1 group-hover:text-app-primary transition-colors">{a.label}</p>
                                         </button>
                                     ))}
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {messages.map((msg) => (
+                                {messages.map(msg => (
                                     <div key={msg.id}>
-                                        {/* Chart messages */}
                                         {msg.role === 'chart' && msg.data && (
-                                            <div className="my-4">
-                                                <AIChart chart={msg.data} />
-                                            </div>
+                                            <div className="my-3"><AIChart chart={msg.data} /></div>
                                         )}
-
-                                        {/* Regular messages */}
                                         {msg.role !== 'chart' && (
-                                            <div className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'
-                                                }`}>
+                                            <div className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                                 {msg.role !== 'user' && (
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'assistant'
-                                                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
-                                                        : 'bg-blue-100 text-blue-600'
-                                                        }`}>
-                                                        {msg.role === 'assistant' ? <Bot size={16} /> : <Wrench size={14} />}
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                                        style={{
+                                                            background: msg.role === 'assistant'
+                                                                ? 'var(--app-primary)'
+                                                                : 'color-mix(in srgb, var(--app-info, #3b82f6) 15%, transparent)',
+                                                            color: msg.role === 'assistant' ? 'white' : 'var(--app-info, #3b82f6)',
+                                                        }}>
+                                                        {msg.role === 'assistant' ? <Bot size={14} /> : <Wrench size={13} />}
                                                     </div>
                                                 )}
-
-                                                <div className={`max-w-[70%] ${msg.role === 'user'
-                                                    ? 'bg-purple-600 text-white rounded-2xl rounded-br-md px-4 py-3'
-                                                    : msg.role === 'tool'
-                                                        ? 'bg-blue-50 text-blue-800 rounded-2xl px-4 py-3'
-                                                        : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3'
-                                                    }`}>
+                                                <div className="max-w-[75%] px-3 py-2 rounded-2xl text-[12px] font-medium whitespace-pre-wrap"
+                                                    style={
+                                                        msg.role === 'user'
+                                                            ? { background: 'var(--app-primary)', color: 'white', borderBottomRightRadius: '6px' }
+                                                            : msg.role === 'tool'
+                                                                ? { background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)', color: 'var(--app-info, #3b82f6)', borderBottomLeftRadius: '6px' }
+                                                                : { background: 'color-mix(in srgb, var(--app-border) 25%, transparent)', color: 'var(--app-foreground)', borderBottomLeftRadius: '6px' }
+                                                    }>
                                                     {msg.role === 'tool' && msg.tool_calls ? (
-                                                        <div className="space-y-2">
-                                                            <p className="text-xs font-medium text-blue-600 flex items-center gap-1">
-                                                                <Wrench size={12} />
-                                                                Querying your data...
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[11px] font-bold flex items-center gap-1">
+                                                                <Wrench size={11} /> Querying your data…
                                                             </p>
                                                             {msg.tool_calls.map((tc, i) => (
-                                                                <div key={i} className="text-sm">
-                                                                    <code className="bg-blue-100 px-2 py-0.5 rounded text-xs">
-                                                                        {tc.name}
-                                                                    </code>
-                                                                </div>
+                                                                <code key={i} className="block text-[11px] font-mono px-2 py-0.5 rounded"
+                                                                    style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)' }}>
+                                                                    {tc.name}
+                                                                </code>
                                                             ))}
                                                         </div>
-                                                    ) : (
-                                                        <div className="text-sm whitespace-pre-wrap prose prose-sm max-w-none">
-                                                            {msg.content}
-                                                        </div>
-                                                    )}
+                                                    ) : msg.content}
                                                 </div>
-
                                                 {msg.role === 'user' && (
-                                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                                                        <User size={16} className="text-gray-600" />
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                        <User size={14} />
                                                     </div>
                                                 )}
                                             </div>
                                         )}
                                     </div>
                                 ))}
-
                                 {sending && (
-                                    <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                                            <Loader2 size={16} className="animate-spin text-white" />
+                                    <div className="flex gap-2">
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                                            style={{ background: 'var(--app-primary)' }}>
+                                            <Loader2 size={14} className="animate-spin text-white" />
                                         </div>
-                                        <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
-                                            <p className="text-sm text-gray-500 flex items-center gap-2">
-                                                <span className="animate-pulse">Analyzing your data...</span>
-                                            </p>
+                                        <div className="px-3 py-2 rounded-2xl text-[12px] font-medium animate-pulse"
+                                            style={{ background: 'color-mix(in srgb, var(--app-border) 25%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                            Analyzing your data…
                                         </div>
                                     </div>
                                 )}
-
                                 <div ref={messagesEndRef} />
                             </div>
                         )}
-                    </CardContent>
+                    </div>
 
-                    {/* Input Area */}
-                    <div className="p-4 border-t border-gray-100">
-                        <div className="flex gap-3">
-                            <Textarea
+                    {/* Input area */}
+                    <div className="p-3 border-t flex-shrink-0"
+                        style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                        <div className="flex gap-2 items-end">
+                            <textarea
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={e => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Ask for analysis, charts, forecasts, or strategic recommendations..."
-                                className="flex-1 min-h-[44px] max-h-32 rounded-xl bg-gray-50 border-gray-200 resize-none"
-                                disabled={sending}
+                                placeholder="Ask for analysis, charts, forecasts, or strategic recommendations…"
                                 rows={1}
+                                disabled={sending}
+                                className="flex-1 min-h-[40px] max-h-32 text-[12px] md:text-[13px] font-medium px-3 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary resize-none custom-scrollbar"
                             />
-                            <Button
-                                onClick={handleSend}
-                                disabled={!input.trim() || sending}
-                                className="rounded-xl bg-purple-600 hover:bg-purple-500 px-6 self-end"
-                            >
-                                {sending ? (
-                                    <Loader2 size={18} className="animate-spin" />
-                                ) : (
-                                    <Send size={18} />
-                                )}
-                            </Button>
+                            <button onClick={handleSend} disabled={!input.trim() || sending}
+                                className="text-[11px] font-bold bg-app-primary text-white px-4 py-2.5 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
+                                style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                            </button>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                            <div className="flex gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                    <BarChart3 size={10} className="mr-1" />
-                                    Charts
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                    <TrendingUp size={10} className="mr-1" />
-                                    Trends
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                    <Target size={10} className="mr-1" />
-                                    Strategy
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                    <FileText size={10} className="mr-1" />
-                                    Reports
-                                </Badge>
+                        <div className="flex items-center justify-between mt-2 flex-wrap gap-1.5">
+                            <div className="flex gap-1 flex-wrap">
+                                <StatusPill label="Charts"   color="var(--app-info, #3b82f6)"    icon={<BarChart3 size={9} />} />
+                                <StatusPill label="Trends"   color="var(--app-success, #22c55e)" icon={<TrendingUp size={9} />} />
+                                <StatusPill label="Strategy" color="var(--app-warning, #f59e0b)" icon={<Target size={9} />} />
+                                <StatusPill label="Reports"  color="#8b5cf6"                     icon={<FileText size={9} />} />
                             </div>
-                            <p className="text-xs text-gray-400">
-                                Press Enter to send
+                            <p className="text-[10px] text-app-muted-foreground font-medium">
+                                <kbd className="px-1.5 py-0.5 rounded border border-app-border text-[9px] font-mono">Enter</kbd> to send · <kbd className="px-1.5 py-0.5 rounded border border-app-border text-[9px] font-mono">Shift+Enter</kbd> for newline
                             </p>
                         </div>
                     </div>
-                </Card>
+                </div>
             </div>
-        </div>
+        </ModulePage>
     )
 }
