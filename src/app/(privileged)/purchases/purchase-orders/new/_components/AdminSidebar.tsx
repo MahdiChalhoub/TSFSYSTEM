@@ -18,6 +18,13 @@ type Props = {
      *  used to scope non-admin users to their assigned branch (currently
      *  `currentUser.home_site`). `null` = no filter (org-wide access). */
     allowedSiteIds?: number[] | null
+    /** True when the workspace dropdown has a branch selected — the
+     *  sidebar then shows Site as a read-only display instead of a
+     *  picker, since the workspace already owns that decision. */
+    siteLockedByTopbar?: boolean
+    /** True when the workspace also has a location pinned — locks
+     *  the Warehouse field too. */
+    warehouseLockedByTopbar?: boolean
     supplierId: number | ''
     onSupplierChange: (id: number | '') => void
     siteId: number | ''
@@ -79,6 +86,8 @@ const FIRM_DIVIDER = 'color-mix(in srgb, var(--app-border) 60%, transparent)'
 export function AdminSidebar({
     suppliers, sites, users,
     allowedSiteIds = null,
+    siteLockedByTopbar = false,
+    warehouseLockedByTopbar = false,
     supplierId, onSupplierChange,
     siteId, onSiteChange,
     warehouseId, onWarehouseChange,
@@ -366,15 +375,45 @@ export function AdminSidebar({
                 <Step n={3} title="Fulfillment" icon={<MapPin size={12} />}
                       done={stepDone.node} required
                       summary={siteName && warehouseName ? `${siteName} → ${warehouseName}` : undefined}>
-                    <SearchableDropdown
-                        label="Site"
-                        value={siteId === '' ? '' : String(siteId)}
-                        onChange={v => { onSiteChange(v === '' ? '' : Number(v)); onWarehouseChange('') }}
-                        options={siteOptions}
-                        placeholder="Search site…"
-                    />
+                    {/* Site — locked to the workspace selection when set, so
+                        the operator doesn't have a second control showing
+                        a different value than the top-bar dropdown. */}
+                    {siteLockedByTopbar ? (
+                        <>
+                            <label className={labelCls}>Site</label>
+                            <div className={fieldBase + ' flex items-center gap-2 cursor-default'}
+                                 style={{ ...fieldStyle, background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-bg))' }}
+                                 title="Controlled by the workspace dropdown — change it from the top bar to switch branch.">
+                                <MapPin size={11} style={{ color: 'var(--app-primary)' }} />
+                                <span className="flex-1 truncate">{siteName || '—'}</span>
+                                <Lock size={10} className="text-app-muted-foreground/70" />
+                            </div>
+                            <p className="text-tp-xxs font-medium text-app-muted-foreground/70 mt-1">
+                                Set in workspace
+                            </p>
+                        </>
+                    ) : (
+                        <SearchableDropdown
+                            label="Site"
+                            value={siteId === '' ? '' : String(siteId)}
+                            onChange={v => { onSiteChange(v === '' ? '' : Number(v)); onWarehouseChange('') }}
+                            options={siteOptions}
+                            placeholder="Search site…"
+                        />
+                    )}
                     <div className="mt-2">
-                        {!siteId ? (
+                        {warehouseLockedByTopbar ? (
+                            <>
+                                <label className={labelCls}>Warehouse</label>
+                                <div className={fieldBase + ' flex items-center gap-2 cursor-default'}
+                                     style={{ ...fieldStyle, background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-bg))' }}
+                                     title="Controlled by the workspace dropdown.">
+                                    <Warehouse size={11} style={{ color: 'var(--app-primary)' }} />
+                                    <span className="flex-1 truncate">{warehouseName || '—'}</span>
+                                    <Lock size={10} className="text-app-muted-foreground/70" />
+                                </div>
+                            </>
+                        ) : !siteId ? (
                             <>
                                 <label className={labelCls}>Warehouse</label>
                                 <div className={fieldBase + ' opacity-60 flex items-center gap-2'} style={fieldStyle}>

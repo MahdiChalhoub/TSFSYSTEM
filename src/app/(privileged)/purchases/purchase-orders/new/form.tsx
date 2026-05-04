@@ -194,25 +194,27 @@ export default function PurchaseForm({
         return topbarBranchId && topbarLocationId ? topbarLocationId : ''
     })
 
-    // ── One-shot top-bar hydration ───────────────────────────────────
-    // BranchProvider reads localStorage in a useEffect, so on first
-    // render `topbarBranchId` is null. The lazy useState above runs once
-    // at mount and locks in that null value. This effect re-seeds the
-    // picker when the provider finishes hydrating — but only if the
-    // user hasn't picked anything yet (selectedSiteId === '') and we're
-    // on a fresh form (not edit, no recovered draft). The `seeded` ref
-    // makes sure later top-bar changes don't blow away the operator's
-    // explicit picks.
-    const topbarSeeded = useRef(false)
+    // ── Continuous top-bar sync ──────────────────────────────────────
+    // The workspace dropdown is the single source of truth for which
+    // branch/location the operator is working in. Mirror it into the
+    // form's Site / Warehouse state whenever it changes — no "one-shot"
+    // guard. When the workspace is set, the picker in the sidebar is
+    // also rendered read-only (see `siteLockedByTopbar` below) so the
+    // operator doesn't get a confusing second control with a different
+    // value. The picker re-enables itself when the workspace returns
+    // to "All Branches".
     useEffect(() => {
         if (isEdit) return
-        if (topbarSeeded.current) return
-        if (topbarBranchId === null) return
-        if (selectedSiteId !== '') return // user already has something
-        topbarSeeded.current = true
+        if (topbarBranchId === null) return // "All Branches" — leave the picker free
         setSelectedSiteId(topbarBranchId)
-        if (topbarLocationId !== null) setWarehouseId(topbarLocationId)
-    }, [isEdit, topbarBranchId, topbarLocationId, selectedSiteId])
+        // If the workspace also pinned a specific location, mirror that.
+        // If not (location === null), clear so the operator picks a
+        // warehouse under the workspace branch via the dropdown.
+        setWarehouseId(topbarLocationId ?? '')
+    }, [isEdit, topbarBranchId, topbarLocationId])
+
+    const siteLockedByTopbar = !isEdit && topbarBranchId !== null
+    const warehouseLockedByTopbar = !isEdit && topbarBranchId !== null && topbarLocationId !== null
     const [assigneeId, setAssigneeId] = useState<number | ''>(() =>
         isEdit ? seedNumber(initialPO?.assignee?.id ?? initialPO?.assignee ?? initialPO?.assignee_id) : ''
     )
@@ -985,6 +987,8 @@ export default function PurchaseForm({
                              <AdminSidebar
                                 suppliers={suppliers} sites={sites} users={users}
                                 allowedSiteIds={allowedSiteIds}
+                                siteLockedByTopbar={siteLockedByTopbar}
+                                warehouseLockedByTopbar={warehouseLockedByTopbar}
                                 supplierId={supplierId} onSupplierChange={setSupplierId}
                                 siteId={selectedSiteId} onSiteChange={setSelectedSiteId}
                                 warehouseId={warehouseId} onWarehouseChange={setWarehouseId}

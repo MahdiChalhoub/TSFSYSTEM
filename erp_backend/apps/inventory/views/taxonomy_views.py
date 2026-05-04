@@ -1177,6 +1177,44 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
         return Response({'status': 'unlinked', 'brand_id': brand.id, 'attribute_id': int(aid)})
 
     @action(detail=True, methods=['get'])
+    def suggested_attribute_groups(self, request, pk=None):
+        """Root attribute groups the brand's products carry but the
+        brand isn't M2M-linked to yet. Powers the "Suggested" pills
+        in the side-panel Attributes tab so the user can one-click
+        link the dimensions their products already use.
+        """
+        brand, organization, err = self._get_brand_or_404(pk)
+        if err: return err
+        # Roots reached through the products' attribute_values M2M.
+        # Two paths: leaves used (parent_id) and roots directly used.
+        moving_qs = Product.objects.filter(brand=brand, organization=organization)
+        from apps.inventory.models import ProductAttribute
+        leaf_pairs = (
+            ProductAttribute.objects
+                .filter(products_with_attribute__in=moving_qs)
+                .exclude(parent__isnull=True)
+                .values_list('id', 'parent_id')
+                .distinct()
+        )
+        roots_via_leaves = {root for _, root in leaf_pairs}
+        roots_direct = set(
+            ProductAttribute.objects
+                .filter(products_with_attribute__in=moving_qs, parent__isnull=True)
+                .values_list('id', flat=True)
+                .distinct()
+        )
+        root_ids = roots_via_leaves | roots_direct
+        already_linked = set(brand.attributes.values_list('id', flat=True))
+        suggested_ids = root_ids - already_linked
+        rows = list(
+            ProductAttribute.objects
+                .filter(id__in=suggested_ids, parent__isnull=True, organization=organization)
+                .values('id', 'name', 'code')
+                .order_by('name')
+        )
+        return Response({'results': rows, 'count': len(rows)})
+
+    @action(detail=True, methods=['get'])
     def hierarchy(self, request, pk=None):
         organization, err = _get_org_or_400()
         if err: return err
