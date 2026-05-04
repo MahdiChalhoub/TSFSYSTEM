@@ -656,6 +656,43 @@ DEFAULT_TOOLS = [
         },
         'required_permissions': ['crm.view']
     },
+    {
+        # Lets a chat-with-data agent surface attribute-scope health.
+        # Phase 6 of the multi-dim attribute scoping feature: agents on
+        # /agents can call this tool to fetch the AI-ranked scope
+        # suggestions for the current org and reply with a summary
+        # ("3 high-confidence accepts pending, 1 partial, 0 rejects").
+        'name': 'analyze_attribute_scope_suggestions',
+        'description': (
+            'Return the current attribute-value scope suggestions for the '
+            'organization, optionally enriched with AI confidence and '
+            'rationale per suggestion. Use this to answer questions like '
+            '"which attribute values need scoping" or "summarize data '
+            'quality of my attribute taxonomy".'
+        ),
+        'category': 'inventory',
+        'internal_endpoint': 'inventory/product-attributes/scope-suggestions/',
+        'http_method': 'GET',
+        'parameters_schema': {
+            'type': 'object',
+            'properties': {
+                'ai': {
+                    'type': 'string',
+                    'enum': ['0', '1'],
+                    'description': '1 = include AI confidence + rationale (uses tokens). 0 = deterministic only.',
+                },
+                'value_ids': {
+                    'type': 'string',
+                    'description': 'Optional comma-separated value IDs to scope the analysis.',
+                },
+                'ai_top_n': {
+                    'type': 'integer',
+                    'description': 'Cap on number of suggestions to AI-rank (default 30, max 100).',
+                },
+            }
+        },
+        'required_permissions': ['inventory.view']
+    },
 ]
 
 

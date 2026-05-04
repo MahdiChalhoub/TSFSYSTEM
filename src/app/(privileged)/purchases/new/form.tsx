@@ -578,19 +578,20 @@ export default function PurchaseForm({
                                 style={{ fontSize: 'var(--tp-lg)' }}
                                 title={isEdit
                                     ? `Edit PO ${reference || `#${editId}`}`
-                                    : isQuick ? 'Quick Purchase' : 'New Purchase Order'}>
+                                    : isQuick ? 'New Purchase Invoice' : 'New Purchase Order'}>
                                 {isEdit
                                     ? `Edit PO ${reference || `#${editId}`}`
-                                    : isQuick ? 'Quick Purchase' : 'New Purchase Order'}
+                                    : isQuick ? 'New Purchase Invoice' : 'New Purchase Order'}
                             </h1>
-                            {/* Quick-purchase banner — surfaces what's about to happen.
-                                Quick mode posts the full journal in one shot (no
-                                separate GRN/Invoice steps) so the user shouldn't
-                                use it for a paper-trail PO workflow. */}
+                            {/* Invoice-mode banner — the user is about to BOOK an
+                                invoice (not just a paper PO). Make the GL impact
+                                obvious so it doesn't surprise an operator who
+                                meant to use the PO entry point. */}
                             {isQuick && (
-                                <div className="mt-1 text-tp-xxs font-bold uppercase tracking-wider"
+                                <div className="mt-1 text-tp-xxs font-bold uppercase tracking-wider flex items-center gap-2"
                                     style={{ color: 'var(--app-warning, #f59e0b)' }}>
-                                    Posts inventory + AP + VAT immediately · no separate Receive/Invoice steps
+                                    <span>📋 Posts AP + VAT input + stock receipt on save</span>
+                                    <span className="opacity-70">· for the PO workflow use New Purchase Order</span>
                                 </div>
                             )}
                             {/* Subtitle is conditional:

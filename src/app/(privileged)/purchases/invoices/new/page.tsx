@@ -1,14 +1,18 @@
 /**
- * Quick Purchase
- * ==============
- * Cash-and-carry style purchase: PO + GRN + Invoice posted in one shot
- * via the legacy `quick_purchase` backend endpoint. No DRAFT lifecycle,
- * no separate receive step — the journal vouchers (AP / VAT input /
- * inventory receipt) all post the moment the form is saved.
+ * New Purchase Invoice — direct-entry path
+ * ========================================
+ * Books a complete purchase invoice in one step: stock receipt, AP entry,
+ * VAT input, and (optional) immediate payment all posted via the
+ * `quick_purchase` backend endpoint.
  *
- * For the formal PO workflow (DRAFT → SUBMITTED → … → RECEIVED → INVOICED)
- * use /purchases/new instead. The two pages share the same form
- * component; the only difference is the submit action.
+ * Use this when the supplier delivers goods + invoice at the same moment
+ * (cash-and-carry, walk-in supplier, urgent restock) and there's no
+ * paper-trail need for an approval chain.
+ *
+ * For the multi-step workflow (PO → Approve → Order → Receive → Invoice)
+ * use /purchases/new (the Purchase Order entry point) and follow the
+ * lifecycle through to INVOICED. Both endpoints write to the same Postgres
+ * tables — this one just collapses the timeline.
  */
 import { erpFetch } from '@/lib/erp-api';
 import { getContactsByType } from '@/app/actions/crm/contacts';
@@ -16,7 +20,8 @@ import { getFinancialSettings } from '@/app/actions/finance/settings';
 import { getUsers } from '@/app/actions/users';
 import { getAnalyticsProfiles } from '@/app/actions/settings/analytics-profiles';
 import { serializeDecimals } from '@/lib/utils/serialization';
-import PurchaseForm from '../new/form';
+// Reuse the PO form — same fields, different submit action driven by mode='quick'
+import PurchaseForm from '../../new/form';
 
 export const dynamic = 'force-dynamic';
 

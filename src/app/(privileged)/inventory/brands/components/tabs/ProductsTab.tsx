@@ -31,10 +31,21 @@ interface Product {
 type SortBy = 'name' | 'sku' | 'price'
 type SortDir = 'asc' | 'desc'
 
+const PAGE_SIZE = 50
+
+const ORDERING: Record<SortBy, string> = {
+    name: 'name',
+    sku: 'sku',
+    price: 'selling_price_ttc',
+}
+
 export function ProductsTab({ brandId, brandName }: { brandId: number; brandName: string }) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
+    const [loadingMore, setLoadingMore] = useState(false)
     const [products, setProducts] = useState<Product[]>([])
+    const [totalCount, setTotalCount] = useState(0)
+    const [nextPage, setNextPage] = useState<number | null>(2)
     const [search, setSearch] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [sortBy, setSortBy] = useState<SortBy>('name')
@@ -44,26 +55,80 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
     const [allBrands, setAllBrands] = useState<Array<{ id: number; name: string }>>([])
     const [moveTarget, setMoveTarget] = useState<number | 'unbranded' | null>(null)
     const [moveTargetSearch, setMoveTargetSearch] = useState('')
+    const [moveScope, setMoveScope] = useState<'selected' | 'all'>('selected')
     const [moving, setMoving] = useState(false)
+    const sentinelRef = useRef<HTMLDivElement | null>(null)
+    const scrollRef = useRef<HTMLDivElement | null>(null)
 
-    // Debounce search 250ms — keeps the input snappy without re-filtering on every keystroke.
+    // Debounce search 250ms — keeps the input snappy without firing a
+    // network call on every keystroke. The debounce target drives the
+    // server filter, so changing it resets pagination via the effect
+    // below.
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(search), 250)
         return () => clearTimeout(t)
     }, [search])
 
-    const loadProducts = useCallback(() => {
-        setLoading(true)
-        erpFetch(`inventory/products/?brand=${brandId}&page_size=200`)
-            .then((res: any) => {
-                const items = Array.isArray(res) ? res : (res?.results ?? [])
-                setProducts(items)
-            })
-            .catch(() => setProducts([]))
-            .finally(() => setLoading(false))
-    }, [brandId])
+    /** Fetch one page from the products endpoint with server-side
+     *  filter + sort. The previous implementation pulled page_size=200
+     *  in one shot and stopped — silently truncating any brand with
+     *  more products than that. With server-side pagination we walk
+     *  through all pages on demand, kicked off by the IntersectionObserver
+     *  below.
+     */
+    const loadPage = useCallback(async (page: number, append: boolean) => {
+        if (append) setLoadingMore(true)
+        else setLoading(true)
+        try {
+            const params = new URLSearchParams()
+            params.set('brand', String(brandId))
+            params.set('page', String(page))
+            params.set('page_size', String(PAGE_SIZE))
+            if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
+            const ordering = `${sortDir === 'desc' ? '-' : ''}${ORDERING[sortBy]}`
+            params.set('ordering', ordering)
+            const res: any = await erpFetch(`inventory/products/?${params}`)
+            const items: Product[] = Array.isArray(res) ? res : (res?.results ?? [])
+            // DRF PageNumberPagination wraps the page in
+            // { count, next, previous, results }. `next` is a URL when
+            // there's a further page, null otherwise. Translate to a
+            // page number so we don't have to thread an absolute URL.
+            const hasMore = !!res?.next
+            setProducts(prev => append ? [...prev, ...items] : items)
+            setTotalCount(typeof res?.count === 'number' ? res.count : items.length)
+            setNextPage(hasMore ? page + 1 : null)
+        } catch {
+            if (!append) {
+                setProducts([])
+                setTotalCount(0)
+            }
+            setNextPage(null)
+        } finally {
+            if (append) setLoadingMore(false)
+            else setLoading(false)
+        }
+    }, [brandId, debouncedSearch, sortBy, sortDir])
 
-    useEffect(() => { loadProducts() }, [loadProducts])
+    // Reset to page 1 on filter / sort / brand change. Selected state
+    // stays — the user might want to keep their cherry-picks across
+    // a search refinement.
+    useEffect(() => { loadPage(1, false) }, [loadPage])
+
+    // IntersectionObserver — fetches the next page when the sentinel
+    // enters the viewport. rootMargin of 200px primes the next batch
+    // before the user actually hits the bottom.
+    useEffect(() => {
+        const sentinel = sentinelRef.current
+        if (!sentinel || nextPage === null || loading || loadingMore) return
+        const obs = new IntersectionObserver(entries => {
+            const [entry] = entries
+            if (entry.isIntersecting && nextPage !== null && !loadingMore) {
+                loadPage(nextPage, true)
+            }
+        }, { rootMargin: '200px', threshold: 0 })
+        obs.observe(sentinel)
+        return () => obs.disconnect()
+    }, [nextPage, loading, loadingMore, loadPage])
 
     // Lazy fetch the brand list when the move modal opens.
     useEffect(() => {
@@ -76,33 +141,10 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
             .catch(() => setAllBrands([]))
     }, [moveOpen, allBrands.length])
 
-    const filteredSorted = useMemo(() => {
-        const q = debouncedSearch.trim().toLowerCase()
-        let list = products
-        if (q) {
-            list = list.filter(p =>
-                (p.name || '').toLowerCase().includes(q) ||
-                (p.sku || '').toLowerCase().includes(q) ||
-                (p.barcode || '').toLowerCase().includes(q)
-            )
-        }
-        const dir = sortDir === 'asc' ? 1 : -1
-        const numericKey = sortBy === 'price' ? 'selling_price_ttc' : null
-        const stringKey = sortBy === 'name' ? 'name' : sortBy === 'sku' ? 'sku' : null
-        return [...list].sort((a, b) => {
-            if (numericKey) {
-                const av = Number(a[numericKey] ?? 0)
-                const bv = Number(b[numericKey] ?? 0)
-                return (av - bv) * dir
-            }
-            if (stringKey) {
-                const av = String(a[stringKey] ?? '')
-                const bv = String(b[stringKey] ?? '')
-                return av.localeCompare(bv) * dir
-            }
-            return 0
-        })
-    }, [products, debouncedSearch, sortBy, sortDir])
+    // Filter + sort happen server-side now, so the visible list is
+    // just `products`. Keeping the variable name for a small diff
+    // against the existing render.
+    const filteredSorted = products
 
     const toggle = (id: number) => {
         setSelected(prev => {
@@ -114,6 +156,11 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
     }
 
     const toggleAll = () => {
+        // "Select all" only ever covers the currently-loaded rows
+        // because that's what the user can see. If they want to act
+        // on the whole brand they should pick "Move ALL N" in the
+        // bulk modal — that omits product_ids and lets the backend
+        // resolve everything in one transaction.
         if (selected.size === filteredSorted.length) setSelected(new Set())
         else setSelected(new Set(filteredSorted.map(p => p.id)))
     }
@@ -134,20 +181,29 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
         if (moveTarget == null) return
         setMoving(true)
         try {
+            // Two scopes:
+            //   selected → only the cherry-picked product_ids
+            //   all      → omit product_ids; backend moves every
+            //              product currently linked to the source brand
+            const body: Record<string, unknown> = {
+                source_brand_id: brandId,
+                target_brand_id: moveTarget === 'unbranded' ? null : moveTarget,
+            }
+            if (moveScope === 'selected') {
+                body.product_ids = Array.from(selected)
+            }
             await erpFetch('inventory/brands/move_products/', {
                 method: 'POST',
-                body: JSON.stringify({
-                    source_brand_id: brandId,
-                    target_brand_id: moveTarget === 'unbranded' ? null : moveTarget,
-                    product_ids: Array.from(selected),
-                }),
+                body: JSON.stringify(body),
             })
-            toast.success(`${selected.size} product${selected.size === 1 ? '' : 's'} moved`)
+            const movedCount = moveScope === 'all' ? totalCount : selected.size
+            toast.success(`${movedCount} product${movedCount === 1 ? '' : 's'} moved`)
             setSelected(new Set())
             setMoveOpen(false)
             setMoveTarget(null)
             setMoveTargetSearch('')
-            loadProducts()
+            setMoveScope('selected')
+            loadPage(1, false)
             router.refresh()
         } catch (e: any) {
             toast.error(e?.message || 'Failed to move products')
@@ -156,7 +212,7 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
         }
     }
 
-    if (loading) {
+    if (loading && products.length === 0) {
         return (
             <div className="flex items-center justify-center py-16">
                 <Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-success)' }} />
@@ -172,7 +228,9 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
             <div className="flex-shrink-0 px-4 py-2 flex items-center gap-2"
                 style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <p className="text-tp-sm font-medium text-app-muted-foreground flex-shrink-0">
-                    {filteredSorted.length} of {products.length} product{products.length !== 1 ? 's' : ''}
+                    {filteredSorted.length === totalCount
+                        ? `${totalCount} product${totalCount === 1 ? '' : 's'}`
+                        : `${filteredSorted.length} of ${totalCount} product${totalCount === 1 ? '' : 's'} loaded`}
                 </p>
                 <div className="flex-1" />
                 <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
@@ -304,6 +362,30 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                                 )
                             })}
                         </div>
+
+                        {/* IntersectionObserver sentinel — when this slides
+                            into the viewport (with a 200px head start),
+                            the next page loads automatically. The status
+                            row below it tells the user what's happening
+                            so an infinite list with a long-running fetch
+                            doesn't feel broken. */}
+                        {nextPage !== null && (
+                            <div ref={sentinelRef} className="px-4 py-4 flex items-center justify-center text-tp-xs text-app-muted-foreground">
+                                {loadingMore ? (
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 size={12} className="animate-spin" />
+                                        Loading more…
+                                    </span>
+                                ) : (
+                                    <span>Scroll for more · {filteredSorted.length} of {totalCount}</span>
+                                )}
+                            </div>
+                        )}
+                        {nextPage === null && filteredSorted.length > 0 && filteredSorted.length === totalCount && totalCount > PAGE_SIZE && (
+                            <p className="px-4 py-3 text-tp-xxs text-center italic text-app-muted-foreground">
+                                End of list — all {totalCount} products shown.
+                            </p>
+                        )}
                     </>
                 )}
             </div>
@@ -318,7 +400,7 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                         <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
                             <ArrowRightLeft size={14} style={{ color: 'var(--app-primary)' }} />
                             <h3 className="flex-1 text-tp-md font-bold text-app-foreground">
-                                Move {selected.size} product{selected.size === 1 ? '' : 's'}
+                                Move products
                             </h3>
                             <button onClick={() => setMoveOpen(false)}
                                 className="p-1 rounded hover:bg-app-border/40 text-app-muted-foreground">
@@ -326,8 +408,37 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                             </button>
                         </div>
                         <div className="px-4 py-3 flex-1 overflow-y-auto custom-scrollbar">
+                            {/* Scope picker — guards against the "I selected
+                                visible rows but the brand actually has way
+                                more" footgun. ALL talks to the backend
+                                without product_ids so the move covers
+                                every row regardless of what's loaded. */}
+                            <div className="mb-3 p-1 rounded-xl flex"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                <button type="button" onClick={() => setMoveScope('selected')}
+                                    disabled={selected.size === 0}
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg text-tp-xs font-bold transition-all disabled:opacity-40"
+                                    style={{
+                                        background: moveScope === 'selected' ? 'var(--app-surface)' : 'transparent',
+                                        color: moveScope === 'selected' ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        boxShadow: moveScope === 'selected' ? '0 1px 2px color-mix(in srgb, var(--app-foreground) 10%, transparent)' : 'none',
+                                    }}>
+                                    {selected.size} selected
+                                </button>
+                                <button type="button" onClick={() => setMoveScope('all')}
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg text-tp-xs font-bold transition-all"
+                                    style={{
+                                        background: moveScope === 'all' ? 'var(--app-surface)' : 'transparent',
+                                        color: moveScope === 'all' ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        boxShadow: moveScope === 'all' ? '0 1px 2px color-mix(in srgb, var(--app-foreground) 10%, transparent)' : 'none',
+                                    }}>
+                                    All {totalCount} in brand
+                                </button>
+                            </div>
                             <p className="text-tp-xs font-medium text-app-muted-foreground mb-2">
-                                Pick the brand to move them to. Existing brand: <strong>{brandName}</strong>.
+                                {moveScope === 'all'
+                                    ? <>Move <strong>every</strong> product currently in <strong>{brandName}</strong> to:</>
+                                    : <>Move the <strong>{selected.size}</strong> selected product{selected.size === 1 ? '' : 's'} from <strong>{brandName}</strong> to:</>}
                             </p>
                             <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg mb-2"
                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
@@ -385,11 +496,12 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                                 style={{ color: 'var(--app-muted-foreground)', border: '1px solid var(--app-border)' }}>
                                 Cancel
                             </button>
-                            <button onClick={performMove} disabled={moveTarget == null || moving}
+                            <button onClick={performMove}
+                                disabled={moveTarget == null || moving || (moveScope === 'selected' && selected.size === 0)}
                                 className="flex-1 px-4 py-2 rounded-xl text-tp-xs font-bold text-white transition-all disabled:opacity-50 hover:brightness-110 flex items-center justify-center gap-2"
                                 style={{ background: 'var(--app-primary)' }}>
                                 {moving ? <Loader2 size={12} className="animate-spin" /> : <ArrowRightLeft size={12} />}
-                                Move {selected.size} product{selected.size === 1 ? '' : 's'}
+                                Move {moveScope === 'all' ? totalCount : selected.size} product{(moveScope === 'all' ? totalCount : selected.size) === 1 ? '' : 's'}
                             </button>
                         </div>
                     </div>

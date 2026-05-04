@@ -94,4 +94,6 @@ __all__ = [
     'GroupingRule', 'InventoryGroup', 'InventoryGroupMember',
     # Business Events (moved from tax engine)
     'GiftSampleEvent', 'InternalConsumptionEvent',
+    # AI scope-suggester (Phase 6)
+    'AIScopeSuggesterConfig', 'AIScopeReview',
 ]

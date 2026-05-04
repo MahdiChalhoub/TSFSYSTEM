@@ -4,10 +4,10 @@ import { useState, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, Check, X, Sparkles, Loader2, Tag, Globe, FolderTree, Award } from 'lucide-react'
+import { ArrowLeft, Check, X, Sparkles, Loader2, Tag, Globe, FolderTree, Award, Bot, AlertTriangle, CircleSlash, Settings as SettingsIcon } from 'lucide-react'
 import {
-    applyScopeSuggestion, previewScopeImpact,
-    type ScopeSuggestion, type ScopeImpact,
+    applyScopeSuggestion, previewScopeImpact, listScopeSuggestions, updateAIScopeConfig,
+    type ScopeSuggestion, type ScopeImpact, type AIScopeConfig, type AIScopeReview,
 } from '@/app/actions/inventory/scope-suggestions'
 
 /**
@@ -30,10 +30,27 @@ const AXIS_META: Record<AxisKey, { label: string; icon: any; color: string }> = 
     brands:     { label: 'Brands',     icon: Award,      color: 'var(--app-primary)' },
 }
 
-export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: ScopeSuggestion[] }) {
+export function ScopeWizardClient({
+    initialSuggestions,
+    initialAIConfig,
+}: {
+    initialSuggestions: ScopeSuggestion[]
+    initialAIConfig: AIScopeConfig | null
+}) {
     const router = useRouter()
     const [pending, startTransition] = useTransition()
     const [suggestions, setSuggestions] = useState(initialSuggestions)
+    // Phase 6: AI toggle state. Tracks the operator's UI choice; the
+    // actual server fetch happens via listScopeSuggestions({ ai }).
+    // Starts in sync with the SSR config so the toggle and the data
+    // agree on first paint.
+    const [aiConfig, setAIConfig] = useState(initialAIConfig)
+    const [aiOn, setAIOn] = useState(!!initialAIConfig?.enabled && !!initialAIConfig?.has_provider)
+    const [aiLoading, setAILoading] = useState(false)
+    // Threshold operators use to bulk-accept-by-AI-confidence. Starts at
+    // the org-configured min (default 0.6) so the obvious wins are
+    // pre-selected; operator can drag it up for stricter, down for more.
+    const [bulkAIThreshold, setBulkAIThreshold] = useState<number>(initialAIConfig?.min_ai_confidence ?? 0.6)
     // Per-suggestion accepted-id maps. {value_id: {categories: [ids], countries: [ids], brands: [ids]}}
     // Default: every suggested id is accepted. Operator can deselect.
     const [accepted, setAccepted] = useState<Record<number, Record<AxisKey, Set<number>>>>(() => {
@@ -204,10 +221,73 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
         })
     }
 
+    // Phase 6: re-fetch suggestions with the new AI flag. Keeps the
+    // operator's customization state intact (accepted ids per axis are
+    // re-seeded only for newly-arriving suggestion ids).
+    const reloadWithAI = (next: boolean) => {
+        setAIOn(next)
+        setAILoading(true)
+        startTransition(async () => {
+            const fresh = await listScopeSuggestions(undefined, { ai: next })
+            setSuggestions(fresh)
+            setAccepted(prev => {
+                const map = { ...prev }
+                for (const s of fresh) {
+                    if (!map[s.value_id]) {
+                        map[s.value_id] = {
+                            categories: new Set(s.suggested_scope.categories.map(c => c.id)),
+                            countries:  new Set(s.suggested_scope.countries.map(c => c.id)),
+                            brands:     new Set(s.suggested_scope.brands.map(c => c.id)),
+                        }
+                    }
+                }
+                return map
+            })
+            setAILoading(false)
+        })
+    }
+
+    // Phase 6: persist the toggle to backend so it sticks across sessions
+    // and the SSR loader picks the right path on the next page open.
+    const persistAIToggle = (next: boolean) => {
+        startTransition(async () => {
+            const r = await updateAIScopeConfig({ enabled: next })
+            if (r.success && r.config) {
+                setAIConfig(r.config)
+                if ((r.config.enabled && r.config.has_provider) !== aiOn) {
+                    reloadWithAI(r.config.enabled && r.config.has_provider)
+                }
+            } else {
+                toast.error(r.message || 'Could not save AI setting')
+            }
+        })
+    }
+
+    // Phase 6: accept every suggestion whose AI confidence ≥ threshold
+    // and whose verdict is "accept". Skips uncertain / partial / rejected
+    // rows so the operator only batch-applies the obvious wins.
+    const applyAllAIAccepted = () => {
+        const winners = suggestions.filter(s =>
+            s.ai_review
+            && s.ai_review.verdict === 'accept'
+            && s.ai_review.confidence >= bulkAIThreshold,
+        )
+        if (winners.length === 0) {
+            toast.info('No suggestions meet the AI threshold yet — try lowering it or using Accept All.')
+            return
+        }
+        applyMany(winners, `(AI ≥ ${Math.round(bulkAIThreshold * 100)}%)`)
+    }
+
+    const aiAcceptedCount = useMemo(
+        () => suggestions.filter(s => s.ai_review?.verdict === 'accept' && s.ai_review.confidence >= bulkAIThreshold).length,
+        [suggestions, bulkAIThreshold],
+    )
+
     return (
         <div className="min-h-screen p-6 max-w-5xl mx-auto">
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
                 <Link href="/inventory/attributes" className="p-2 rounded-xl hover:bg-app-surface transition-all">
                     <ArrowLeft size={16} />
                 </Link>
@@ -230,6 +310,87 @@ export function ScopeWizardClient({ initialSuggestions }: { initialSuggestions: 
                     </button>
                 )}
             </div>
+
+            {/* Phase 6: AI ranker control bar. Renders when an AI provider
+                is available (whether enabled or not) so the operator can
+                turn it on inline without leaving the wizard. When the org
+                has no provider configured, points to Settings instead. */}
+            {aiConfig && (
+                <div className="mb-4 rounded-xl px-3 py-2.5 flex items-center gap-3 flex-wrap"
+                    style={{
+                        background: aiOn
+                            ? 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))'
+                            : 'var(--app-surface)',
+                        border: `1px solid ${aiOn ? 'color-mix(in srgb, var(--app-primary) 30%, transparent)' : 'var(--app-border)'}`,
+                    }}>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{
+                                background: aiOn
+                                    ? 'color-mix(in srgb, var(--app-primary) 15%, transparent)'
+                                    : 'color-mix(in srgb, var(--app-muted-foreground) 10%, transparent)',
+                                color: aiOn ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                            }}>
+                            <Bot size={14} />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-tp-sm font-bold text-app-foreground flex items-center gap-2">
+                                AI ranking
+                                {aiLoading && <Loader2 size={11} className="animate-spin text-app-muted-foreground" />}
+                                {aiOn && aiConfig.tokens_used_today > 0 && (
+                                    <span className="text-tp-xxs font-normal text-app-muted-foreground">
+                                        · {aiConfig.tokens_used_today.toLocaleString()} / {aiConfig.daily_token_cap.toLocaleString()} tokens today
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-tp-xs text-app-muted-foreground truncate">
+                                {aiOn
+                                    ? 'Each suggestion is scored by your AI provider for commonsense plausibility. Cached for 7 days per row.'
+                                    : aiConfig.has_provider
+                                        ? 'Add a confidence + rationale to each row using your configured AI provider.'
+                                        : 'No AI provider configured. Add one under /agents to enable ranking.'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {aiConfig.has_provider ? (
+                        <button onClick={() => persistAIToggle(!aiOn)}
+                            disabled={pending}
+                            className="relative inline-flex items-center h-6 w-11 rounded-full transition-all disabled:opacity-50"
+                            style={{ background: aiOn ? 'var(--app-primary)' : 'var(--app-border)' }}>
+                            <span className="inline-block w-4 h-4 rounded-full bg-white transition-all"
+                                style={{ transform: `translateX(${aiOn ? '24px' : '4px'})` }} />
+                        </button>
+                    ) : (
+                        <Link href="/agents"
+                            className="px-3 py-1.5 rounded-lg text-tp-xs font-bold border flex items-center gap-1.5"
+                            style={{ borderColor: 'var(--app-border)', color: 'var(--app-foreground)' }}>
+                            <SettingsIcon size={11} /> Configure
+                        </Link>
+                    )}
+
+                    {aiOn && aiAcceptedCount > 0 && (
+                        <div className="flex items-center gap-2 ml-auto basis-full sm:basis-auto pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l sm:pl-3"
+                            style={{ borderColor: 'color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <label className="text-tp-xxs uppercase tracking-wider font-bold text-app-muted-foreground whitespace-nowrap">
+                                Bulk threshold
+                            </label>
+                            <input type="range" min={0} max={100} step={5}
+                                value={Math.round(bulkAIThreshold * 100)}
+                                onChange={e => setBulkAIThreshold(Number(e.target.value) / 100)}
+                                className="w-24 accent-current" style={{ color: 'var(--app-primary)' }} />
+                            <span className="text-tp-xs font-mono font-bold text-app-foreground w-9 text-right">
+                                {Math.round(bulkAIThreshold * 100)}%
+                            </span>
+                            <button onClick={applyAllAIAccepted} disabled={pending || aiAcceptedCount === 0}
+                                className="px-3 py-1.5 rounded-lg text-tp-xs font-bold bg-app-primary text-white flex items-center gap-1.5 hover:brightness-110 transition-all disabled:opacity-50">
+                                {pending ? <Loader2 size={11} className="animate-spin" /> : <Bot size={11} />}
+                                Accept AI picks ({aiAcceptedCount})
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Phase 5: confirm dialog when an apply would orphan
                 products. Lists the count + first 10 affected so the
@@ -408,12 +569,35 @@ function SuggestionRow({
     onCustomize: () => void
     pending: boolean
 }) {
+    // Phase 6: subtle border tint when an AI verdict is present, so the
+    // operator can scan the list and immediately spot which rows have
+    // been AI-vetted and which are deterministic-only.
+    const ai = s.ai_review
+    const aiBorder = ai
+        ? ai.verdict === 'accept'  ? 'color-mix(in srgb, var(--app-success) 35%, transparent)'
+        : ai.verdict === 'reject'  ? 'color-mix(in srgb, var(--app-danger) 35%, transparent)'
+        : ai.verdict === 'partial' ? 'color-mix(in srgb, var(--app-warning) 40%, transparent)'
+        :                            'var(--app-border)'
+        : 'var(--app-border)'
+
     return (
         <div className="rounded-xl p-3 transition-all"
-            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+            style={{ background: 'var(--app-surface)', border: `1px solid ${aiBorder}` }}>
             <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                    <div className="text-tp-md font-bold text-app-foreground">{s.value_name}</div>
+                    <div className="text-tp-md font-bold text-app-foreground flex items-center gap-2 flex-wrap">
+                        <span>{s.value_name}</span>
+                        {ai && <AIVerdictBadge review={ai} />}
+                    </div>
+                    {/* Phase 6: AI rationale inline. One short sentence
+                        in italic muted text directly under the title so
+                        the operator reads it before scanning the chips. */}
+                    {ai && ai.rationale && (
+                        <div className="text-tp-xs italic text-app-muted-foreground mt-0.5 flex items-start gap-1">
+                            <Bot size={10} className="mt-0.5 flex-shrink-0 opacity-60" />
+                            <span>{ai.rationale}</span>
+                        </div>
+                    )}
                     {/* Used-by line is now an expandable details element
                         so the operator can verify exactly which products
                         the suggestion is derived from before clicking
@@ -448,12 +632,25 @@ function SuggestionRow({
                             const meta = AXIS_META[axis]
                             const Icon = meta.icon
                             const conf = s.confidence[axis]
+                            // Phase 6: axis-level AI disagreement. When the
+                            // LLM marked this axis as wrong, dim the row
+                            // and surface a small warning so the operator
+                            // sees AT-CHIP-LEVEL where the heuristic and
+                            // AI disagree, not just at the row level.
+                            const axisAIDisagrees = ai && ai.verdict !== 'error' && ai.axes && ai.axes[axis] === false
                             return (
-                                <div key={axis} className="flex items-start gap-2">
+                                <div key={axis} className="flex items-start gap-2"
+                                    style={{ opacity: axisAIDisagrees ? 0.5 : 1 }}>
                                     <div className="w-20 flex items-center gap-1 flex-shrink-0 text-tp-xxs font-bold uppercase tracking-wider"
                                         style={{ color: meta.color }}>
                                         <Icon size={10} />
                                         {meta.label}
+                                        {axisAIDisagrees && (
+                                            <span title="AI thinks this axis is wrong"
+                                                className="text-app-warning ml-0.5">
+                                                <AlertTriangle size={9} />
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex-1 flex flex-wrap gap-1">
                                         {items.map(it => {
@@ -528,5 +725,44 @@ function SuggestionRow({
                 </div>
             </div>
         </div>
+    )
+}
+
+/**
+ * Phase 6: AI verdict pill rendered next to the value name. Color-coded
+ * by verdict, percentage shown for accept/partial. Hover reveals the
+ * full review meta (cached vs fresh, capped, error reason).
+ */
+function AIVerdictBadge({ review }: { review: AIScopeReview }) {
+    const isCached = !!review.cached
+    const map = {
+        accept:  { bg: 'var(--app-success)', label: 'AI accepts',  Icon: Bot },
+        partial: { bg: 'var(--app-warning)', label: 'AI partial',  Icon: AlertTriangle },
+        reject:  { bg: 'var(--app-danger)',  label: 'AI rejects',  Icon: CircleSlash },
+        error:   { bg: 'var(--app-muted-foreground)', label: 'AI error', Icon: AlertTriangle },
+    } as const
+    const m = map[review.verdict] ?? map.error
+    const Icon = m.Icon
+    const pct = review.verdict === 'error' ? null : Math.round(review.confidence * 100)
+    const tooltip = [
+        `Verdict: ${review.verdict}`,
+        pct !== null ? `Confidence: ${pct}%` : null,
+        isCached ? 'Source: cache' : 'Source: fresh AI call',
+        review.capped ? 'Daily token cap reached' : null,
+        review.rationale,
+    ].filter(Boolean).join('\n')
+    return (
+        <span title={tooltip}
+            className="inline-flex items-center gap-1 text-tp-xxs font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider"
+            style={{
+                background: `color-mix(in srgb, ${m.bg} 15%, transparent)`,
+                color: m.bg,
+                border: `1px solid color-mix(in srgb, ${m.bg} 35%, transparent)`,
+            }}>
+            <Icon size={9} />
+            {m.label}
+            {pct !== null && <span className="font-mono">{pct}%</span>}
+            {isCached && <span className="opacity-60 normal-case">·cached</span>}
+        </span>
     )
 }

@@ -19,6 +19,27 @@ import { revalidatePath } from 'next/cache'
 
 type ScopeRef = { id: number; name: string }
 
+/**
+ * Phase 6: AI-enriched scope suggestion. Present only when the org has
+ * opted into AI ranking and the deterministic suggestion was within the
+ * top-N enriched batch. The wizard tolerates missing ai_review by
+ * falling back to deterministic-only display.
+ */
+export type AIScopeReview = {
+    verdict: 'accept' | 'partial' | 'reject' | 'error'
+    /** 0..1 — the LLM's independent confidence in the suggestion. */
+    confidence: number
+    /** One short sentence explaining the verdict, shown inline in the wizard. */
+    rationale: string
+    /** Per-axis agreement. False on an axis means the LLM thinks the
+     *  deterministic suggestion is wrong on THAT axis only. */
+    axes: { categories: boolean; countries: boolean; brands: boolean }
+    /** True when this review came from the cache rather than a fresh call. */
+    cached?: boolean
+    /** True when the AI was skipped because the daily token cap was hit. */
+    capped?: boolean
+}
+
 export type ScopeSuggestion = {
     value_id: number
     value_name: string
@@ -35,16 +56,72 @@ export type ScopeSuggestion = {
     current_scope: { categories: ScopeRef[]; countries: ScopeRef[]; brands: ScopeRef[] }
     suggested_scope: { categories: ScopeRef[]; countries: ScopeRef[]; brands: ScopeRef[] }
     confidence: { categories: number; countries: number; brands: number }
+    /** Phase 6: AI ranker output, optional. */
+    ai_review?: AIScopeReview
 }
 
-export async function listScopeSuggestions(valueIds?: number[]): Promise<ScopeSuggestion[]> {
-    const qs = valueIds && valueIds.length ? `?value_ids=${valueIds.join(',')}` : ''
+export async function listScopeSuggestions(
+    valueIds?: number[],
+    opts?: { ai?: boolean; aiTopN?: number },
+): Promise<ScopeSuggestion[]> {
+    const params = new URLSearchParams()
+    if (valueIds && valueIds.length) params.set('value_ids', valueIds.join(','))
+    if (opts?.ai) params.set('ai', '1')
+    if (opts?.aiTopN) params.set('ai_top_n', String(opts.aiTopN))
+    const qs = params.toString() ? `?${params.toString()}` : ''
     try {
         const r = await erpFetch(`inventory/product-attributes/scope-suggestions/${qs}`)
         return Array.isArray(r) ? r : []
     } catch (e) {
         console.warn('[scope-suggestions] list failed', e)
         return []
+    }
+}
+
+/**
+ * Phase 6: per-org config for the AI scope ranker. The shape mirrors
+ * the backend response — `has_provider` is a UI hint so the settings
+ * card knows when to show "configure provider first" instead of just
+ * a disabled toggle.
+ */
+export type AIScopeConfig = {
+    enabled: boolean
+    min_ai_confidence: number
+    daily_token_cap: number
+    tokens_used_today: number
+    tokens_reset_at: string | null
+    provider_id: number | null
+    has_provider: boolean
+    available_providers: {
+        id: number
+        name: string
+        provider_type: string
+        model_name: string
+        is_default: boolean
+    }[]
+}
+
+export async function getAIScopeConfig(): Promise<AIScopeConfig | null> {
+    try {
+        return await erpFetch('inventory/product-attributes/ai-scope-config/') as AIScopeConfig
+    } catch (e) {
+        console.warn('[ai-scope-config] get failed', e)
+        return null
+    }
+}
+
+export async function updateAIScopeConfig(
+    patch: Partial<Pick<AIScopeConfig, 'enabled' | 'min_ai_confidence' | 'daily_token_cap' | 'provider_id'>>,
+): Promise<{ success: boolean; config?: AIScopeConfig; message?: string }> {
+    try {
+        const r = await erpFetch('inventory/product-attributes/ai-scope-config/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch),
+        })
+        return { success: true, config: r as AIScopeConfig }
+    } catch (e: any) {
+        return { success: false, message: e?.message || 'Update failed' }
     }
 }
 

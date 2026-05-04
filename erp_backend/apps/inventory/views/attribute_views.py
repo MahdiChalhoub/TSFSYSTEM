@@ -532,6 +532,15 @@ class ProductAttributeViewSet(TenantModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='scope-suggestions')
     def scope_suggestions(self, request):
+        """
+        GET /api/inventory/product-attributes/scope-suggestions/?value_ids=…&ai=1
+
+        Returns the deterministic suggestions. When `?ai=1` is set AND the
+        org has opted into AI ranking, each suggestion carries an extra
+        `ai_review` field — verdict, confidence, rationale, per-axis
+        agreement. AI calls are cached, rate-limited, and degrade
+        silently to deterministic-only on any provider error.
+        """
         from apps.inventory.services.scope_suggester import suggest_scopes
         org = _current_org(request)
         if not org:
@@ -540,7 +549,87 @@ class ProductAttributeViewSet(TenantModelViewSet):
         parsed = None
         if value_ids:
             parsed = [int(x) for x in value_ids.split(',') if x.strip().isdigit()]
-        return Response(suggest_scopes(org, value_ids=parsed))
+        suggestions = suggest_scopes(org, value_ids=parsed)
+
+        if str(request.query_params.get('ai', '')).lower() in ('1', 'true', 'yes'):
+            from apps.inventory.services.scope_ai_ranker import enrich_suggestions
+            try:
+                top_n = int(request.query_params.get('ai_top_n', 30))
+            except (TypeError, ValueError):
+                top_n = 30
+            suggestions = enrich_suggestions(org, suggestions, top_n=max(1, min(top_n, 100)))
+
+        return Response(suggestions)
+
+    @action(detail=False, methods=['get', 'post'], url_path='ai-scope-config')
+    def ai_scope_config(self, request):
+        """
+        GET  → return the org's AI scope-ranker config (creates a default
+               row off the first read so the wizard always has something
+               to render).
+        POST → update enabled / min_ai_confidence / daily_token_cap /
+               provider. Body fields are all optional — only the
+               provided keys are touched.
+        """
+        from apps.inventory.models import AIScopeSuggesterConfig
+        from apps.mcp.models import MCPProvider
+
+        org = _current_org(request)
+        if not org:
+            return Response({'error': 'No organization context'}, status=400)
+
+        config, _ = AIScopeSuggesterConfig.objects.get_or_create(organization=org)
+
+        if request.method == 'POST':
+            data = request.data or {}
+            updates = []
+            if 'enabled' in data:
+                config.enabled = bool(data['enabled'])
+                updates.append('enabled')
+            if 'min_ai_confidence' in data:
+                try:
+                    val = float(data['min_ai_confidence'])
+                    config.min_ai_confidence = max(0.0, min(1.0, val))
+                    updates.append('min_ai_confidence')
+                except (TypeError, ValueError):
+                    pass
+            if 'daily_token_cap' in data:
+                try:
+                    cap = int(data['daily_token_cap'])
+                    config.daily_token_cap = max(1000, cap)
+                    updates.append('daily_token_cap')
+                except (TypeError, ValueError):
+                    pass
+            if 'provider_id' in data:
+                pid = data['provider_id']
+                if pid in (None, '', 0, '0'):
+                    config.provider = None
+                else:
+                    prov = MCPProvider.objects.filter(id=pid, organization=org).first()
+                    if prov:
+                        config.provider = prov
+                updates.append('provider')
+            if updates:
+                config.save()
+
+        # Cheap availability hint for the UI: do we have any provider at
+        # all? Used to render "Configure provider first" inside the
+        # settings card when the toggle would be a no-op.
+        has_provider = MCPProvider.objects.filter(organization=org, is_active=True).exists()
+
+        return Response({
+            'enabled': config.enabled,
+            'min_ai_confidence': config.min_ai_confidence,
+            'daily_token_cap': config.daily_token_cap,
+            'tokens_used_today': config.tokens_used_today,
+            'tokens_reset_at': config.tokens_reset_at.isoformat() if config.tokens_reset_at else None,
+            'provider_id': config.provider_id,
+            'has_provider': has_provider,
+            'available_providers': list(
+                MCPProvider.objects.filter(organization=org, is_active=True)
+                .values('id', 'name', 'provider_type', 'model_name', 'is_default')
+            ),
+        })
 
     @action(detail=True, methods=['post'], url_path='apply-scope')
     def apply_scope(self, request, pk=None):
