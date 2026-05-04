@@ -31,7 +31,8 @@ class MCPProvider(models.Model):
     organization = models.ForeignKey(
         'erp.Organization',
         on_delete=models.CASCADE,
-        related_name='mcp_providers'
+        related_name='mcp_providers',
+    db_column='tenant_id',
     )
     
     name = models.CharField(max_length=100)
@@ -86,7 +87,8 @@ class MCPTool(models.Model):
         on_delete=models.CASCADE,
         related_name='mcp_tools',
         null=True,  # null = global tool
-        blank=True
+        blank=True,
+    db_column='tenant_id',
     )
     
     name = models.CharField(max_length=100)
@@ -149,7 +151,8 @@ class MCPConnection(models.Model):
     organization = models.OneToOneField(
         'erp.Organization',
         on_delete=models.CASCADE,
-        related_name='mcp_connection'
+        related_name='mcp_connection',
+        db_column='tenant_id',
     )
     
     provider = models.ForeignKey(
@@ -191,7 +194,8 @@ class MCPConversation(models.Model):
     organization = models.ForeignKey(
         'erp.Organization',
         on_delete=models.CASCADE,
-        related_name='mcp_conversations'
+        related_name='mcp_conversations',
+    db_column='tenant_id',
     )
     user = models.ForeignKey(
         'erp.User',
@@ -284,7 +288,8 @@ class MCPUsageLog(models.Model):
     organization = models.ForeignKey(
         'erp.Organization',
         on_delete=models.CASCADE,
-        related_name='mcp_usage_logs'
+        related_name='mcp_usage_logs',
+    db_column='tenant_id',
     )
     user = models.ForeignKey(
         'erp.User',
@@ -351,7 +356,8 @@ class MCPRateLimit(models.Model):
     organization = models.ForeignKey(
         'erp.Organization',
         on_delete=models.CASCADE,
-        related_name='mcp_rate_limits'
+        related_name='mcp_rate_limits',
+    db_column='tenant_id',
     )
     user = models.ForeignKey(
         'erp.User',

@@ -56,7 +56,8 @@ class StorageProvider(models.Model):
         Organization, on_delete=models.CASCADE,
         null=True, blank=True,
         related_name='storage_provider',
-        help_text='Null = platform default provider'
+        help_text='Null = platform default provider',
+        db_column='tenant_id',
     )
     provider_type = models.CharField(max_length=10, choices=PROVIDER_TYPES, default='R2')
     endpoint_url = models.URLField(

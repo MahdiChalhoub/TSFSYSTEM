@@ -56,7 +56,8 @@ class RegulationAuditLog(models.Model):
     # ── Organization (explicit FK, not TenantOwnedModel) ───────────
     organization = models.ForeignKey(
         'erp.Organization', on_delete=models.CASCADE,
-        related_name='compliance_audit_logs', db_index=True
+        related_name='compliance_audit_logs', db_index=True,
+    db_column='tenant_id',
     )
 
     # ── What happened ───────────────────────────────────────────────

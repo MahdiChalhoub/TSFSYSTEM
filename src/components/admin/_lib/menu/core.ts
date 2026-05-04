@@ -68,6 +68,7 @@ export const systemSettings: MenuItem = {
         { title: 'Features', path: '/settings/features' },
         { title: 'Payment Terms', path: '/settings/payment-terms' },
         { title: 'POS Settings', path: '/settings/pos-settings', stage: 'in-progress' },
+        { title: 'Procurement Recovery', path: '/settings/procurement-recovery', stage: 'in-progress' },
         { title: 'Purchase Analytics', path: '/settings/purchase-analytics', stage: 'in-progress' },
         { title: 'Regional Settings', path: '/settings/regional', stage: 'in-progress' },
         { title: 'Sequences', path: '/settings/sequences', stage: 'in-progress' },

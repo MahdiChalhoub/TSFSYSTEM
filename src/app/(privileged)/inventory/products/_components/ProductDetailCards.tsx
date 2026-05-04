@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import type { Product } from '../_lib/types'
 import { TYPE_CONFIG, STATUS_CONFIG, PIPELINE_STATUS_CONFIG, fmt } from '../_lib/constants'
+import { applyRecoveryPolicy, type PipelineStatus } from '@/lib/procurement-status'
+import { useProcurementRecoveryPolicy } from '@/hooks/useProcurementRecoveryPolicy'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { useRequestFlow } from '@/components/products/RequestFlowProvider'
 import { ExpiryAlertDialog } from '@/components/products/ExpiryAlertDialog'
@@ -99,7 +101,15 @@ export const ProductDetailCards = React.memo(function ProductDetailCards({ produ
     return { onHand, min, max, tier, tierColor, tierLabel, pct }
   }, [product.on_hand_qty, product.min_stock_level, product.max_stock_level])
 
-  const proc = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
+  // Apply tenant recovery policy so terminal states age out to Available
+  const recoveryPolicy = useProcurementRecoveryPolicy()
+  const liveProcStatus: string = applyRecoveryPolicy(
+    (product.pipeline_status as PipelineStatus) || 'NONE',
+    (product.pipeline_status_changed_at as string | null) ?? null,
+    recoveryPolicy,
+    (product.pipeline_rejection_reason as string | undefined) || undefined,
+  )
+  const proc = PIPELINE_STATUS_CONFIG[liveProcStatus] || PIPELINE_STATUS_CONFIG.NONE
 
   return (
     <div className="border-b border-app-border/30 animate-in slide-in-from-top-1 duration-200"

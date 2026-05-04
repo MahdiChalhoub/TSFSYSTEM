@@ -30,6 +30,7 @@ import {
     saveRecoveryPolicy,
     resetRecoveryPolicy,
 } from '@/app/actions/settings/procurement-recovery'
+import { invalidateRecoveryPolicyCache } from '@/hooks/useProcurementRecoveryPolicy'
 
 type TerminalKey = keyof PipelineRecoveryPolicy
 
@@ -112,8 +113,13 @@ export default function ProcurementRecoveryClient() {
     const handleSave = () => {
         startSaving(async () => {
             const r = await saveRecoveryPolicy(policy)
-            if (r.ok) { toast.success('Recovery policy saved · applies to all users in your organization'); setDirty(false) }
-            else toast.error(`Could not save: ${r.error}`)
+            if (r.ok) {
+                // Bust the in-memory cache so chip renderers across the
+                // app pick up the new policy without a full page reload.
+                invalidateRecoveryPolicyCache(policy)
+                toast.success('Recovery policy saved · applies to all users in your organization')
+                setDirty(false)
+            } else toast.error(`Could not save: ${r.error}`)
         })
     }
     const handleReset = () => {
@@ -121,6 +127,7 @@ export default function ProcurementRecoveryClient() {
         startSaving(async () => {
             const r = await resetRecoveryPolicy()
             if (r.ok) {
+                invalidateRecoveryPolicyCache(DEFAULT_RECOVERY_POLICY)
                 setPolicy(DEFAULT_RECOVERY_POLICY)
                 setDirty(false)
                 toast.success('Reverted to defaults')

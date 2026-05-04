@@ -25,11 +25,11 @@ class GeneratedDocument(TenantModel):
         ('FAILED',  'Failed'),
     ]
 
-    # Re-declared to keep historical db_column='organization_id'.
+    # DB uses tenant_id (multi-tenant convention).
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
         related_name='generated_documents',
-        db_column='organization_id',
+        db_column='tenant_id',
     )
     # Source references (one or the other, both nullable)
     order_id       = models.IntegerField(null=True, blank=True, db_index=True)

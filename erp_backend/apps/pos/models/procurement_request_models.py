@@ -20,12 +20,26 @@ class ProcurementRequest(TenantModel):
         ('TRANSFER', 'Internal Transfer'),
         ('PURCHASE', 'Purchase from Supplier'),
     )
+    # Lifecycle now mirrors the full physical-journey vocabulary so the
+    # request chip walks the whole chain as the linked PO/TO progresses.
+    # Backend signal (see apps.pos.signals) bumps a request's status
+    # whenever its source_po (or future source_to) advances. Older
+    # request rows still using the legacy subset (PENDING/APPROVED/
+    # EXECUTED/REJECTED/CANCELLED) keep working — EXECUTED is treated
+    # as an alias for ORDERED everywhere.
     STATUS_CHOICES = (
-        ('PENDING', 'Pending Review'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('EXECUTED', 'Executed'),
-        ('CANCELLED', 'Cancelled'),
+        ('PENDING',            'Pending Review'),
+        ('APPROVED',           'Approved'),
+        ('ORDERED',            'Ordered'),
+        ('EXECUTED',           'Executed (alias for Ordered)'),
+        ('SUPPLIER_CONFIRMED', 'Supplier Confirmed'),
+        ('IN_TRANSIT',         'In Transit'),
+        ('PARTIALLY_RECEIVED', 'Partially Received'),
+        ('RECEIVED',           'Received'),
+        ('COMPLETED',          'Completed'),
+        ('REJECTED',           'Rejected'),
+        ('CANCELLED',          'Cancelled'),
+        ('FAILED',             'Failed'),
     )
     PRIORITY_CHOICES = (
         ('LOW', 'Low'),

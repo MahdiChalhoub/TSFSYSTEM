@@ -16,7 +16,8 @@ class FinanceDailySummary(models.Model):
 
     organization     = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
-        related_name='finance_daily_summaries'
+        related_name='finance_daily_summaries',
+    db_column='tenant_id',
     )
     date             = models.DateField()
     scope            = models.CharField(max_length=10, default='OFFICIAL')  # OFFICIAL | INTERNAL

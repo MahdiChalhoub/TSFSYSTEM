@@ -9,12 +9,14 @@ class POSAuditRule(TenantModel):
 
     Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
     """
-    # Re-declared to keep historical db_column='organization_id'
-    # (TenantModel's inherited field uses db_column='tenant_id').
+    # Inherits TenantModel's tenant_id db_column convention — every audit
+    # table on this org actually uses `tenant_id` in Postgres. Earlier
+    # override (`db_column='organization_id'`) broke queries because the
+    # DB never created an `organization_id` column. Stick with the parent.
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
         related_name='pos_audit_rules',
-        db_column='organization_id',
+        db_column='tenant_id',
     )
     event_type = models.CharField(max_length=50) # e.g. 'PRICE_CHANGE', 'DISCOUNT', 'CLEAR_CART', 'REMOVE_ITEM'
     
@@ -38,11 +40,11 @@ class POSAuditEvent(TenantModel):
 
     Tenant Isolation: ✅ via TenantModel (auto-filter by current organization).
     """
-    # Re-declared to keep historical db_column='organization_id'.
+    # DB uses tenant_id (multi-tenant convention) — keep aligned with parent.
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
         related_name='pos_audit_events',
-        db_column='organization_id',
+        db_column='tenant_id',
     )
     register = models.ForeignKey(POSRegister, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_events')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='pos_audit_events')
@@ -121,11 +123,11 @@ class SalesAuditLog(TenantModel):
         ('NOTE',              'Manual Note'),
     ]
 
-    # Re-declared to keep historical db_column='organization_id'.
+    # DB uses tenant_id (multi-tenant convention) — keep aligned with parent.
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
         related_name='sales_audit_logs', db_index=True,
-        db_column='organization_id',
+        db_column='tenant_id',
     )
     order = models.ForeignKey(
         'pos.Order', on_delete=models.CASCADE,

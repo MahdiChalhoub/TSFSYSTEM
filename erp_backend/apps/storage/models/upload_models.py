@@ -76,7 +76,8 @@ class UploadSession(models.Model):
     # Ownership
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='upload_sessions'
+        null=True, blank=True, related_name='upload_sessions',
+    db_column='tenant_id',
     )
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

@@ -610,7 +610,8 @@ class SubscriptionPayment(models.Model):
         ('CREDIT_NOTE', 'Credit Note'),
         ('RENEWAL', 'Renewal'),
     )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    # DB column is `tenant_id` (multi-tenant convention).
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, db_column='tenant_id')
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='payments')
     previous_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='upgrade_payments', help_text="Plan before the switch (for audit)")
     amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -798,7 +799,8 @@ class UDLESavedView(models.Model):
     Stores visible columns, filters, and sorting preferences.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='udle_views')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    # DB column is `tenant_id` (multi-tenant convention).
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, db_column='tenant_id')
     model_name = models.CharField(max_length=100)  # e.g., 'Product', 'InventoryMovement'
     name = models.CharField(max_length=100)
     config = models.JSONField(default=dict)  # {columns: [], filters: {}, sorting: {}}

@@ -229,7 +229,8 @@ class BufferedRequest(models.Model):
         'Organization',
         on_delete=models.CASCADE,
         related_name='buffered_requests',
-        null=True, blank=True
+        null=True, blank=True,
+    db_column='tenant_id',
     )
     
     # Request data
@@ -362,12 +363,15 @@ class ConnectorLog(models.Model):
         blank=True
     )
     
-    # Context
+    # Context — DB column is `tenant_id` (matches the multi-tenant
+    # convention used by every other table); without `db_column` Django
+    # would query `organization_id` and crash. Same fix as ConnectorCache.
     organization = models.ForeignKey(
         'Organization',
         on_delete=models.CASCADE,
         related_name='connector_logs',
-        null=True, blank=True
+        null=True, blank=True,
+        db_column='tenant_id',
     )
     user = models.ForeignKey(
         'User',

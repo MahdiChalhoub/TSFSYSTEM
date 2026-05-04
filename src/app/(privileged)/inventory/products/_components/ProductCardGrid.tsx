@@ -15,6 +15,8 @@ import { memo } from 'react'
 import { Package, Eye, Pencil, Loader2, ShoppingCart, ArrowRightLeft, BellRing, Check } from 'lucide-react'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { TYPE_CONFIG, STATUS_CONFIG, PIPELINE_STATUS_CONFIG, fmt } from '../_lib/constants'
+import { applyRecoveryPolicy, type PipelineStatus } from '@/lib/procurement-status'
+import { useProcurementRecoveryPolicy } from '@/hooks/useProcurementRecoveryPolicy'
 import type { Product } from '../_lib/types'
 
 interface Props {
@@ -124,9 +126,19 @@ const ProductCard = memo(function ProductCard({
       : 'var(--app-success, #22c55e)'
   const stockLabel = isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'
 
-  // Procurement Status Config
-  const ps = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
-  const hasProcurement = product.pipeline_status && product.pipeline_status !== 'NONE'
+  // Procurement Status Config — apply the tenant's recovery policy
+  // so terminal states (Received / Cancelled / Rejected / Failed)
+  // auto-recycle to "Available" once their cooldown matures. The
+  // policy lives in Org settings; the hook reads it once per session.
+  const recoveryPolicy = useProcurementRecoveryPolicy()
+  const liveStatus: string = applyRecoveryPolicy(
+    (product.pipeline_status as PipelineStatus) || 'NONE',
+    (product.pipeline_status_changed_at as string | null) ?? null,
+    recoveryPolicy,
+    (product.pipeline_rejection_reason as string | undefined) || undefined,
+  )
+  const ps = PIPELINE_STATUS_CONFIG[liveStatus] || PIPELINE_STATUS_CONFIG.NONE
+  const hasProcurement = liveStatus && liveStatus !== 'NONE'
 
   return (
     <div

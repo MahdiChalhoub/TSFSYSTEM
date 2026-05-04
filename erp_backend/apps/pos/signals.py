@@ -380,3 +380,63 @@ def auto_reissue_request_on_po_failure(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"[SIGNAL] auto_reissue_request_on_po_failure failed for PO {instance.id}: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bubble PO state into the linked Procurement Requests
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# When a PO progresses (DRAFT → ORDERED → CONFIRMED → IN_TRANSIT → RECEIVED
+# → COMPLETED), update every ProcurementRequest that derived from it
+# (request.source_po == this PO) so the request chip walks the full chain
+# instead of staying stuck at "Executed".
+#
+# The frontend already speaks the canonical pipeline vocabulary; the model
+# enum was extended in this commit to accept the new state names.
+
+PO_TO_REQUEST_STATUS = {
+    'DRAFT':              'PENDING',
+    'SUBMITTED':          'PENDING',
+    'APPROVED':           'APPROVED',
+    'ORDERED':            'ORDERED',
+    'SENT':               'ORDERED',
+    'CONFIRMED':          'SUPPLIER_CONFIRMED',
+    'IN_TRANSIT':         'IN_TRANSIT',
+    'PARTIALLY_RECEIVED': 'PARTIALLY_RECEIVED',
+    'RECEIVED':           'RECEIVED',
+    'INVOICED':           'RECEIVED',   # cycle-from-product POV
+    'COMPLETED':          'COMPLETED',
+    'REJECTED':           'REJECTED',
+    'CANCELLED':          'CANCELLED',
+    'FAILED':             'FAILED',
+}
+
+
+@receiver(post_save, sender='pos.PurchaseOrder')
+def bubble_po_status_to_requests(sender, instance, **kwargs):
+    """Push the PO's lifecycle state into every Procurement Request whose
+    source_po points at it. Idempotent: if the request is already at the
+    target status, nothing changes (no extra save → no signal storm)."""
+    target = PO_TO_REQUEST_STATUS.get((instance.status or '').upper())
+    if not target:
+        return
+    try:
+        # `derived_requests` is the reverse FK from
+        # ProcurementRequest.source_po → PurchaseOrder.
+        from apps.pos.models.procurement_request_models import ProcurementRequest
+        qs = ProcurementRequest.objects.filter(source_po=instance).exclude(status=target)
+        # Don't overwrite TERMINAL states the user has explicitly set
+        # (REJECTED / CANCELLED / FAILED) — those are operator decisions
+        # that out-rank the auto-bubble. Only auto-bump if the request
+        # is in a forward-progressing state.
+        non_terminal = qs.exclude(status__in=['REJECTED', 'CANCELLED', 'FAILED'])
+        updated = non_terminal.update(status=target)
+        if updated:
+            logger.info(
+                f"[SIGNAL] bubble_po_status_to_requests: PO #{instance.id} → "
+                f"{instance.status} bumped {updated} request(s) → {target}"
+            )
+    except Exception as e:
+        logger.warning(
+            f"[SIGNAL] bubble_po_status_to_requests failed for PO {instance.id}: {e}"
+        )
