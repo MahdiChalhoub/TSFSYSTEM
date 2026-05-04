@@ -20,7 +20,8 @@
 
 import {
     BookOpen, BarChart3, Search, FolderTree, Plus, Library, Zap,
-    Settings2, RefreshCcw, Maximize2, Sparkles, Keyboard, Layers
+    Settings2, RefreshCcw, Maximize2, Sparkles, Keyboard, Layers,
+    Building2, GitBranch, Globe,
 } from 'lucide-react'
 import { createElement } from 'react'
 import { registerTour } from '@/lib/tours/registry'
@@ -122,6 +123,33 @@ const coaTour: TourConfig = {
             icon: createElement(Maximize2, { size: 16 }),
             color: 'var(--app-info, #3b82f6)',
             placement: 'left',
+        },
+        // 9a — SCOPE column (per-row chip)
+        {
+            target: '[data-tour="account-tree"]',
+            title: 'Branch Scope per Account',
+            description: 'Every row carries a scope chip — 🌐 Tenant-wide (one shared balance), 🏢 Branch-split (slices per branch), 📦 Branch-located (lives at one site). Picking a Branch from the header filter only affects Split / Located accounts; Tenant balances stay stable.',
+            icon: createElement(Building2, { size: 16 }),
+            color: 'var(--app-info, #3b82f6)',
+            placement: 'top',
+        },
+        // 9b — Scope filter chips
+        {
+            target: '[data-tour="scope-filter-tabs"]',
+            title: 'Filter by Scope',
+            description: 'Quick tabs above the tree: All · Tenant-wide · Branch-split · Branch-located. Combine with the Branch picker in the header to see exactly what changes when you switch branches.',
+            icon: createElement(GitBranch, { size: 16 }),
+            color: 'var(--app-warning, #f59e0b)',
+            placement: 'bottom',
+        },
+        // 9c — Branch banner + Branch Scope override on the form
+        {
+            target: '[data-tour="add-account-btn"]',
+            title: 'Branch Scope Override (in the form)',
+            description: 'When you create an account, the Branch Scope field defaults to Auto (derived from type, system role, and the parent\'s scope). Override it to lock a specific behavior — handy for unusual ledger setups. Picking a parent inherits its scope automatically.',
+            icon: createElement(Globe, { size: 16 }),
+            color: 'var(--app-success, #22c55e)',
+            placement: 'bottom',
         },
         // 10 — Keyboard
         {

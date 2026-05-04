@@ -12,7 +12,7 @@
 
 import {
     BookOpen, Library, Search, FolderTree, Plus, Sparkles,
-    MousePointerClick, Menu, RefreshCcw
+    MousePointerClick, Menu, RefreshCcw, Building2, GitBranch,
 } from 'lucide-react'
 import { createElement } from 'react'
 import { registerTour } from '@/lib/tours/registry'
@@ -72,6 +72,24 @@ const coaMobileTour: TourConfig = {
             icon: createElement(Plus, { size: 16 }),
             color: 'var(--app-primary)',
             placement: 'bottom',
+        },
+        // SCOPE chip per row
+        {
+            target: '[data-tour="tree-container"]',
+            title: 'Branch Scope on Each Row',
+            description: 'Every account row carries a tiny scope chip — 🌐 Tenant-wide (one shared balance), 🏢 Branch-split (slices per branch), 📦 Branch-located (lives at one site). On mobile we keep them compact next to the balance.',
+            icon: createElement(Building2, { size: 16 }),
+            color: 'var(--app-info, #3b82f6)',
+            placement: 'top',
+        },
+        // SCOPE filter rail
+        {
+            target: '[data-tour="scope-filter-rail"]',
+            title: 'Scope Filter Rail',
+            description: 'A second row of filter chips lets you focus on one scope category at a time — handy on mobile when scrolling the full tree is slow. Combine with the Branch picker in the drawer to see what changes when you switch branch.',
+            icon: createElement(GitBranch, { size: 16 }),
+            color: 'var(--app-warning, #f59e0b)',
+            placement: 'top',
         },
         {
             target: null,

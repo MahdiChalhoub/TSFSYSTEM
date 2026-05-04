@@ -29,7 +29,21 @@ from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
 
 
+# Drift-bridge: TenantOwnedModel uses db_column='tenant_id' but the bank-
+# reconciliation tables in this DB were created with `organization_id`.
+# Each subclass overrides the FK to match. No DB migration needed.
+_BANK_TABLE_ORG_FK = lambda: models.ForeignKey(
+    'erp.Organization',
+    on_delete=models.CASCADE,
+    related_name='%(app_label)s_%(class)s_v2_set',
+    db_index=True,
+    null=True, blank=True,
+    db_column='organization_id',
+)
+
+
 class BankStatement(AuditLogMixin, TenantOwnedModel):
+    organization = _BANK_TABLE_ORG_FK()
     """
     Imported bank statement for reconciliation.
 
@@ -112,6 +126,7 @@ class BankStatement(AuditLogMixin, TenantOwnedModel):
 
 
 class BankStatementLine(AuditLogMixin, TenantOwnedModel):
+    organization = _BANK_TABLE_ORG_FK()
     """Individual bank transaction line."""
 
     statement = models.ForeignKey(BankStatement, on_delete=models.CASCADE, related_name='lines')
@@ -166,6 +181,7 @@ class BankStatementLine(AuditLogMixin, TenantOwnedModel):
 
 
 class ReconciliationSession(AuditLogMixin, TenantOwnedModel):
+    organization = _BANK_TABLE_ORG_FK()
     """Track reconciliation session metrics."""
 
     statement = models.ForeignKey(BankStatement, on_delete=models.CASCADE, related_name='sessions')

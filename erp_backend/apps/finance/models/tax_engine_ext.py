@@ -37,6 +37,10 @@ from apps.pos.models.import_declaration_models import ImportDeclaration  # noqa:
 # 0. Tax Rate Category — per-product VAT rate override
 # ═══════════════════════════════════════════════════════════════════════
 class TaxRateCategory(TenantModel):
+    # Override TenantModel's default db_column='tenant_id' — this DB
+    # table was created with `organization_id`. Without the override
+    # Django queries `tenant_id` and crashes with "column doesn't exist".
+    organization = models.ForeignKey('erp.Organization', on_delete=models.CASCADE, db_column='organization_id')
     """
     A named VAT rate that can be attached to individual products.
     When a product has a TaxRateCategory, TaxCalculator.resolve_product_rate()

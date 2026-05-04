@@ -16,10 +16,28 @@ from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
 
 
+# Drift-bridge: TenantOwnedModel declares the FK with db_column='tenant_id',
+# but every label/print table in this DB was created with the column literally
+# named `organization` (no _id suffix). Override on each subclass so Django
+# queries the right column name. No DB migration needed.
+_LABEL_TABLE_ORG_FK = lambda: models.ForeignKey(
+    'erp.Organization',
+    on_delete=models.CASCADE,
+    related_name='%(app_label)s_%(class)s_v2_set',
+    db_index=True,
+    null=True, blank=True,
+    db_column='organization',
+)
+
+
 class LabelPolicy(AuditLogMixin, TenantOwnedModel):
     """
     Organization-level label printing policy.
     Singleton per org — governs label lifecycle.
+
+    Note: this table really uses `tenant_id` (the parent default) —
+    only the OTHER label tables below (template/printer/session)
+    were created with an `organization` column.
     """
     INVALIDATION_CHOICES = (
         ('BARCODE_CHANGE', 'Invalidate on barcode change'),
@@ -157,6 +175,7 @@ class LabelRecord(AuditLogMixin, TenantOwnedModel):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class LabelTemplate(AuditLogMixin, TenantOwnedModel):
+    organization = _LABEL_TABLE_ORG_FK()
     """
     Versioned label layout template with HTML+CSS content, paper/size config,
     variable schema, and thermal-print-aware dimensions.
@@ -246,6 +265,7 @@ class LabelTemplate(AuditLogMixin, TenantOwnedModel):
 
 
 class PrinterConfig(AuditLogMixin, TenantOwnedModel):
+    organization = _LABEL_TABLE_ORG_FK()
     """
     Printer hardware configuration with runtime capability tracking.
     Separates: identity → capabilities → operational state → assignment.
@@ -318,6 +338,7 @@ class PrinterConfig(AuditLogMixin, TenantOwnedModel):
 
 
 class PrintSession(AuditLogMixin, TenantOwnedModel):
+    organization = _LABEL_TABLE_ORG_FK()
     """
     Enterprise print session — auditable lifecycle from Draft to Completed.
 
@@ -492,6 +513,7 @@ class PrintSession(AuditLogMixin, TenantOwnedModel):
 
 
 class PrintSessionItem(TenantOwnedModel):
+    organization = _LABEL_TABLE_ORG_FK()
     """
     A product/packaging in a print session queue.
     Stores a FULL immutable snapshot for reliable reprinting.
