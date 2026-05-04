@@ -839,22 +839,38 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
     @action(detail=False, methods=['post'])
     def move_products(self, request):
         """
-        Bulk-reassign products from one brand to another (or to unbranded).
-        Used by both the delete-protection migration flow and the brand
-        side panel's Products tab "Move" bulk action.
+        Bulk-reassign products from one brand to another (or to unbranded),
+        with conflict detection and reconciliation. Mirrors the categories
+        module's smart move flow.
 
         Body:
           source_brand_id (required): brand to move away from
           target_brand_id (optional): brand to assign — omit/null to clear brand
-          product_ids (optional): list[int] — when present, ONLY these
-            products are moved (subset move). Each id must currently
-            belong to source_brand_id; ids that don't are silently
-            ignored (the source filter handles that). When absent,
-            ALL products of source_brand_id are moved (the original
-            full-brand-merge behaviour the delete-protection flow uses).
+          product_ids (optional): list[int] — subset move. Omit to move
+            ALL products currently linked to source.
+          preview (optional, default False): when true, returns conflict
+            analysis without moving anything. Use this to drive the
+            "auto-link / reassign" UI before committing.
+          reconciliation (optional): {
+              auto_link_categories: list[int]  — category ids to add to
+                                                 target.categories M2M
+              auto_link_countries:  list[int]  — country ids to add to
+                                                 target.countries  M2M
+              auto_link_attributes: list[int]  — root attribute group ids
+                                                 to add to target.attributes
+              reassign_categories:  {old_cat_id: new_cat_id, ...}
+                  — change product.category FK on affected rows
+              reassign_countries:   {old_country_id: new_country_id, ...}
+              reassign_attributes:  {old_attr_id: new_attr_id, ...}
+            }
+            When the body lacks any reconciliation key entirely, the
+            ergonomic default is to auto-link every conflicting M2M to
+            the target — matches what categories.move_products does.
           also_delete_source (default false): after successful migration,
             delete the source brand (only if empty now)
         """
+        from apps.inventory.models import ProductAttribute
+
         organization, err = _get_org_or_400()
         if err: return err
 
@@ -862,6 +878,8 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
         target_id = request.data.get('target_brand_id')
         also_delete = bool(request.data.get('also_delete_source'))
         product_ids = request.data.get('product_ids')
+        preview = bool(request.data.get('preview', False))
+        reconciliation = request.data.get('reconciliation') or {}
         if not source_id:
             return Response({'error': 'source_brand_id is required'}, status=400)
 
@@ -877,22 +895,179 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
             except Brand.DoesNotExist:
                 return Response({'error': 'Target brand not found'}, status=404)
 
+        # Resolve the products being moved. The same filter feeds both
+        # the conflict scan and the actual update.
+        moving_qs = Product.objects.filter(brand=source, organization=organization)
+        if isinstance(product_ids, list) and product_ids:
+            moving_qs = moving_qs.filter(id__in=product_ids)
+        moving = list(moving_qs.only('id', 'category_id', 'country_id'))
+        moving_count = len(moving)
+
+        # ── Conflict analysis ──
+        # When the target is None ("Unbranded"), there's no target M2M
+        # to compare against, so no conflicts. The user is just clearing
+        # brand FKs and the products keep all their other associations.
+        target_cat_ids = set(target.categories.values_list('id', flat=True)) if target else set()
+        target_country_ids = set(target.countries.values_list('id', flat=True)) if target else set()
+        target_attr_ids = set(target.attributes.values_list('id', flat=True)) if target else set()
+
+        moving_cat_ids = {p.category_id for p in moving if p.category_id}
+        moving_country_ids = {p.country_id for p in moving if p.country_id}
+        # Attribute values are an M2M on Product — bulk-fetch the leaf-
+        # to-root mapping so we can map leaves back to their root group
+        # (the brand M2M only stores root groups).
+        leaf_pairs = (
+            ProductAttribute.objects
+                .filter(products_with_attribute__in=moving_qs)
+                .exclude(parent__isnull=True)
+                .values_list('id', 'parent_id')
+                .distinct()
+        )
+        leafless_used = (
+            ProductAttribute.objects
+                .filter(products_with_attribute__in=moving_qs, parent__isnull=True)
+                .values_list('id', flat=True)
+                .distinct()
+        )
+        moving_attr_root_ids = {root for _, root in leaf_pairs} | set(leafless_used)
+
+        cat_conflicts = moving_cat_ids - target_cat_ids if target else set()
+        country_conflicts = moving_country_ids - target_country_ids if target else set()
+        attr_conflicts = moving_attr_root_ids - target_attr_ids if target else set()
+
+        def _named(model, ids, **filters):
+            if not ids:
+                return []
+            return list(
+                model.objects.filter(id__in=ids, organization=organization, **filters)
+                              .values('id', 'name')
+            )
+
+        # Affected-product counts make the dialog more useful — the user
+        # can see "8 products under category X will need that link".
+        cat_affected: dict[int, int] = {}
+        country_affected: dict[int, int] = {}
+        for p in moving:
+            if p.category_id in cat_conflicts:
+                cat_affected[p.category_id] = cat_affected.get(p.category_id, 0) + 1
+            if p.country_id in country_conflicts:
+                country_affected[p.country_id] = country_affected.get(p.country_id, 0) + 1
+
+        conflict_categories = [
+            {**row, 'affected_count': cat_affected.get(row['id'], 0)}
+            for row in _named(Category, cat_conflicts)
+        ]
+        conflict_countries = [
+            {**row, 'affected_count': country_affected.get(row['id'], 0)}
+            for row in Country.objects.filter(id__in=country_conflicts).values('id', 'name')
+        ]
+        conflict_attributes = _named(
+            ProductAttribute, attr_conflicts, parent__isnull=True
+        )
+
+        has_conflicts = bool(conflict_categories or conflict_countries or conflict_attributes)
+
+        if preview:
+            return Response({
+                'has_conflicts': has_conflicts,
+                'target_brand': {'id': target.id, 'name': target.name} if target else None,
+                'product_count': moving_count,
+                'conflict_categories': conflict_categories,
+                'conflict_countries':  conflict_countries,
+                'conflict_attributes': conflict_attributes,
+                'target_categories': list(target.categories.values('id', 'name')) if target else [],
+                'target_countries':  list(target.countries.values('id', 'name')) if target else [],
+                'target_attributes': list(target.attributes.filter(parent__isnull=True).values('id', 'name')) if target else [],
+                'all_categories': list(Category.objects.filter(organization=organization).values('id', 'name').order_by('name')),
+                'all_countries':  list(Country.objects.values('id', 'name').order_by('name')),
+                'all_attributes': list(ProductAttribute.objects.filter(organization=organization, parent__isnull=True).values('id', 'name').order_by('name')),
+            })
+
+        # ── Execute Move with Reconciliation ──
+        # Same ergonomic default as categories.move_products: an empty /
+        # missing reconciliation block means "resolve every conflict by
+        # auto-linking to the target brand". The UI can override with
+        # explicit per-conflict choices.
+        reconciliation_is_explicit = bool(
+            reconciliation.get('auto_link_categories')
+            or reconciliation.get('reassign_categories')
+            or reconciliation.get('auto_link_countries')
+            or reconciliation.get('reassign_countries')
+            or reconciliation.get('auto_link_attributes')
+            or reconciliation.get('reassign_attributes')
+        )
+        if not reconciliation_is_explicit:
+            auto_link_cats = list(cat_conflicts)
+            auto_link_countries = list(country_conflicts)
+            auto_link_attrs = list(attr_conflicts)
+            reassign_cats: dict = {}
+            reassign_countries_map: dict = {}
+            reassign_attrs: dict = {}
+        else:
+            auto_link_cats        = reconciliation.get('auto_link_categories', [])
+            reassign_cats         = reconciliation.get('reassign_categories', {})
+            auto_link_countries   = reconciliation.get('auto_link_countries', [])
+            reassign_countries_map = reconciliation.get('reassign_countries', {})
+            auto_link_attrs       = reconciliation.get('auto_link_attributes', [])
+            reassign_attrs        = reconciliation.get('reassign_attributes', {})
+
         with transaction.atomic():
-            qs = Product.objects.filter(brand=source, organization=organization)
-            if isinstance(product_ids, list) and product_ids:
-                # Subset move — only the supplied ids that still belong
-                # to the source brand. Defends against stale UIs.
-                qs = qs.filter(id__in=product_ids)
-            updated = qs.update(brand=target)
+            if target:
+                # Auto-link missing M2M edges before the move so the
+                # target's facet view of the moved products is
+                # correct in the new home.
+                if auto_link_cats:
+                    target.categories.add(*auto_link_cats)
+                if auto_link_countries:
+                    target.countries.add(*auto_link_countries)
+                if auto_link_attrs:
+                    target.attributes.add(*auto_link_attrs)
+
+                # Reassign FKs on the products that the user opted to
+                # change rather than auto-link. Each (old → new) entry
+                # rewrites the product FK in bulk.
+                if reassign_cats:
+                    for old_id, new_id in reassign_cats.items():
+                        moving_qs.filter(category_id=old_id).update(category_id=new_id)
+                if reassign_countries_map:
+                    for old_id, new_id in reassign_countries_map.items():
+                        moving_qs.filter(country_id=old_id).update(country_id=new_id)
+                # Attribute reassignment lives on the through-table —
+                # rewrite each product's M2M leaf membership for the
+                # affected root group. Requires per-product touch
+                # because attributes is M2M, not FK.
+                if reassign_attrs:
+                    for p in moving_qs.prefetch_related('attribute_values'):
+                        for leaf in list(p.attribute_values.all()):
+                            old_root_id = leaf.parent_id
+                            new_root_id = reassign_attrs.get(old_root_id)
+                            if new_root_id and old_root_id != new_root_id:
+                                # Drop the old leaf, attach a placeholder
+                                # leaf under the new root if any exists
+                                # (otherwise the user can edit later).
+                                p.attribute_values.remove(leaf)
+                                placeholder = ProductAttribute.objects.filter(
+                                    parent_id=new_root_id, organization=organization
+                                ).first()
+                                if placeholder:
+                                    p.attribute_values.add(placeholder)
+
+            updated = moving_qs.update(brand=target)
             deleted = False
             if also_delete:
                 remaining = Product.objects.filter(brand=source, organization=organization).count()
                 if remaining == 0:
                     source.delete()
                     deleted = True
+
         return Response({
             'status': 'moved', 'products_updated': updated,
             'source_deleted': deleted,
+            'reconciled': {
+                'auto_link_categories': list(auto_link_cats),
+                'auto_link_countries':  list(auto_link_countries),
+                'auto_link_attributes': list(auto_link_attrs),
+            },
         })
 
     # ─────────────────────────────────────────────────────────────────

@@ -128,6 +128,20 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
     }
 
     const unlinkCountry = async (countryId: number) => {
+        // Pre-check the affected product count, like the sourcing-country
+        // remove guard does. Removes the M2M only — products keep their
+        // country FK.
+        let affected = 0
+        try {
+            const res: any = await erpFetch(`inventory/products/?brand=${brandId}&country=${countryId}&page_size=1`)
+            affected = typeof res?.count === 'number' ? res.count : 0
+        } catch { /* fall through */ }
+        const c = linked.find(x => x.id === countryId)
+        const msg = affected === 0
+            ? `Unlink "${c?.name || 'this country'}" from this brand?`
+            : `Unlink "${c?.name || 'this country'}" from this brand?\n\n${affected} product${affected === 1 ? '' : 's'} of this brand carry this country FK — they keep it. Only the explicit brand-country registration is removed.`
+        if (!window.confirm(msg)) return
+
         setLinking(true)
         try {
             await erpFetch(`inventory/brands/${brandId}/unlink_country/`, {

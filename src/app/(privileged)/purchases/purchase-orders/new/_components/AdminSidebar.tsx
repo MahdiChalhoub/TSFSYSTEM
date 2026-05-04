@@ -14,6 +14,10 @@ type Props = {
     suppliers: Record<string, any>[]
     sites: Record<string, any>[]
     users: Record<string, any>[]
+    /** When set, the Site dropdown is filtered to these site ids only —
+     *  used to scope non-admin users to their assigned branch (currently
+     *  `currentUser.home_site`). `null` = no filter (org-wide access). */
+    allowedSiteIds?: number[] | null
     supplierId: number | ''
     onSupplierChange: (id: number | '') => void
     siteId: number | ''
@@ -74,6 +78,7 @@ const FIRM_DIVIDER = 'color-mix(in srgb, var(--app-border) 60%, transparent)'
 
 export function AdminSidebar({
     suppliers, sites, users,
+    allowedSiteIds = null,
     supplierId, onSupplierChange,
     siteId, onSiteChange,
     warehouseId, onWarehouseChange,
@@ -105,9 +110,17 @@ export function AdminSidebar({
         () => suppliers.map(s => ({ value: String(s.id), label: s.name })),
         [suppliers],
     )
+    // Apply the permission filter once, before mapping to dropdown shape.
+    // `null` allowedSiteIds means org-wide access (staff/superuser); a set
+    // means non-admin users limited to their assigned branch(es).
+    const visibleSites = useMemo(() => {
+        if (!allowedSiteIds || allowedSiteIds.length === 0) return sites
+        const allowed = new Set(allowedSiteIds.map(Number))
+        return sites.filter(s => allowed.has(Number(s.id)))
+    }, [sites, allowedSiteIds])
     const siteOptions = useMemo(
-        () => sites.map(s => ({ value: String(s.id), label: s.name })),
-        [sites],
+        () => visibleSites.map(s => ({ value: String(s.id), label: s.name })),
+        [visibleSites],
     )
     const warehouseOptions = useMemo(
         () => warehouses.map((w: any) => ({ value: String(w.id), label: w.name })),

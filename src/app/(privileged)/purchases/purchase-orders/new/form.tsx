@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 import { useFormDraft } from './_lib/use-form-draft'
+import { useBranchScope } from '@/context/BranchContext'
 import { ProductSearch } from './_components/ProductSearch'
 import { LineCardGrid } from './_components/LineCardGrid'
 import { AdminSidebar } from './_components/AdminSidebar'
@@ -72,6 +73,23 @@ export default function PurchaseForm({
     initialPO = null,
 }: PurchaseFormProps) {
     const isStaff = currentUser?.is_staff || currentUser?.is_superuser;
+
+    // ── Permission scope for the Site/Warehouse picker ──────────────
+    // 1. The top-bar branch/location selector (cookie-backed) is the
+    //    operator's CURRENT working scope — pre-fill the picker with it
+    //    so they don't re-pick the same branch they just selected.
+    // 2. `currentUser.home_site` is the user's permanent assigned BRANCH;
+    //    non-staff users can ONLY pick under it. Staff/superusers get
+    //    org-wide access (`allowedSiteIds = null`).
+    // The picker uses the union of these signals — top-bar wins for
+    // initial selection, home_site decides which sites show up at all.
+    const { branchId: topbarBranchId, locationId: topbarLocationId } = useBranchScope()
+    const homeSiteId: number | null = (() => {
+        const v = currentUser?.home_site
+        const n = typeof v === 'object' && v ? Number(v.id) : Number(v)
+        return Number.isFinite(n) && n > 0 ? n : null
+    })()
+    const allowedSiteIds: number[] | null = isStaff ? null : (homeSiteId ? [homeSiteId] : null)
 
     const isEdit = mode === 'edit' && !!initialPO
     const isQuick = mode === 'quick'
@@ -156,16 +174,25 @@ export default function PurchaseForm({
         isEdit ? seedNumber(initialPO?.supplier?.id ?? initialPO?.supplier ?? initialPO?.supplier_id) : ''
     )
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>(() => {
-        if (!isEdit) return ''
-        // Backend stores `warehouse` (the leaf) — use its `parent` (or
-        // `site`/`branch` if the serializer surfaces it directly) for the
-        // site selector.
-        const wh = initialPO?.warehouse as Record<string, unknown> | undefined
-        return seedNumber(initialPO?.site?.id ?? initialPO?.site ?? wh?.parent ?? wh?.site ?? initialPO?.branch_id)
+        if (isEdit) {
+            // Backend stores `warehouse` (the leaf) — use its `parent` (or
+            // `site`/`branch` if the serializer surfaces it directly) for the
+            // site selector.
+            const wh = initialPO?.warehouse as Record<string, unknown> | undefined
+            return seedNumber(initialPO?.site?.id ?? initialPO?.site ?? wh?.parent ?? wh?.site ?? initialPO?.branch_id)
+        }
+        // Fresh form — pre-fill from top-bar selection, then home_site.
+        // (Top-bar wins because that's what the operator is actively
+        // working in; home_site is the silent fallback.)
+        return topbarBranchId ?? homeSiteId ?? ''
     })
-    const [warehouseId, setWarehouseId] = useState<number | ''>(() =>
-        isEdit ? seedNumber(initialPO?.warehouse?.id ?? initialPO?.warehouse ?? initialPO?.warehouse_id) : ''
-    )
+    const [warehouseId, setWarehouseId] = useState<number | ''>(() => {
+        if (isEdit) return seedNumber(initialPO?.warehouse?.id ?? initialPO?.warehouse ?? initialPO?.warehouse_id)
+        // Only seed warehouse from top-bar if the top-bar's branch matches
+        // what we just seeded as site — otherwise the location id won't
+        // belong to the chosen branch.
+        return topbarBranchId && topbarLocationId ? topbarLocationId : ''
+    })
     const [assigneeId, setAssigneeId] = useState<number | ''>(() =>
         isEdit ? seedNumber(initialPO?.assignee?.id ?? initialPO?.assignee ?? initialPO?.assignee_id) : ''
     )
@@ -937,6 +964,7 @@ export default function PurchaseForm({
                         >
                              <AdminSidebar
                                 suppliers={suppliers} sites={sites} users={users}
+                                allowedSiteIds={allowedSiteIds}
                                 supplierId={supplierId} onSupplierChange={setSupplierId}
                                 siteId={selectedSiteId} onSiteChange={setSelectedSiteId}
                                 warehouseId={warehouseId} onWarehouseChange={setWarehouseId}

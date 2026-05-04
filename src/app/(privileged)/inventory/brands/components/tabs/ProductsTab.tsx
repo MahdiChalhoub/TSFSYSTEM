@@ -57,6 +57,23 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
     const [moveTargetSearch, setMoveTargetSearch] = useState('')
     const [moveScope, setMoveScope] = useState<'selected' | 'all'>('selected')
     const [moving, setMoving] = useState(false)
+    // Conflict-preview state — populated by the backend before the move
+    // commits. The user sees what category / country / attribute groups
+    // the moving products carry that the target brand isn't M2M-linked
+    // to, and chooses whether to auto-link them all (default) or skip.
+    type MovePreview = {
+        has_conflicts: boolean
+        target_brand: { id: number; name: string } | null
+        product_count: number
+        conflict_categories: Array<{ id: number; name: string; affected_count?: number }>
+        conflict_countries:  Array<{ id: number; name: string; affected_count?: number }>
+        conflict_attributes: Array<{ id: number; name: string }>
+    }
+    const [preview, setPreview] = useState<MovePreview | null>(null)
+    const [previewing, setPreviewing] = useState(false)
+    const [autoLinkCats,    setAutoLinkCats]    = useState<Set<number>>(new Set())
+    const [autoLinkCountries, setAutoLinkCountries] = useState<Set<number>>(new Set())
+    const [autoLinkAttrs,   setAutoLinkAttrs]   = useState<Set<number>>(new Set())
     const sentinelRef = useRef<HTMLDivElement | null>(null)
     const scrollRef = useRef<HTMLDivElement | null>(null)
 
@@ -177,24 +194,78 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
         return list.filter(b => b.name.toLowerCase().includes(q))
     }, [allBrands, brandId, moveTargetSearch])
 
+    /** Build the request body shared by both preview and commit calls. */
+    const moveBody = (extras: Record<string, unknown> = {}): Record<string, unknown> => {
+        const body: Record<string, unknown> = {
+            source_brand_id: brandId,
+            target_brand_id: moveTarget === 'unbranded' ? null : moveTarget,
+            ...extras,
+        }
+        if (moveScope === 'selected') body.product_ids = Array.from(selected)
+        return body
+    }
+
+    /** Fetch a conflict preview from the backend. Triggered when the
+     *  user picks a target brand (and any time the scope or selection
+     *  changes after that). Unbranded targets skip preview because
+     *  there's no M2M to compare against. */
+    const fetchPreview = useCallback(async () => {
+        if (moveTarget == null) return
+        if (moveTarget === 'unbranded') {
+            // No conflicts possible when clearing brand FK to null.
+            setPreview({
+                has_conflicts: false, target_brand: null,
+                product_count: moveScope === 'all' ? totalCount : selected.size,
+                conflict_categories: [], conflict_countries: [], conflict_attributes: [],
+            })
+            setAutoLinkCats(new Set()); setAutoLinkCountries(new Set()); setAutoLinkAttrs(new Set())
+            return
+        }
+        setPreviewing(true)
+        try {
+            const res: any = await erpFetch('inventory/brands/move_products/', {
+                method: 'POST',
+                body: JSON.stringify(moveBody({ preview: true })),
+            })
+            setPreview(res as MovePreview)
+            // Default to auto-link everything (the "ergonomic default"
+            // matches the backend's no-reconciliation-key behaviour).
+            // The user can uncheck items to opt out per group.
+            setAutoLinkCats(new Set((res?.conflict_categories || []).map((c: any) => c.id)))
+            setAutoLinkCountries(new Set((res?.conflict_countries || []).map((c: any) => c.id)))
+            setAutoLinkAttrs(new Set((res?.conflict_attributes || []).map((a: any) => a.id)))
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to preview move')
+            setPreview(null)
+        } finally {
+            setPreviewing(false)
+        }
+    // moveBody captures moveTarget/moveScope/selected/totalCount via closure;
+    // listing them in deps keeps fetchPreview consistent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [moveTarget, moveScope, selected, totalCount, brandId])
+
+    // Refetch preview whenever the target / scope / selection changes
+    // while the dialog is open. The backend response drives the
+    // conflict UI below.
+    useEffect(() => {
+        if (!moveOpen || moveTarget == null) { setPreview(null); return }
+        fetchPreview()
+    }, [moveOpen, fetchPreview])
+
     const performMove = async () => {
         if (moveTarget == null) return
         setMoving(true)
         try {
-            // Two scopes:
-            //   selected → only the cherry-picked product_ids
-            //   all      → omit product_ids; backend moves every
-            //              product currently linked to the source brand
-            const body: Record<string, unknown> = {
-                source_brand_id: brandId,
-                target_brand_id: moveTarget === 'unbranded' ? null : moveTarget,
-            }
-            if (moveScope === 'selected') {
-                body.product_ids = Array.from(selected)
-            }
             await erpFetch('inventory/brands/move_products/', {
                 method: 'POST',
-                body: JSON.stringify(body),
+                body: JSON.stringify(moveBody({
+                    reconciliation: {
+                        auto_link_categories: Array.from(autoLinkCats),
+                        auto_link_countries:  Array.from(autoLinkCountries),
+                        auto_link_attributes: Array.from(autoLinkAttrs),
+                    },
+                })),
             })
             const movedCount = moveScope === 'all' ? totalCount : selected.size
             toast.success(`${movedCount} product${movedCount === 1 ? '' : 's'} moved`)
@@ -203,6 +274,7 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
             setMoveTarget(null)
             setMoveTargetSearch('')
             setMoveScope('selected')
+            setPreview(null)
             loadPage(1, false)
             router.refresh()
         } catch (e: any) {
@@ -496,6 +568,72 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                                     </p>
                                 )}
                             </div>
+
+                            {/* ── Conflict preview ── Shown once a target
+                                brand is picked. Tells the user which
+                                M2M registrations the target is missing
+                                vs what the moving products carry, with
+                                an opt-out per group. Default state is
+                                "auto-link everything" which matches the
+                                backend's default behaviour and keeps the
+                                product-level facets (categories /
+                                countries / attribute groups) intact in
+                                the new home. */}
+                            {previewing && (
+                                <div className="mt-3 p-3 rounded-xl text-tp-xs flex items-center gap-2 text-app-muted-foreground"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                    <Loader2 size={12} className="animate-spin" />
+                                    Checking what {moveTarget && moveTarget !== 'unbranded' ? '' : 'the move'} affects…
+                                </div>
+                            )}
+                            {!previewing && preview && preview.has_conflicts && (
+                                <div className="mt-3 p-3 rounded-xl text-tp-xs"
+                                    style={{ background: 'color-mix(in srgb, var(--app-warning) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning) 25%, transparent)' }}>
+                                    <p className="font-bold mb-2" style={{ color: 'var(--app-warning)' }}>
+                                        ⚠ The target brand isn&apos;t linked to everything these products use.
+                                    </p>
+                                    <p className="text-app-muted-foreground mb-3">
+                                        Auto-link the items below to <strong>{preview.target_brand?.name}</strong>&apos;s
+                                        Categories / Countries / Attributes so its facets show the moved products
+                                        correctly. Uncheck any you want to leave unlinked (the products keep their
+                                        own FKs either way — this is brand-level registration only).
+                                    </p>
+
+                                    {preview.conflict_categories.length > 0 && (
+                                        <ConflictGroup
+                                            label="Categories"
+                                            items={preview.conflict_categories}
+                                            selected={autoLinkCats}
+                                            onToggle={(id) => setAutoLinkCats(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })}
+                                        />
+                                    )}
+                                    {preview.conflict_countries.length > 0 && (
+                                        <ConflictGroup
+                                            label="Countries"
+                                            items={preview.conflict_countries}
+                                            selected={autoLinkCountries}
+                                            onToggle={(id) => setAutoLinkCountries(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })}
+                                        />
+                                    )}
+                                    {preview.conflict_attributes.length > 0 && (
+                                        <ConflictGroup
+                                            label="Attribute groups"
+                                            items={preview.conflict_attributes}
+                                            selected={autoLinkAttrs}
+                                            onToggle={(id) => setAutoLinkAttrs(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })}
+                                        />
+                                    )}
+                                </div>
+                            )}
+                            {!previewing && preview && !preview.has_conflicts && moveTarget !== null && moveTarget !== 'unbranded' && (
+                                <div className="mt-3 p-3 rounded-xl text-tp-xs flex items-start gap-2"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)', color: 'var(--app-success)' }}>
+                                    <Check size={12} className="mt-0.5 flex-shrink-0" />
+                                    <span><strong>{preview.target_brand?.name}</strong> is already linked to every category,
+                                    country and attribute these {preview.product_count} product{preview.product_count === 1 ? '' : 's'} use.
+                                    Clean move.</span>
+                                </div>
+                            )}
                         </div>
                         <div className="px-4 py-3 flex items-center gap-2"
                             style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-background) 40%, var(--app-surface))' }}>
@@ -515,6 +653,44 @@ export function ProductsTab({ brandId, brandName }: { brandId: number; brandName
                     </div>
                 </div>
             )}
+        </div>
+    )
+}
+
+/** Small reusable list block for the move-products conflict UI. One
+ *  toggleable row per conflicting M2M entry, with the affected-product
+ *  count when the backend supplied it. */
+function ConflictGroup({
+    label, items, selected, onToggle,
+}: {
+    label: string
+    items: Array<{ id: number; name: string; affected_count?: number }>
+    selected: Set<number>
+    onToggle: (id: number) => void
+}) {
+    return (
+        <div className="mb-2 last:mb-0">
+            <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1">
+                {label} ({items.length})
+            </p>
+            <div className="space-y-1">
+                {items.map(it => {
+                    const checked = selected.has(it.id)
+                    return (
+                        <label key={it.id}
+                            className="flex items-center gap-2 px-2 py-1 rounded-lg cursor-pointer transition-colors hover:bg-app-surface-hover">
+                            <input type="checkbox" checked={checked} onChange={() => onToggle(it.id)}
+                                className="w-3.5 h-3.5 rounded border accent-[var(--app-warning)]" />
+                            <span className="text-tp-sm font-semibold text-app-foreground flex-1 truncate">{it.name}</span>
+                            {typeof it.affected_count === 'number' && it.affected_count > 0 && (
+                                <span className="text-tp-xxs font-medium text-app-muted-foreground flex-shrink-0">
+                                    {it.affected_count} product{it.affected_count === 1 ? '' : 's'}
+                                </span>
+                            )}
+                        </label>
+                    )
+                })}
+            </div>
         </div>
     )
 }

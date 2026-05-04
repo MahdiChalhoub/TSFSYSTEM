@@ -132,9 +132,14 @@ class OrganizationMinimalSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)
     organization = OrganizationMinimalSerializer(read_only=True)
+    # `home_site` is the user's assigned BRANCH (Site row, location_type='BRANCH').
+    # Surfaced as a flat id so the front-end can scope pickers (Fulfillment
+    # site/warehouse) to the user's permitted branch without a second lookup.
+    home_site = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'organization', 'role']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'organization', 'role', 'home_site']
 
 class BusinessRegistrationSerializer(serializers.Serializer):
     # Business Details

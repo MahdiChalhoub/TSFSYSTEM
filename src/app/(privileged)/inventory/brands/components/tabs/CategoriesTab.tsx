@@ -108,6 +108,23 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
     }
 
     const unlinkCategory = async (catId: number) => {
+        // Cheap pre-check — count products of this brand that carry the
+        // category FK we're about to unlink. Surface that in the confirm
+        // prompt so the user knows the M2M removal won't touch product
+        // FKs (they keep their category) but the brand will lose its
+        // explicit registration. Same shape as the sourcing-country
+        // remove guard.
+        let affected = 0
+        try {
+            const res: any = await erpFetch(`inventory/products/?brand=${brandId}&category=${catId}&page_size=1`)
+            affected = typeof res?.count === 'number' ? res.count : 0
+        } catch { /* fall through to a generic prompt */ }
+        const cat = linkedCats.find(c => c.id === catId)
+        const msg = affected === 0
+            ? `Unlink "${cat?.name || 'this category'}" from this brand?`
+            : `Unlink "${cat?.name || 'this category'}" from this brand?\n\n${affected} product${affected === 1 ? '' : 's'} of this brand carry this category — they keep their category FK. Only the explicit brand-category registration is removed.`
+        if (!window.confirm(msg)) return
+
         setLinking(true)
         try {
             await erpFetch(`inventory/brands/${brandId}/unlink_category/`, {

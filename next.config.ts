@@ -30,6 +30,26 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // URL hygiene — `/inventory/purchases/...` is a wrong nesting (Purchases is
+  // a sibling module to Inventory, not a child). Bounce stale bookmarks /
+  // typos to the real path before the App Router runs, so we don't fight
+  // the RSC pipeline with a server-component `redirect()` (Next 16 + Turbopack
+  // currently surfaces those as "unexpected response from server").
+  async redirects() {
+    return [
+      {
+        source: '/inventory/purchases',
+        destination: '/purchases',
+        permanent: false,
+      },
+      {
+        source: '/inventory/purchases/:rest*',
+        destination: '/purchases/:rest*',
+        permanent: false,
+      },
+    ];
+  },
+
   // Security headers
   async headers() {
     return [
