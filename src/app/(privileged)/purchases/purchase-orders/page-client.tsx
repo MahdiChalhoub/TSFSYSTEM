@@ -186,7 +186,7 @@ export default function PurchaseOrdersManager({
         { label: 'Incoming', value: stats.incoming, icon: <Truck size={11} />, color: 'var(--app-info, #3b82f6)' },
         { label: 'Completed', value: stats.completed, icon: <CheckCircle size={11} />, color: 'var(--app-success, #22c55e)' },
       ]}
-      primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/new') }}
+      primaryAction={{ label: 'New Order', icon: <Plus size={14} />, onClick: () => openTab('New Purchase Order', '/purchases/purchase-orders/new') }}
       secondaryActions={
         <>
           <button onClick={() => router.push('/purchases/sourcing')}
@@ -318,7 +318,7 @@ export default function PurchaseOrdersManager({
         onView={po => onView(po.id)}
         menuActions={po => [
           { label: 'Open Order', icon: <Eye size={12} className="text-app-muted-foreground" />, onClick: () => onView(po.id) },
-          { label: 'Edit Order', icon: <Pencil size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/new?edit=${po.id}` } },
+          { label: 'Edit Order', icon: <Pencil size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/purchases/purchase-orders/new?edit=${po.id}` } },
           { label: '─── Transfer To ───', icon: <ArrowRightCircle size={12} className="text-app-muted-foreground/30" />, onClick: () => {} },
           { label: 'Purchase Receipt', icon: <Truck size={12} style={{ color: 'var(--app-success)' }} />, onClick: () => { window.location.href = `/purchases/receipts/new?from_po=${po.id}` } },
           { label: 'Purchase Invoice', icon: <Receipt size={12} style={{ color: 'var(--app-warning)' }} />, onClick: () => { window.location.href = `/purchases/invoices?from_po=${po.id}` } },

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 
-import PurchaseForm from '../purchases/new/form';
+import PurchaseForm from '../purchases/purchase-orders/new/form';
 import FormalOrderFormV2 from '../purchases/new-order-v2/form';
 
 type View = 'new' | 'new-order-v2';

@@ -35,53 +35,72 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
 
     const loadData = useCallback(() => {
         setLoading(true)
-        Promise.all([
-            erpFetch(`inventory/brands/${brandId}/`),
-            erpFetch('countries/'),
-            erpFetch(`inventory/products/?brand=${brandId}&page_size=200`),
-        ]).then(([brandData, countryData, prodData]: any[]) => {
-            const all = Array.isArray(countryData?.results) ? countryData.results : (Array.isArray(countryData) ? countryData : [])
-            const masterCountries: CountryRow[] = all.map((c: any) => ({ id: c.id, name: c.name, code: c.code }))
-            const idToName = new Map<number, CountryRow>(masterCountries.map(c => [c.id, c]))
-            setAllCountries(masterCountries)
-
-            const m2mRaw = brandData?.countries
-            const m2mIdsLocal: number[] = Array.isArray(m2mRaw)
-                ? m2mRaw.map((c: any) => typeof c === 'number' ? c : c?.id).filter((n): n is number => typeof n === 'number')
-                : []
-            setM2mIds(new Set(m2mIdsLocal))
-
-            const products = Array.isArray(prodData) ? prodData : (prodData?.results ?? [])
-            const fromProducts = new Map<number, CountryRow>()
-            products.forEach((p: any) => {
-                if (p.country) {
-                    const found = idToName.get(p.country)
-                    fromProducts.set(p.country, {
-                        id: p.country,
-                        name: p.country_name || found?.name || `Country #${p.country}`,
-                        code: p.country_code || found?.code,
-                    })
-                }
+        // Fast path: read M2M-linked countries straight from the brand
+        // record (the detail serializer ships them as nested objects).
+        // The previous implementation was 3 calls including a 200-row
+        // products scan to derive "Inferred from product country" rows
+        // and the Universal bucket — that scan was the slow part the
+        // user kept hitting on big-catalogue brands.
+        erpFetch(`inventory/brands/${brandId}/`)
+            .then((brandData: any) => {
+                const cs = Array.isArray(brandData?.countries) ? brandData.countries : []
+                const m2mIdsLocal: number[] = cs
+                    .map((c: any) => typeof c === 'number' ? c : c?.id)
+                    .filter((n: any): n is number => typeof n === 'number')
+                setM2mIds(new Set(m2mIdsLocal))
+                setLinked(
+                    cs
+                        .map((c: any) => ({
+                            id: typeof c === 'number' ? c : c?.id,
+                            name: typeof c === 'number' ? `Country #${c}` : (c?.name || `Country #${c?.id}`),
+                            code: typeof c === 'number' ? undefined : c?.code,
+                        }))
+                        .filter((c: any) => Number.isFinite(c.id))
+                        .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                )
             })
-            const universalList = products
-                .filter((p: any) => !p.country)
-                .map((p: any) => ({ id: p.id, name: p.name }))
-            setUniversalProducts(universalList)
-            setHasUniversal(universalList.length > 0)
+            .catch(() => {})
+            .finally(() => setLoading(false))
 
-            const merged = new Map<number, CountryRow>()
-            m2mIdsLocal.forEach(id => {
-                const c = idToName.get(id)
-                if (c) merged.set(id, c)
-                else merged.set(id, { id, name: `Country #${id}` })
+        // Universal bucket detection — page_size=1 just to read the
+        // `count` from the paginated response. We avoid pulling the
+        // actual rows; the Remove-Universal modal does its own fetch
+        // when opened (it needs the ids to PATCH). The "N products"
+        // hint on the Universal row uses the count value.
+        erpFetch(`inventory/products/?brand=${brandId}&country__isnull=true&page_size=1`)
+            .then((res: any) => {
+                const total = typeof res?.count === 'number' ? res.count : (Array.isArray(res) ? res.length : (res?.results?.length || 0))
+                setHasUniversal(total > 0)
+                setUniversalProducts(
+                    total > 0
+                        ? Array.from({ length: total }, (_, i) => ({ id: i, name: '' }))
+                        : []
+                )
             })
-            fromProducts.forEach((row, id) => { if (!merged.has(id)) merged.set(id, row) })
-
-            setLinked([...merged.values()].sort((a, b) => a.name.localeCompare(b.name)))
-        }).catch(() => {}).finally(() => setLoading(false))
+            .catch(() => {
+                setHasUniversal(false)
+                setUniversalProducts([])
+            })
     }, [brandId])
 
     useEffect(() => { loadData() }, [loadData])
+
+    // Lazy-fetch the master countries list — only when the user is
+    // about to need it (Link picker or Remove-Universal modal). Saves
+    // a 250-row fetch on every tab open.
+    const ensureAllCountries = useCallback(() => {
+        if (allCountries.length > 0) return
+        erpFetch('countries/')
+            .then((countryData: any) => {
+                const all = Array.isArray(countryData?.results) ? countryData.results : (Array.isArray(countryData) ? countryData : [])
+                setAllCountries(all.map((c: any) => ({ id: c.id, name: c.name, code: c.code })))
+            })
+            .catch(() => {})
+    }, [allCountries.length])
+
+    useEffect(() => {
+        if (showLink || removeUniversalOpen) ensureAllCountries()
+    }, [showLink, removeUniversalOpen, ensureAllCountries])
 
     const unlinkedCountries = useMemo(
         () => allCountries.filter(c => !m2mIds.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)),
@@ -129,11 +148,32 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
         if (universalTarget == null || universalProducts.length === 0) return
         setRemovingUniversal(true)
         try {
-            // Run all PATCHes in parallel — settles even if some fail so
-            // the user gets partial-success feedback.
+            // The fast initial load only knows the COUNT of universal
+            // products (via page_size=1). Now that the user has
+            // committed to a country, fetch the real ids before
+            // PATCHing. We page through all universal products with a
+            // higher page_size to keep the round-trip count down.
+            const ids: number[] = []
+            let page = 1
+            const pageSize = 200
+            // Bound the loop — should never exceed 100k/200 = 500 pages
+            // even for absurd catalogues, but we cap at 1k iterations
+            // as a safety belt against an infinite next-link loop.
+            for (let i = 0; i < 1000; i++) {
+                const res: any = await erpFetch(
+                    `inventory/products/?brand=${brandId}&country__isnull=true&page=${page}&page_size=${pageSize}&fields=id`
+                )
+                const items = Array.isArray(res) ? res : (res?.results ?? [])
+                items.forEach((p: any) => { if (Number.isFinite(p?.id)) ids.push(p.id) })
+                if (!res?.next) break
+                page += 1
+            }
+
+            // Run all PATCHes in parallel — settles even if some fail
+            // so the user gets partial-success feedback.
             const results = await Promise.allSettled(
-                universalProducts.map(p =>
-                    erpFetch(`inventory/products/${p.id}/`, {
+                ids.map(id =>
+                    erpFetch(`inventory/products/${id}/`, {
                         method: 'PATCH',
                         body: JSON.stringify({ country: universalTarget }),
                     })

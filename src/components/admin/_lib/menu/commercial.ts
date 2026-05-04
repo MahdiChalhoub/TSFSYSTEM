@@ -71,9 +71,9 @@ export const commercial: MenuItem = {
             children: [
                 { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                 { title: 'New Order v2', path: '/purchases/new-order-v2' },
-                { title: 'New Purchase Order', path: '/purchases/new' },
-                { title: 'New Purchase Invoice', path: '/purchases/invoices/new', stage: 'in-progress' },
                 { title: 'Purchase Orders', path: '/purchases/purchase-orders', stage: 'in-progress' },
+                { title: 'New Purchase Order', path: '/purchases/purchase-orders/new', stage: 'in-progress' },
+                { title: 'New Purchase Invoice', path: '/purchases/invoices/new', stage: 'in-progress' },
                 { title: 'Quotations', path: '/purchases/quotations' },
                 { title: 'Receiving', path: '/purchases/receiving', stage: 'in-progress' },
                 { title: 'Receipts', path: '/purchases/receipts', stage: 'in-progress' },

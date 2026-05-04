@@ -29,48 +29,51 @@ export function CategoriesTab({ brandId, brandName }: { brandId: number; brandNa
 
     const loadData = useCallback(() => {
         setLoading(true)
-        // Pull the M2M-linked categories AND every category that the
-        // brand's products actually use. The user wants to see the
-        // *real* categories the brand operates in — the M2M field is
-        // rarely populated in this tenant; it's the products that carry
-        // the category FK. Merge both into one display list, deduped.
-        Promise.all([
-            erpFetch(`inventory/brands/${brandId}/`),
-            erpFetch('inventory/categories/'),
-            erpFetch(`inventory/products/?brand=${brandId}&page_size=200`),
-        ]).then(([brandData, catData, prodData]: any[]) => {
-            // BrandSerializer returns `categories` as raw FK ids (numbers)
-            // and parallel `category_names` strings. Build an id→name
-            // lookup from the master list first so we can resolve either.
-            const all = Array.isArray(catData?.results) ? catData.results : (Array.isArray(catData) ? catData : [])
-            const masterCats: CategoryRow[] = all.map((c: any) => ({ id: c.id, name: c.name }))
-            const idToName = new Map<number, string>(masterCats.map(c => [c.id, c.name]))
-            setAllCats(masterCats)
-
-            const m2mRaw = brandData?.categories
-            const m2mIdsLocal: number[] = Array.isArray(m2mRaw)
-                ? m2mRaw.map((c: any) => typeof c === 'number' ? c : c?.id).filter((n): n is number => typeof n === 'number')
-                : []
-            setM2mIds(new Set(m2mIdsLocal))
-
-            const products = Array.isArray(prodData) ? prodData : (prodData?.results ?? [])
-            const fromProducts = new Map<number, string>()
-            products.forEach((p: any) => {
-                if (p.category) fromProducts.set(p.category, p.category_name || idToName.get(p.category) || `Category #${p.category}`)
+        // Single fast call: just the brand record. BrandDetailSerializer
+        // ships `categories` as a nested array of {id, name, code} so we
+        // don't need a master-list lookup or a per-brand products scan
+        // to resolve names. The previous implementation did 3 calls
+        // including a 200-row product fetch — that was the slow part the
+        // user kept hitting on big-catalogue brands. Master categories
+        // (for the Link picker) are now fetched lazily, only when the
+        // user opens it.
+        erpFetch(`inventory/brands/${brandId}/`)
+            .then((brandData: any) => {
+                const cats = Array.isArray(brandData?.categories) ? brandData.categories : []
+                const m2mIdsLocal = cats
+                    .map((c: any) => typeof c === 'number' ? c : c?.id)
+                    .filter((n: any): n is number => typeof n === 'number')
+                setM2mIds(new Set(m2mIdsLocal))
+                setLinkedCats(
+                    cats
+                        .map((c: any) => ({
+                            id: typeof c === 'number' ? c : c?.id,
+                            name: typeof c === 'number' ? `Category #${c}` : (c?.name || `Category #${c?.id}`),
+                        }))
+                        .filter((c: any) => Number.isFinite(c.id))
+                        .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                )
             })
-
-            const merged = new Map<number, string>()
-            m2mIdsLocal.forEach(id => {
-                const name = idToName.get(id) || `Category #${id}`
-                merged.set(id, name)
-            })
-            fromProducts.forEach((name, id) => { if (!merged.has(id)) merged.set(id, name) })
-
-            setLinkedCats([...merged.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)))
-        }).catch(() => {}).finally(() => setLoading(false))
+            .catch(() => {})
+            .finally(() => setLoading(false))
     }, [brandId])
 
     useEffect(() => { loadData() }, [loadData])
+
+    // Lazy-fetch the master categories list — only when the user
+    // opens the Link picker. Avoids loading hundreds of categories
+    // every time the tab opens.
+    const ensureAllCats = useCallback(() => {
+        if (allCats.length > 0) return
+        erpFetch('inventory/categories/')
+            .then((catData: any) => {
+                const all = Array.isArray(catData?.results) ? catData.results : (Array.isArray(catData) ? catData : [])
+                setAllCats(all.map((c: any) => ({ id: c.id, name: c.name })))
+            })
+            .catch(() => {})
+    }, [allCats.length])
+
+    useEffect(() => { if (showLink) ensureAllCats() }, [showLink, ensureAllCats])
 
     // The picker should offer every category not currently in the M2M
     // (even ones already inferred from products — re-adding via M2M is

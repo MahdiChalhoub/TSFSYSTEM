@@ -21,7 +21,7 @@ import { getUsers } from '@/app/actions/users';
 import { getAnalyticsProfiles } from '@/app/actions/settings/analytics-profiles';
 import { serializeDecimals } from '@/lib/utils/serialization';
 // Reuse the PO form — same fields, different submit action driven by mode='quick'
-import PurchaseForm from '../../new/form';
+import PurchaseForm from '../../purchase-orders/new/form';
 
 export const dynamic = 'force-dynamic';
 
