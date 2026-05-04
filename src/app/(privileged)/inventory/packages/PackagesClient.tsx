@@ -106,6 +106,10 @@ type ProductPackagingRow = {
     effective_selling_price?: number
     ratio?: number | string
     unit?: number
+    /** Template this row officially adopted (set by backend auto-link or
+     *  explicit clone). When equal to the panel's template id, the row is
+     *  badged as a strict adopter. */
+    template?: number | null
 }
 
 interface Props {
@@ -691,12 +695,27 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
     const loadProducts = useCallback(async () => {
         if (productsLoaded) return
         try {
+            // Load every ProductPackaging on this unit (broad picture) —
+            // the strict adopters (template_id == tpl.id, OR the historic
+            // ratio-equality match) get badged in the UI. Filtering only
+            // by ratio used to hide rows whose operator-set ratio diverged
+            // from the template's canonical ratio (e.g. PP=1 vs tpl=0.33).
             const d = await erpFetch(`product-packaging/?unit=${tpl.unit}`, { cache: 'no-store' } as RequestInit) as { results?: ProductPackagingRow[] } | ProductPackagingRow[]
             const list: ProductPackagingRow[] = Array.isArray(d) ? d : (d?.results ?? [])
-            setProducts(list.filter((pp) => Number(pp.ratio) === Number(tpl.ratio)))
+            // Sort strict adopters first, then ratio-matchers, then everything else.
+            const ratioOf = (pp: ProductPackagingRow) => Number(pp.ratio)
+            list.sort((a, b) => {
+                const aStrict = Number(a.template) === Number(tpl.id) ? 0 : 1
+                const bStrict = Number(b.template) === Number(tpl.id) ? 0 : 1
+                if (aStrict !== bStrict) return aStrict - bStrict
+                const aRatio = ratioOf(a) === Number(tpl.ratio) ? 0 : 1
+                const bRatio = ratioOf(b) === Number(tpl.ratio) ? 0 : 1
+                return aRatio - bRatio
+            })
+            setProducts(list)
         } catch { setProducts([]) }
         setProductsLoaded(true)
-    }, [tpl.unit, tpl.ratio, productsLoaded])
+    }, [tpl.unit, tpl.ratio, tpl.id, productsLoaded])
 
     useEffect(() => {
         if (tab === 'links' && !rulesLoaded) loadRules()
@@ -796,7 +815,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
                         onAdd={handleAddLink} onRemove={handleRemoveLink}
                     />
                 )}
-                {tab === 'usage' && <UsageTab products={products} loaded={productsLoaded} />}
+                {tab === 'usage' && <UsageTab products={products} loaded={productsLoaded} tpl={tpl} />}
             </div>
         </div>
     )
@@ -968,46 +987,86 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
     )
 }
 
-function UsageTab({ products, loaded }: { products: ProductPackagingRow[]; loaded: boolean }) {
+function UsageTab({ products, loaded, tpl }: { products: ProductPackagingRow[]; loaded: boolean; tpl: Template }) {
     if (!loaded) return <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-app-primary" /></div>
     if (products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Package size={22} className="text-app-muted-foreground mb-2 opacity-40" />
-                <p className="text-tp-md font-bold text-app-muted-foreground">No products have adopted this template yet</p>
-                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[240px]">Products adopt a template by creating a ProductPackaging with the matching ratio + unit. The smart engine proposes this when category / brand / attribute matches.</p>
+                <p className="text-tp-md font-bold text-app-muted-foreground">No product packagings on this unit yet</p>
+                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[280px]">Add a product packaging on this unit to start tracking. Rows that match this template's ratio (×{Number(tpl.ratio).toLocaleString()}) get badged below.</p>
             </div>
         )
     }
+    // Three categories of "adopter" the operator cares about:
+    //   - strict (template_id = this template) → official adoption
+    //   - ratio  (same ratio, different/no template) → likely should be linked
+    //   - other  (same unit, different ratio) → for context only
+    const strictCount = products.filter(p => Number(p.template) === Number(tpl.id)).length
+    const ratioCount  = products.filter(p => Number(p.template) !== Number(tpl.id) && Number(p.ratio) === Number(tpl.ratio)).length
     return (
         <div className="p-3 space-y-1">
-            <p className="text-tp-xxs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--app-muted-foreground)' }}>
-                {products.length} product packaging{products.length !== 1 ? 's' : ''} adopt this shape
-            </p>
-            {products.map((pp) => (
-                <div key={pp.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-app-surface/50 transition-all group">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}><Package size={11} /></div>
-                    <div className="flex-1 min-w-0">
-                        <div className="text-tp-sm font-bold truncate">
-                            {pp.product_name || `Product #${pp.product}`}
-                            {pp.display_name && <span className="text-app-muted-foreground ml-1 font-normal">· {pp.display_name}</span>}
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                    {products.length} on this unit
+                </span>
+                {strictCount > 0 && (
+                    <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded"
+                        style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>
+                        {strictCount} adopted
+                    </span>
+                )}
+                {ratioCount > 0 && (
+                    <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded"
+                        style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
+                        {ratioCount} ratio match
+                    </span>
+                )}
+            </div>
+            {products.map((pp) => {
+                const isStrict = Number(pp.template) === Number(tpl.id)
+                const isRatioMatch = !isStrict && Number(pp.ratio) === Number(tpl.ratio)
+                const accent = isStrict ? 'var(--app-success)' : isRatioMatch ? 'var(--app-warning)' : 'var(--app-muted-foreground)'
+                return (
+                    <div key={pp.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-app-surface/50 transition-all group">
+                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, color: accent }}><Package size={11} /></div>
+                        <div className="flex-1 min-w-0">
+                            <div className="text-tp-sm font-bold truncate flex items-center gap-1.5">
+                                <span className="truncate">{pp.product_name || `Product #${pp.product}`}</span>
+                                {pp.display_name && <span className="text-app-muted-foreground font-normal truncate">· {pp.display_name}</span>}
+                                {isStrict && (
+                                    <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}
+                                        title="Officially adopted this template (template_id matches)">
+                                        ✓ adopted
+                                    </span>
+                                )}
+                                {isRatioMatch && (
+                                    <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}
+                                        title="Same ratio but no template link — likely should be adopted">
+                                        ratio match
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>×{pp.ratio}</span>
+                                {pp.barcode && <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
+                                {(pp.effective_selling_price ?? 0) > 0 && (
+                                    <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>
+                                        {Number(pp.effective_selling_price).toLocaleString()}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            {pp.barcode && <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
-                            {(pp.effective_selling_price ?? 0) > 0 && (
-                                <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>
-                                    {Number(pp.effective_selling_price).toLocaleString()}
-                                </span>
-                            )}
-                        </div>
+                        <a href={`/inventory/products/${pp.product}`} target="_blank" rel="noreferrer"
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-app-border/50">
+                            <ExternalLink size={11} />
+                        </a>
                     </div>
-                    <a href={`/inventory/products/${pp.product}`} target="_blank" rel="noreferrer"
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-app-border/50">
-                        <ExternalLink size={11} />
-                    </a>
-                </div>
-            ))}
+                )
+            })}
         </div>
     )
 }

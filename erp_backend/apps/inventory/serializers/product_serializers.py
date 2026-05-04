@@ -51,6 +51,10 @@ class ProductPackagingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'product', 'name', 'display_name', 'sku', 'barcode', 'image_url',
             'unit', 'unit_name', 'level', 'ratio',
+            # FK to the UnitPackage template this row was cloned from. Auto-
+            # populated server-side; surfaced so the Packages → Usage tab
+            # can list precise adopters via `?template=<id>`.
+            'template',
             'custom_selling_price', 'custom_selling_price_ht',
             'price_mode', 'discount_pct',
             'purchase_price_ht', 'purchase_price_ttc',

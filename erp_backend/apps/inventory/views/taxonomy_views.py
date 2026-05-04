@@ -647,12 +647,12 @@ class ProductPackagingViewSet(TenantModelViewSet):
         from apps.inventory.models import ProductPackaging
         qs = ProductPackaging.objects.select_related(
             'product', 'product__category', 'product__brand',
-            'unit',
+            'unit', 'template',
         )
-        for key in ('product', 'unit', 'level'):
+        for key in ('product', 'unit', 'level', 'template'):
             v = self.request.query_params.get(key)
             if v:
-                qs = qs.filter(**{f'{key}_id' if key in ('product', 'unit') else key: v})
+                qs = qs.filter(**{f'{key}_id' if key in ('product', 'unit', 'template') else key: v})
         if self.request.query_params.get('has_barcode') == '1':
             qs = qs.exclude(barcode__isnull=True).exclude(barcode='')
         if self.request.query_params.get('active') == '1':

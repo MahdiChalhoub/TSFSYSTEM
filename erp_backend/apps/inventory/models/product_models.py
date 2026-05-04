@@ -1167,6 +1167,17 @@ class ProductPackaging(AuditLogMixin, TenantOwnedModel):
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='packaging_levels')
     level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=first above base, 2=second, etc.)")
     ratio = models.DecimalField(max_digits=15, decimal_places=4, default=1, help_text="How many BASE units this level contains")
+    # Optional FK back to the per-unit template (UnitPackage) this row was
+    # cloned from. When set, the Packages → Usage tab can list adopters
+    # precisely (filter by template id) instead of guessing via
+    # (unit, ratio) equality, which broke whenever ratios diverged.
+    # Auto-populated in `save()` when a matching template exists; a
+    # data migration backfills existing rows the same way.
+    template = models.ForeignKey(
+        'inventory.UnitPackage', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='product_packagings',
+        help_text='UnitPackage template this row adopted (auto-linked when unit+ratio match).',
+    )
 
     # ── Selling Price ───────────────────────────────────────────────
     custom_selling_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Override selling price (TTC) for this level")
@@ -1286,6 +1297,32 @@ class ProductPackaging(AuditLogMixin, TenantOwnedModel):
                 product=self.product, organization=self.organization,
                 is_default_purchase=True
             ).exclude(pk=self.pk).update(is_default_purchase=False)
+
+        # ── Auto-link to a UnitPackage template when (unit, ratio) match ──
+        # Only run when caller didn't set `template` explicitly. Preference
+        # order on multiple matches: same name first (operator likely cloned
+        # the template name), then most recent.
+        if self.template_id is None and self.unit_id and self.ratio is not None and self.organization_id:
+            match = UnitPackage.objects.filter(
+                unit_id=self.unit_id,
+                organization_id=self.organization_id,
+                ratio=self.ratio,
+                is_archived=False,
+            )
+            if self.name:
+                # Prefer same-name match — `order_by(case)` puts those first.
+                from django.db.models import Case, When, IntegerField
+                match = match.annotate(
+                    _name_match=Case(
+                        When(name=self.name, then=0),
+                        default=1, output_field=IntegerField(),
+                    )
+                ).order_by('_name_match', '-updated_at')
+            else:
+                match = match.order_by('-updated_at')
+            chosen = match.first()
+            if chosen is not None:
+                self.template = chosen
 
         super().save(*args, **kwargs)
 
