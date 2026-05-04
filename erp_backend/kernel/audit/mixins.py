@@ -69,11 +69,20 @@ class AuditableModel(models.Model):
         return super().delete(*args, **kwargs)
 
     def _get_field_values(self):
-        """Get all field values as a dict."""
+        """Get all field values as a dict.
+
+        Uses ``field.attname`` (e.g. ``brand_id``) rather than ``field.name``
+        (``brand``) so that ForeignKey access doesn't trigger a related-object
+        fetch. Reading the FK descriptor on every instance loaded turned every
+        list view in the app into 15-20 queries × N rows; using the column
+        name keeps it at zero. Change-detection on save still works correctly
+        because brand_id flips when the FK is reassigned.
+        """
         values = {}
         for field in self._meta.fields:
-            if field.name not in self.AUDIT_EXCLUDE_FIELDS:
-                values[field.name] = getattr(self, field.name)
+            if field.name in self.AUDIT_EXCLUDE_FIELDS:
+                continue
+            values[field.name] = getattr(self, field.attname, None)
         return values
 
     def _detect_changes(self, old_values, new_values):

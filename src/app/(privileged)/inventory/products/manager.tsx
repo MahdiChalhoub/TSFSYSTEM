@@ -23,7 +23,7 @@ import {
   X, Maximize2, Minimize2, SlidersHorizontal,
   AlertTriangle, RefreshCcw, Settings2, DollarSign,
   ShoppingCart, ArrowRightLeft, Edit,
-  LayoutGrid, List,
+  LayoutGrid, List, Loader2,
 } from 'lucide-react'
 
 /* ── Lib imports ── */
@@ -138,22 +138,88 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
+  // ── Server-side fetch state (search-driven, paginated, append-able) ──
+  // Tenants with 10k+ products would freeze the tab if we kept the old
+  // unfettered `products/` fetch. Now:
+  //   - `search` is debounced + sent to the backend (?search=)
+  //   - the backend returns one page (FETCH_PAGE_SIZE rows) at a time
+  //   - "Load more" appends the next page; resetting search/server-side
+  //     filters jumps back to page 1.
+  // Niche filters (numeric ranges, attribute names, parfum, completeness,
+  // country) keep working client-side over whatever's loaded — they refine
+  // a search-result set, not the whole 10k catalogue.
+  const FETCH_PAGE_SIZE = 200
+  const [serverPage, setServerPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  // Debounce the search box so we don't fire a backend request per keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  const fetchPage = useCallback(async (opts: { search?: string; page: number; append: boolean }) => {
+    const { search: q, page, append } = opts
+    if (append) setLoadingMore(true)
+    else setLoading(true)
     try {
-      const data = await erpFetch('products/') as Product[] | { results?: Product[]; count?: number }
+      const params = new URLSearchParams()
+      params.set('page', String(page))
+      params.set('page_size', String(FETCH_PAGE_SIZE))
+      if (q) params.set('search', q)
+      const data = await erpFetch(`products/?${params.toString()}`) as Product[] | { results?: Product[]; count?: number; next?: string | null }
       if (Array.isArray(data)) {
-        setItems(data); setServerTotal(data.length)
+        setItems(prev => append ? [...prev, ...data] : data)
+        setServerTotal(append ? prev => prev + data.length : data.length)
+        setHasMore(false) // unpaginated response — nothing else to fetch
       } else {
         const results = Array.isArray(data?.results) ? data.results : []
-        setItems(results)
-        setServerTotal(typeof data?.count === 'number' ? data.count : results.length)
+        setItems(prev => append ? [...prev, ...results] : results)
+        setServerTotal(typeof data?.count === 'number' ? data.count : (append ? items.length + results.length : results.length))
+        setHasMore(!!data?.next)
       }
+      setServerPage(page)
     } catch { /* empty */ }
     setLoading(false)
+    setLoadingMore(false)
+  // `items.length` only matters for the "no count" fallback; not worth adding to deps.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { if (initialProducts.length === 0) fetchData() }, [fetchData, initialProducts.length])
+  // SSR-prefilled tab → already has its first page, just record pagination state.
+  useEffect(() => {
+    if (initialProducts.length > 0) {
+      // Server rendered the first page — assume more pages exist iff the
+      // pre-render `count` exceeds what we got. Conservative: we'll learn
+      // for sure after the first client-side fetch (search or load more).
+      setHasMore((totalProductCount ?? 0) > initialProducts.length)
+    } else {
+      fetchPage({ page: 1, append: false })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Server-side search. When the debounced search changes, reset to page 1.
+  // Skip the very first run if initialProducts already covered an empty query —
+  // the SSR fetch already loaded that exact page.
+  const lastSearch = useRef<string | null>(null)
+  useEffect(() => {
+    if (lastSearch.current === null) {
+      // First mount — skip if the SSR already returned the empty-search page 1.
+      lastSearch.current = debouncedSearch
+      if (debouncedSearch === '' && initialProducts.length > 0) return
+    }
+    if (lastSearch.current === debouncedSearch) return
+    lastSearch.current = debouncedSearch
+    fetchPage({ search: debouncedSearch, page: 1, append: false })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return
+    fetchPage({ search: debouncedSearch, page: serverPage + 1, append: true })
+  }, [loadingMore, hasMore, fetchPage, debouncedSearch, serverPage])
 
   // ── Filtering (delegated to _lib/filters.ts) ──
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters])
@@ -251,7 +317,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
       showFilters={showFilters}
       onToggleFilters={() => setShowFilters(!showFilters)}
       activeFilterCount={activeFilterCount}
-      onRefresh={fetchData}
+      onRefresh={() => fetchPage({ search: debouncedSearch, page: 1, append: false })}
       dataTools={{
         title: 'Product Data',
         exportFilename: 'products',
@@ -507,6 +573,25 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
             onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
           }}
         />
+        {/* Server-side "Load more" — surfaces only when the backend signals
+         *  another page exists. Hidden when filters narrowed the local set
+         *  but the server has nothing left to send. */}
+        {hasMore && (
+          <div className="flex flex-col items-center gap-1.5 py-3 px-4 mt-2 rounded-xl border border-dashed border-app-border bg-app-surface/40">
+            <p className="text-[10px] font-bold text-app-muted-foreground">
+              Showing {items.length.toLocaleString()} of {serverTotal.toLocaleString()} products
+              {debouncedSearch && <> matching <span className="font-mono">"{debouncedSearch}"</span></>}
+            </p>
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-app-primary/40 text-app-primary hover:bg-app-primary/10 transition-all disabled:opacity-50"
+            >
+              {loadingMore ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+              {loadingMore ? 'Loading…' : `Load next ${FETCH_PAGE_SIZE}`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Customize Panel */}

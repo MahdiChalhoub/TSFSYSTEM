@@ -16,23 +16,22 @@
  * to the PO line list. Already-added products are visually marked.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart, RotateCcw } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
-import { SearchableDropdown } from '@/components/ui/SearchableDropdown'
 
-const TYPE_OPTIONS = [
-    { value: 'STOCKABLE', label: 'Stockable' },
-    { value: 'COMBO', label: 'Combo' },
-    { value: 'STANDARD', label: 'Standard' },
-]
-
-const STATUS_OPTIONS = [
-    { value: 'ACTIVE', label: 'Active' },
-    { value: 'INACTIVE', label: 'Inactive' },
-    { value: 'DRAFT', label: 'Draft' },
-    { value: 'ARCHIVED', label: 'Archived' },
-]
+// Reuse the rich filter UI + filter shape from the inventory products page so
+// the catalogue picker has the same filtering vocabulary (type, completeness,
+// verified, ranges, etc.). Future cleanup: lift these to `src/lib/products/`
+// or `src/components/products/` so the cross-page coupling isn't via _lib/.
+import { FiltersPanel } from '../../../../inventory/products/_components/FiltersPanel'
+import type { Filters, Lookups } from '../../../../inventory/products/_lib/types'
+import {
+    EMPTY_FILTERS,
+    EMPTY_LOOKUPS,
+    DEFAULT_VISIBLE_FILTERS,
+    COMPLETENESS_LEVELS,
+} from '../../../../inventory/products/_lib/constants'
 
 type CatalogueItem = {
     id: number
@@ -78,13 +77,6 @@ function mapProductToCatalogueItem(p: Record<string, any>): CatalogueItem {
     }
 }
 
-type FilterDimensions = {
-    categories: { id: number; name: string }[]
-    brands: { id: number; name: string }[]
-    units: { id: number; name: string }[]
-    types: { value: string; label: string }[]
-}
-
 type Props = {
     open: boolean
     onClose: () => void
@@ -95,29 +87,53 @@ type Props = {
     supplierId?: number | ''
 }
 
+/** Map a Completeness label (e.g. "Identified") to its integer level (0..7).
+ *  Backend's `data_completeness_level` filterset expects an int; the UI shows
+ *  the label. The COMPLETENESS_LEVELS constant defines the canonical order. */
+const completenessLevelByValue = new Map(COMPLETENESS_LEVELS.map((c, i) => [c.value, i]))
+
 export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds, supplierId }: Props) {
     const [items, setItems] = useState<CatalogueItem[]>([])
-    const [filters, setFilters] = useState<FilterDimensions | null>(null)
+    const [lookups, setLookups] = useState<Lookups>(EMPTY_LOOKUPS)
     const [loading, setLoading] = useState(false)
     const [query, setQuery] = useState('')
-    const [category, setCategory] = useState('')
-    const [brand, setBrand] = useState('')
-    const [unit, setUnit] = useState('')
-    const [productType, setProductType] = useState('')
-    const [status, setStatus] = useState('')
+    const [filterValues, setFilterValues] = useState<Filters>(EMPTY_FILTERS)
+    // Which filters appear in the FiltersPanel grid. Same defaults as the
+    // /inventory/products page; a future Customize button can let the user
+    // toggle individual filters in/out and persist that choice as a profile.
+    const [visibleFilters] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_FILTERS)
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(false)
     const [filtersOpen, setFiltersOpen] = useState(false)
     const [showSupplierOnly, setShowSupplierOnly] = useState(!!supplierId)
     const searchRef = useRef<HTMLInputElement>(null)
 
+    // Resolve filter NAME → backend FK ID. The FiltersPanel sends
+    // `filterValues.category = "Soft Drinks"` (the human label), but DRF's
+    // FK filterset expects the row id. We do the lookup here so the panel
+    // stays UI-only.
+    const idByName = useMemo(() => ({
+        category: new Map(lookups.categories.map(c => [c.name, c.id])),
+        brand:    new Map(lookups.brands.map(b => [b.name, b.id])),
+        unit:     new Map(lookups.units.map(u => [u.name, u.id])),
+    }), [lookups])
+
+    // Has-any-active for the chip Reset button
+    const hasActiveFilters = useMemo(() => {
+        const f = filterValues
+        return Boolean(f.type || f.category || f.brand || f.unit || f.country || f.parfum
+            || f.status || f.completeness || f.verified || f.isActive || f.catalogReady
+            || f.expiryTracked || f.tracksLots || f.tracksSerials
+            || f.lotMgmt || f.valuation || f.productGroup || f.pricingSource || f.syncStatus)
+    }, [filterValues])
+
     // Sync showSupplierOnly with prop if it changes
     useEffect(() => {
         if (supplierId) setShowSupplierOnly(true)
     }, [supplierId])
 
-    // Fetch filter dimensions once — pull categories + brands directly from
-    // the inventory master endpoints (same source as /inventory/products).
+    // Fetch filter dimensions once — same masters /inventory/products uses.
+    // Adds countries + parfums so the rich FiltersPanel can offer them.
     useEffect(() => {
         if (!open) return
         let cancelled = false
@@ -125,47 +141,80 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
             erpFetch('categories/').catch(() => []),
             erpFetch('brands/').catch(() => []),
             erpFetch('units/').catch(() => []),
-        ]).then(([catsRaw, brandsRaw, unitsRaw]) => {
+            erpFetch('reference/sourcing-countries/').catch(() => []),
+            erpFetch('parfums/').catch(() => []),
+        ]).then(([catsRaw, brandsRaw, unitsRaw, countriesRaw, parfumsRaw]) => {
             if (cancelled) return
             const toList = (raw: unknown): Array<Record<string, unknown>> => {
                 if (Array.isArray(raw)) return raw
                 const r = raw as { results?: unknown } | null
                 return Array.isArray(r?.results) ? (r!.results as Array<Record<string, unknown>>) : []
             }
-            setFilters({
+            setLookups({
                 categories: toList(catsRaw).map(c => ({ id: Number(c.id), name: String(c.name || '') })),
                 brands: toList(brandsRaw).map(b => ({ id: Number(b.id), name: String(b.name || '') })),
-                units: toList(unitsRaw).map(u => ({ id: Number(u.id), name: String(u.name || '') })),
-                types: TYPE_OPTIONS,
+                units: toList(unitsRaw).map(u => ({ id: Number(u.id), name: String(u.name || ''), short_name: String(u.short_name || '') })),
+                countries: toList(countriesRaw).map(c => ({ id: Number(c.id), name: String(c.name || c.country_name || '') })),
+                parfums: toList(parfumsRaw).map(p => ({ id: Number(p.id), name: String(p.name || '') })),
             })
         })
         return () => { cancelled = true }
     }, [open])
 
-    // Fetch catalogue items from `products/` — the same DRF endpoint that
-    // /inventory/products uses. Server-side pagination + DRF SearchFilter
-    // (`?search=`) covers SKU / barcode / name. Filters are passed as
-    // `?category=` / `?brand=` (DRF FK filter names).
+    // Fetch catalogue items from `products/` — same DRF endpoint as
+    // /inventory/products. Server-side pagination + SearchFilter for
+    // SKU/barcode/name; FK filters (`?category=<id>`) pulled from idByName.
+    //
+    // Filters that the backend's `filterset_fields` doesn't yet support
+    // (country, parfum, ranges, catalogReady, expiryTracked, lotMgmt,
+    // valuation, productGroup, pricingSource, syncStatus) are intentionally
+    // not wired here — they appear in the panel but no-op for now. Adding
+    // backend support is a separate task; the panel is structured so the
+    // wiring is mechanical when those filters land.
     const fetchItems = useCallback(async (pageNum: number, append = false) => {
         setLoading(true)
         try {
             const params = new URLSearchParams({
                 page: String(pageNum),
                 page_size: '30',
-                // Picker-grade payload: drops nested variants / packaging
-                // levels and the SerializerMethodFields that turn a 30-row
-                // page into ~1200 queries. Catalogue only needs id/sku/
-                // name/category + price columns, all of which the lite
-                // serializer now exposes.
-                lite: '1',
+                lite: '1', // skip N+1-causing nested fields; see ProductLiteSerializer
             })
             if (query) params.set('search', query)
-            if (category) params.set('category', category.startsWith('!') ? `!${category.slice(1)}` : category)
-            if (brand) params.set('brand', brand.startsWith('!') ? `!${brand.slice(1)}` : brand)
-            if (unit) params.set('unit', unit.startsWith('!') ? `!${unit.slice(1)}` : unit)
-            if (productType) params.set('product_type', productType.startsWith('!') ? `!${productType.slice(1)}` : productType)
-            if (status) params.set('status', status.startsWith('!') ? `!${status.slice(1)}` : status)
             if (showSupplierOnly && supplierId) params.set('supplier', String(supplierId))
+
+            const f = filterValues
+            // FK filters: convert NAME → id via lookup map. Skip silently
+            // when name has no match (lookups not loaded yet).
+            const setFkParam = (paramName: string, val: string, idMap: Map<string, number>) => {
+                if (!val) return
+                if (val === '__NONE__') { params.set(`${paramName}__isnull`, 'true'); return }
+                const cleanVal = val.startsWith('!') ? val.slice(1) : val
+                const id = idMap.get(cleanVal)
+                if (id == null) return
+                params.set(paramName, val.startsWith('!') ? `!${id}` : String(id))
+            }
+            setFkParam('category', f.category, idByName.category)
+            setFkParam('brand',    f.brand,    idByName.brand)
+            setFkParam('unit',     f.unit,     idByName.unit)
+
+            // Enum / scalar filters — pass values directly.
+            if (f.type)   params.set('product_type', f.type)
+            if (f.status) params.set('status', f.status)
+
+            // Boolean tri-state ('yes' | 'no' | ''): pass true/false to backend.
+            const setBoolParam = (paramName: string, val: string) => {
+                if (val === 'yes') params.set(paramName, 'true')
+                else if (val === 'no') params.set(paramName, 'false')
+            }
+            setBoolParam('is_verified',     f.verified)
+            setBoolParam('is_active',       f.isActive)
+            setBoolParam('tracks_serials',  f.tracksSerials)
+
+            // Completeness label → integer level.
+            if (f.completeness) {
+                const lvl = completenessLevelByValue.get(f.completeness)
+                if (lvl != null) params.set('data_completeness_level', String(lvl))
+            }
 
             const data = await erpFetch(`products/?${params}`) as
                 | Array<Record<string, unknown>>
@@ -175,8 +224,6 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                 ? data
                 : (data?.results || [])
             const newItems = rawList.map(mapProductToCatalogueItem)
-            // DRF returns a `next` URL when more pages exist; fall back to
-            // count-based check for compatibility with custom paginators.
             const next = !Array.isArray(data) && data?.next
             const total = !Array.isArray(data) && typeof data?.count === 'number' ? data.count : undefined
             const hasMoreFlag = !!next || (typeof total === 'number' && pageNum * 30 < total)
@@ -188,14 +235,15 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
         } finally {
             setLoading(false)
         }
-    }, [query, category, brand, supplierId, showSupplierOnly])
+    }, [query, filterValues, idByName, supplierId, showSupplierOnly])
 
-    // Refetch on filter/query change
+    // Refetch on filter/query change. fetchItems is memoized on filterValues,
+    // so a single dep on it covers all 27 filter fields.
     useEffect(() => {
         if (!open) return
         const timer = setTimeout(() => fetchItems(1), 300)
         return () => clearTimeout(timer)
-    }, [open, query, category, brand, unit, productType, status, showSupplierOnly, fetchItems])
+    }, [open, query, filterValues, showSupplierOnly, fetchItems])
 
     // Focus search on open
     useEffect(() => {
@@ -257,37 +305,31 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                     </button>
                 </div>
 
-                {/* Filters grid */}
-                {filtersOpen && filters && (
-                    <div className="px-5 py-4 border-b border-app-border" 
+                {/* Filters grid — same FiltersPanel as /inventory/products so the
+                    picker has identical filter vocabulary. Backend wires the
+                    supported subset (FK, enum, boolean, completeness); the rest
+                    are visual-only until backend filterset_fields catches up. */}
+                {filtersOpen && (
+                    <div className="px-5 py-4 border-b border-app-border space-y-2"
                          style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-background))' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
-                            <SearchableDropdown label="Category" value={category} onChange={setCategory}
-                                options={filters.categories.map(c => ({ value: String(c.id), label: c.name }))} placeholder="All Categories" />
-                            
-                            <SearchableDropdown label="Brand" value={brand} onChange={setBrand}
-                                options={filters.brands.map(b => ({ value: String(b.id), label: b.name }))} placeholder="All Brands" />
-                            
-                            <SearchableDropdown label="Unit" value={unit} onChange={setUnit}
-                                options={filters.units.map(u => ({ value: String(u.id), label: u.name }))} placeholder="All Units" />
-                            
-                            <SearchableDropdown label="Type" value={productType} onChange={setProductType}
-                                options={filters.types} placeholder="All Types" />
-                            
-                            <SearchableDropdown label="Status" value={status} onChange={setStatus}
-                                options={STATUS_OPTIONS} placeholder="All Statuses" />
-
-                            <div className="flex items-end pb-1.5">
-                                {(category || brand || unit || productType || status) && (
-                                    <button type="button" 
-                                            onClick={() => { setCategory(''); setBrand(''); setUnit(''); setProductType(''); setStatus('') }}
-                                            className="flex items-center gap-1 text-[10px] font-black uppercase text-app-error hover:opacity-80 transition-all">
-                                        <RotateCcw size={10} />
-                                        Clear All
-                                    </button>
-                                )}
+                        <FiltersPanel
+                            items={items}
+                            filters={filterValues}
+                            setFilters={setFilterValues}
+                            isOpen
+                            lookups={lookups}
+                            visibleFilters={visibleFilters}
+                        />
+                        {hasActiveFilters && (
+                            <div className="flex justify-end">
+                                <button type="button"
+                                        onClick={() => setFilterValues(EMPTY_FILTERS)}
+                                        className="flex items-center gap-1 text-[10px] font-black uppercase text-app-error hover:opacity-80 transition-all">
+                                    <RotateCcw size={10} />
+                                    Clear All Filters
+                                </button>
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
 
