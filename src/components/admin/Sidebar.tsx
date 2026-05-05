@@ -176,12 +176,12 @@ export function Sidebar({
                                     viewScope === 'INTERNAL' ? "" : "hover:bg-[var(--app-sidebar-active)]"
                                 )}
                                 style={viewScope === 'INTERNAL' ? {
-                                    // Mix sidebar-text 14% with transparent — visible in both
-                                    // dark and light themes without depending on the underdefined
-                                    // --app-sidebar-surface var (5% white in dark = nearly invisible).
-                                    background: 'color-mix(in srgb, var(--app-sidebar-text) 14%, transparent)',
-                                    color: 'var(--app-sidebar-text)',
-                                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                    // Mirror the OFFICIAL active style (solid theme accent +
+                                    // white text + glow) but with --app-info so the two scopes
+                                    // are visually distinct yet both themed.
+                                    background: 'var(--app-info)',
+                                    color: 'white',
+                                    boxShadow: '0 2px 6px var(--app-info-bg, rgba(0,0,0,0.2))',
                                 } : { color: 'var(--app-sidebar-muted)' }}
                             >
                                 <BarChart3 size={12} /> Internal

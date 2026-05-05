@@ -47,17 +47,21 @@ function darkenColor(hex: string, percent: number): string {
   )
 }
 
-// Helper to enrich color schemes with computed fields
-function enrichColors(colors: any) {
+// Helper to enrich color schemes with computed fields.
+// Mode-aware defaults so themes that omit fields in their `light` preset
+// don't inherit dark fallbacks (= near-white text on near-white background,
+// the "gray title in light mode" bug).
+function enrichColors(colors: any, mode: 'dark' | 'light' = 'dark') {
+  const isLight = mode === 'light';
   return {
     primary: colors.primary || '#10B981',
     primaryDark: colors.primaryDark || darkenColor(colors.primary || '#10B981', 10),
-    bg: colors.bg || '#020617',
-    surface: colors.surface || '#0F172A',
-    surfaceHover: colors.surfaceHover || 'rgba(255, 255, 255, 0.07)',
-    text: colors.text || '#F1F5F9',
-    textMuted: colors.textMuted || colors.muted || '#94A3B8',
-    border: colors.border || 'rgba(255, 255, 255, 0.08)',
+    bg: colors.bg || (isLight ? '#FFFFFF' : '#020617'),
+    surface: colors.surface || (isLight ? '#F8FAFC' : '#0F172A'),
+    surfaceHover: colors.surfaceHover || (isLight ? 'rgba(15, 23, 42, 0.04)' : 'rgba(255, 255, 255, 0.07)'),
+    text: colors.text || (isLight ? '#0F172A' : '#F1F5F9'),
+    textMuted: colors.textMuted || colors.muted || (isLight ? '#64748B' : '#94A3B8'),
+    border: colors.border || (isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.08)'),
   }
 }
 
@@ -75,8 +79,8 @@ function transformThemeFromAPI(apiTheme: any): ThemePreset {
     tags: apiTheme.tags || [],
     presetData: {
       colors: {
-        dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}),
-        light: enrichColors(apiTheme.preset_data?.colors?.light || {}),
+        dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}, 'dark'),
+        light: enrichColors(apiTheme.preset_data?.colors?.light || {}, 'light'),
       },
       layout: apiTheme.preset_data?.layout || {
         density: 'medium',

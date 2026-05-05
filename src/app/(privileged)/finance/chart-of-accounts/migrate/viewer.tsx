@@ -94,11 +94,11 @@ export default function CoaMigrationTool({
             <div className="space-y-8 max-w-4xl mx-auto">
                 <div className="bg-app-bg rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="bg-app-warning/20 p-3 rounded-2xl">
+                        <div className="bg-amber-500/20 p-3 rounded-2xl">
                             <Layers className="text-amber-400" size={32} />
                         </div>
                         <div>
-                            <h2 className="font-serif italic">Step 1: Choose Your Destination</h2>
+                            <h2 className="text-xl font-bold font-serif italic">Step 1: Choose Your Destination</h2>
                             <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-wide mt-1">Select the standard you want to migrate to</p>
                         </div>
                     </div>
@@ -110,7 +110,7 @@ export default function CoaMigrationTool({
                             key={key}
                             onClick={() => handleSelectTemplate(key)}
                             className={`p-6 rounded-3xl border-2 transition-all text-left flex items-start gap-4 ${selectedTemplate === key
-                                ? 'border-app-warning bg-app-warning-bg shadow-lg'
+                                ? 'border-amber-500 bg-app-warning-bg shadow-lg'
                                 : 'border-app-border bg-app-surface hover:border-app-border'
                                 }`}
                         >
@@ -145,7 +145,7 @@ export default function CoaMigrationTool({
             <div className="bg-app-warning-bg border border-amber-100 p-6 rounded-3xl flex items-start gap-4 shadow-sm border-2">
                 <AlertCircle className="text-app-warning mt-1" size={24} />
                 <div className="flex-1">
-                    <h3 className="text-amber-900">Step 2: Map Your Balances</h3>
+                    <h3 className="font-bold text-amber-900">Step 2: Map Your Balances</h3>
                     <p className="text-sm text-app-warning opacity-80 mt-1 leading-relaxed">
                         Your target standard <strong className="uppercase">{selectedTemplate.replace('_', ' ')}</strong> is now loaded.
                         Please match your old accounts with the new ones. Zero-balance accounts will be ignored.
@@ -169,7 +169,7 @@ export default function CoaMigrationTool({
                             <th className="p-5 text-left w-1/2">New Layout (Destination)</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-app-border">
+                    <tbody className="divide-y divide-stone-50">
                         {accountsWithBalance.map(acc => (
                             <tr key={acc.id} className="hover:bg-app-surface/50 transition-colors">
                                 <td className="p-5">
@@ -189,7 +189,7 @@ export default function CoaMigrationTool({
                                 </td>
                                 <td className="p-5">
                                     <select
-                                        className="w-full p-3.5 rounded-2xl border border-app-border text-sm font-medium focus:ring-4 focus:ring-amber-500/10 focus:border-app-warning outline-none transition-all shadow-sm bg-app-surface/30"
+                                        className="w-full p-3.5 rounded-2xl border border-app-border text-sm font-medium focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all shadow-sm bg-app-surface/30"
                                         value={mappings[acc.id] || ''}
                                         onChange={(e) => handleMap(acc.id, parseInt(e.target.value))}
                                     >

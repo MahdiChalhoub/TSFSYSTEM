@@ -153,7 +153,7 @@ export function TaskSettingsModal({ onClose }: { onClose: () => void }) {
                             <Zap size={20} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h3 id="task-settings-title" style={{ color: 'var(--app-foreground)' }}>
+                            <h3 id="task-settings-title" className="text-[16px] font-black leading-tight" style={{ color: 'var(--app-foreground)' }}>
                                 Task Settings
                             </h3>
                             <p className="text-[10px] font-bold uppercase tracking-[0.08em] mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>

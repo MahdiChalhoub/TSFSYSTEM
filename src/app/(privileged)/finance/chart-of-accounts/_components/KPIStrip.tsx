@@ -46,7 +46,7 @@ export function KPIStrip({ stats, typeFilter, setTypeFilter }: KPIStripProps) {
                             <div className="text-tp-xxs font-bold uppercase tracking-wider truncate"
                                 style={{ color: isActive ? s.color : 'var(--app-muted-foreground, #94A3B8)' }}>{s.label}</div>
                             <div className="text-sm font-bold tabular-nums"
-                                style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{s.value}</div>
+                                style={{ color: 'var(--app-foreground, var(--app-text))' }}>{s.value}</div>
                         </div>
                     </button>
                 )

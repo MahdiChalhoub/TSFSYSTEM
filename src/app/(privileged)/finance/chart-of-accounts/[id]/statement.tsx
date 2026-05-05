@@ -28,13 +28,13 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
             {/* Header */}
             <div className="p-8 border-b border-app-border flex justify-between items-start">
                 <div>
-                    <h1 className="font-serif mb-1">{data.account.name}</h1>
+                    <h1 className="text-2xl font-bold text-app-foreground font-serif mb-1">{data.account.name}</h1>
                     <div className="text-app-muted-foreground font-mono text-sm">Account Code: {data.account.code}</div>
                     <div className="mt-2 text-xs uppercase font-bold tracking-wider text-app-muted-foreground">{data.account.type}</div>
                 </div>
 
                 <div className="text-right">
-                    <h2 className="uppercase text-app-muted-foreground mb-1">Statement Period</h2>
+                    <h2 className="text-xs font-bold uppercase text-app-muted-foreground mb-1">Statement Period</h2>
                     <div className="font-medium text-app-foreground">
                         {new Date(currentRange.start).toLocaleDateString()} — {new Date(currentRange.end).toLocaleDateString()}
                     </div>

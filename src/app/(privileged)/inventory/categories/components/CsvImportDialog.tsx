@@ -352,7 +352,7 @@ export function CsvImportDialog({ allCategories, onClose, onDone }: Props) {
                             <Upload size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3>{t('inventory.categories_page.csv_import_title')}</h3>
+                            <h3 className="text-sm font-bold text-app-foreground">{t('inventory.categories_page.csv_import_title')}</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">{t('inventory.categories_page.csv_import_subtitle')}</p>
                         </div>
                     </div>

@@ -93,7 +93,7 @@ export function UnitDetailPanel({ node, onEdit, onAdd, onDelete, allUnits, initi
                         <Ruler size={15} />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-tp-lg truncate">{node.name}</h2>
+                        <h2 className="text-tp-lg font-bold text-app-foreground tracking-tight truncate">{node.name}</h2>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             {node.code && <span className="font-mono text-tp-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>{node.code}</span>}
                             <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"

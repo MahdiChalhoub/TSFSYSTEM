@@ -59,7 +59,7 @@ export function CategoryDetailPanel({ node, onEdit, onAdd, onDelete, allCategori
 
                 {/* Identity — name headline, thin meta row with boxed field labels */}
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-tp-lg truncate"
+                    <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight"
                         style={{ color: 'var(--app-foreground)' }}>
                         {node.name}
                     </h3>

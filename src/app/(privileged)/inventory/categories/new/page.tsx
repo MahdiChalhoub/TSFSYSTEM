@@ -23,7 +23,7 @@ export default function CreateCategoriesPage() {
 
     // Brief loading state in case the redirect doesn't paint instantly.
     return (
-        <div className="min-h-screen flex items-center justify-center bg-app-bg">
+        <div className="min-h-screen flex items-center justify-center theme-bg">
             <div className="flex items-center gap-3 text-app-muted-foreground">
                 <Loader2 size={18} className="animate-spin" />
                 <span className="text-tp-sm font-bold">Opening Create Category…</span>

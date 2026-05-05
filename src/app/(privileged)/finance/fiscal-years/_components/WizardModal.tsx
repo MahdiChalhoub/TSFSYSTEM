@@ -43,7 +43,7 @@ export function WizardModal({ data, setData, onClose, onSubmit, isPending }: Wiz
                             <Calendar size={16} style={{ color: 'var(--app-primary)' }} />
                         </div>
                         <div>
-                            <h2 className="text-tp-lg" style={{ color: 'var(--app-foreground)' }}>{t('finance.fiscal_years_page.wizard_title')}</h2>
+                            <h2 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>{t('finance.fiscal_years_page.wizard_title')}</h2>
                             <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>{t('finance.fiscal_years_page.wizard_subtitle')}</p>
                         </div>
                     </div>

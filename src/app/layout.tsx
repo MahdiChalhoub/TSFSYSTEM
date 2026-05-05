@@ -64,15 +64,20 @@ export const viewport = {
 //
 // Typography intentionally uses CANONICAL values (not theme overrides)
 // because AppThemeProvider locks typography to the canonical scale.
-function buildRootThemeCSS(colors: any, layout: any, components: any): string {
+function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode: 'dark' | 'light' = 'dark'): string {
+    // Mode-aware fallbacks. The previous code always fell back to dark
+    // defaults — themes whose `light` preset omits a field would inherit
+    // dark colors, painting near-white text on a near-white background
+    // (the "gray title on light mode" bug).
+    const isLight = colorMode === 'light';
     const p  = colors.primary      || '#10B981';
     const pd = colors.primaryDark  || '#059669';
-    const bg = colors.bg           || '#020617';
-    const sf = colors.surface      || '#0F172A';
-    const sh = colors.surfaceHover || 'rgba(255,255,255,0.07)';
-    const tx = colors.text         || '#F1F5F9';
-    const mt = colors.textMuted    || '#94A3B8';
-    const bd = colors.border       || 'rgba(255,255,255,0.08)';
+    const bg = colors.bg           || (isLight ? '#FFFFFF'                : '#020617');
+    const sf = colors.surface      || (isLight ? '#F8FAFC'                : '#0F172A');
+    const sh = colors.surfaceHover || (isLight ? 'rgba(0,0,0,0.04)'       : 'rgba(255,255,255,0.07)');
+    const tx = colors.text         || (isLight ? '#0F172A'                : '#F1F5F9');
+    const mt = colors.textMuted    || (isLight ? '#64748B'                : '#94A3B8');
+    const bd = colors.border       || (isLight ? 'rgba(0,0,0,0.08)'       : 'rgba(255,255,255,0.08)');
     const c  = components || {};
     const cards   = c.cards   || {};
     const btns    = c.buttons || {};
@@ -204,7 +209,7 @@ export default async function RootLayout({
                 || all[0];
             if (theme?.presetData?.colors) {
                 const colors = theme.presetData.colors[colorMode] || theme.presetData.colors.dark || {};
-                ssrThemeCSS = buildRootThemeCSS(colors, theme.presetData.layout, theme.presetData.components);
+                ssrThemeCSS = buildRootThemeCSS(colors, theme.presetData.layout, theme.presetData.components, colorMode);
                 // Compact JSON for ThemeScript to read on first paint when localStorage is empty.
                 // Replace </script> to prevent tag injection when embedded in <script> tag.
                 ssrThemeJSON = JSON.stringify({

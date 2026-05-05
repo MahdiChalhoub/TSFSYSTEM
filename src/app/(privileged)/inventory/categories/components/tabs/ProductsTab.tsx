@@ -512,7 +512,7 @@ export function ProductsTab({ categoryId, categoryName, allCategories }: {
                                     <ArrowRightLeft size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3>Move Products</h3>
+                                    <h3 className="text-sm font-bold text-app-foreground">Move Products</h3>
                                     <p className="text-tp-sm text-app-muted-foreground">{selected.size} product{selected.size > 1 ? 's' : ''} from &ldquo;{categoryName}&rdquo;</p>
                                 </div>
                             </div>

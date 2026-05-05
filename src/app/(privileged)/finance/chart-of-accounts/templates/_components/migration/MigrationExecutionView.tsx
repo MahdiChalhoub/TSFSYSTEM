@@ -90,7 +90,7 @@ export function MigrationExecutionView({
                             <ArrowRightLeft size={18} style={{ color: 'var(--app-primary)' }} />
                         </div>
                         <div>
-                            <h2 style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 Migration Execution
                             </h2>
                             <p className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>

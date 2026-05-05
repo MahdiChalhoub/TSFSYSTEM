@@ -53,7 +53,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <Undo2 size={20} className="text-app-muted-foreground" />
                         </button>
                         <div>
-                            <h1 className="font-serif">Accounting Standards Library</h1>
+                            <h1 className="text-xl font-bold text-app-foreground font-serif">Accounting Standards Library</h1>
                             <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Compare and select your operational layout</p>
                         </div>
                     </div>
@@ -77,7 +77,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     <div className="flex items-center gap-3 border-r border-emerald-800 pr-8">
                         <ShieldCheck className="text-emerald-400" size={32} />
                         <div>
-                            <h4 className="font-bold">Financial Integrity Guide</h4>
+                            <h4 className="font-bold text-sm">Financial Integrity Guide</h4>
                             <p className="text-tp-xs text-emerald-300 uppercase tracking-wide">How your reports are calculated</p>
                         </div>
                     </div>
@@ -101,7 +101,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                 <span>-</span>
                                 <span className="p-1 bg-amber-800 rounded">Expenses</span>
                                 <span>=</span>
-                                <span className="p-1 bg-amber-800/50 border border-app-warning rounded text-amber-200 italic font-bold">Net Profit</span>
+                                <span className="p-1 bg-amber-800/50 border border-amber-400 rounded text-amber-200 italic font-bold">Net Profit</span>
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             onClick={() => toggleTemplate(key)}
                             className={`flex-shrink-0 px-6 py-3 rounded-2xl border transition-all flex items-center gap-3 ${selectedTemplates.includes(key)
                                 ? 'bg-app-bg border-stone-900 text-white shadow-xl shadow-stone-200'
-                                : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
+                                : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-stone-400'
                                 }`}
                         >
                             {selectedTemplates.includes(key) ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Library size={16} />}
@@ -135,7 +135,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                 {selectedTemplates.length === 0 ? (
                     <div className="h-[60vh] flex flex-col items-center justify-center text-app-faint">
                         <Library size={64} className="mb-4 opacity-20" />
-                        <h2>Select standards to compare</h2>
+                        <h2 className="text-xl font-medium">Select standards to compare</h2>
                         <p className="text-sm">Choose one or more templates from the library above.</p>
                     </div>
                 ) : (
@@ -144,13 +144,13 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <div key={key} className="bg-app-surface rounded-3xl border border-app-border shadow-sm flex flex-col overflow-hidden">
                                 <div className="p-6 border-b border-app-border flex justify-between items-start bg-app-surface/50">
                                     <div>
-                                        <h3>{key.replace('_', ' ')}</h3>
+                                        <h3 className="font-bold text-app-foreground text-lg">{key.replace('_', ' ')}</h3>
                                         <p className="text-tp-xs font-bold text-app-muted-foreground uppercase mt-1 tracking-tight">Official Standard Structure</p>
                                     </div>
                                     <button
                                         disabled={isPending}
                                         onClick={() => handleImport(key)}
-                                        className="bg-app-success text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-app-success transition-all flex items-center gap-2 shadow-sm"
+                                        className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm"
                                     >
                                         <Zap size={14} /> Import
                                     </button>

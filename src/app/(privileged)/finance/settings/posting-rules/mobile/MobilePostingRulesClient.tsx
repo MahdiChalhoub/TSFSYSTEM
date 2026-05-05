@@ -572,7 +572,7 @@ function AccountPickerSheet({ event, accounts, currentAccountId, onPick, onClear
                     <Target size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="truncate" style={{ fontSize: 'var(--tp-xl)' }}>
+                    <h3 className="font-black text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-xl)' }}>
                         Map account
                     </h3>
                     <div className="font-mono font-bold text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-xs)' }}>

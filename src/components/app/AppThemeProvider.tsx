@@ -792,16 +792,20 @@ function darkenColor(hex: string, percent: number): string {
 
 type ColorsInput = Partial<ColorScheme> & { muted?: string;[key: string]: unknown };
 
-function enrichColors(colors: ColorsInput): ColorScheme {
+function enrichColors(colors: ColorsInput, mode: 'dark' | 'light' = 'dark'): ColorScheme {
+    // Mode-aware fallbacks. Mirrors src/app/actions/theme.ts — keep them in sync.
+    // Dark fallback for a partially-defined `light` preset paints near-white
+    // on a near-white background ("gray title in light mode" bug).
+    const isLight = mode === 'light';
     return {
         primary: colors.primary || '#10B981',
         primaryDark: colors.primaryDark || darkenColor(colors.primary || '#10B981', 10),
-        bg: colors.bg || '#020617',
-        surface: colors.surface || '#0F172A',
-        surfaceHover: colors.surfaceHover || 'rgba(255, 255, 255, 0.07)',
-        text: colors.text || '#F1F5F9',
-        textMuted: colors.textMuted || colors.muted || '#94A3B8',
-        border: colors.border || 'rgba(255, 255, 255, 0.08)',
+        bg: colors.bg || (isLight ? '#FFFFFF' : '#020617'),
+        surface: colors.surface || (isLight ? '#F8FAFC' : '#0F172A'),
+        surfaceHover: colors.surfaceHover || (isLight ? 'rgba(15, 23, 42, 0.04)' : 'rgba(255, 255, 255, 0.07)'),
+        text: colors.text || (isLight ? '#0F172A' : '#F1F5F9'),
+        textMuted: colors.textMuted || colors.muted || (isLight ? '#64748B' : '#94A3B8'),
+        border: colors.border || (isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.08)'),
     };
 }
 
@@ -841,8 +845,8 @@ function transformThemeFromAPI(apiTheme: ApiThemePayload): ThemePreset {
         tags: apiTheme.tags || [],
         presetData: {
             colors: {
-                dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}),
-                light: enrichColors(apiTheme.preset_data?.colors?.light || {}),
+                dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}, 'dark'),
+                light: enrichColors(apiTheme.preset_data?.colors?.light || {}, 'light'),
             },
             layout: (apiTheme.preset_data?.layout as ThemePreset['presetData']['layout']) || DEFAULT_LAYOUT,
             components: (apiTheme.preset_data?.components as ThemePreset['presetData']['components']) || DEFAULT_COMPONENTS,

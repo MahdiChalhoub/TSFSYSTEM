@@ -330,7 +330,7 @@ export function ChartOfAccountsViewer({ accounts, orgCurrencies = [], numberingR
                             <BookOpen size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1>{t('finance.coa.title')}</h1>
+                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">{t('finance.coa.title')}</h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">{accounts.length} {t('finance.coa.accounts')}</p>
                         </div>
                     </div>

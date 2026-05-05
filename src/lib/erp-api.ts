@@ -224,6 +224,12 @@ export const getTenantContext = cache(resolveTenantContext);
 export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
+    // Callers that don't depend on accounting scope (chrome, auth, modules,
+    // sidebar, sites, themes…) can pass `scopeAware: false` to skip the
+    // X-Scope header injection. Without this, scope toggling busts every
+    // chrome cache (different X-Scope = different cache key) and a single
+    // toggle re-runs ~6 Django roundtrips.
+    const scopeAware = (options as any).scopeAware !== false;
 
     // [AUTH + SCOPE HEADERS]
     // Server-side only: read cookies once, inject Authorization + X-Scope together.
@@ -243,12 +249,12 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                 }
             }
 
-            if (!headersRaw.has('X-Scope')) {
+            if (scopeAware && !headersRaw.has('X-Scope')) {
                 const scope = cookieStore.get('tsf_view_scope')?.value;
                 if (scope) headersRaw.set('X-Scope', scope.toUpperCase());
             }
 
-            if (!headersRaw.has('X-Scope-Access')) {
+            if (scopeAware && !headersRaw.has('X-Scope-Access')) {
                 const scopeAccess = cookieStore.get('scope_access')?.value;
                 if (scopeAccess) headersRaw.set('X-Scope-Access', scopeAccess.toLowerCase());
             }

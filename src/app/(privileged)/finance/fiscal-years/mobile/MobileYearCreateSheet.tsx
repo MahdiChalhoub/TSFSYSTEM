@@ -93,7 +93,7 @@ export function MobileYearCreateSheet({ onClose }: Props) {
             <div className="flex items-center justify-between px-4 pt-2 pb-3 border-b border-app-border/50">
                 <div className="flex items-center gap-2">
                     <Calendar size={18} style={{ color: 'var(--app-primary)' }} />
-                    <h2 className="text-tp-lg">New Fiscal Year</h2>
+                    <h2 className="font-bold text-tp-lg">New Fiscal Year</h2>
                 </div>
                 <button
                     onClick={onClose}

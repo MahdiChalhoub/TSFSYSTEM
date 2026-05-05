@@ -157,7 +157,7 @@ export function CategoryRuleWizardClient({
                     <ArrowLeft size={16} />
                 </Link>
                 <div className="flex-1">
-                    <h1 className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-2">
                         <Sparkles size={20} className="text-app-primary" />
                         Category Rule Wizard
                     </h1>

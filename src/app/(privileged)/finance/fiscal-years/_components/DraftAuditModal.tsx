@@ -25,7 +25,7 @@ export function DraftAuditModal({ data, onClose }: { data: DraftAuditData; onClo
                             <AlertTriangle size={16} style={{ color: 'var(--app-error, #ef4444)' }} />
                         </div>
                         <div>
-                            <h2 className="text-tp-lg" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>
                                 Cannot Close {data.periodName}
                             </h2>
                             <p className="text-tp-xs font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
