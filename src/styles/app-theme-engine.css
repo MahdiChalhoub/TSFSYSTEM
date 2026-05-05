@@ -448,6 +448,23 @@
   .app-page-subtitle { font-size: 0.75rem; }     /* 12px on tablet+ */
 }
 
+/* Micro-label — used on KPI cards, legacy stat blocks, and stat
+   footnotes. Was referenced everywhere via `<p className="label-micro …">`
+   but never defined, so the <p> fell back to default normal weight.
+   This is the same eyebrow style as .app-page-subtitle without the
+   color (callers add their own text-app-muted-foreground / text-app-primary
+   etc.) and slightly tighter line-height for stat-card density. */
+.label-micro {
+  font-size: 0.6875rem;                          /* 11px */
+  font-weight: var(--font-weight-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;                         /* tracking-widest */
+  line-height: 1.3;
+}
+@media (min-width: 768px) {
+  .label-micro { font-size: 0.75rem; }           /* 12px on tablet+ */
+}
+
 /* Base button — sizing/spacing only, no visual style */
 .app-btn {
   display: inline-flex;

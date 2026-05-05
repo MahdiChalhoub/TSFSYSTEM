@@ -99,7 +99,7 @@ const DEFAULT_COMPONENTS: ComponentConfig = {
     inputs: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 0.875rem', fontSize: '0.875rem', border: '1px solid var(--app-border)' },
     /* Canonical typography defaults — synced with globals.css.
        Sizes: h1=18 h2=16 h3=15 body=15 small=13 (px). Outfit body. */
-    typography: { headingFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", bodyFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", h1Size: '1.875rem', h2Size: '1rem', h3Size: '0.9375rem', bodySize: '0.9375rem', smallSize: '0.8125rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
+    typography: { headingFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", bodyFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", h1Size: '1.5rem', h2Size: '1rem', h3Size: '0.9375rem', bodySize: '0.9375rem', smallSize: '0.8125rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
     tables: { rowHeight: '3rem', headerStyle: 'bold', borderStyle: 'rows', striped: false, hoverEffect: true, density: 'comfortable' },
     modals: { maxWidth: '600px', borderRadius: '0.75rem', padding: '1.5rem', backdrop: 'blur', animation: 'scale', shadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
     forms: { labelPosition: 'top', labelStyle: 'bold', fieldSpacing: '1rem', groupSpacing: '1.5rem', validationStyle: 'inline' },
@@ -214,7 +214,7 @@ function applyFullThemeToDOM(
     const CANONICAL_FONT = "'Outfit', ui-sans-serif, system-ui, sans-serif";
     r.setProperty('--font-heading',     CANONICAL_FONT);
     r.setProperty('--font-body',        CANONICAL_FONT);
-    r.setProperty('--font-size-h1',     '1.875rem');     /* 30px — page title baseline (text-3xl) */
+    r.setProperty('--font-size-h1',     '1.5rem');       /* 24px — page title */
     r.setProperty('--font-size-h2',     '1rem');         /* 16px */
     r.setProperty('--font-size-h3',     '0.9375rem');    /* 15px */
     r.setProperty('--font-size-body',   '0.9375rem');    /* 15px */

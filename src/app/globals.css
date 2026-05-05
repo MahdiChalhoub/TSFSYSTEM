@@ -57,7 +57,7 @@
    * ═══════════════════════════════════════════════════════════ */
   /* Tight scale — 1-2px steps so headings feel like emphasis,
      not a hierarchy explosion. h1 is only 3px above body. */
-  --font-size-h1:    1.875rem;   /* 30px — page title (matches text-3xl, the production-page baseline) */
+  --font-size-h1:    1.5rem;     /* 24px — page title */
   --font-size-h2:    1rem;       /* 16px — section header */
   --font-size-h3:    0.9375rem;  /* 15px — subsection */
   --font-size-h4:    0.9375rem;  /* 15px — inline emphasis */

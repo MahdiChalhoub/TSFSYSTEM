@@ -20,7 +20,6 @@ import { useEffect, useState, useCallback, useContext } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { AdminContext } from '@/context/AdminContext'
@@ -155,26 +154,19 @@ export default function ProductsDetailPage() {
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6 bg-app-bg min-h-full">
-                <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-app-surface-2 animate-pulse" />
-                    <div className="space-y-2">
-                        <div className="h-6 w-64 rounded bg-app-surface-2 animate-pulse" />
-                        <div className="h-3 w-48 rounded bg-app-surface-2 animate-pulse" />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-2xl bg-app-surface-2 animate-pulse" />)}</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <div key={i} className="h-16 rounded-2xl bg-app-surface-2 animate-pulse" />)}</div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-72 rounded-2xl bg-app-surface-2 animate-pulse" />)}</div>
+            <div className="flex items-center justify-center py-20">
+                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
             </div>
         )
     }
     if (!item) {
         return (
-            <div className="p-6 flex flex-col items-center justify-center gap-4 h-full bg-app-bg">
-                <AlertTriangle size={26} className="text-app-error" />
-                <p className="text-base font-bold">Product not found</p>
-                <Link href="/inventory/products" className="text-sm font-bold text-app-primary hover:underline">Back to products</Link>
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                <AlertTriangle size={36} style={{ color: 'var(--app-muted-foreground)', opacity: 0.4 }} className="mb-3" />
+                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>Product not found</p>
+                <Link href="/inventory/products" className="text-tp-xs font-bold hover:underline mt-1" style={{ color: 'var(--app-primary)' }}>
+                    Back to products
+                </Link>
             </div>
         )
     }
@@ -197,327 +189,283 @@ export default function ProductsDetailPage() {
     const maxWarehouseQty = Math.max(1, ...stockByWarehouse.map(s => s.quantity))
 
     return (
-        <div className="p-6 space-y-6 bg-app-bg min-h-full">
-            {/* ═══ Header ═══ */}
-            <header>
+        <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 space-y-4 md:space-y-5 overflow-y-auto custom-scrollbar">
+            {/* ═══ Header — design-language §2 ═══ */}
+            <header className="flex-shrink-0">
                 <Link href="/inventory/products"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-app-muted-foreground hover:text-app-foreground transition-colors mb-4">
-                    <ArrowLeft size={14} /> Back to products
+                    className="inline-flex items-center gap-1.5 text-tp-xs font-bold transition-colors mb-3 hover:opacity-70"
+                    style={{ color: 'var(--app-muted-foreground)' }}>
+                    <ArrowLeft size={13} /> Back to products
                 </Link>
 
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <div className="w-14 h-14 rounded-2xl bg-app-primary flex items-center justify-center flex-shrink-0 shadow-lg shadow-app-primary/20">
-                            <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={56} className="rounded-2xl" color="white" iconSize={28} />
-                        </div>
-                        <div className="min-w-0">
-                            <h1 className="flex items-center gap-3 text-xl font-black tracking-tight">
-                                <span className="truncate">{String(it.name || `Product #${it.id}`)}</span>
-                                <span className={`shrink-0 inline-flex items-center text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${isActive ? 'text-app-success bg-app-success/10 border-app-success/20' : 'text-app-error bg-app-error/10 border-app-error/20'}`}>
-                                    {isActive ? 'Active' : 'Inactive'}
-                                </span>
+                <div className="flex items-start md:items-center gap-3 md:gap-4">
+                    <div className="page-header-icon bg-app-primary"
+                         style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                        <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={36} color="white" iconSize={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight truncate">
+                                {String(it.name || `Product #${it.id}`)}
                             </h1>
-                            <p className="text-sm text-app-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
-                                <span className="font-mono">{String(it.sku || `#${it.id}`)}</span>
-                                {it.brand_name && <><span>·</span><span>{String(it.brand_name)}</span></>}
-                                {it.category_name && <><span>·</span><span>{String(it.category_name)}</span></>}
-                                {it.unit_name && <><span>·</span><span>{String(it.unit_name)}</span></>}
-                            </p>
+                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                  style={{
+                                      background: `color-mix(in srgb, ${isActive ? 'var(--app-success)' : 'var(--app-error)'} 10%, transparent)`,
+                                      color: isActive ? 'var(--app-success)' : 'var(--app-error)',
+                                      border: `1px solid color-mix(in srgb, ${isActive ? 'var(--app-success)' : 'var(--app-error)'} 20%, transparent)`,
+                                  }}>
+                                {isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            {hasGroup && syncBadge.icon && (
+                                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0"
+                                      style={{
+                                          background: `color-mix(in srgb, ${syncBadge.color} 10%, transparent)`,
+                                          color: syncBadge.color,
+                                          border: `1px solid color-mix(in srgb, ${syncBadge.color} 20%, transparent)`,
+                                      }}>
+                                    <syncBadge.icon size={9} /> {syncBadge.label}
+                                </span>
+                            )}
                         </div>
+                        <p className="text-tp-xxs font-bold uppercase tracking-widest mt-1.5"
+                           style={{ color: 'var(--app-muted-foreground)' }}>
+                            <span className="font-mono normal-case">{String(it.sku || `#${it.id}`)}</span>
+                            {it.brand_name && <> · {String(it.brand_name)}</>}
+                            {it.category_name && <> · {String(it.category_name)}</>}
+                            {it.unit_name && <> · {String(it.unit_name)}</>}
+                        </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => router.push(`/inventory/products/${id}/edit`)}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-app-primary text-white shadow-lg shadow-app-primary/20 hover:brightness-110 transition-all">
-                            <Edit3 size={14} /> Edit
-                        </button>
                         <button onClick={() => setShowDelete(true)}
-                            className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-app-border hover:bg-app-error/10 hover:border-app-error/30 hover:text-app-error transition-colors text-app-muted-foreground">
-                            <Trash2 size={14} />
+                            className="flex items-center gap-1 text-tp-xs font-bold px-2.5 py-1.5 rounded-xl transition-all"
+                            style={{
+                                color: 'var(--app-muted-foreground)',
+                                border: '1px solid var(--app-border)',
+                                background: 'transparent',
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.color = 'var(--app-error)'
+                                e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--app-error) 30%, transparent)'
+                                e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error) 8%, transparent)'
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.color = 'var(--app-muted-foreground)'
+                                e.currentTarget.style.borderColor = 'var(--app-border)'
+                                e.currentTarget.style.background = 'transparent'
+                            }}>
+                            <Trash2 size={13} />
+                            <span className="hidden md:inline">Delete</span>
+                        </button>
+                        <button onClick={() => router.push(`/inventory/products/${id}/edit`)}
+                            className="flex items-center gap-1.5 text-tp-xs font-bold text-white px-3 py-1.5 rounded-xl transition-all hover:brightness-110"
+                            style={{
+                                background: 'var(--app-primary)',
+                                boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                            }}>
+                            <Edit3 size={14} />
+                            <span className="hidden sm:inline">Edit Product</span>
                         </button>
                     </div>
                 </div>
             </header>
 
-            {/* ═══ Primary KPI Row ═══ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-app-primary text-white border-0 shadow-lg shadow-app-primary/10">
-                    <CardContent className="py-5">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={28} className="opacity-80 flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-xs uppercase font-black opacity-80 tracking-widest">Selling TTC</p>
-                                <p className="text-2xl font-black tabular-nums">{fmt(it.selling_price_ttc)}</p>
-                                <p className="text-xs font-medium opacity-60 truncate">HT {fmt(it.selling_price_ht)} · VAT {it.tva_rate != null ? `${it.tva_rate}%` : '—'}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-app-success text-white border-0 shadow-lg shadow-app-success/10">
-                    <CardContent className="py-5">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={28} className="opacity-80 flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-xs uppercase font-black opacity-80 tracking-widest">Margin</p>
-                                <p className="text-2xl font-black tabular-nums">{margin != null ? `${margin.toFixed(1)}%` : '—'}</p>
-                                <p className="text-xs font-medium opacity-60 truncate">{margin != null ? `over ${fmt(it.cost_price)} cost` : 'set cost to compute'}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-app-info text-white border-0 shadow-lg shadow-app-info/10">
-                    <CardContent className="py-5">
-                        <div className="flex items-center gap-3">
-                            <Box size={28} className="opacity-80 flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-xs uppercase font-black opacity-80 tracking-widest">On Hand</p>
-                                <p className="text-2xl font-black tabular-nums">{fmtQty(onHand)}</p>
-                                <p className="text-xs font-medium opacity-60 truncate">{stockByWarehouse.length} {stockByWarehouse.length === 1 ? 'location' : 'locations'} · {fmtQty(it.available_qty)} free</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className={`text-white border-0 shadow-lg ${stockHealth === 'OUT' ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-app-error/10' : stockHealth === 'LOW' ? 'bg-gradient-to-br from-orange-500 to-amber-600 shadow-app-warning/10' : 'bg-gradient-to-br from-violet-500 to-indigo-600 shadow-app-accent/10'}`}>
-                    <CardContent className="py-5">
-                        <div className="flex items-center gap-3">
-                            {stockHealth === 'OK' ? <CheckCircle2 size={28} className="opacity-80 flex-shrink-0" /> : <AlertTriangle size={28} className="opacity-80 flex-shrink-0" />}
-                            <div className="min-w-0">
-                                <p className="text-xs uppercase font-black opacity-80 tracking-widest">Stock Status</p>
-                                <p className="text-2xl font-black">{stockLabel}</p>
-                                <p className="text-xs font-medium opacity-60 truncate">
-                                    {stockHealth === 'OK' && (minStock > 0 ? `${fmtQty(onHand - minStock)} above minimum` : 'no minimum set')}
-                                    {stockHealth === 'LOW' && `min ${fmtQty(minStock)} · reorder ${fmtQty(reorder)}`}
-                                    {stockHealth === 'OUT' && `restock ${fmtQty(reorder || minStock || 1)} units`}
-                                </p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* ═══ KPI Strip — design-language §4 (compact, auto-fit) ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                <KpiTile icon={<DollarSign size={14} />} color="var(--app-success)"
+                    label="Selling TTC" value={fmt(it.selling_price_ttc)} />
+                <KpiTile icon={<TrendingUp size={14} />} color="var(--app-primary)"
+                    label="Margin" value={margin != null ? `${margin.toFixed(1)}%` : '—'} />
+                <KpiTile icon={<Box size={14} />}
+                    color={stockHealth === 'OUT' ? 'var(--app-error)' : stockHealth === 'LOW' ? 'var(--app-warning)' : 'var(--app-info)'}
+                    label="On Hand" value={fmtQty(onHand)} />
+                <KpiTile icon={<Archive size={14} />} color="var(--app-info)"
+                    label="Available" value={fmtQty(it.available_qty)} />
+                <KpiTile icon={<Shield size={14} />} color="#8b5cf6"
+                    label="Reserved" value={fmtQty(it.reserved_qty)} />
+                <KpiTile icon={<RefreshCw size={14} />} color="var(--app-warning)"
+                    label="Reorder At" value={fmtQty(reorder)} />
+                <KpiTile icon={<ShoppingCart size={14} />} color="var(--app-primary)"
+                    label="Total Sold" value={fmtQty(totalSold)} />
+                <KpiTile icon={<TrendingUp size={14} />} color="var(--app-success)"
+                    label="Cost" value={fmt(it.cost_price)} />
             </div>
 
-            {/* ═══ Secondary KPI Row ═══ */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-app-info bg-app-surface/40">
-                    <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                            <Archive size={20} className="text-app-info flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-[10px] text-app-muted-foreground uppercase font-black">Available</p>
-                                <p className="text-lg font-black text-app-info tabular-nums">{fmtQty(it.available_qty)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-app-accent bg-app-surface/40">
-                    <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                            <Shield size={20} className="text-app-accent flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-[10px] text-app-muted-foreground uppercase font-black">Reserved</p>
-                                <p className="text-lg font-black text-app-accent tabular-nums">{fmtQty(it.reserved_qty)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-app-warning bg-app-surface/40">
-                    <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                            <RefreshCw size={20} className="text-app-warning flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-[10px] text-app-muted-foreground uppercase font-black">Reorder Point</p>
-                                <p className="text-lg font-black text-app-warning tabular-nums">{fmtQty(reorder)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-app-primary bg-app-surface/40">
-                    <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                            <ShoppingCart size={20} className="text-app-primary flex-shrink-0" />
-                            <div className="min-w-0">
-                                <p className="text-[10px] text-app-muted-foreground uppercase font-black">Total Sold</p>
-                                <p className="text-lg font-black text-app-primary tabular-nums">{fmtQty(totalSold)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            {/* ═══ Stock Status — slim severity banner ═══ */}
+            {(stockHealth !== 'OK' || minStock > 0) && (() => {
+                const tone = stockHealth === 'OUT' ? 'var(--app-error)' : stockHealth === 'LOW' ? 'var(--app-warning)' : 'var(--app-success)'
+                return (
+                    <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl"
+                         style={{
+                             background: `color-mix(in srgb, ${tone} 7%, transparent)`,
+                             border: `1px solid color-mix(in srgb, ${tone} 20%, transparent)`,
+                         }}>
+                        {stockHealth === 'OK'
+                            ? <CheckCircle2 size={14} style={{ color: tone }} className="flex-shrink-0" />
+                            : <AlertTriangle size={14} style={{ color: tone }} className="flex-shrink-0" />}
+                        <span className="text-tp-xs font-bold" style={{ color: tone }}>{stockLabel}</span>
+                        <span className="text-tp-xs font-medium tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {stockHealth === 'OK' && minStock > 0 && `· ${fmtQty(onHand - minStock)} above minimum (${fmtQty(minStock)})`}
+                            {stockHealth === 'LOW' && `· min ${fmtQty(minStock)} · reorder ${fmtQty(reorder)}`}
+                            {stockHealth === 'OUT' && `· restock ${fmtQty(reorder || minStock || 1)} units`}
+                        </span>
+                        <span className="ml-auto text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                            {stockByWarehouse.length} {stockByWarehouse.length === 1 ? 'location' : 'locations'}
+                        </span>
+                    </div>
+                )
+            })()}
 
-            {/* ═══ 3-col widget row ═══ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* ═══ 3-col widget row — auto-fit per design-language §3 ═══ */}
+            <div className="flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
                 {/* Pricing breakdown */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                            <DollarSign size={16} className="text-app-success" /> Pricing Breakdown
-                            {hasGroup && (
-                                <button onClick={handleTogglePricingSource}
-                                    className="ml-auto text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md hover:brightness-110 transition-all"
-                                    style={{
-                                        background: it.pricing_source === 'GROUP'
-                                            ? 'color-mix(in srgb, var(--app-warning) 12%, transparent)'
-                                            : 'color-mix(in srgb, var(--app-info) 12%, transparent)',
-                                        color: it.pricing_source === 'GROUP' ? 'var(--app-warning)' : 'var(--app-info)',
-                                    }}>
-                                    {it.pricing_source === 'GROUP' ? 'Override' : 'Follow group'}
-                                </button>
-                            )}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+                <PanelCard icon={<DollarSign size={13} />} accent="var(--app-success)" title="Pricing"
+                    right={hasGroup && (
+                        <button onClick={handleTogglePricingSource}
+                            className="text-tp-xxs font-black uppercase tracking-wider px-2 py-0.5 rounded-md hover:brightness-110 transition-all"
+                            style={{
+                                background: it.pricing_source === 'GROUP'
+                                    ? 'color-mix(in srgb, var(--app-warning) 12%, transparent)'
+                                    : 'color-mix(in srgb, var(--app-info) 12%, transparent)',
+                                color: it.pricing_source === 'GROUP' ? 'var(--app-warning)' : 'var(--app-info)',
+                            }}>
+                            {it.pricing_source === 'GROUP' ? 'Override' : 'Follow group'}
+                        </button>
+                    )}>
+                    <div className="space-y-1">
                         <Row label="Selling TTC" value={fmt(it.selling_price_ttc)} highlight color="text-app-success" />
                         <Row label="Selling HT"  value={fmt(it.selling_price_ht)} />
                         <Row label="Cost"        value={fmt(it.cost_price)} color="text-app-info" />
                         <Row label="VAT rate"    value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} muted />
                         {margin != null && <Row label="Margin" value={`${margin.toFixed(1)}%`} highlight color="text-app-primary" />}
                         {totalProfit > 0 && <Row label="Total profit" value={fmt(totalProfit)} muted />}
-                        {hasGroup && syncBadge.icon && (
-                            <div className="pt-2 mt-2 border-t border-app-border flex items-center gap-2 text-xs">
-                                <span style={{ color: syncBadge.color }} className="flex items-center gap-1 font-bold">
-                                    <syncBadge.icon size={11} /> {syncBadge.label}
-                                </span>
-                                {it.product_group_name && (
-                                    <button type="button"
-                                        onClick={() => openInTab(String(it.product_group_name), `/inventory/product-groups/${it.product_group}`)}
-                                        className="ml-auto font-medium text-app-muted-foreground hover:text-app-foreground inline-flex items-center gap-1 truncate">
-                                        <span className="truncate max-w-[140px]">{String(it.product_group_name)}</span>
-                                        <ExternalLink size={9} className="flex-shrink-0" />
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                    </div>
+                    {hasGroup && syncBadge.icon && (
+                        <div className="mt-3 pt-2 flex items-center gap-2 text-tp-xs"
+                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <span style={{ color: syncBadge.color }} className="flex items-center gap-1 font-bold">
+                                <syncBadge.icon size={11} /> {syncBadge.label}
+                            </span>
+                            {it.product_group_name && (
+                                <button type="button"
+                                    onClick={() => openInTab(String(it.product_group_name), `/inventory/product-groups/${it.product_group}`)}
+                                    className="ml-auto font-medium text-app-muted-foreground hover:text-app-foreground inline-flex items-center gap-1 truncate transition-colors">
+                                    <span className="truncate max-w-[140px]">{String(it.product_group_name)}</span>
+                                    <ExternalLink size={9} className="flex-shrink-0" />
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </PanelCard>
 
                 {/* Stock by warehouse */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                            <Warehouse size={16} className="text-app-info" /> Stock by Warehouse
-                            <span className="ml-auto text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">{stockByWarehouse.length}</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2.5">
-                        {stockByWarehouse.length === 0 ? (
-                            <p className="text-center py-4 text-app-muted-foreground text-sm">No warehouse data</p>
-                        ) : stockByWarehouse.slice(0, 8).map(s => {
-                            const pct = (s.quantity / maxWarehouseQty) * 100
-                            const reserved = Number(s.reserved_quantity ?? 0)
-                            return (
-                                <div key={s.warehouse} className="space-y-1">
-                                    <div className="flex justify-between text-xs">
-                                        <span className="font-medium truncate flex-1 text-app-foreground">{s.warehouse_name || `Warehouse #${s.warehouse}`}</span>
-                                        <span className="font-bold text-app-info tabular-nums">{fmtQty(s.quantity)}</span>
+                <PanelCard icon={<Warehouse size={13} />} accent="var(--app-info, #3b82f6)" title="Stock by Warehouse"
+                    right={<span className="text-tp-xxs font-bold text-app-muted-foreground tabular-nums">{stockByWarehouse.length}</span>}>
+                    {stockByWarehouse.length === 0 ? (
+                        <div className="py-4 text-center">
+                            <Warehouse size={20} className="text-app-muted-foreground/40 mx-auto mb-1.5" />
+                            <p className="text-tp-xs font-bold text-app-muted-foreground">No warehouse data</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {stockByWarehouse.slice(0, 8).map(s => {
+                                const pct = (s.quantity / maxWarehouseQty) * 100
+                                const reserved = Number(s.reserved_quantity ?? 0)
+                                return (
+                                    <div key={s.warehouse} className="space-y-1">
+                                        <div className="flex justify-between items-baseline gap-2">
+                                            <span className="text-tp-xs font-medium truncate flex-1 text-app-foreground">{s.warehouse_name || `Warehouse #${s.warehouse}`}</span>
+                                            <span className="text-tp-sm font-bold tabular-nums" style={{ color: 'var(--app-info, #3b82f6)' }}>{fmtQty(s.quantity)}</span>
+                                        </div>
+                                        <div className="h-1.5 rounded-full overflow-hidden"
+                                             style={{ background: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                            <div className="h-full rounded-full transition-all"
+                                                 style={{ width: `${pct}%`, background: 'var(--app-info, #3b82f6)' }} />
+                                        </div>
+                                        {reserved > 0 && (
+                                            <p className="text-tp-xxs font-medium tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                {fmtQty(reserved)} reserved · {fmtQty(s.quantity - reserved)} free
+                                            </p>
+                                        )}
                                     </div>
-                                    <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
-                                        <div className="h-full bg-app-info rounded-full transition-all" style={{ width: `${pct}%` }} />
-                                    </div>
-                                    {reserved > 0 && (
-                                        <p className="text-[10px] text-app-muted-foreground tabular-nums">{fmtQty(reserved)} reserved · {fmtQty(s.quantity - reserved)} free</p>
-                                    )}
-                                </div>
-                            )
-                        })}
-                        {stockByWarehouse.length > 8 && (
-                            <p className="text-[10px] text-app-muted-foreground text-center pt-1">+{stockByWarehouse.length - 8} more locations</p>
-                        )}
-                    </CardContent>
-                </Card>
+                                )
+                            })}
+                            {stockByWarehouse.length > 8 && (
+                                <p className="text-tp-xxs text-app-muted-foreground text-center pt-1">+{stockByWarehouse.length - 8} more locations</p>
+                            )}
+                        </div>
+                    )}
+                </PanelCard>
 
                 {/* Identity & Groups */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                            <Tag size={16} className="text-app-accent" /> Identity & Groups
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+                <PanelCard icon={<Tag size={13} />} accent="#8b5cf6" title="Identity & Groups">
+                    <div className="space-y-1">
                         {it.brand_name && (
-                            <RowLink icon={<Star size={11} className="text-app-warning" />} label="Brand" value={String(it.brand_name)}
+                            <RowLink icon={<Star size={11} style={{ color: 'var(--app-warning)' }} />} label="Brand" value={String(it.brand_name)}
                                 onClick={it.brand ? () => openInTab(String(it.brand_name), `/inventory/brands/${it.brand}`) : undefined} />
                         )}
                         {it.category_name && (
-                            <RowLink icon={<Tag size={11} className="text-app-info" />} label="Category" value={String(it.category_name)}
+                            <RowLink icon={<Tag size={11} style={{ color: 'var(--app-info)' }} />} label="Category" value={String(it.category_name)}
                                 onClick={it.category ? () => openInTab(String(it.category_name), `/inventory/categories?category=${it.category}`) : undefined} />
                         )}
                         {(it.unit_name || it.unit_code) && (
-                            <RowLink icon={<Ruler size={11} className="text-app-primary" />} label="Unit" value={String(it.unit_name || it.unit_code)}
+                            <RowLink icon={<Ruler size={11} style={{ color: 'var(--app-primary)' }} />} label="Unit" value={String(it.unit_name || it.unit_code)}
                                 onClick={it.unit ? () => openInTab(String(it.unit_name || it.unit_code), `/inventory/units?unit=${it.unit}`) : undefined} />
                         )}
                         {it.barcode && <Row label="Barcode" value={String(it.barcode)} mono muted />}
-                        {invMemberships.length > 0 && (
-                            <div className="pt-2 mt-2 border-t border-app-border">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 flex items-center gap-1.5">
-                                    <Layers size={10} /> Inventory groups · {invMemberships.length}
-                                </p>
-                                <div className="space-y-1">
-                                    {invMemberships.slice(0, 4).map(m => {
-                                        const mm = m as Record<string, any>
-                                        const role = ROLE_BADGES[mm.substitution_role as string] || ROLE_BADGES.NOT_SUB
-                                        return (
-                                            <button key={mm.id as number} type="button"
-                                                onClick={() => mm.group && openInTab(String(mm.group_name || `Group #${mm.group}`), `/inventory/inventory-groups/${mm.group}`)}
-                                                className="w-full flex items-center gap-2 text-xs px-2 py-1 rounded-lg hover:bg-app-surface-2 transition-colors text-left">
-                                                <span className="flex-1 truncate font-medium text-app-foreground">{String(mm.group_name || `Group #${mm.group}`)}</span>
-                                                <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded"
-                                                    style={{ background: `color-mix(in srgb, ${role.color} 10%, transparent)`, color: role.color }}>
-                                                    {role.label}
-                                                </span>
-                                            </button>
-                                        )
-                                    })}
-                                </div>
+                    </div>
+                    {invMemberships.length > 0 && (
+                        <div className="mt-3 pt-2"
+                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 flex items-center gap-1.5">
+                                <Layers size={10} /> Inventory groups · {invMemberships.length}
+                            </p>
+                            <div className="space-y-0.5">
+                                {invMemberships.slice(0, 4).map(m => {
+                                    const mm = m as Record<string, any>
+                                    const role = ROLE_BADGES[mm.substitution_role as string] || ROLE_BADGES.NOT_SUB
+                                    return (
+                                        <button key={mm.id as number} type="button"
+                                            onClick={() => mm.group && openInTab(String(mm.group_name || `Group #${mm.group}`), `/inventory/inventory-groups/${mm.group}`)}
+                                            className="w-full flex items-center gap-2 text-tp-xs px-2 py-1 rounded-lg transition-colors text-left"
+                                            style={{ background: 'transparent' }}
+                                            onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in srgb, var(--app-border) 30%, transparent)' }}
+                                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                                            <span className="flex-1 truncate font-medium text-app-foreground">{String(mm.group_name || `Group #${mm.group}`)}</span>
+                                            <span className="text-tp-xxs font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                style={{ background: `color-mix(in srgb, ${role.color} 10%, transparent)`, color: role.color }}>
+                                                {role.label}
+                                            </span>
+                                        </button>
+                                    )
+                                })}
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        </div>
+                    )}
+                </PanelCard>
             </div>
 
             {/* ═══ Description ═══ */}
             {it.description && (
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                            <Package size={16} className="text-app-muted-foreground" /> Description
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm leading-relaxed whitespace-pre-line text-app-foreground">{String(it.description)}</p>
-                    </CardContent>
-                </Card>
+                <PanelCard icon={<Package size={13} />} accent="var(--app-muted-foreground)" title="Description">
+                    <p className="text-tp-sm leading-relaxed whitespace-pre-line text-app-foreground">{String(it.description)}</p>
+                </PanelCard>
             )}
 
             {/* ═══ Packaging variants ═══ */}
-            <Card>
-                <CardHeader className="py-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                        <Package size={16} className="text-app-warning" /> Packaging Variants
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ProductPackagingTab
-                        productId={id}
-                        productName={String(it.name || '')}
-                        basePriceTTC={Number(it.selling_price_ttc) || undefined}
-                        basePriceHT={Number(it.selling_price_ht) || undefined}
-                        productUnitId={it.unit as number}
-                    />
-                </CardContent>
-            </Card>
+            <PanelCard icon={<Package size={13} />} accent="var(--app-warning)" title="Packaging Variants">
+                <ProductPackagingTab
+                    productId={id}
+                    productName={String(it.name || '')}
+                    basePriceTTC={Number(it.selling_price_ttc) || undefined}
+                    basePriceHT={Number(it.selling_price_ht) || undefined}
+                    productUnitId={it.unit as number}
+                />
+            </PanelCard>
 
             {/* ═══ Activity timeline ═══ */}
-            <Card>
-                <CardHeader className="py-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                        <History size={16} className="text-app-muted-foreground" /> Activity
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ProductAuditTimeline productId={Number(id)} />
-                </CardContent>
-            </Card>
+            <PanelCard icon={<History size={13} />} accent="var(--app-muted-foreground)" title="Activity">
+                <ProductAuditTimeline productId={Number(id)} />
+            </PanelCard>
 
             {/* Delete confirm */}
             <ConfirmDialog
@@ -534,13 +482,79 @@ export default function ProductsDetailPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+ *  KPI tile — matches design-language §4 (compact, auto-fit)
+ * ═══════════════════════════════════════════════════════════ */
+function KpiTile({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+    return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+             style={{
+                 background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                 border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+             }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                 style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <div className="text-tp-xxs font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+                <div className="text-tp-sm font-black tabular-nums truncate" style={{ color: 'var(--app-foreground)' }}>{value}</div>
+            </div>
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  PanelCard — production-style container
+ *  ----------------------------------------------------------
+ *  Matches CategoryDetailPanel surface treatment: subtle gradient
+ *  header bg, accent-tinted icon tile, inline-styled border using
+ *  --app-border. No shadcn chrome, all tokens, no raw hex.
+ * ═══════════════════════════════════════════════════════════ */
+function PanelCard({ icon, title, accent, right, children }: {
+    icon: React.ReactNode; title: string; accent: string;
+    right?: React.ReactNode; children: React.ReactNode;
+}) {
+    return (
+        <section className="rounded-2xl overflow-hidden"
+                 style={{
+                     background: 'var(--app-surface)',
+                     border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                 }}>
+            <header className="px-3 py-2 flex items-center gap-2"
+                    style={{
+                        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 6%, var(--app-surface)), var(--app-surface))`,
+                        borderBottom: `1px solid color-mix(in srgb, ${accent} 14%, transparent)`,
+                    }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)`, color: accent }}>
+                    {icon}
+                </div>
+                <h3 className="text-tp-sm font-bold tracking-tight flex-1 truncate" style={{ color: 'var(--app-foreground)' }}>
+                    {title}
+                </h3>
+                {right}
+            </header>
+            <div className="p-3">
+                {children}
+            </div>
+        </section>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
  *  Helper rows
  * ═══════════════════════════════════════════════════════════ */
 function Row({ label, value, color, highlight, muted, mono }: { label: string; value: string; color?: string; highlight?: boolean; muted?: boolean; mono?: boolean }) {
     return (
-        <div className="flex items-baseline justify-between text-xs gap-3">
-            <span className={muted ? 'text-app-muted-foreground' : 'text-app-foreground font-medium'}>{label}</span>
-            <span className={`tabular-nums truncate ${highlight ? 'text-base font-black' : 'text-sm font-bold'} ${mono ? 'font-mono' : ''} ${color || 'text-app-foreground'}`}>{value}</span>
+        <div className="flex items-baseline justify-between gap-3 px-2 py-1.5 rounded-lg"
+             style={{ background: highlight ? `color-mix(in srgb, ${color || 'var(--app-success)'} 5%, transparent)` : 'transparent' }}>
+            <span className={`text-tp-xs ${muted ? 'font-medium' : 'font-medium'}`}
+                  style={{ color: muted ? 'var(--app-muted-foreground)' : 'var(--app-foreground)' }}>
+                {label}
+            </span>
+            <span className={`tabular-nums truncate ${highlight ? 'text-tp-md font-black' : 'text-tp-sm font-bold'} ${mono ? 'font-mono' : ''} ${color || 'text-app-foreground'}`}>{value}</span>
         </div>
     )
 }
@@ -548,11 +562,16 @@ function RowLink({ icon, label, value, onClick }: { icon: React.ReactNode; label
     const Element = onClick ? 'button' : 'div'
     return (
         <Element type={onClick ? 'button' : undefined} onClick={onClick}
-            className={`w-full flex items-center justify-between text-xs gap-3 ${onClick ? 'hover:text-app-foreground transition-colors text-left cursor-pointer' : ''}`}>
-            <span className="flex items-center gap-1.5 text-app-muted-foreground">{icon}{label}</span>
-            <span className="font-bold truncate flex items-center gap-1 max-w-[60%] text-app-foreground">
+            className={`w-full flex items-center justify-between gap-3 px-2 py-1.5 rounded-lg transition-colors ${onClick ? 'cursor-pointer text-left' : ''}`}
+            style={{ background: 'transparent' }}
+            onMouseEnter={onClick ? (e) => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 25%, transparent)' } : undefined}
+            onMouseLeave={onClick ? (e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' } : undefined}>
+            <span className="flex items-center gap-1.5 text-tp-xs font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
+                {icon}{label}
+            </span>
+            <span className="text-tp-sm font-bold truncate flex items-center gap-1 max-w-[60%]" style={{ color: 'var(--app-foreground)' }}>
                 <span className="truncate">{value}</span>
-                {onClick && <ExternalLink size={9} className="text-app-muted-foreground flex-shrink-0" />}
+                {onClick && <ExternalLink size={9} className="flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />}
             </span>
         </Element>
     )

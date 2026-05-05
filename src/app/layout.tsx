@@ -148,7 +148,7 @@ function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode:
         `--font-body:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
         `--app-font:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
         `--app-font-display:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
-        `--font-size-h1:1.875rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
+        `--font-size-h1:1.5rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
         `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
         `--font-weight-normal:400;--font-line-height:1.5;` +
         `}` +
@@ -168,7 +168,7 @@ function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode:
         // SSR-time and ignore AppThemeProvider's runtime updates when the
         // user switches color mode or theme.
         `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;color:var(--app-heading)!important;margin:0;}` +
-        `h1{font-size:1.875rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+        `h1{font-size:1.5rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
         `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
         `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
         `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +
@@ -255,13 +255,13 @@ export default async function RootLayout({
                         `--font-body:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
                         `--app-font:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
                         `--app-font-display:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
-                        `--font-size-h1:1.875rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
+                        `--font-size-h1:1.5rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
                         `--font-size-h4:0.9375rem;` +
                         `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
                         `--font-weight-normal:400;--font-line-height:1.5;` +
                         `}` +
                         `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;margin:0;}` +
-                        `h1{font-size:1.875rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+                        `h1{font-size:1.5rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
                         `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
                         `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
                         `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +

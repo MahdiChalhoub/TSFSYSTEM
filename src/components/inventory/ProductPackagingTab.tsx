@@ -583,7 +583,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                 {/* Left: Identity */}
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500/15 to-purple-500/15 flex items-center justify-center shrink-0">
-                                        <span className="text-sm font-black text-violet-400">×{pkg.ratio}</span>
+                                        <span className="text-sm font-black text-violet-400">×{+pkg.ratio}</span>
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
