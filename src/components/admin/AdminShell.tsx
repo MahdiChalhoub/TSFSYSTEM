@@ -5,29 +5,16 @@ import { useAdmin } from '@/context/AdminContext';
 import { TabNavigator } from './TabNavigator';
 
 /**
- * Shown while the active page component is loading (Suspense boundary).
- * Uses CSS variables so it respects the active theme automatically.
+ * Suspense fallback for the page area.
+ *
+ * Returns null so router.refresh() (e.g. scope toggle) doesn't flash a
+ * dark animate-pulse skeleton against the dark theme — the previous
+ * children stay rendered until React swaps in the new tree.
+ *
+ * Pages that need a richer placeholder should ship a route-level loading.tsx.
  */
 function PageSkeleton() {
-    return (
-        <div className="flex-1 overflow-auto p-6 md:p-8">
-            <div className="animate-pulse space-y-4 max-w-5xl">
-                {/* Page title */}
-                <div className="h-7 rounded-lg w-48" style={{ background: 'var(--app-surface)' }} />
-                <div className="h-4 rounded w-72" style={{ background: 'var(--app-surface)' }} />
-
-                {/* Stat cards row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="h-24 rounded-xl" style={{ background: 'var(--app-surface)' }} />
-                    ))}
-                </div>
-
-                {/* Table / content block */}
-                <div className="h-64 rounded-xl mt-2" style={{ background: 'var(--app-surface)' }} />
-            </div>
-        </div>
-    );
+    return null;
 }
 
 /**

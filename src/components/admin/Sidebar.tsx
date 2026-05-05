@@ -176,9 +176,12 @@ export function Sidebar({
                                     viewScope === 'INTERNAL' ? "" : "hover:bg-[var(--app-sidebar-active)]"
                                 )}
                                 style={viewScope === 'INTERNAL' ? {
-                                    background: 'var(--app-sidebar-surface, var(--app-sidebar-active))',
+                                    // Mix sidebar-text 14% with transparent — visible in both
+                                    // dark and light themes without depending on the underdefined
+                                    // --app-sidebar-surface var (5% white in dark = nearly invisible).
+                                    background: 'color-mix(in srgb, var(--app-sidebar-text) 14%, transparent)',
                                     color: 'var(--app-sidebar-text)',
-                                    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
                                 } : { color: 'var(--app-sidebar-muted)' }}
                             >
                                 <BarChart3 size={12} /> Internal

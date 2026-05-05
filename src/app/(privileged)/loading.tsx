@@ -1,47 +1,14 @@
+/**
+ * Privileged-segment loading fallback.
+ *
+ * Returns null so Next.js keeps the previously-rendered tree visible while
+ * new server data streams in. The earlier dark-skeleton version flashed
+ * during scope toggles and other router.refresh() calls — animate-pulse on
+ * dark surface tokens read as "a black box that disappears" against the
+ * dark theme.
+ *
+ * Pages that need their own placeholder should ship a per-route loading.tsx.
+ */
 export default function Loading() {
-    return (
-        <div className="flex-1 flex flex-col min-w-0">
-            {/* Top header skeleton */}
-            <div className="h-14 bg-app-surface border-b border-app-border px-6 flex items-center gap-4">
-                <div className="h-8 w-48 bg-app-surface-2 rounded-xl animate-pulse" />
-                <div className="flex-1" />
-                <div className="h-8 w-8 bg-app-surface-2 rounded-full animate-pulse" />
-            </div>
-
-            {/* Tab bar skeleton */}
-            <div className="h-10 bg-app-surface border-b border-app-border px-6 flex items-center gap-2">
-                <div className="h-6 w-24 bg-app-surface-2 rounded-lg animate-pulse" />
-                <div className="h-6 w-20 bg-app-surface rounded-lg animate-pulse" />
-            </div>
-
-            {/* Main content skeleton */}
-            <main className="flex-1 p-8 space-y-6">
-                {/* Title */}
-                <div className="space-y-2">
-                    <div className="h-4 w-32 bg-app-surface-2 rounded-lg animate-pulse" />
-                    <div className="h-10 w-64 bg-app-surface-2 rounded-xl animate-pulse" />
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-40 bg-app-surface border border-app-border rounded-[2rem] shadow-sm animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
-                            <div className="p-8 space-y-4">
-                                <div className="h-12 w-12 bg-app-surface-2 rounded-2xl" />
-                                <div className="h-4 w-24 bg-app-surface-2 rounded" />
-                                <div className="h-8 w-16 bg-app-surface-2 rounded" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Content cards */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 h-72 bg-app-surface border border-app-border rounded-[2.5rem] shadow-sm animate-pulse" />
-                    <div className="h-72 bg-app-surface border border-app-border rounded-[2.5rem] shadow-sm animate-pulse" />
-                </div>
-            </main>
-        </div>
-    );
+    return null;
 }
-

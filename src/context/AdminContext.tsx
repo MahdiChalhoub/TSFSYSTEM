@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 type Tab = {
@@ -68,6 +68,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     }, []);
     const pathname = usePathname();
     const router = useRouter();
+    // useTransition wraps router.refresh() so React keeps the previous UI
+    // visible while the new RSC payload streams in — no loading.tsx flash
+    // when toggling scope.
+    const [, startScopeTransition] = useTransition();
 
     // Clear pending active tab when pathname catches up
     useEffect(() => {
@@ -161,7 +165,11 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         document.cookie = `tsf_view_scope=${scope}; path=/; max-age=31536000; SameSite=Lax`;
         localStorage.setItem(SCOPE_KEY, scope);
         setViewScope(scope);
-        router.refresh();
+        // Wrapped in startTransition so React keeps the current UI visible
+        // while the new tree streams in (no loading.tsx skeleton flash).
+        startScopeTransition(() => {
+            router.refresh();
+        });
     };
 
     // Toggle is visible only if user has internal (full) access
