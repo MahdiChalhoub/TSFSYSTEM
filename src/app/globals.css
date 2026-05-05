@@ -34,6 +34,9 @@
 
   /* Font Scaling */
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  /* Heading / display font — applied to every h1..h6 by the base
+     rule below. Body text stays on --font-sans (Outfit). */
+  --font-heading: 'Poppins', system-ui, sans-serif;
 
   /* Border Radius */
   --radius-xl: 1rem;
@@ -279,6 +282,13 @@
 
 /* Global Base Styles */
 @layer base {
+  /* Headings auto-pick up Poppins (or whatever --font-heading is set
+     to in the active theme). Falls back to body's --font-sans if
+     unset, so a theme can disable the heading font entirely by
+     omitting the variable. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading, var(--font-sans));
+  }
   body {
     @apply bg-slate-50 text-app-foreground font-sans antialiased;
     /* Subtle background pattern */

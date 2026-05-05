@@ -16,9 +16,11 @@ Status Chain:
 
   Failed (rejected request — lowest priority, overridden by any active PO)
 """
+import hashlib
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from django.apps import apps as django_apps
+from django.core.cache import cache
 from django.db import transaction, connections
 
 logger = logging.getLogger(__name__)
@@ -234,6 +236,27 @@ def _run_in_thread(fn, organization, product_ids):
 _PHASE_EXECUTOR = ThreadPoolExecutor(max_workers=3, thread_name_prefix='procstat')
 
 
+# Cache TTL for the procurement-status batch. Short enough that PR/PO state
+# changes propagate quickly to the chip ("Available" → "Requested") without
+# requiring explicit invalidation; long enough to absorb a burst of concurrent
+# requests on the same product set (the typical pattern: a user pages through
+# the products list, scope-toggles, opens a side panel — each render hits this
+# function with the same tenant + product page).
+_PROCUREMENT_CACHE_TTL_SEC = 30
+
+
+def _cache_key_for(organization_id, pids):
+    """Deterministic cache key for (org, product_id set).
+
+    `hash()` of a tuple is salted per-process (PYTHONHASHSEED), so different
+    gunicorn workers would compute different keys for the same input —
+    defeating cross-worker cache sharing. md5 of the canonical comma-joined
+    id list is process-stable.
+    """
+    digest = hashlib.md5(','.join(map(str, pids)).encode('ascii')).hexdigest()
+    return f'procstat:{organization_id}:{digest}'
+
+
 def get_procurement_status_batch(organization, product_ids):
     """
     Compute procurement status for a batch of product IDs.
@@ -243,6 +266,10 @@ def get_procurement_status_batch(organization, product_ids):
     serialized version was 3× ~10ms = ~30ms; parallel cuts it to
     ~max(q1,q2,q3) ≈ ~12ms.
 
+    Result is cached in Redis for `_PROCUREMENT_CACHE_TTL_SEC` so repeated
+    calls with the same tenant + product set (e.g. user paging through the
+    list, scope-toggling, scrolling) skip the DB round-trip entirely.
+
     Returns:
         dict: {product_id: {status, detail, po_number, qty_ordered, qty_received, priority}}
         Products without active procurement return None (not in dict).
@@ -250,9 +277,17 @@ def get_procurement_status_batch(organization, product_ids):
     if not product_ids:
         return {}
 
-    # Resolve product_ids once — `__in` accepts a list/iterable; force a
-    # tuple so the threads don't share a mutable reference.
-    pids = tuple(product_ids)
+    # Resolve product_ids once — sort so cache key is order-independent and
+    # force a tuple so the threads don't share a mutable reference.
+    pids = tuple(sorted(product_ids))
+
+    # Cache lookup. `cache.get` returns None on miss OR on stored None —
+    # we never store None (always a dict, possibly empty), so a None
+    # return unambiguously means "miss".
+    cache_key = _cache_key_for(organization.id, pids)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     ex = _PHASE_EXECUTOR
     f1 = ex.submit(_run_in_thread, _phase1_op_request_lines, organization, pids)
@@ -275,6 +310,12 @@ def get_procurement_status_batch(organization, product_ids):
 
     logger.debug('Procurement status: %d entries for %d products (parallel)',
                  len(result), len(product_ids))
+    # Store the (possibly empty) dict so a tenant with zero active procurement
+    # also gets a cache hit on the next call instead of re-firing 3 queries.
+    try:
+        cache.set(cache_key, result, timeout=_PROCUREMENT_CACHE_TTL_SEC)
+    except Exception:  # noqa: BLE001 — cache backend down shouldn't kill the request
+        pass
     return result
 
 

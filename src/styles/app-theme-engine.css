@@ -66,7 +66,7 @@
   --app-border-strong: rgba(16, 185, 129, 0.5);
 
   --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
-  --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
+  --app-font-display: 'Poppins', system-ui, sans-serif;
 
   --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
@@ -111,7 +111,7 @@
   --app-border: rgba(255, 255, 255, 0.08);
   --app-border-strong: rgba(16, 185, 129, 0.5);
   --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
-  --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
+  --app-font-display: 'Poppins', system-ui, sans-serif;
   --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
   --app-sidebar-text: #CBD5E1;

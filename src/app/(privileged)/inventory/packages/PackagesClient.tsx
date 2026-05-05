@@ -20,7 +20,7 @@
  *  split-panel, focus mode, tour, keyboard shortcuts.
  * ═══════════════════════════════════════════════════════════ */
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useContext } from 'react'
 import type { ReactNode } from 'react'
 import {
     Package, Plus, Pencil, Trash2, Ruler, ArrowRight, ArrowRightLeft, Layers,
@@ -39,7 +39,7 @@ import {
 } from '@/app/actions/inventory/packaging-suggestions'
 import { TemplateFormModal } from './_shared/TemplateFormModal'
 import { buildPackagesDataTools } from './_lib/dataTools'
-import { useAdmin } from '@/context/AdminContext'
+import { AdminContext } from '@/context/AdminContext'
 import '@/lib/tours/definitions/inventory-packages'
 
 type Option = { id: number; name: string; code?: string }
@@ -1400,15 +1400,13 @@ function ChainArrow({ strict }: { strict: boolean }) {
     )
 }
 
-/** Safe wrapper around useAdmin — falls back gracefully when the
- *  panel mounts outside the privileged shell (e.g. in a test or a
- *  storybook). Returns null in that case so callers can branch. */
+/** Safe wrapper around AdminContext — returns null when mounted
+ *  outside the privileged shell (e.g. tests / storybook) so the
+ *  caller can fall back to a plain navigation. Hook itself is always
+ *  called, satisfying the rules of hooks. */
 function useAdminSafe(): { openTab: (title: string, path: string) => void } | null {
-    try {
-        return useAdmin() as unknown as { openTab: (title: string, path: string) => void }
-    } catch {
-        return null
-    }
+    const ctx = useContext(AdminContext)
+    return ctx ? (ctx as unknown as { openTab: (title: string, path: string) => void }) : null
 }
 
 interface LinkSelectProps {

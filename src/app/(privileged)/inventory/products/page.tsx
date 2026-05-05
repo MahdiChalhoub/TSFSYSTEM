@@ -4,13 +4,6 @@ import { RequestFlowProvider } from '@/components/products/RequestFlowProvider'
 
 export const dynamic = 'force-dynamic'
 
-async function safeLoad(url: string) {
-  try {
-    const d = await erpFetch(url)
-    return Array.isArray(d) ? d : d?.results || []
-  } catch { return [] }
-}
-
 /**
  * Paginated load — returns BOTH the slice and the true total from the DRF
  * `count` field. Without this, the footer would report `results.length` as
@@ -38,50 +31,29 @@ const INITIAL_PAGE_SIZE = 100
 export default async function ProductMasterPage(props: {
   searchParams: Promise<{ unit?: string; category?: string; brand?: string }>
 }) {
-  const [searchParams, [productsResp, categories, brands, units, countries, sourcingCountries, attributeTree, suppliers, currentUser]] = await Promise.all([
+  /* SSR fetches the bare minimum needed to paint the page:
+   *   - products    → the table content (the user's reason for being here)
+   *   - currentUser → drives staff-only UI bits + scope limiting
+   *
+   * The 7 lookup endpoints (categories / brands / units / countries /
+   * sourcing-countries / attribute-tree / suppliers) only feed the Filters
+   * panel, which is collapsed by default. Fetching them here used to gate
+   * first paint behind 9 parallel HTTP round-trips; the manager now loads
+   * them client-side after mount via useEffect, so first paint waits only
+   * on the slowest of TWO requests instead of nine. */
+  const [searchParams, [productsResp, currentUser]] = await Promise.all([
     props.searchParams,
     Promise.all([
       safeLoadPaginated(`products/?page_size=${INITIAL_PAGE_SIZE}`),
-      safeLoad('categories/'),
-      safeLoad('brands/'),
-      safeLoad('units/'),
-      safeLoad('reference/countries/'),
-      safeLoad('reference/sourcing-countries/'),
-      safeLoad('inventory/product-attributes/tree/'),
-      // Suppliers — CRM contacts of type=SUPPLIER. Powers the Supplier filter
-      // in the FiltersPanel; without this lookup the filter renders an empty
-      // dropdown when the user toggles it on in Customize.
-      safeLoad('crm/contacts/?type=SUPPLIER'),
       import('@/app/actions/auth').then(m => m.getUser()),
     ]),
   ])
   const products = productsResp.results
   const totalProductCount = productsResp.count
 
-  // Country filter prefers SourcingCountry (org-enabled list) over the raw
-  // Country master — sourcing is the truth of "where can this org buy from".
-  // Falls back to all countries if no sourcing list is configured yet.
-  const countryLookup = (sourcingCountries.length > 0
-    ? sourcingCountries.map((sc: any) => ({
-        id: sc.country, // Country FK id (the actual Country PK)
-        name: sc.country_name || sc.name || sc.country_iso2 || `#${sc.country}`,
-      }))
-    : countries.map((c: any) => ({ id: c.id, name: c.name }))
-  )
-
-  // Parfum filter pulls its options from the dynamic attribute tree (V2+).
-  // Find the root attribute group whose name matches /parfum|fragrance/i and
-  // expose its leaf children as the parfum filter options. The legacy
-  // `parfums/` master is no longer the source of truth.
-  const parfumRoot = (attributeTree as any[]).find((root: any) =>
-    /parfum|fragrance/i.test(root?.name || '')
-  )
-  const parfumOptions: { id: number; name: string }[] = parfumRoot
-    ? (parfumRoot.children || []).map((c: any) => ({ id: c.id, name: c.name }))
-    : []
-
-  // Build initial filter from URL entity-prefill params.
-  // Sent by EntityProductsTab empty-state "Browse & Assign" CTAs.
+  // URL entity-prefill (sent by EntityProductsTab empty-state "Browse &
+  // Assign" CTAs). The manager applies this once lookups land client-side
+  // so the human-name resolution can happen.
   const initialFilters: Record<string, string> = {}
   if (searchParams.unit) initialFilters.unit = searchParams.unit
   if (searchParams.category) initialFilters.category = searchParams.category
@@ -94,20 +66,6 @@ export default async function ProductMasterPage(props: {
         totalProductCount={totalProductCount}
         initialFilters={Object.keys(initialFilters).length ? initialFilters : undefined}
         currentUser={currentUser}
-        lookups={{
-          categories: categories.map((c: any) => ({ id: c.id, name: c.name })),
-          brands: brands.map((b: any) => ({ id: b.id, name: b.name })),
-          units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
-          countries: countryLookup,
-          parfums: parfumOptions,
-          suppliers: suppliers.map((s: any) => ({
-            id: s.id,
-            // CRM contacts can be either a person (name) or a company. Pick
-            // whichever is filled — falling back to a synthetic label so the
-            // dropdown never shows blank rows.
-            name: s.name || s.company_name || `#${s.id}`,
-          })),
-        }}
       />
     </RequestFlowProvider>
   )

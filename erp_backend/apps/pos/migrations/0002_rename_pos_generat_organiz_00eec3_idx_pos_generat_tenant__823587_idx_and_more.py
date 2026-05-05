@@ -9,11 +9,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('erp', '0003_rename_bufferedreq_organiz_3f8ed5_idx_bufferedreq_tenant__076e1c_idx_and_more'),
-        # Was '0001_initial' — bumped to '0001b_repair_missing_pos_driver'
-        # so the repair runs FIRST. On healthy DBs the repair is a no-op
-        # (CREATE TABLE IF NOT EXISTS); on the drifted dev DB it creates
-        # the missing pos_driver table this migration's AddFields target.
-        ('pos', '0001b_repair_missing_pos_driver'),
+        # Was '0001_initial' — chained through repair migrations so:
+        #   0001b creates pos_driver if missing
+        #   0001c backfills pos_driver columns 0002 will add
+        # On healthy DBs both repairs are no-ops (CREATE/ALTER ...
+        # IF NOT EXISTS); on the drifted dev DB they fill the gap.
+        ('pos', '0001c_repair_pos_driver_columns'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

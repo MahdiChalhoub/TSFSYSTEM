@@ -37,16 +37,46 @@ import { applyFilters, countActiveFilters } from './_lib/filters'
 import { loadProfiles, saveProfiles, loadActiveProfileId, saveActiveProfileId, syncProfileToBackend, loadProfileFromBackend } from './_lib/profiles'
 
 /* ── Component imports ── */
-import { FiltersPanel } from './_components/FiltersPanel'
-import { CustomizePanel } from './_components/CustomizePanel'
+import dynamic from 'next/dynamic'
+
+/* ── Lazy-loaded panels ────────────────────────────────────────────────
+ *
+ * Each of these components is gated behind a user interaction (click
+ * "Filters", click "Customize", expand a row, switch to card view) and
+ * is hidden on the initial render. Pulling them out of the initial JS
+ * bundle shaves the parse/compile cost off the page's TTI. The fallback
+ * is `null` for panels that overlay (Customize, ExpiryAlertDialog) and
+ * a thin placeholder for inline content (FiltersPanel, ProductCardGrid,
+ * ProductDetailCards) — none of these are visible during normal SSR.
+ *
+ * `ssr: false` is correct here: SSR rendering of a hidden / overlay
+ * component produces no useful HTML, just adds bundle weight.
+ */
+const FiltersPanel = dynamic(
+  () => import('./_components/FiltersPanel').then(m => m.FiltersPanel),
+  { ssr: false, loading: () => null },
+)
+const CustomizePanel = dynamic(
+  () => import('./_components/CustomizePanel').then(m => m.CustomizePanel),
+  { ssr: false, loading: () => null },
+)
+const ProductDetailCards = dynamic(
+  () => import('./_components/ProductDetailCards').then(m => m.ProductDetailCards),
+  { ssr: false, loading: () => null },
+)
+const ProductCardGrid = dynamic(
+  () => import('./_components/ProductCardGrid').then(m => m.ProductCardGrid),
+  { ssr: false, loading: () => null },
+)
+const ExpiryAlertDialog = dynamic(
+  () => import('@/components/products/ExpiryAlertDialog').then(m => m.ExpiryAlertDialog),
+  { ssr: false, loading: () => null },
+)
 import type { KPIStat } from '@/components/ui/KPIStrip'
 import { DajingoListView } from '@/components/common/DajingoListView'
 import { DajingoPageShell } from '@/components/common/DajingoPageShell'
-import { ProductDetailCards } from './_components/ProductDetailCards'
 import { renderProductCell } from './_components/ProductColumns'
-import { ProductCardGrid } from './_components/ProductCardGrid'
 import { ProductThumbnail } from '@/components/products/ProductThumbnail'
-import { ExpiryAlertDialog } from '@/components/products/ExpiryAlertDialog'
 import { type RequestableProduct } from '@/components/products/RequestProductDialog'
 import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
 
@@ -62,7 +92,7 @@ function toRequestable(p: Product): RequestableProduct {
  *  MAIN PAGE
  * ═══════════════════════════════════════════════════════════ */
 
-export default function ProductMasterManager({ initialProducts = [], totalProductCount, lookups = EMPTY_LOOKUPS, currentUser }: { initialProducts?: Product[]; totalProductCount?: number; lookups?: Lookups; initialFilters?: Record<string, string>; currentUser?: any }) {
+export default function ProductMasterManager({ initialProducts = [], totalProductCount, currentUser }: { initialProducts?: Product[]; totalProductCount?: number; initialFilters?: Record<string, string>; currentUser?: any }) {
   const isStaff = currentUser?.is_staff || currentUser?.is_superuser;
 
   const router = useRouter()
@@ -78,15 +108,38 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   const [showFilters, setShowFilters] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
-  const [profiles, setProfiles] = useState<ViewProfile[]>(() => loadProfiles())
-  const [activeProfileId, setActiveProfileId] = useState(() => loadActiveProfileId())
+  // ── Profile state — always start with deterministic defaults so SSR and
+  //    first client render produce identical DOM (prevents hydration mismatch).
+  //    localStorage preferences are applied after mount via useEffect below. ──
+  const [profiles, setProfiles] = useState<ViewProfile[]>([])
+  const [activeProfileId, setActiveProfileId] = useState('default')
   const activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0]
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(activeProfile?.columns || DEFAULT_VISIBLE_COLS)
-  const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>(activeProfile?.filters || DEFAULT_VISIBLE_FILTERS)
-  const [columnOrder, setColumnOrder] = useState<string[]>(activeProfile?.columnOrder || ALL_COLUMNS.map(c => c.key))
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_COLS)
+  const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_FILTERS)
+  const [columnOrder, setColumnOrder] = useState<string[]>(ALL_COLUMNS.map(c => c.key))
+
+  // ── Hydrate from localStorage after mount (avoids SSR ↔ client divergence) ──
+  useEffect(() => {
+    const storedProfiles = loadProfiles()
+    const storedActiveId = loadActiveProfileId()
+    const active = storedProfiles.find(p => p.id === storedActiveId) || storedProfiles[0]
+    if (storedProfiles.length > 0) {
+      setProfiles(storedProfiles)
+      setActiveProfileId(storedActiveId)
+      if (active) {
+        setVisibleColumns(active.columns || DEFAULT_VISIBLE_COLS)
+        setVisibleFilters(active.filters || DEFAULT_VISIBLE_FILTERS)
+        setColumnOrder(active.columnOrder || ALL_COLUMNS.map(c => c.key))
+      }
+    }
+  }, [])
   const searchRef = useRef<HTMLInputElement>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const [pageSize, setPageSize] = useState(50)
+  // Bumped from 50 → 200 now that DajingoListView's row windowing kicks in
+  // above 30 rows. Each rendered page has ~10-18 row instances in the DOM at
+  // any moment regardless of how many rows it logically contains, so the user
+  // can scroll a long list without hitting "Load more" every few flicks.
+  const [pageSize, setPageSize] = useState(200)
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
   // Card-view-driven dialogs. The list view uses the per-row expanded
   // ProductDetailCards which has its own dialog state; the card view drives
@@ -94,6 +147,58 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   // trigger it from any card without each card duplicating the modal.
   const [expiryDialogProduct, setExpiryDialogProduct] = useState<Product | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+
+  /* ── Filter lookup masters (client-loaded) ─────────────────────────
+   *
+   *  Previously these 7 endpoints were SSR-fetched and gated first paint.
+   *  They only feed the Filters panel (collapsed by default), so we now
+   *  load them after mount in a single Promise.all. First paint waits on
+   *  products + auth only; the filters dropdowns populate in the
+   *  background, usually before the user can click "Filters" anyway.
+   */
+  const [lookups, setLookups] = useState<Lookups>(EMPTY_LOOKUPS)
+  useEffect(() => {
+    let cancelled = false
+    const safeArr = async (url: string): Promise<any[]> => {
+      try {
+        const d: any = await erpFetch(url)
+        return Array.isArray(d) ? d : (d?.results ?? [])
+      } catch { return [] }
+    }
+    Promise.all([
+      safeArr('categories/'),
+      safeArr('brands/'),
+      safeArr('units/'),
+      safeArr('reference/countries/'),
+      safeArr('reference/sourcing-countries/'),
+      safeArr('inventory/product-attributes/tree/'),
+      safeArr('crm/contacts/?type=SUPPLIER'),
+    ]).then(([categories, brands, units, countries, sourcingCountries, attributeTree, suppliers]) => {
+      if (cancelled) return
+      const countryLookup = sourcingCountries.length > 0
+        ? sourcingCountries.map((sc: any) => ({
+            id: sc.country,
+            name: sc.country_name || sc.name || sc.country_iso2 || `#${sc.country}`,
+          }))
+        : countries.map((c: any) => ({ id: c.id, name: c.name }))
+      const parfumRoot = attributeTree.find((root: any) => /parfum|fragrance/i.test(root?.name || ''))
+      const parfumOptions = parfumRoot
+        ? (parfumRoot.children || []).map((c: any) => ({ id: c.id, name: c.name }))
+        : []
+      setLookups({
+        categories: categories.map((c: any) => ({ id: c.id, name: c.name })),
+        brands: brands.map((b: any) => ({ id: b.id, name: b.name })),
+        units: units.map((u: any) => ({ id: u.id, name: u.name, short_name: u.short_name })),
+        countries: countryLookup,
+        parfums: parfumOptions,
+        suppliers: suppliers.map((s: any) => ({
+          id: s.id,
+          name: s.name || s.company_name || `#${s.id}`,
+        })),
+      })
+    })
+    return () => { cancelled = true }
+  }, [])
 
   // ── SaaS ListViewPolicy enforcement ──
   const [policyHiddenColumns, setPolicyHiddenColumns] = useState<Set<string>>(new Set())
