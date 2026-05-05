@@ -44,6 +44,9 @@ class TenantMiddleware:
     def __call__(self, request):
         # 1. Explicit header from frontend (tenant-aware pages)
         tenant_id = request.headers.get('X-Tenant-Id')
+        # Resolved Organization instance — set on the request below so views
+        # can read self.request.organization without a per-view fetch.
+        resolved_org = None
 
         # 2. No header? Resolve from auth token → user.organization
         #    Cache the resolved token + user on the request so DRF's
@@ -54,8 +57,17 @@ class TenantMiddleware:
                 tenant_id = str(user.organization_id)
                 # Cache for DRF auth reuse (Fix #3: eliminate duplicate token lookup)
                 request._cached_auth = (user, token)
+                # User was loaded with select_related('user__organization'),
+                # so .organization is already in memory — no extra query.
+                resolved_org = user.organization
 
         set_current_tenant_id(tenant_id)
+
+        # Expose org on request — views/serializers consistently use
+        # `self.request.organization` and `request.organization_id`. Without
+        # this, those reads raise AttributeError → HTTP 500.
+        request.organization_id = tenant_id
+        request.organization = resolved_org or self._lookup_org(tenant_id)
 
         # 3. Pre-fetch read-only status in a single query (Fix #2).
         #    This avoids the per-write DB lookup that process_view was doing.
@@ -85,6 +97,23 @@ class TenantMiddleware:
             return token.user, token
         except Exception:
             return None, None
+
+    @staticmethod
+    def _lookup_org(tenant_id):
+        """Resolve Organization for header-based requests (no auth token path).
+        Returns None if tenant_id is missing or unresolvable."""
+        if not tenant_id:
+            return None
+        import uuid
+        try:
+            from .models import Organization
+            try:
+                uuid.UUID(str(tenant_id))
+                return Organization.objects.filter(id=tenant_id).first()
+            except ValueError:
+                return Organization.objects.filter(slug=tenant_id).first()
+        except Exception:
+            return None
 
     @staticmethod
     def _check_read_only(tenant_id):

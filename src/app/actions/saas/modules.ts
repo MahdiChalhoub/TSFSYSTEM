@@ -3,9 +3,15 @@
 import { erpFetch, handleAuthError } from '@/lib/erp-api'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
+// Both getSaaSModules and getDynamicSidebar are layout chrome — fired on
+// every privileged page render. HTTP fetch cache (per-user via
+// Authorization header) keeps them cheap for 5 min. Tag `sidebar` busts
+// both at once when modules install/uninstall.
 export async function getSaaSModules() {
     try {
-        return await erpFetch('saas/modules/')
+        return await erpFetch('saas/modules/', {
+            next: { revalidate: 300, tags: ['saas-modules', 'sidebar'] },
+        } as any)
     } catch (e) {
         handleAuthError(e)
         console.error("Failed to fetch SaaS modules:", e)
@@ -25,12 +31,19 @@ export async function getModuleDependencyGraph(organizationId?: string) {
 
 export async function getDynamicSidebar() {
     try {
-        return await erpFetch('saas/modules/sidebar/')
+        return await erpFetch('saas/modules/sidebar/', {
+            next: { revalidate: 300, tags: ['dynamic-sidebar', 'sidebar'] },
+        } as any)
     } catch (e) {
         handleAuthError(e)
         console.error("Failed to fetch dynamic sidebar:", e)
         return []
     }
+}
+
+/** Bust both sidebar caches in one call (after module install/uninstall). */
+export async function revalidateSidebarCache() {
+    revalidateTag('sidebar')
 }
 
 export async function getActiveModules() {
@@ -53,6 +66,7 @@ export async function syncModulesGlobal() {
             method: 'POST'
         })
         revalidatePath('/modules')
+        revalidateTag('sidebar')
         return data
     } catch (e: unknown) {
         return { error: (e instanceof Error ? e.message : String(e)) }
@@ -65,6 +79,7 @@ export async function installModuleGlobal(code: string) {
             method: 'POST'
         })
         revalidatePath('/modules')
+        revalidateTag('sidebar')
         return data
     } catch (e: unknown) {
         return { error: (e instanceof Error ? e.message : String(e)) }
@@ -77,6 +92,7 @@ export async function uninstallModuleGlobal(code: string) {
             method: 'POST'
         })
         revalidatePath('/modules')
+        revalidateTag('sidebar')
         return data
     } catch (e: unknown) {
         return { error: (e instanceof Error ? e.message : String(e)) }
@@ -117,6 +133,7 @@ export async function rollbackModule(code: string, targetVersion: string) {
             body: JSON.stringify({ target_version: targetVersion })
         })
         revalidatePath('/modules')
+        revalidateTag('sidebar')
         return data
     } catch (e: unknown) {
         return { error: (e instanceof Error ? e.message : String(e)) }

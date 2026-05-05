@@ -27,7 +27,7 @@ class SalesDailySummaryListView(APIView):
     GET /pos/analytics/daily/
 
     Returns SalesDailySummary rows for a date range, scoped to the
-    current organization (via request.tenant).
+    current organization (via request.organization).
 
     Query params (all optional):
       from        YYYY-MM-DD  (default: 30 days ago)

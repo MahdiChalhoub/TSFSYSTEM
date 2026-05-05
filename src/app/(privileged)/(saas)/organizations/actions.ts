@@ -1,16 +1,19 @@
 'use server'
 
 import { cache } from "react"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { erpFetch } from "@/lib/erp-api"
 
-// React.cache() — per-SSR-render dedup only. Safe because it lives within
-// one request scope and respects cookies/headers. Do NOT add unstable_cache
-// here: erpFetch reads cookies(), which is unavailable in the cache
-// runtime and causes 401 → NEXT_REDIRECT (logging users out).
+// React.cache() — per-SSR-render dedup. Safe because it lives within one
+// request scope and respects cookies/headers. The HTTP fetch inside is
+// also tagged for cross-request caching (5 min, per-user via Authorization
+// header). Do NOT use unstable_cache: erpFetch reads cookies(), which is
+// unavailable in the cache runtime → 401 → NEXT_REDIRECT (auth loss).
 export const getOrganizations = cache(async function getOrganizations() {
     try {
-        return await erpFetch('organizations/')
+        return await erpFetch('organizations/', {
+            next: { revalidate: 300, tags: ['organizations'] },
+        } as any)
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error)
         if (msg.includes('Authentication credentials') || msg.includes('No organization context')) {
@@ -39,6 +42,7 @@ export async function createOrganization(data: {
 
         revalidatePath('/organizations')
         revalidatePath('/dashboard')
+        revalidateTag('organizations')
         return result
     } catch (error: unknown) {
         console.error("CRITICAL: Organization Provisioning Failed", error);
@@ -54,6 +58,7 @@ export async function toggleOrganizationStatus(id: string, currentStatus: boolea
             body: JSON.stringify({ is_active: !currentStatus })
         })
         revalidatePath('/organizations')
+        revalidateTag('organizations')
         return result
     } catch (error) {
         console.error("Failed to toggle organization status:", error)
@@ -68,6 +73,7 @@ export async function deleteOrganization(id: string) {
         })
         revalidatePath('/organizations')
         revalidatePath('/dashboard')
+        revalidateTag('organizations')
         return result
     } catch (error) {
         console.error("Failed to delete organization:", error)

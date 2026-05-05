@@ -122,6 +122,18 @@ export default function ProductsDetailPage() {
     const sectionRefs = useRef<Record<SectionId, HTMLElement | null>>({
         pulse: null, pricing: null, inventory: null, packaging: null, groups: null, activity: null,
     })
+    // Visual theme — five look-and-feel philosophies for the same data.
+    //   modern  — app's own dashboard (default): meters, alerts, sections
+    //   apple   — Apple Human Interface: SF-style type, vibrant system
+    //             colors, frosted materials, generous rounded geometry
+    //   google  — Material 3: tonal surfaces, primary containers,
+    //             Roboto/Google Sans, Google brand palette
+    //   claude  — Anthropic feel: cream paper, terracotta clay accent,
+    //             serif headings, calm editorial rhythm
+    //   lovable — Vibrant gradient surface, glassmorphism cards,
+    //             playful big rounded geometry, AI-builder vibe
+    type ViewMode = 'modern' | 'apple' | 'google' | 'claude' | 'lovable'
+    const [viewMode, setViewMode] = useState<ViewMode>('modern')
     // Per-warehouse stock breakdown — loaded once and used in the dashboard.
     const [stockByWarehouse, setStockByWarehouse] = useState<Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>>([])
 
@@ -253,6 +265,65 @@ export default function ProductsDetailPage() {
     return (
         <div className="h-full overflow-hidden flex flex-col"
              style={{ background: 'var(--app-bg)' }}>
+            {/* ═══ Theme switcher — sits above EVERYTHING so it survives
+                 across the very different chrome each theme renders. ═══ */}
+            <PhilosophyGallery active={viewMode} onPick={setViewMode} />
+
+            {viewMode === 'apple' && (
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                    <AppleView
+                        it={it}
+                        stockByWarehouse={stockByWarehouse}
+                        margin={margin}
+                        stockColor={stockColor}
+                        onBack={() => router.push('/inventory/products')}
+                        onEdit={() => router.push(`/inventory/products/${id}/edit`)}
+                        onDelete={() => setShowDelete(true)}
+                    />
+                </div>
+            )}
+            {viewMode === 'google' && (
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                    <GoogleView
+                        it={it}
+                        stockByWarehouse={stockByWarehouse}
+                        margin={margin}
+                        stockColor={stockColor}
+                        onBack={() => router.push('/inventory/products')}
+                        onEdit={() => router.push(`/inventory/products/${id}/edit`)}
+                        onDelete={() => setShowDelete(true)}
+                    />
+                </div>
+            )}
+            {viewMode === 'claude' && (
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                    <ClaudeView
+                        it={it}
+                        stockByWarehouse={stockByWarehouse}
+                        margin={margin}
+                        stockColor={stockColor}
+                        onBack={() => router.push('/inventory/products')}
+                        onEdit={() => router.push(`/inventory/products/${id}/edit`)}
+                        onDelete={() => setShowDelete(true)}
+                    />
+                </div>
+            )}
+            {viewMode === 'lovable' && (
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                    <LovableView
+                        it={it}
+                        stockByWarehouse={stockByWarehouse}
+                        margin={margin}
+                        stockColor={stockColor}
+                        onBack={() => router.push('/inventory/products')}
+                        onEdit={() => router.push(`/inventory/products/${id}/edit`)}
+                        onDelete={() => setShowDelete(true)}
+                    />
+                </div>
+            )}
+
+            {viewMode === 'modern' && (
+            <>
             {/* ═══ Mobile sticky header (rail collapsed) ═══ */}
             <div className="lg:hidden flex-shrink-0 sticky top-0 z-30 px-3 py-2"
                  style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
@@ -344,6 +415,39 @@ export default function ProductsDetailPage() {
                             <RailKpi label="On hand"     value={fmtQty(it.on_hand_qty)}    color={stockColor}         icon={<Box size={12} />} />
                             <RailKpi label="Available"   value={fmtQty(it.available_qty)}  color="var(--app-primary)" icon={<Archive size={12} />} />
                             <RailKpi label="Reserved"    value={fmtQty(it.reserved_qty)}   color="var(--app-accent)"  icon={<Shield size={12} />} />
+                        </div>
+
+                        {/* Visual theme picker — three look-and-feel
+                            philosophies, same data. Modern = the app's own
+                            dashboard. Apple = Human Interface. Google =
+                            Material 3. */}
+                        <div>
+                            <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Visual theme</p>
+                            <div className="space-y-0.5">
+                                {([
+                                    { id: 'modern',  label: 'Modern',  accent: 'var(--app-primary)', hint: 'App theme · dashboard' },
+                                    { id: 'apple',   label: 'Apple',   accent: '#007aff',            hint: 'SF · frosted materials' },
+                                    { id: 'google',  label: 'Google',  accent: '#1a73e8',            hint: 'Material 3 · tonal' },
+                                    { id: 'claude',  label: 'Claude',  accent: '#cc785c',            hint: 'Cream paper · serif' },
+                                    { id: 'lovable', label: 'Lovable', accent: '#ff4f8b',            hint: 'Vibrant · glass cards' },
+                                ] as { id: ViewMode; label: string; accent: string; hint: string }[]).map(v => {
+                                    const active = viewMode === v.id
+                                    return (
+                                        <button key={v.id} onClick={() => setViewMode(v.id)}
+                                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left"
+                                            style={{
+                                                background: active ? `color-mix(in srgb, ${v.accent} 12%, transparent)` : 'transparent',
+                                                color: active ? v.accent : 'var(--app-muted-foreground)',
+                                                border: `1px solid ${active ? `color-mix(in srgb, ${v.accent} 32%, transparent)` : 'transparent'}`,
+                                            }}
+                                            title={v.hint}>
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: v.accent }} />
+                                            <span className="text-tp-sm font-bold flex-1 truncate">{v.label}</span>
+                                            {active && <Check size={11} className="flex-shrink-0" />}
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         </div>
 
                         {/* Primary actions */}
@@ -613,6 +717,8 @@ export default function ProductsDetailPage() {
                     </div>
                 </main>
             </div>
+            </>
+            )}
 
             <ConfirmDialog
                 open={showDelete}
@@ -1075,6 +1181,1020 @@ function BigStat({ label, value, hint, color }: { label: string; value: string; 
             <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">{label}</p>
             <p className="text-tp-lg font-black tabular-nums tracking-tight" style={{ color }}>{value}</p>
             {hint && <p className="text-tp-xxs text-app-muted-foreground truncate">{hint}</p>}
+        </div>
+    )
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+ *  PHILOSOPHY GALLERY — sticky top strip
+ *  ----------------------------------------------------------------
+ *  Sits above the per-theme chrome. Each thumbnail is painted in
+ *  the real palette of its theme so the operator picks by visual
+ *  feel, not by reading text.
+ * ═════════════════════════════════════════════════════════════ */
+type PhilosophyId = 'modern' | 'apple' | 'google' | 'claude' | 'lovable'
+
+function PhilosophyGallery({ active, onPick }: { active: PhilosophyId; onPick: (id: PhilosophyId) => void }) {
+    const items: { id: PhilosophyId; label: string; tag: string; accent: string; preview: React.ReactNode }[] = [
+        { id: 'modern',  label: 'Modern',  tag: 'App theme · dashboard',  accent: 'var(--app-primary)', preview: <PreviewModern /> },
+        { id: 'apple',   label: 'Apple',   tag: 'SF · frosted materials', accent: '#007aff',            preview: <PreviewApple /> },
+        { id: 'google',  label: 'Google',  tag: 'Material 3 · tonal',     accent: '#1a73e8',            preview: <PreviewGoogle /> },
+        { id: 'claude',  label: 'Claude',  tag: 'Cream paper · serif',    accent: '#cc785c',            preview: <PreviewClaude /> },
+        { id: 'lovable', label: 'Lovable', tag: 'Vibrant · glass cards',  accent: '#ff4f8b',            preview: <PreviewLovable /> },
+    ]
+    return (
+        <div className="flex-shrink-0 px-3 md:px-6 py-2.5"
+             style={{ background: 'color-mix(in srgb, var(--app-surface) 92%, transparent)', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--app-border)' }}>
+            <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">Visual theme</p>
+                <span className="text-tp-xxs text-app-muted-foreground hidden md:inline">— same data, different look-and-feel</span>
+            </div>
+            <div className="flex items-stretch gap-2 overflow-x-auto custom-scrollbar -mx-1 px-1">
+                {items.map(p => {
+                    const isActive = active === p.id
+                    return (
+                        <button key={p.id} type="button" onClick={() => onPick(p.id)}
+                            className="flex-shrink-0 rounded-xl p-1.5 text-left transition-all hover:brightness-105 active:scale-[0.98]"
+                            style={{
+                                width: 168,
+                                background: isActive
+                                    ? `color-mix(in srgb, ${p.accent} 10%, var(--app-surface))`
+                                    : 'var(--app-surface)',
+                                border: `1px solid ${isActive
+                                    ? `color-mix(in srgb, ${p.accent} 45%, transparent)`
+                                    : 'var(--app-border)'}`,
+                                boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${p.accent} 18%, transparent)` : undefined,
+                            }}
+                            title={`${p.label} — ${p.tag}`}>
+                            <div className="rounded-lg overflow-hidden mb-1.5" style={{ height: 56 }}>
+                                {p.preview}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-tp-xs font-black truncate"
+                                      style={{ color: isActive ? p.accent : 'var(--app-foreground)' }}>
+                                    {p.label}
+                                </span>
+                                {isActive && <Check size={9} style={{ color: p.accent }} />}
+                            </div>
+                            <p className="text-tp-xxs font-bold text-app-muted-foreground truncate">{p.tag}</p>
+                        </button>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+/* ─── Theme thumbnails — painted in each theme's real palette ─── */
+function PreviewModern() {
+    return (
+        <div className="w-full h-full p-1.5 flex flex-col gap-1"
+             style={{ background: 'var(--app-bg)' }}>
+            <div className="flex gap-0.5">
+                <div className="flex-1 h-2 rounded-sm" style={{ background: 'var(--app-success)', opacity: 0.7 }} />
+                <div className="flex-1 h-2 rounded-sm" style={{ background: 'var(--app-info, #3b82f6)', opacity: 0.7 }} />
+                <div className="flex-1 h-2 rounded-sm" style={{ background: 'var(--app-warning, #f59e0b)', opacity: 0.7 }} />
+            </div>
+            <div className="flex-1 flex gap-0.5">
+                <div className="flex-1 rounded-sm" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }} />
+                <div className="flex-1 rounded-sm" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }} />
+            </div>
+        </div>
+    )
+}
+function PreviewApple() {
+    return (
+        <div className="w-full h-full p-1.5 flex flex-col gap-1"
+             style={{ background: '#f5f5f7' }}>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />
+                <div className="w-3 h-3 rounded-full" style={{ background: '#febc2e' }} />
+                <div className="w-3 h-3 rounded-full" style={{ background: '#28c840' }} />
+            </div>
+            <div className="flex-1 rounded-lg" style={{ background: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>
+                <div className="h-1.5 rounded-full m-1" style={{ background: '#007aff', opacity: 0.9, width: '40%' }} />
+                <div className="flex gap-0.5 m-1 mt-0.5">
+                    <div className="flex-1 h-2 rounded" style={{ background: '#34c759', opacity: 0.6 }} />
+                    <div className="flex-1 h-2 rounded" style={{ background: '#ff9500', opacity: 0.6 }} />
+                </div>
+            </div>
+        </div>
+    )
+}
+function PreviewGoogle() {
+    return (
+        <div className="w-full h-full p-1.5 flex flex-col gap-1"
+             style={{ background: '#fef7ff' }}>
+            <div className="h-2.5 rounded flex items-center px-1 gap-0.5" style={{ background: '#1a73e8' }}>
+                <div className="w-0.5 h-0.5 rounded-full bg-white" />
+                <div className="w-0.5 h-0.5 rounded-full bg-white" />
+                <div className="w-0.5 h-0.5 rounded-full bg-white" />
+            </div>
+            <div className="flex gap-0.5">
+                <div className="flex-1 h-3 rounded-md" style={{ background: '#d3e3fd' }} />
+                <div className="flex-1 h-3 rounded-md" style={{ background: '#e8f5e9' }} />
+            </div>
+            <div className="flex-1 rounded-md" style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)' }} />
+        </div>
+    )
+}
+function PreviewClaude() {
+    return (
+        <div className="w-full h-full p-1.5 flex flex-col gap-1"
+             style={{ background: '#f5f1e8', color: '#1a1814', fontFamily: 'Georgia, serif' }}>
+            <div className="text-[6px] tracking-[0.3em] uppercase opacity-50">PRODUCT</div>
+            <div className="text-[10px] font-bold italic leading-none" style={{ color: '#cc785c' }}>Detail</div>
+            <div className="border-t" style={{ borderColor: '#cc785c', opacity: 0.4 }} />
+            <div className="flex-1 rounded-sm" style={{ background: '#faf6ee', border: '1px solid rgba(204,120,92,0.18)' }} />
+        </div>
+    )
+}
+function PreviewLovable() {
+    return (
+        <div className="w-full h-full relative overflow-hidden p-1.5"
+             style={{ background: 'linear-gradient(135deg, #ff4f8b 0%, #a855f7 50%, #6366f1 100%)' }}>
+            <div className="absolute top-0 right-0 w-6 h-6 rounded-full blur-md" style={{ background: '#fde047', opacity: 0.6 }} />
+            <div className="relative h-full flex flex-col gap-1">
+                <div className="flex-1 rounded-md" style={{ background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(4px)' }} />
+                <div className="flex gap-0.5">
+                    <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.3)' }} />
+                    <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.3)' }} />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+ *  APPLE VIEW — Apple Human Interface Guidelines
+ *  ----------------------------------------------------------------
+ *  SF-style typography (system font stack), light gray system
+ *  surface (#f5f5f7 — actual macOS/iOS background), big rounded
+ *  corners, white cards with subtle shadows ("materials"), Apple
+ *  system colors as accents (blue, green, orange, red, purple).
+ *  Generous whitespace, refined hierarchy. Own toolbar, no rail.
+ * ═════════════════════════════════════════════════════════════ */
+const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif'
+const APPLE = {
+    blue:    '#007aff',
+    green:   '#34c759',
+    orange:  '#ff9500',
+    red:     '#ff3b30',
+    purple:  '#bf5af2',
+    teal:    '#5ac8fa',
+    indigo:  '#5856d6',
+    gray:    '#8e8e93',
+    bg:      '#f5f5f7',
+    surface: '#ffffff',
+    label:   '#1d1d1f',
+    sublabel:'#6e6e73',
+}
+
+function AppleView({ it, stockByWarehouse, margin, stockColor: _stockColor, onBack, onEdit, onDelete }: {
+    it: Record<string, any>
+    stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>
+    margin: number | null
+    stockColor: string
+    onBack: () => void
+    onEdit: () => void
+    onDelete: () => void
+}) {
+    const onHand = Number(it.on_hand_qty || 0)
+    const minStock = Number(it.min_stock_level || 0)
+    const isOut = onHand <= 0
+    const isLow = !isOut && minStock > 0 && onHand <= minStock
+    const stockTone = isOut ? APPLE.red : isLow ? APPLE.orange : APPLE.green
+    const stockText = isOut ? 'Out of stock' : isLow ? 'Low stock' : 'In stock'
+
+    return (
+        <div className="min-h-full" style={{ background: APPLE.bg, color: APPLE.label, fontFamily: APPLE_FONT }}>
+            {/* ── Toolbar (Apple-style segmented buttons) ── */}
+            <div className="sticky top-0 z-10 px-4 md:px-8 py-3 flex items-center gap-3"
+                 style={{ background: 'rgba(245,245,247,0.85)', backdropFilter: 'saturate(180%) blur(20px)', borderBottom: '0.5px solid rgba(0,0,0,0.08)' }}>
+                <button onClick={onBack}
+                    className="flex items-center gap-1 text-sm font-medium hover:opacity-70 transition-opacity"
+                    style={{ color: APPLE.blue }}>
+                    <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} /> Products
+                </button>
+                <div className="flex-1" />
+                <button onClick={onEdit}
+                    className="px-3 py-1.5 rounded-full text-sm font-semibold transition-all hover:brightness-110"
+                    style={{ background: APPLE.blue, color: 'white' }}>
+                    Edit
+                </button>
+                <button onClick={onDelete} title="Delete"
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-70 transition-opacity"
+                    style={{ background: 'rgba(255,59,48,0.1)', color: APPLE.red }}>
+                    <Trash2 size={14} />
+                </button>
+            </div>
+
+            <div className="px-4 md:px-8 py-6 md:py-10 max-w-5xl mx-auto space-y-6">
+                {/* ── Hero card ── */}
+                <div className="rounded-3xl p-6 md:p-8 flex items-center gap-5"
+                     style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)' }}>
+                    <div className="flex-shrink-0 rounded-3xl flex items-center justify-center"
+                         style={{ width: 80, height: 80, background: `linear-gradient(135deg, ${APPLE.blue}, ${APPLE.indigo})`, color: 'white', boxShadow: '0 6px 18px rgba(0,122,255,0.35)' }}>
+                        <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={64} className="rounded-2xl" color="white" iconSize={36} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium uppercase tracking-wider" style={{ color: APPLE.sublabel }}>
+                            {String(it.brand_name || it.category_name || 'Product')}
+                        </p>
+                        <h1 className="text-3xl md:text-4xl font-bold leading-tight mt-1 truncate" style={{ letterSpacing: '-0.02em' }}>
+                            {String(it.name || `Product #${it.id}`)}
+                        </h1>
+                        <p className="text-sm mt-1.5" style={{ color: APPLE.sublabel }}>
+                            {String(it.sku || `#${it.id}`)}{it.barcode && <> · <span className="font-mono">{String(it.barcode)}</span></>}
+                        </p>
+                    </div>
+                    {/* Status capsule */}
+                    <div className="hidden md:flex flex-col items-end gap-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold"
+                              style={{ background: `color-mix(in srgb, ${stockTone} 14%, transparent)`, color: stockTone }}>
+                            {stockText}
+                        </span>
+                        {it.is_active === false && (
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold"
+                                  style={{ background: 'rgba(142,142,147,0.18)', color: APPLE.gray }}>
+                                Inactive
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── KPI tiles — Apple system color squares ── */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <AppleTile label="Selling"    value={fmt(it.selling_price_ttc)}  tone={APPLE.green}  caption="TTC" />
+                    <AppleTile label="Cost"       value={fmt(it.cost_price)}         tone={APPLE.blue}   caption="HT" />
+                    <AppleTile label="Margin"     value={margin != null ? `${margin.toFixed(1)}%` : '—'} tone={APPLE.purple} caption={margin != null ? 'over cost' : 'set cost'} />
+                    <AppleTile label="On hand"    value={fmtQty(onHand)}             tone={stockTone}    caption={stockText} />
+                </div>
+
+                {/* ── Two-column body: Stock + Pricing ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {/* Stock card */}
+                    <div className="rounded-3xl overflow-hidden"
+                         style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+                        <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+                            <Box size={16} style={{ color: APPLE.blue }} />
+                            <h3 className="text-base font-semibold" style={{ letterSpacing: '-0.01em' }}>Stock</h3>
+                        </div>
+                        <div className="px-2 py-1">
+                            <AppleRow label="On hand"   value={fmtQty(onHand)} tone={stockTone} />
+                            <AppleRow label="Available" value={fmtQty(it.available_qty)} />
+                            <AppleRow label="Reserved"  value={fmtQty(it.reserved_qty)} />
+                            <AppleRow label="Reorder"   value={fmtQty(it.reorder_point)} sublabel="restock at" />
+                            <AppleRow label="Min level" value={fmtQty(it.min_stock_level)} />
+                            <AppleRow label="Max level" value={fmtQty(it.max_stock_level)} last />
+                        </div>
+                    </div>
+
+                    {/* Pricing card */}
+                    <div className="rounded-3xl overflow-hidden"
+                         style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+                        <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+                            <DollarSign size={16} style={{ color: APPLE.green }} />
+                            <h3 className="text-base font-semibold" style={{ letterSpacing: '-0.01em' }}>Pricing</h3>
+                        </div>
+                        <div className="px-2 py-1">
+                            <AppleRow label="Selling TTC" value={fmt(it.selling_price_ttc)} tone={APPLE.green} />
+                            <AppleRow label="Selling HT"  value={fmt(it.selling_price_ht)} />
+                            <AppleRow label="Cost"        value={fmt(it.cost_price)} />
+                            <AppleRow label="VAT rate"    value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} />
+                            {margin != null && <AppleRow label="Margin" value={`${margin.toFixed(1)}%`} tone={APPLE.purple} last />}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Per-warehouse list (Apple settings-style rows) ── */}
+                {stockByWarehouse.length > 0 && (
+                    <div className="rounded-3xl overflow-hidden"
+                         style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+                        <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+                            <Warehouse size={16} style={{ color: APPLE.indigo }} />
+                            <h3 className="text-base font-semibold" style={{ letterSpacing: '-0.01em' }}>Warehouses</h3>
+                            <span className="ml-auto text-xs font-medium" style={{ color: APPLE.sublabel }}>{stockByWarehouse.length} {stockByWarehouse.length === 1 ? 'location' : 'locations'}</span>
+                        </div>
+                        <div className="px-2 py-1">
+                            {stockByWarehouse.slice(0, 10).map((s, i) => (
+                                <AppleRow key={s.warehouse}
+                                    label={s.warehouse_name || `Warehouse #${s.warehouse}`}
+                                    value={fmtQty(s.quantity)}
+                                    sublabel={s.reserved_quantity ? `${fmtQty(s.reserved_quantity)} reserved` : undefined}
+                                    last={i === Math.min(stockByWarehouse.length, 10) - 1} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Identity card ── */}
+                <div className="rounded-3xl overflow-hidden"
+                     style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+                    <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+                        <Tag size={16} style={{ color: APPLE.orange }} />
+                        <h3 className="text-base font-semibold" style={{ letterSpacing: '-0.01em' }}>Details</h3>
+                    </div>
+                    <div className="px-2 py-1">
+                        <AppleRow label="Brand"    value={String(it.brand_name || '—')} />
+                        <AppleRow label="Category" value={String(it.category_name || '—')} />
+                        <AppleRow label="Unit"     value={String(it.unit_name || it.unit_code || '—')} />
+                        <AppleRow label="Type"     value={String(it.product_type || '—')} />
+                        <AppleRow label="Status"   value={it.is_active === false ? 'Inactive' : 'Active'} tone={it.is_active === false ? APPLE.gray : APPLE.green} last />
+                    </div>
+                </div>
+
+                {it.description && (
+                    <div className="rounded-3xl p-6"
+                         style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+                        <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: APPLE.sublabel }}>About</p>
+                        <p className="text-base leading-relaxed whitespace-pre-line" style={{ color: APPLE.label }}>
+                            {String(it.description)}
+                        </p>
+                    </div>
+                )}
+
+                <p className="text-xs text-center pt-2" style={{ color: APPLE.sublabel }}>
+                    {it.updated_at && <>Updated {timeAgo(String(it.updated_at))} · </>}id {String(it.id)}
+                </p>
+
+                <div className="h-8" />
+            </div>
+        </div>
+    )
+}
+function AppleTile({ label, value, tone, caption }: { label: string; value: string; tone: string; caption?: string }) {
+    return (
+        <div className="rounded-2xl p-4"
+             style={{ background: APPLE.surface, boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)' }}>
+            <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: tone }} />
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: APPLE.sublabel }}>{label}</p>
+            </div>
+            <p className="text-3xl font-bold tabular-nums mt-1.5" style={{ color: APPLE.label, letterSpacing: '-0.02em' }}>{value}</p>
+            {caption && <p className="text-xs mt-0.5" style={{ color: APPLE.sublabel }}>{caption}</p>}
+        </div>
+    )
+}
+function AppleRow({ label, value, sublabel, tone, last }: { label: string; value: string; sublabel?: string; tone?: string; last?: boolean }) {
+    return (
+        <div className="flex items-center justify-between px-3 py-2.5"
+             style={{ borderBottom: last ? 'none' : '0.5px solid rgba(0,0,0,0.06)' }}>
+            <div className="min-w-0 flex-1">
+                <p className="text-sm" style={{ color: APPLE.label }}>{label}</p>
+                {sublabel && <p className="text-xs mt-0.5" style={{ color: APPLE.sublabel }}>{sublabel}</p>}
+            </div>
+            <span className="text-sm font-medium tabular-nums ml-3" style={{ color: tone || APPLE.sublabel }}>{value}</span>
+        </div>
+    )
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+ *  GOOGLE VIEW — Material Design 3
+ *  ----------------------------------------------------------------
+ *  Tonal surface palette (background warm-tinted, surface variants
+ *  for cards, primary container fills for emphasis), Roboto/Google
+ *  Sans, top app bar with title + actions, FAB, list rows with
+ *  leading icons, filled tonal chips. Google brand colors as
+ *  semantic accents (blue / green / yellow / red).
+ * ═════════════════════════════════════════════════════════════ */
+const GOOGLE_FONT = '"Google Sans", "Product Sans", Roboto, "Helvetica Neue", Arial, sans-serif'
+const GOOGLE = {
+    blue:    '#1a73e8',
+    blueAlt: '#4285f4',
+    green:   '#188038',
+    greenC:  '#e6f4ea',
+    yellow:  '#f9ab00',
+    yellowC: '#fef7e0',
+    red:     '#d93025',
+    redC:    '#fce8e6',
+    primaryC:'#d3e3fd',
+    onPrimaryC: '#001d35',
+    bg:      '#fef7ff',
+    surface: '#ffffff',
+    surfaceLow: '#f7f2fa',
+    surfaceVariant: '#e7e0ec',
+    onSurface: '#1d1b20',
+    onSurfaceVariant: '#49454f',
+    outline: '#79747e',
+}
+
+function GoogleView({ it, stockByWarehouse, margin, stockColor: _stockColor, onBack, onEdit, onDelete }: {
+    it: Record<string, any>
+    stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>
+    margin: number | null
+    stockColor: string
+    onBack: () => void
+    onEdit: () => void
+    onDelete: () => void
+}) {
+    const onHand = Number(it.on_hand_qty || 0)
+    const minStock = Number(it.min_stock_level || 0)
+    const isOut = onHand <= 0
+    const isLow = !isOut && minStock > 0 && onHand <= minStock
+    const stockTone = isOut ? GOOGLE.red : isLow ? GOOGLE.yellow : GOOGLE.green
+    const stockBg   = isOut ? GOOGLE.redC : isLow ? GOOGLE.yellowC : GOOGLE.greenC
+    const stockText = isOut ? 'Out of stock' : isLow ? 'Low stock' : 'In stock'
+
+    return (
+        <div className="min-h-full relative" style={{ background: GOOGLE.bg, color: GOOGLE.onSurface, fontFamily: GOOGLE_FONT }}>
+            {/* ── Material 3 top app bar ── */}
+            <div className="sticky top-0 z-10 px-3 md:px-6 py-2 flex items-center gap-3"
+                 style={{ background: GOOGLE.bg, borderBottom: '1px solid color-mix(in srgb, #79747e 20%, transparent)' }}>
+                <button onClick={onBack}
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-black/5"
+                    style={{ color: GOOGLE.onSurface }}>
+                    <ArrowLeft size={20} />
+                </button>
+                <div className="min-w-0 flex-1">
+                    <p className="text-base font-medium truncate" style={{ color: GOOGLE.onSurface }}>
+                        {String(it.name || `Product #${it.id}`)}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: GOOGLE.onSurfaceVariant }}>
+                        {String(it.sku || `#${it.id}`)}
+                    </p>
+                </div>
+                <button onClick={onDelete} title="Delete"
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-black/5"
+                    style={{ color: GOOGLE.red }}>
+                    <Trash2 size={18} />
+                </button>
+                <button onClick={onEdit}
+                    className="hidden md:flex items-center gap-2 px-4 h-10 rounded-full font-medium text-sm transition-all hover:brightness-110"
+                    style={{ background: GOOGLE.blue, color: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }}>
+                    <Edit3 size={16} /> Edit
+                </button>
+            </div>
+
+            <div className="px-4 md:px-8 py-6 md:py-8 max-w-5xl mx-auto space-y-4 pb-32">
+                {/* ── Hero (Material primary container) ── */}
+                <div className="rounded-3xl p-5 md:p-6 flex items-center gap-4"
+                     style={{ background: GOOGLE.primaryC, color: GOOGLE.onPrimaryC }}>
+                    <div className="flex-shrink-0 rounded-2xl flex items-center justify-center"
+                         style={{ width: 72, height: 72, background: GOOGLE.blue, color: 'white' }}>
+                        <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={56} className="rounded-xl" color="white" iconSize={32} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium" style={{ color: GOOGLE.onPrimaryC, opacity: 0.7 }}>
+                            {String(it.brand_name || it.category_name || 'Product')}
+                        </p>
+                        <p className="text-2xl font-medium leading-tight mt-0.5 truncate" style={{ color: GOOGLE.onPrimaryC }}>
+                            {String(it.name || `Product #${it.id}`)}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <GoogleChip label={stockText}                tone={stockTone} bg={stockBg} />
+                            {it.is_active === false && <GoogleChip label="Inactive" tone={GOOGLE.onSurfaceVariant} bg={GOOGLE.surfaceVariant} />}
+                            {it.barcode && <GoogleChip label={String(it.barcode)} mono />}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── KPI tiles (filled cards, Material 3) ── */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <GoogleStat label="Selling" value={fmt(it.selling_price_ttc)} tone={GOOGLE.blue}  bg={GOOGLE.primaryC} caption="TTC" />
+                    <GoogleStat label="Cost"    value={fmt(it.cost_price)}        tone={GOOGLE.green} bg={GOOGLE.greenC}   caption="HT" />
+                    <GoogleStat label="Margin"  value={margin != null ? `${margin.toFixed(1)}%` : '—'} tone={GOOGLE.yellow} bg={GOOGLE.yellowC} caption={margin != null ? 'over cost' : 'set cost'} />
+                    <GoogleStat label="On hand" value={fmtQty(onHand)} tone={stockTone} bg={stockBg} caption={stockText} />
+                </div>
+
+                {/* ── Two cards: Stock + Pricing (elevated cards) ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <GoogleCard title="Stock levels" icon={<Box size={18} />} accent={GOOGLE.blue}>
+                        <GoogleListRow icon={<Box size={16} />}     label="On hand"   value={fmtQty(onHand)} tone={stockTone} />
+                        <GoogleListRow icon={<Archive size={16} />} label="Available" value={fmtQty(it.available_qty)} />
+                        <GoogleListRow icon={<Shield size={16} />}  label="Reserved"  value={fmtQty(it.reserved_qty)} />
+                        <GoogleListRow icon={<RefreshCw size={16} />} label="Reorder point" value={fmtQty(it.reorder_point)} />
+                        <GoogleListRow icon={<TrendingUp size={16} />} label="Max level" value={fmtQty(it.max_stock_level)} last />
+                    </GoogleCard>
+
+                    <GoogleCard title="Pricing" icon={<DollarSign size={18} />} accent={GOOGLE.green}>
+                        <GoogleListRow icon={<DollarSign size={16} />} label="Selling TTC" value={fmt(it.selling_price_ttc)} tone={GOOGLE.green} />
+                        <GoogleListRow icon={<DollarSign size={16} />} label="Selling HT"  value={fmt(it.selling_price_ht)} />
+                        <GoogleListRow icon={<TrendingUp size={16} />} label="Cost"        value={fmt(it.cost_price)} />
+                        <GoogleListRow icon={<Tag size={16} />}        label="VAT rate"    value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} />
+                        {margin != null && <GoogleListRow icon={<Activity size={16} />} label="Margin" value={`${margin.toFixed(1)}%`} tone={GOOGLE.yellow} last />}
+                    </GoogleCard>
+                </div>
+
+                {/* ── Per-warehouse list ── */}
+                {stockByWarehouse.length > 0 && (
+                    <GoogleCard title={`Warehouses (${stockByWarehouse.length})`} icon={<Warehouse size={18} />} accent={GOOGLE.blueAlt}>
+                        {stockByWarehouse.slice(0, 10).map((s, i, arr) => (
+                            <GoogleListRow key={s.warehouse}
+                                icon={<Warehouse size={16} />}
+                                label={s.warehouse_name || `Warehouse #${s.warehouse}`}
+                                sublabel={s.reserved_quantity ? `${fmtQty(s.reserved_quantity)} reserved` : undefined}
+                                value={fmtQty(s.quantity)}
+                                last={i === arr.length - 1} />
+                        ))}
+                    </GoogleCard>
+                )}
+
+                {/* ── Identity card ── */}
+                <GoogleCard title="Details" icon={<Tag size={18} />} accent={GOOGLE.yellow}>
+                    <GoogleListRow icon={<Star size={16} />}      label="Brand"    value={String(it.brand_name || '—')} />
+                    <GoogleListRow icon={<Tag size={16} />}       label="Category" value={String(it.category_name || '—')} />
+                    <GoogleListRow icon={<Ruler size={16} />}     label="Unit"     value={String(it.unit_name || it.unit_code || '—')} />
+                    <GoogleListRow icon={<Package size={16} />}   label="Type"     value={String(it.product_type || '—')} />
+                    <GoogleListRow icon={<CheckCircle2 size={16} />} label="Status" value={it.is_active === false ? 'Inactive' : 'Active'}
+                        tone={it.is_active === false ? GOOGLE.onSurfaceVariant : GOOGLE.green} last />
+                </GoogleCard>
+
+                {it.description && (
+                    <div className="rounded-2xl p-5"
+                         style={{ background: GOOGLE.surface, boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)' }}>
+                        <p className="text-xs font-medium mb-2" style={{ color: GOOGLE.onSurfaceVariant }}>ABOUT</p>
+                        <p className="text-base leading-relaxed whitespace-pre-line">{String(it.description)}</p>
+                    </div>
+                )}
+
+                <p className="text-xs text-center pt-2" style={{ color: GOOGLE.onSurfaceVariant }}>
+                    {it.updated_at && <>Updated {timeAgo(String(it.updated_at))} · </>}id {String(it.id)}
+                </p>
+            </div>
+
+            {/* ── FAB (Material extended FAB) ── */}
+            <button onClick={onEdit}
+                className="fixed bottom-6 right-6 md:bottom-8 md:right-8 flex items-center gap-2 px-5 h-14 rounded-2xl font-medium text-base transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: GOOGLE.blue, color: 'white', boxShadow: '0 3px 6px rgba(0,0,0,0.15), 0 6px 16px rgba(26,115,232,0.3)' }}>
+                <Edit3 size={18} /> Edit
+            </button>
+        </div>
+    )
+}
+function GoogleChip({ label, tone, bg, mono }: { label: string; tone?: string; bg?: string; mono?: boolean }) {
+    return (
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium ${mono ? 'font-mono' : ''}`}
+              style={{ background: bg || GOOGLE.surfaceVariant, color: tone || GOOGLE.onSurface }}>
+            {label}
+        </span>
+    )
+}
+function GoogleStat({ label, value, tone, bg, caption }: { label: string; value: string; tone: string; bg: string; caption?: string }) {
+    return (
+        <div className="rounded-2xl p-4" style={{ background: bg, color: tone }}>
+            <p className="text-xs font-medium uppercase tracking-wider opacity-80">{label}</p>
+            <p className="text-2xl font-medium tabular-nums mt-1" style={{ color: tone }}>{value}</p>
+            {caption && <p className="text-xs mt-0.5 opacity-70">{caption}</p>}
+        </div>
+    )
+}
+function GoogleCard({ title, icon, accent, children }: { title: string; icon: React.ReactNode; accent: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-2xl overflow-hidden"
+             style={{ background: GOOGLE.surface, boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)' }}>
+            <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid color-mix(in srgb, #79747e 18%, transparent)' }}>
+                <span style={{ color: accent }}>{icon}</span>
+                <h3 className="text-base font-medium" style={{ color: GOOGLE.onSurface }}>{title}</h3>
+            </div>
+            <div>{children}</div>
+        </div>
+    )
+}
+function GoogleListRow({ icon, label, value, sublabel, tone, last }: { icon: React.ReactNode; label: string; value: string; sublabel?: string; tone?: string; last?: boolean }) {
+    return (
+        <div className="flex items-center gap-3 px-4 py-3"
+             style={{ borderBottom: last ? 'none' : '1px solid color-mix(in srgb, #79747e 12%, transparent)' }}>
+            <span className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: GOOGLE.surfaceLow, color: GOOGLE.onSurfaceVariant }}>
+                {icon}
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className="text-sm" style={{ color: GOOGLE.onSurface }}>{label}</p>
+                {sublabel && <p className="text-xs" style={{ color: GOOGLE.onSurfaceVariant }}>{sublabel}</p>}
+            </div>
+            <span className="text-sm font-medium tabular-nums ml-2" style={{ color: tone || GOOGLE.onSurface }}>{value}</span>
+        </div>
+    )
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+ *  CLAUDE VIEW — Anthropic feel
+ *  ----------------------------------------------------------------
+ *  Warm cream paper background, Tiempos-style serif headings in
+ *  near-black, terracotta clay accent (#cc785c — Anthropic's
+ *  signature color). Calm editorial rhythm — sections set off by
+ *  rule lines, not card chrome. Conversational, intelligent, dense
+ *  but unhurried.
+ * ═════════════════════════════════════════════════════════════ */
+const CLAUDE_SERIF = '"Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", serif'
+const CLAUDE_SANS  = '"Untitled Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+const CLAUDE = {
+    paper:    '#f5f1e8',
+    paperLow: '#ede7d6',
+    panel:    '#faf6ee',
+    ink:      '#1a1814',
+    inkSoft:  '#3d3830',
+    muted:    '#7c7466',
+    rule:     'rgba(26,24,20,0.18)',
+    clay:     '#cc785c',
+    clayDeep: '#a85a40',
+    clayBg:   'rgba(204,120,92,0.10)',
+    sage:     '#5a7a52',
+    sageBg:   'rgba(90,122,82,0.10)',
+    amber:    '#b8810f',
+    amberBg:  'rgba(184,129,15,0.10)',
+    rust:     '#a8453a',
+    rustBg:   'rgba(168,69,58,0.10)',
+}
+
+function ClaudeView({ it, stockByWarehouse, margin, stockColor: _stockColor, onBack, onEdit, onDelete }: {
+    it: Record<string, any>
+    stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>
+    margin: number | null
+    stockColor: string
+    onBack: () => void
+    onEdit: () => void
+    onDelete: () => void
+}) {
+    const onHand = Number(it.on_hand_qty || 0)
+    const minStock = Number(it.min_stock_level || 0)
+    const isOut = onHand <= 0
+    const isLow = !isOut && minStock > 0 && onHand <= minStock
+    const stockTone = isOut ? CLAUDE.rust : isLow ? CLAUDE.amber : CLAUDE.sage
+    const stockBg   = isOut ? CLAUDE.rustBg : isLow ? CLAUDE.amberBg : CLAUDE.sageBg
+    const stockText = isOut ? 'Out of stock' : isLow ? 'Low stock' : 'In stock'
+
+    return (
+        <div className="min-h-full" style={{ background: CLAUDE.paper, color: CLAUDE.ink, fontFamily: CLAUDE_SANS }}>
+            {/* ── Slim editorial top bar ── */}
+            <div className="sticky top-0 z-10 px-5 md:px-10 py-3 flex items-center gap-4"
+                 style={{ background: 'rgba(245,241,232,0.92)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${CLAUDE.rule}` }}>
+                <button onClick={onBack}
+                    className="text-sm hover:underline transition-all"
+                    style={{ color: CLAUDE.clay, fontFamily: CLAUDE_SERIF, fontStyle: 'italic' }}>
+                    ← Back to products
+                </button>
+                <div className="flex-1" />
+                <button onClick={onEdit}
+                    className="px-4 py-1.5 rounded-full text-sm font-medium transition-all hover:brightness-95"
+                    style={{ background: CLAUDE.clay, color: CLAUDE.panel }}>
+                    Edit
+                </button>
+                <button onClick={onDelete}
+                    className="text-sm hover:underline" style={{ color: CLAUDE.muted }}>
+                    Delete
+                </button>
+            </div>
+
+            <div className="px-6 md:px-12 py-10 md:py-16 max-w-3xl mx-auto">
+                {/* ── Masthead ── */}
+                <p className="text-[11px] font-semibold tracking-[0.4em] uppercase mb-5" style={{ color: CLAUDE.muted }}>
+                    Inventory · Product · {String(it.sku || `#${it.id}`)}
+                </p>
+                <h1 className="leading-[0.98] tracking-tight mb-3"
+                    style={{ fontFamily: CLAUDE_SERIF, fontSize: 'clamp(2.5rem, 6vw, 4.25rem)', fontWeight: 600, color: CLAUDE.ink }}>
+                    {String(it.name || `Product #${it.id}`)}
+                </h1>
+                {(it.brand_name || it.category_name) && (
+                    <p className="text-lg italic mb-8" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.inkSoft }}>
+                        {it.brand_name && <>from {String(it.brand_name)}</>}
+                        {it.brand_name && it.category_name && <> · </>}
+                        {it.category_name && <span style={{ color: CLAUDE.muted }}>{String(it.category_name)}</span>}
+                    </p>
+                )}
+
+                {/* Status line */}
+                <div className="border-t border-b py-3 mb-12 flex items-center gap-4 flex-wrap text-xs font-semibold tracking-widest uppercase"
+                     style={{ borderColor: CLAUDE.rule, color: CLAUDE.muted }}>
+                    <span className="px-2 py-0.5 rounded" style={{ background: stockBg, color: stockTone }}>{stockText}</span>
+                    {it.unit_name && <span>{String(it.unit_name)}</span>}
+                    {it.is_active === false && <span style={{ color: CLAUDE.rust }}>Inactive</span>}
+                    <span className="ml-auto">id {String(it.id)}</span>
+                </div>
+
+                {/* ── The lead — selling price as headline number ── */}
+                <div className="mb-14">
+                    <p className="text-xs font-semibold tracking-[0.35em] uppercase mb-2" style={{ color: CLAUDE.muted }}>The number</p>
+                    <div className="flex items-baseline gap-4 flex-wrap">
+                        <p className="leading-none tabular-nums tracking-tight"
+                           style={{ fontFamily: CLAUDE_SERIF, fontSize: 'clamp(4rem, 12vw, 8rem)', fontWeight: 600, color: CLAUDE.clay, letterSpacing: '-0.03em' }}>
+                            {fmt(it.selling_price_ttc)}
+                        </p>
+                        <p className="text-base italic" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.inkSoft }}>
+                            TTC selling price
+                            {margin != null && <> · {margin.toFixed(1)}% margin over {fmt(it.cost_price)}</>}
+                        </p>
+                    </div>
+                </div>
+
+                {/* ── Three columns: stock facts ── */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14 pb-14 border-b" style={{ borderColor: CLAUDE.rule }}>
+                    <ClaudeFact label="On hand"   value={fmtQty(onHand)}            caption="across all locations" tone={stockTone} />
+                    <ClaudeFact label="Available" value={fmtQty(it.available_qty)}  caption="free to allocate" />
+                    <ClaudeFact label="Reserved"  value={fmtQty(it.reserved_qty)}   caption="on open orders" />
+                </div>
+
+                {/* ── Pricing & Cost ladder ── */}
+                <h2 className="text-2xl italic mb-4" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.ink }}>
+                    Pricing
+                </h2>
+                <div className="mb-14">
+                    <ClaudePriceRow label="Selling TTC" value={fmt(it.selling_price_ttc)} accent={CLAUDE.clay} />
+                    <ClaudePriceRow label="Selling HT"  value={fmt(it.selling_price_ht)} />
+                    <ClaudePriceRow label="Cost"        value={fmt(it.cost_price)} />
+                    <ClaudePriceRow label="VAT rate"    value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} muted />
+                    {margin != null && <ClaudePriceRow label="Margin" value={`${margin.toFixed(1)}%`} accent={CLAUDE.sage} last />}
+                </div>
+
+                {/* ── Where it lives ── */}
+                {stockByWarehouse.length > 0 && (
+                    <>
+                        <h2 className="text-2xl italic mb-4" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.ink }}>
+                            Where it lives
+                        </h2>
+                        <div className="mb-14">
+                            {stockByWarehouse.slice(0, 8).map((s, i, arr) => (
+                                <div key={s.warehouse}
+                                     className="flex items-baseline justify-between py-3"
+                                     style={{ borderBottom: i === arr.length - 1 ? 'none' : `1px dotted ${CLAUDE.rule}` }}>
+                                    <span className="text-base" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.ink }}>
+                                        {s.warehouse_name || `Warehouse #${s.warehouse}`}
+                                    </span>
+                                    <span className="text-2xl tabular-nums" style={{ fontFamily: CLAUDE_SERIF, fontWeight: 600, color: CLAUDE.clay }}>
+                                        {fmtQty(s.quantity)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {/* ── Description with drop cap ── */}
+                {it.description && (
+                    <>
+                        <h2 className="text-2xl italic mb-4" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.ink }}>
+                            About
+                        </h2>
+                        <p className="text-lg leading-relaxed first-letter:text-6xl first-letter:font-semibold first-letter:float-left first-letter:mr-3 first-letter:leading-none first-letter:mt-1"
+                           style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.ink }}>
+                            <span style={{ color: CLAUDE.clay }} className="first-letter:inline">{String(it.description)}</span>
+                        </p>
+                    </>
+                )}
+
+                <p className="text-xs italic text-center mt-20 pt-8" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.muted, borderTop: `1px solid ${CLAUDE.rule}` }}>
+                    — Last updated {fmtDate(String(it.updated_at)) || 'recently'} —
+                </p>
+            </div>
+        </div>
+    )
+}
+function ClaudeFact({ label, value, caption, tone }: { label: string; value: string; caption: string; tone?: string }) {
+    return (
+        <div>
+            <p className="text-xs font-semibold tracking-[0.3em] uppercase" style={{ color: CLAUDE.muted }}>{label}</p>
+            <p className="leading-none tabular-nums my-2"
+               style={{ fontFamily: CLAUDE_SERIF, fontSize: 'clamp(2.25rem, 5vw, 3rem)', fontWeight: 600, color: tone || CLAUDE.ink, letterSpacing: '-0.02em' }}>
+                {value}
+            </p>
+            <p className="text-sm italic" style={{ fontFamily: CLAUDE_SERIF, color: CLAUDE.inkSoft }}>{caption}</p>
+        </div>
+    )
+}
+function ClaudePriceRow({ label, value, accent, muted, last }: { label: string; value: string; accent?: string; muted?: boolean; last?: boolean }) {
+    return (
+        <div className="flex items-baseline justify-between py-3"
+             style={{ borderBottom: last ? 'none' : `1px solid ${CLAUDE.rule}` }}>
+            <span className="text-base" style={{ fontFamily: CLAUDE_SERIF, color: muted ? CLAUDE.muted : CLAUDE.inkSoft, fontStyle: muted ? 'italic' : 'normal' }}>
+                {label}
+            </span>
+            <span className="tabular-nums" style={{ fontFamily: CLAUDE_SERIF, fontSize: accent ? '1.75rem' : '1.25rem', fontWeight: accent ? 600 : 500, color: accent || CLAUDE.ink }}>
+                {value}
+            </span>
+        </div>
+    )
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+ *  LOVABLE VIEW — vibrant AI-builder feel
+ *  ----------------------------------------------------------------
+ *  Bright pink/purple/indigo gradient background, glassmorphism
+ *  cards floating on top with backdrop blur, big rounded geometry
+ *  (rounded-3xl everywhere), gradient text for the hero, vibrant
+ *  CTAs with soft glow shadows. Playful but premium — the energy
+ *  of a product that wants you to *make* something.
+ * ═════════════════════════════════════════════════════════════ */
+const LOVABLE_FONT = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+const LOVABLE = {
+    grad:     'linear-gradient(135deg, #ff4f8b 0%, #a855f7 45%, #6366f1 100%)',
+    gradSoft: 'linear-gradient(135deg, rgba(255,79,139,0.85), rgba(168,85,247,0.85), rgba(99,102,241,0.85))',
+    pink:     '#ff4f8b',
+    purple:   '#a855f7',
+    indigo:   '#6366f1',
+    yellow:   '#fde047',
+    glassBg:  'rgba(255,255,255,0.14)',
+    glassBgStrong: 'rgba(255,255,255,0.22)',
+    glassBorder: 'rgba(255,255,255,0.32)',
+    text:     '#ffffff',
+    textSoft: 'rgba(255,255,255,0.75)',
+    textMuted:'rgba(255,255,255,0.55)',
+}
+
+function LovableView({ it, stockByWarehouse, margin, stockColor: _stockColor, onBack, onEdit, onDelete }: {
+    it: Record<string, any>
+    stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>
+    margin: number | null
+    stockColor: string
+    onBack: () => void
+    onEdit: () => void
+    onDelete: () => void
+}) {
+    const onHand = Number(it.on_hand_qty || 0)
+    const minStock = Number(it.min_stock_level || 0)
+    const isOut = onHand <= 0
+    const isLow = !isOut && minStock > 0 && onHand <= minStock
+    const stockText = isOut ? 'Out of stock' : isLow ? 'Low stock' : 'In stock'
+    const stockEmoji = isOut ? '#ef4444' : isLow ? '#fde047' : '#22c55e'
+
+    return (
+        <div className="min-h-full relative overflow-hidden" style={{ background: LOVABLE.grad, color: LOVABLE.text, fontFamily: LOVABLE_FONT }}>
+            {/* ── Aurora blobs for depth ── */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none"
+                 style={{ background: LOVABLE.yellow, opacity: 0.18, transform: 'translate(150px, -150px)' }} />
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none"
+                 style={{ background: '#06b6d4', opacity: 0.18, transform: 'translate(-200px, 200px)' }} />
+
+            {/* ── Floating glass top bar ── */}
+            <div className="sticky top-0 z-10 px-4 md:px-8 py-3 flex items-center gap-3"
+                 style={{ background: 'rgba(99,102,241,0.30)', backdropFilter: 'blur(20px) saturate(180%)', borderBottom: `1px solid ${LOVABLE.glassBorder}` }}>
+                <button onClick={onBack}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-all hover:brightness-110"
+                    style={{ background: LOVABLE.glassBg, border: `1px solid ${LOVABLE.glassBorder}`, color: LOVABLE.text, backdropFilter: 'blur(8px)' }}>
+                    <ArrowLeft size={14} /> Products
+                </button>
+                <div className="flex-1" />
+                <button onClick={onDelete}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:brightness-110"
+                    style={{ background: 'rgba(239,68,68,0.22)', border: '1px solid rgba(239,68,68,0.38)', color: '#fecaca' }}>
+                    <Trash2 size={14} />
+                </button>
+                <button onClick={onEdit}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all hover:brightness-110 active:scale-[0.97]"
+                    style={{ background: 'white', color: LOVABLE.purple, boxShadow: '0 6px 20px rgba(255,255,255,0.35)' }}>
+                    <Edit3 size={14} /> Edit
+                </button>
+            </div>
+
+            <div className="relative px-5 md:px-10 py-8 md:py-12 max-w-5xl mx-auto space-y-5">
+                {/* ── Hero glass card ── */}
+                <div className="rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-5"
+                     style={{
+                         background: LOVABLE.glassBg,
+                         border: `1px solid ${LOVABLE.glassBorder}`,
+                         backdropFilter: 'blur(24px) saturate(180%)',
+                         boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
+                     }}>
+                    <div className="flex-shrink-0 rounded-3xl flex items-center justify-center"
+                         style={{ width: 88, height: 88, background: 'white', boxShadow: '0 12px 32px rgba(0,0,0,0.18)' }}>
+                        <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={72} className="rounded-2xl" color={LOVABLE.purple} iconSize={40} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: LOVABLE.textMuted }}>
+                            {String(it.brand_name || it.category_name || 'Product')}
+                        </p>
+                        <h1 className="text-3xl md:text-5xl font-extrabold leading-[1.05] tracking-tight mt-1.5"
+                            style={{
+                                background: 'linear-gradient(135deg, #ffffff 0%, #fde047 50%, #ffffff 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                            }}>
+                            {String(it.name || `Product #${it.id}`)}
+                        </h1>
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                            <LovableChip>
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ background: stockEmoji }} /> {stockText}
+                            </LovableChip>
+                            <LovableChip>{String(it.sku || `#${it.id}`)}</LovableChip>
+                            {it.barcode && <LovableChip mono>{String(it.barcode)}</LovableChip>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── KPI tiles — glass with gradient accents ── */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <LovableTile label="Selling" value={fmt(it.selling_price_ttc)} hue="#22d3ee" caption="TTC" />
+                    <LovableTile label="Cost"    value={fmt(it.cost_price)}        hue="#fde047" caption="HT" />
+                    <LovableTile label="Margin"  value={margin != null ? `${margin.toFixed(0)}%` : '—'} hue="#22c55e" caption={margin != null ? 'over cost' : 'set cost'} />
+                    <LovableTile label="On hand" value={fmtQty(onHand)}            hue={stockEmoji} caption={stockText} />
+                </div>
+
+                {/* ── Two glass cards: Stock + Pricing ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <LovableCard title="Stock" hue="#22d3ee">
+                        <LovableRow label="On hand"   value={fmtQty(onHand)} bold />
+                        <LovableRow label="Available" value={fmtQty(it.available_qty)} />
+                        <LovableRow label="Reserved"  value={fmtQty(it.reserved_qty)} />
+                        <LovableRow label="Reorder"   value={fmtQty(it.reorder_point)} />
+                        <LovableRow label="Min · Max" value={`${fmtQty(it.min_stock_level)} · ${fmtQty(it.max_stock_level)}`} last />
+                    </LovableCard>
+
+                    <LovableCard title="Pricing" hue="#fde047">
+                        <LovableRow label="Selling TTC" value={fmt(it.selling_price_ttc)} bold />
+                        <LovableRow label="Selling HT"  value={fmt(it.selling_price_ht)} />
+                        <LovableRow label="Cost"        value={fmt(it.cost_price)} />
+                        <LovableRow label="VAT rate"    value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} />
+                        {margin != null && <LovableRow label="Margin" value={`${margin.toFixed(1)}%`} bold last />}
+                    </LovableCard>
+                </div>
+
+                {/* ── Per-warehouse list ── */}
+                {stockByWarehouse.length > 0 && (
+                    <LovableCard title={`Warehouses · ${stockByWarehouse.length}`} hue="#a855f7">
+                        {stockByWarehouse.slice(0, 10).map((s, i, arr) => (
+                            <LovableRow key={s.warehouse}
+                                label={s.warehouse_name || `Warehouse #${s.warehouse}`}
+                                value={fmtQty(s.quantity)}
+                                last={i === arr.length - 1} />
+                        ))}
+                    </LovableCard>
+                )}
+
+                {/* ── Identity ── */}
+                <LovableCard title="Details" hue="#ff4f8b">
+                    <LovableRow label="Brand"    value={String(it.brand_name || '—')} />
+                    <LovableRow label="Category" value={String(it.category_name || '—')} />
+                    <LovableRow label="Unit"     value={String(it.unit_name || it.unit_code || '—')} />
+                    <LovableRow label="Type"     value={String(it.product_type || '—')} />
+                    <LovableRow label="Status"   value={it.is_active === false ? 'Inactive' : 'Active'} last />
+                </LovableCard>
+
+                {it.description && (
+                    <div className="rounded-3xl p-6"
+                         style={{ background: LOVABLE.glassBg, border: `1px solid ${LOVABLE.glassBorder}`, backdropFilter: 'blur(24px)' }}>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: LOVABLE.textMuted }}>About</p>
+                        <p className="text-base leading-relaxed whitespace-pre-line" style={{ color: LOVABLE.text }}>
+                            {String(it.description)}
+                        </p>
+                    </div>
+                )}
+
+                <p className="text-center text-xs pt-4" style={{ color: LOVABLE.textMuted }}>
+                    {it.updated_at && <>Updated {timeAgo(String(it.updated_at))} · </>}id {String(it.id)}
+                </p>
+
+                <div className="h-12" />
+            </div>
+        </div>
+    )
+}
+function LovableChip({ children, mono }: { children: React.ReactNode; mono?: boolean }) {
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${mono ? 'font-mono' : ''}`}
+              style={{ background: LOVABLE.glassBgStrong, border: `1px solid ${LOVABLE.glassBorder}`, color: LOVABLE.text, backdropFilter: 'blur(8px)' }}>
+            {children}
+        </span>
+    )
+}
+function LovableTile({ label, value, hue, caption }: { label: string; value: string; hue: string; caption?: string }) {
+    return (
+        <div className="rounded-3xl p-4 relative overflow-hidden"
+             style={{
+                 background: `linear-gradient(135deg, color-mix(in srgb, ${hue} 22%, transparent), ${LOVABLE.glassBg})`,
+                 border: `1px solid color-mix(in srgb, ${hue} 35%, ${LOVABLE.glassBorder})`,
+                 backdropFilter: 'blur(20px) saturate(180%)',
+                 boxShadow: `0 8px 24px color-mix(in srgb, ${hue} 18%, transparent)`,
+             }}>
+            <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: hue, boxShadow: `0 0 12px ${hue}` }} />
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: LOVABLE.textSoft }}>{label}</p>
+            </div>
+            <p className="text-3xl font-extrabold tabular-nums mt-2" style={{ color: LOVABLE.text, letterSpacing: '-0.02em' }}>{value}</p>
+            {caption && <p className="text-xs mt-0.5" style={{ color: LOVABLE.textMuted }}>{caption}</p>}
+        </div>
+    )
+}
+function LovableCard({ title, hue, children }: { title: string; hue: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-3xl p-5 relative overflow-hidden"
+             style={{
+                 background: LOVABLE.glassBg,
+                 border: `1px solid ${LOVABLE.glassBorder}`,
+                 backdropFilter: 'blur(24px) saturate(180%)',
+                 boxShadow: `0 12px 36px rgba(0,0,0,0.14)`,
+             }}>
+            <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: hue, boxShadow: `0 0 14px ${hue}` }} />
+                <h3 className="text-base font-bold" style={{ color: LOVABLE.text }}>{title}</h3>
+            </div>
+            <div>{children}</div>
+        </div>
+    )
+}
+function LovableRow({ label, value, bold, last }: { label: string; value: string; bold?: boolean; last?: boolean }) {
+    return (
+        <div className="flex items-center justify-between py-2"
+             style={{ borderBottom: last ? 'none' : `1px solid rgba(255,255,255,0.10)` }}>
+            <span className="text-sm" style={{ color: LOVABLE.textSoft }}>{label}</span>
+            <span className={`tabular-nums ${bold ? 'text-base font-extrabold' : 'text-sm font-semibold'}`} style={{ color: LOVABLE.text }}>
+                {value}
+            </span>
         </div>
     )
 }

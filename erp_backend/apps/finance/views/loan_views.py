@@ -222,7 +222,7 @@ class LoanManagementMixin:
 
         # Get loans with overdue installments
         overdue_loans = Loan.objects.filter(
-            organization=request.tenant,
+            organization=request.organization,
             status='ACTIVE',
             installments__is_paid=False,
             installments__due_date__lt=date.today()
@@ -274,7 +274,7 @@ class LoanManagementMixin:
         end_date = date.today() + timedelta(days=days)
 
         upcoming_installments = LoanInstallment.objects.filter(
-            organization=request.tenant,
+            organization=request.organization,
             is_paid=False,
             due_date__gte=date.today(),
             due_date__lte=end_date

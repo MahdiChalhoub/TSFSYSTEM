@@ -309,7 +309,10 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
         if (isReadRequest) {
             // Respect explicit cache: 'no-store' from caller (e.g. auth/me must be fresh)
-            if (options.cache !== 'no-store') {
+            // Respect caller-supplied `next` override (e.g. layout chrome fetches
+            // pass `next: { revalidate: 300, tags: [...] }` for longer windows
+            // with tag-based invalidation).
+            if (options.cache !== 'no-store' && !(options as any).next) {
                 fetchOptions.next = { revalidate: 30 };
             }
         } else {

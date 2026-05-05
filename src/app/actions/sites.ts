@@ -1,7 +1,7 @@
 'use server'
 
 import { erpFetch, handleAuthError } from "@/lib/erp-api"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 
 export type SiteState = {
     message?: string;
@@ -13,7 +13,11 @@ export type SiteState = {
 
 export async function getSites() {
     try {
-        const result = await erpFetch('sites/')
+        // 5-min HTTP fetch cache (per user via Authorization header).
+        // Tag-bust on site create/update/delete with revalidateTag('sites').
+        const result = await erpFetch('sites/', {
+            next: { revalidate: 300, tags: ['sites'] },
+        } as any)
         return result.map((site: Record<string, any>) => ({
             ...site,
             _count: { warehouses: 0, users: 0 },
@@ -62,6 +66,7 @@ export async function createSite(prevState: SiteState, formData: FormData): Prom
             body: JSON.stringify(data)
         })
         revalidatePath('/settings/sites');
+        revalidateTag('sites');
         return { message: 'success' };
     } catch (e: unknown) {
         return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
@@ -86,6 +91,7 @@ export async function updateSite(id: number, prevState: SiteState, formData: For
             body: JSON.stringify(data)
         })
         revalidatePath('/settings/sites');
+        revalidateTag('sites');
         return { message: 'success' };
     } catch (e: unknown) {
         return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
@@ -98,6 +104,7 @@ export async function deleteSite(id: number) {
             method: 'DELETE'
         })
         revalidatePath('/settings/sites');
+        revalidateTag('sites');
         return { success: true };
     } catch (e: unknown) {
         return { success: false, message: (e instanceof Error ? e.message : String(e)) };

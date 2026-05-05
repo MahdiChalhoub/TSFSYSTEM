@@ -52,7 +52,7 @@ class BankStatementViewSet(TenantModelViewSet):
     def get_queryset(self):
         """Get statements for current organization."""
         return BankStatement.objects.filter(
-            organization=self.request.tenant
+            organization=self.request.organization
         ).select_related('account', 'reconciled_by').prefetch_related('lines')
 
     @action(detail=False, methods=['post'], serializer_class=BankStatementImportSerializer)
@@ -92,7 +92,7 @@ class BankStatementViewSet(TenantModelViewSet):
 
         # Import statement
         import_service = BankStatementImportService(
-            organization=request.tenant,
+            organization=request.organization,
             account=account,
             uploaded_file=uploaded_file
         )
@@ -245,7 +245,7 @@ class BankStatementViewSet(TenantModelViewSet):
             statement_line = BankStatementLine.objects.get(
                 id=statement_line_id,
                 statement=statement,
-                organization=request.tenant
+                organization=request.organization
             )
         except BankStatementLine.DoesNotExist:
             return Response({
@@ -333,7 +333,7 @@ class BankStatementViewSet(TenantModelViewSet):
             session = ReconciliationSession.objects.get(
                 id=session_id,
                 statement=statement,
-                organization=request.tenant
+                organization=request.organization
             )
         except ReconciliationSession.DoesNotExist:
             return Response({
@@ -428,5 +428,5 @@ class ReconciliationSessionViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         """Get sessions for current organization."""
         return ReconciliationSession.objects.filter(
-            organization=self.request.tenant
+            organization=self.request.organization
         ).select_related('statement', 'started_by')

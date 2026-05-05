@@ -7,6 +7,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { revalidateTag } from 'next/cache'
 import type {
   ThemesListResponse,
   CurrentThemeResponse,
@@ -156,7 +157,11 @@ async function apiCall<T>(
 
 export async function getThemes(tenantSlug?: string): Promise<ThemesListResponse> {
   try {
-    const result = await apiCall<any>('ui-themes/', {}, tenantSlug)
+    // 5-min HTTP fetch cache. Per-user safe (token in Authorization header
+    // → cache key). Tag-bust via revalidateTag('themes:<slug>') after a write.
+    const result = await apiCall<any>('ui-themes/', {
+      next: { revalidate: 300, tags: [`themes:${tenantSlug || 'default'}`, 'themes'] },
+    } as any, tenantSlug)
     return {
       system: (result.system || []).map(transformThemeFromAPI),
       custom: (result.custom || []).map(transformThemeFromAPI),
@@ -198,9 +203,11 @@ export async function getThemeById(themeId: number): Promise<ThemePreset> {
 export async function activateTheme(
   themeId: number
 ): Promise<ThemeActivateResponse> {
-  return apiCall<ThemeActivateResponse>(`ui-themes/${themeId}/activate/`, {
+  const result = await apiCall<ThemeActivateResponse>(`ui-themes/${themeId}/activate/`, {
     method: 'POST',
   })
+  revalidateTag('themes')
+  return result
 }
 
 /**

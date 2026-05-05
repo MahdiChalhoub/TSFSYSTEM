@@ -240,7 +240,7 @@ class AssetDepreciationMixin:
         year = serializer.validated_data['year']
 
         results = DepreciationBatchService.post_depreciation_for_month(
-            organization=request.tenant,
+            organization=request.organization,
             month=month,
             year=year
         )
@@ -259,7 +259,7 @@ class AssetDepreciationMixin:
             List of all assets with depreciation details
         """
         register = DepreciationBatchService.get_asset_register(
-            organization=request.tenant
+            organization=request.organization
         )
 
         serializer = DepreciationSummarySerializer(register, many=True)
@@ -277,7 +277,7 @@ class AssetDepreciationMixin:
             List of fully depreciated assets
         """
         assets = Asset.objects.filter(
-            organization=request.tenant,
+            organization=request.organization,
             status='FULLY_DEPRECIATED'
         ).select_related('asset_coa')
 
@@ -317,7 +317,7 @@ class AssetDepreciationMixin:
 
         # Get unposted schedule entries for this period
         pending_entries = AmortizationSchedule.objects.filter(
-            organization=request.tenant,
+            organization=request.organization,
             period_date=period_date,
             is_posted=False
         ).select_related('asset')

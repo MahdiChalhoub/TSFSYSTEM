@@ -56,7 +56,11 @@ export async function saveProductNamingRule(rule: ProductNamingRule) {
 
 export async function getGlobalFinancialSettings() {
     try {
-        return await erpFetch('settings/global_financial/');
+        // 10-min HTTP fetch cache — fiscal calendar + dualView change rarely.
+        // Per-user safe (cache key includes Authorization header).
+        return await erpFetch('settings/global_financial/', {
+            next: { revalidate: 600, tags: ['global-financial'] },
+        } as any);
     } catch (e) {
         console.error("Failed to fetch global financial settings:", e);
         return { dualView: false };

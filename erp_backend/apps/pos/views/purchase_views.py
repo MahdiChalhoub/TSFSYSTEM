@@ -544,7 +544,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
             
         try:
             order = PurchaseService.invoice_po(
-                organization=request.tenant_id,
+                organization=request.organization_id,
                 order_id=pk,
                 invoice_number=invoice_number,
                 user=request.user

@@ -114,8 +114,8 @@ class BankStatementImportSerializer(serializers.Serializer):
     def validate_account(self, value):
         """Validate account belongs to organization."""
         request = self.context.get('request')
-        if request and hasattr(request, 'tenant'):
-            if value.organization != request.tenant:
+        if request and hasattr(request, 'organization'):
+            if value.organization != request.organization:
                 raise serializers.ValidationError("Account does not belong to your organization")
         return value
 
@@ -177,7 +177,7 @@ class ManualMatchSerializer(serializers.Serializer):
     def validate(self, data):
         """Validate both records exist and belong to organization."""
         request = self.context.get('request')
-        org = request.tenant if request and hasattr(request, 'tenant') else None
+        org = request.organization if request and hasattr(request, 'organization') else None
 
         try:
             statement_line = BankStatementLine.objects.get(
