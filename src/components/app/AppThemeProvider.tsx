@@ -359,7 +359,20 @@ export function AppThemeProvider({
     }, [colorMode]);
 
     // ── Load themes from backend on mount ──
-    useEffect(() => { loadFromBackend(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // PERF: skip the backend fetch when SSR already injected a usable
+    // theme + we have a localStorage cache. The SSR <style id="ssr-theme">
+    // already painted the right colors and `getInitial()` populated the
+    // active theme from cache. The only reason to fetch here is to
+    // populate the FULL list of available themes (system + custom) for
+    // the theme switcher UI — defer until the switcher actually mounts.
+    //
+    // Without this gate every navigation triggers a duplicate
+    // /api/proxy/ui-themes/ round-trip even though the SSR fetch
+    // already had the data.
+    useEffect(() => {
+        if (initial.theme) return;       // SSR/cache already gave us a theme
+        loadFromBackend();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Apply CSS vars when theme/mode changes ──
     // Skip-marker: the synchronous inline apply at line ~325 already wrote

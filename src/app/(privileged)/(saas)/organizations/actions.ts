@@ -4,21 +4,16 @@ import { cache } from "react"
 import { revalidatePath } from "next/cache"
 import { erpFetch } from "@/lib/erp-api"
 
-/**
- * Per-render dedup: when both the privileged layout AND a page (e.g.
- * purchase-orders/page.tsx pulling org currency) need the org list in
- * the same SSR pass, React.cache() collapses them into one backend call.
- * Without this we observed two parallel hits to /api/organizations/ on
- * every cold render — 200-300ms wasted.
- */
+// React.cache() — per-SSR-render dedup only. Safe because it lives within
+// one request scope and respects cookies/headers. Do NOT add unstable_cache
+// here: erpFetch reads cookies(), which is unavailable in the cache
+// runtime and causes 401 → NEXT_REDIRECT (logging users out).
 export const getOrganizations = cache(async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
     } catch (error: unknown) {
-        if ((error instanceof Error ? error.message : String(error)) && (
-            (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
-            (error instanceof Error ? error.message : String(error)).includes('No organization context')
-        )) {
+        const msg = error instanceof Error ? error.message : String(error)
+        if (msg.includes('Authentication credentials') || msg.includes('No organization context')) {
             return []
         }
         console.error("[SaaS] Error fetching organizations:", error);

@@ -139,7 +139,30 @@ function buildRootThemeCSS(colors: any, layout: any, components: any): string {
         `--font-size-h1:1.125rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
         `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
         `--font-weight-normal:400;--font-line-height:1.5;` +
-        `}`;
+        `}` +
+        // ── Heading rules INLINED in the SSR stylesheet ──
+        // Without these, the browser paints <h1> at its default 2em
+        // (32px) until app-theme-engine.css arrives, causing a
+        // "big-text → empty → final" reflow flash on hard reload.
+        //
+        // !important here is intentional + safe: Tailwind v4's preflight
+        // sets `h1 { font-size: inherit }` in its base layer which would
+        // otherwise win on cascade order (preflight loads via the
+        // tailwind <link> right after this <style> block). With
+        // !important, the canonical scale wins from the very first
+        // paint regardless of stylesheet load order.
+        `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;color:${tx}!important;margin:0;}` +
+        `h1{font-size:1.125rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+        `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
+        `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
+        `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +
+        // .app-page-subtitle inlined too — same first-paint reasoning.
+        `.app-page-subtitle{font-size:0.6875rem!important;color:${mt};margin-top:0.125rem;font-weight:700!important;text-transform:uppercase;letter-spacing:0.1em;line-height:1.4;}` +
+        `@media(min-width:768px){.app-page-subtitle{font-size:0.75rem!important;}}` +
+        // Body baseline — match the canonical body size on first paint
+        // so the brief gap between SSR HTML arriving and the Tailwind
+        // bundle finishing download doesn't show oversized text either.
+        `body{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;font-size:0.9375rem;background:${bg};color:${tx};margin:0;}`;
 }
 
 export default async function RootLayout({
@@ -204,6 +227,35 @@ export default async function RootLayout({
                     `suppressHydrationWarning` guards against browser extensions
                     (Polymer-legacy "unresolved" polyfills, theme overriders) that
                     rewrite the first <style> tag before React mounts. */}
+                {/* CANONICAL CSS — must paint on byte 1 even if the theme
+                    fetch failed. Typography is locked & theme-independent
+                    so it goes here BEFORE any theme override has a chance
+                    to load. The theme block below adds colors/spacing on
+                    top — but if it's empty, headings still render correctly. */}
+                <style id="ssr-canonical" suppressHydrationWarning dangerouslySetInnerHTML={{
+                    __html:
+                        `:root{` +
+                        `--font-heading:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
+                        `--font-body:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
+                        `--app-font:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
+                        `--app-font-display:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
+                        `--font-size-h1:1.125rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
+                        `--font-size-h4:0.9375rem;` +
+                        `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
+                        `--font-weight-normal:400;--font-line-height:1.5;` +
+                        `}` +
+                        `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;margin:0;}` +
+                        `h1{font-size:1.125rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+                        `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
+                        `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
+                        `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +
+                        `.app-page-subtitle{font-size:0.6875rem!important;font-weight:700!important;text-transform:uppercase;letter-spacing:0.1em;line-height:1.4;margin-top:0.125rem;}` +
+                        `@media(min-width:768px){.app-page-subtitle{font-size:0.75rem!important;}}` +
+                        `body{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;font-size:0.9375rem;margin:0;}`
+                }} />
+                {/* Per-tenant theme colors (loaded from DB; may be empty
+                    if the fetch fails — canonical CSS above keeps the
+                    page readable in that case). */}
                 <style id="ssr-theme" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />
                 <script id="__tsf_ssr_theme__" type="application/json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: ssrThemeJSON || '{}' }} />
                 <ThemeScript />

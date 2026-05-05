@@ -1,7 +1,7 @@
 'use server'
 
 import { erpFetch, handleAuthError } from '@/lib/erp-api'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function getSaaSModules() {
     try {

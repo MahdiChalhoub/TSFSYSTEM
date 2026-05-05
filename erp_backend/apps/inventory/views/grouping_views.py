@@ -35,7 +35,7 @@ class InventoryGroupViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         qs = InventoryGroup.objects.filter(
-            organization=self.request.tenant
+            organization=self.request.organization
         )
         # Annotate with member count
         qs = qs.annotate(
@@ -67,7 +67,7 @@ class InventoryGroupViewSet(TenantModelViewSet):
         from apps.inventory.models import Inventory
 
         members = InventoryGroupMember.objects.filter(
-            group=group, is_active=True, organization=request.tenant
+            group=group, is_active=True, organization=request.organization
         ).select_related('product', 'product__country_of_origin', 'product__country', 'product__size_unit')
 
         variants = []
@@ -79,7 +79,7 @@ class InventoryGroupViewSet(TenantModelViewSet):
         for m in members:
             p = m.product
             stock = Inventory.objects.filter(
-                product=p, organization=request.tenant
+                product=p, organization=request.organization
             ).aggregate(total=Coalesce(Sum('quantity'), Decimal('0')))['total']
 
             total_stock += stock
@@ -148,7 +148,7 @@ class InventoryGroupMemberViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         qs = InventoryGroupMember.objects.filter(
-            organization=self.request.tenant
+            organization=self.request.organization
         ).select_related('product', 'product__country_of_origin', 'product__size_unit')
         product_id = self.request.query_params.get('product')
         if product_id:
@@ -159,7 +159,7 @@ class InventoryGroupMemberViewSet(TenantModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(organization=self.request.tenant)
+        serializer.save(organization=self.request.organization)
 
 
 class PricingGroupViewSet(TenantModelViewSet):
@@ -175,7 +175,7 @@ class PricingGroupViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         qs = ProductGroup.objects.filter(
-            organization=self.request.tenant
+            organization=self.request.organization
         )
         # Filter by pricing mode
         mode = self.request.query_params.get('pricing_mode')
@@ -224,7 +224,7 @@ class PricingGroupViewSet(TenantModelViewSet):
         group = self.get_object()
         expected = group.base_selling_price_ttc or Decimal('0')
         members = Product.objects.filter(
-            product_group=group, organization=request.tenant
+            product_group=group, organization=request.organization
         )
 
         broken = []
@@ -288,7 +288,7 @@ class PricingGroupViewSet(TenantModelViewSet):
         proposed_price = Decimal(str(proposed_price))
 
         products = Product.objects.filter(
-            product_group=group, organization=request.tenant
+            product_group=group, organization=request.organization
         )
         results = []
         negatives = 0

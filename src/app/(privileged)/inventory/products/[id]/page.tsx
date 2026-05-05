@@ -3,30 +3,21 @@
 /* ═══════════════════════════════════════════════════════════
  *  Product Detail (/inventory/products/[id])
  *  -----------------------------------------------------------
- *  Design philosophy: PRODUCT AS A WORKSPACE
- *
- *  Not a record-with-fields. A workspace where the operator
- *  always sees *who they're looking at* (sticky identity rail
- *  on the left) and walks through a *narrative* of sections
- *  on the right (Pulse → Pricing → Inventory → Packaging →
- *  Groups → Activity).
- *
- *  Implementation choices that flow from the philosophy:
- *    • One accent color per section. Used in the section header
- *      AND in the rail's TOC dot, so the eye matches them up.
- *    • Sections separated by AIR, not by card chrome — borders
- *      only show up when content needs grouping (e.g. inside
- *      the packaging ladder).
- *    • Identity rail collapses into a sticky top header on
- *      mobile; the TOC becomes a horizontal pill scroller.
+ *  Single coherent page (no theme/view switcher):
+ *    • Sticky identity rail on the left — hero, status pills,
+ *      KPIs, primary actions, linked entities, section TOC.
+ *    • Main column: Analytics dashboard up top (action bar,
+ *      health meters, alerts, stock split, business metrics),
+ *      then the full workspace sections below (Pulse, Pricing,
+ *      Inventory, Packaging, Groups, Activity) — one continuous
+ *      scroll. The rail's TOC anchors into those sections.
+ *    • One accent color per section, used in the section header
+ *      AND in the rail's TOC dot so the eye matches them up.
+ *    • Mobile: rail collapses to a sticky header; TOC becomes a
+ *      horizontal pill scroller.
  *    • No emojis. No raw hex. tp-* font tokens throughout.
  *    • All linked entities open as new app tabs via
  *      AdminContext.openTab — never window.open / target=_blank.
- *
- *  Tabs from the previous incarnation are flattened into a
- *  single scrollable page; the only "tabbed" surface that
- *  survives is the Packaging ladder which embeds the existing
- *  ProductPackagingTab inline.
  * ═══════════════════════════════════════════════════════════ */
 
 import { useEffect, useState, useCallback, useContext, useRef } from 'react'
@@ -39,7 +30,7 @@ import {
     DollarSign, Box, Shield, ChevronRight, Loader2,
     Archive, Clock, User as UserIcon, Warehouse, Star, Ruler,
     History, ExternalLink, Copy, Check, Truck, Zap,
-    Calendar, ShoppingCart, Inbox,
+    Calendar, ShoppingCart,
 } from 'lucide-react'
 import ProductPackagingTab from '@/components/inventory/ProductPackagingTab'
 import { toast } from 'sonner'
@@ -131,26 +122,7 @@ export default function ProductsDetailPage() {
     const sectionRefs = useRef<Record<SectionId, HTMLElement | null>>({
         pulse: null, pricing: null, inventory: null, packaging: null, groups: null, activity: null,
     })
-    // Top-level view mode. Six different design philosophies — each shows
-    // the same data through a different lens. Operator picks from the rail.
-    //   analytics — at-a-glance dashboard (default)
-    //   cockpit   — action-first: "what should I do RIGHT NOW?"
-    //   qa        — plain-English questions answered
-    //   lanes     — Buy / Stock / Sell three columns (business flow)
-    //   timeline  — chronological event-stream as primary surface
-    //   workspace — full 360-section drill-down (deepest detail)
-    // Six look-and-feel themes — each is a visually distinct redesign,
-    // not just a data rearrangement. The data is identical; the surfaces,
-    // typography, color treatment, geometry, and rhythm are different.
-    //   analytics  — at-a-glance dashboard (default, app-themed)
-    //   glass      — frosted glass + iridescent neon accents
-    //   editorial  — serif headlines + cream surface + huge numbers
-    //   brutalist  — mono + thick black borders + ALL CAPS labels
-    //   terminal   — amber-on-black + ASCII frames + monospace rows
-    //   workspace  — the existing 360-section drill-down
-    type ViewMode = 'analytics' | 'glass' | 'editorial' | 'brutalist' | 'terminal' | 'workspace'
-    const [viewMode, setViewMode] = useState<ViewMode>('analytics')
-    // Per-warehouse stock breakdown — loaded once and reused by both views.
+    // Per-warehouse stock breakdown — loaded once and used in the dashboard.
     const [stockByWarehouse, setStockByWarehouse] = useState<Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>>([])
 
     const loadData = useCallback(async () => {
@@ -374,40 +346,6 @@ export default function ProductsDetailPage() {
                             <RailKpi label="Reserved"    value={fmtQty(it.reserved_qty)}   color="var(--app-accent)"  icon={<Shield size={12} />} />
                         </div>
 
-                        {/* View philosophy picker — six different design
-                            philosophies, same data. Operator picks whichever
-                            mental model fits the task at hand. */}
-                        <div>
-                            <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">View philosophy</p>
-                            <div className="space-y-0.5">
-                                {([
-                                    { id: 'analytics', label: 'Analytics',  icon: TrendingUp, hint: 'App theme · dashboard' },
-                                    { id: 'glass',     label: 'Glass',      icon: Zap,        hint: 'Frosted · neon accents' },
-                                    { id: 'editorial', label: 'Editorial',  icon: History,    hint: 'Serif · magazine layout' },
-                                    { id: 'brutalist', label: 'Brutalist',  icon: Layers,     hint: 'Mono · thick borders' },
-                                    { id: 'terminal',  label: 'Terminal',   icon: Clock,      hint: 'Amber-on-black CLI' },
-                                    { id: 'workspace', label: 'Workspace',  icon: Box,        hint: 'Full 360 sections' },
-                                ] as { id: ViewMode; label: string; icon: typeof TrendingUp; hint: string }[]).map(v => {
-                                    const Icon = v.icon
-                                    const active = viewMode === v.id
-                                    return (
-                                        <button key={v.id} onClick={() => setViewMode(v.id)}
-                                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left"
-                                            style={{
-                                                background: active ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
-                                                color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
-                                                border: `1px solid ${active ? 'color-mix(in srgb, var(--app-primary) 28%, transparent)' : 'transparent'}`,
-                                            }}
-                                            title={v.hint}>
-                                            <Icon size={12} className="flex-shrink-0" />
-                                            <span className="text-tp-sm font-bold flex-1 truncate">{v.label}</span>
-                                            {active && <ChevronRight size={11} className="flex-shrink-0" />}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
                         {/* Primary actions */}
                         <div className="space-y-1.5 pt-1">
                             <Link href={`/inventory/products/${id}/edit`}
@@ -445,32 +383,29 @@ export default function ProductsDetailPage() {
                             </div>
                         </div>
 
-                        {/* TOC — only meaningful in workspace mode where the
-                            sections are actually scrollable. */}
-                        {viewMode === 'workspace' && (
-                            <div className="pt-2">
-                                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Sections</p>
-                                <nav className="space-y-0.5">
-                                    {SECTIONS.map(s => {
-                                        const Icon = s.icon
-                                        const active = activeSection === s.id
-                                        return (
-                                            <button key={s.id} type="button" onClick={() => scrollToSection(s.id)}
-                                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left"
-                                                style={{
-                                                    background: active ? `color-mix(in srgb, ${s.accent} 8%, transparent)` : 'transparent',
-                                                    color: active ? s.accent : 'var(--app-muted-foreground)',
-                                                }}>
-                                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                      style={{ background: active ? s.accent : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }} />
-                                                <Icon size={12} />
-                                                <span className="text-tp-sm font-bold">{s.label}</span>
-                                            </button>
-                                        )
-                                    })}
-                                </nav>
-                            </div>
-                        )}
+                        {/* TOC — section anchors for the page below. */}
+                        <div className="pt-2">
+                            <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5">Sections</p>
+                            <nav className="space-y-0.5">
+                                {SECTIONS.map(s => {
+                                    const Icon = s.icon
+                                    const active = activeSection === s.id
+                                    return (
+                                        <button key={s.id} type="button" onClick={() => scrollToSection(s.id)}
+                                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left"
+                                            style={{
+                                                background: active ? `color-mix(in srgb, ${s.accent} 8%, transparent)` : 'transparent',
+                                                color: active ? s.accent : 'var(--app-muted-foreground)',
+                                            }}>
+                                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                  style={{ background: active ? s.accent : 'color-mix(in srgb, var(--app-muted-foreground) 30%, transparent)' }} />
+                                            <Icon size={12} />
+                                            <span className="text-tp-sm font-bold">{s.label}</span>
+                                        </button>
+                                    )
+                                })}
+                            </nav>
+                        </div>
 
                         {/* Audit summary */}
                         {(it.updated_at || it.created_at) && (
@@ -486,28 +421,20 @@ export default function ProductsDetailPage() {
 
                 {/* ─── Main column ─── */}
                 <main className="flex-1 min-w-0 overflow-y-auto custom-scrollbar">
-                    {/* Philosophy gallery — sticky top strip so swapping
-                        between layouts is one tap, regardless of which one
-                        is currently rendered. Each thumbnail includes a
-                        tiny visual hint of that philosophy's information
-                        arrangement so the operator picks by *shape*, not by
-                        reading text. */}
-                    <PhilosophyGallery active={viewMode} onPick={setViewMode} />
+                    {/* Analytics dashboard — at-a-glance answers up top:
+                        action bar, three health meters, alerts, stock split,
+                        business metrics, best supplier. */}
+                    <AnalyticsView
+                        it={it}
+                        stockByWarehouse={stockByWarehouse}
+                        margin={margin}
+                        stockColor={stockColor}
+                        onScrollToSections={() => scrollToSection('pulse')}
+                    />
 
-                    {viewMode === 'analytics' && (
-                        <AnalyticsView
-                            it={it}
-                            stockByWarehouse={stockByWarehouse}
-                            margin={margin}
-                            stockColor={stockColor}
-                            onSwitchToWorkspace={() => setViewMode('workspace')}
-                        />
-                    )}
-                    {viewMode === 'glass'     && <GlassView     it={it} stockByWarehouse={stockByWarehouse} margin={margin} stockColor={stockColor} />}
-                    {viewMode === 'editorial' && <EditorialView it={it} stockByWarehouse={stockByWarehouse} margin={margin} stockColor={stockColor} />}
-                    {viewMode === 'brutalist' && <BrutalistView it={it} stockByWarehouse={stockByWarehouse} margin={margin} stockColor={stockColor} />}
-                    {viewMode === 'terminal'  && <TerminalView  it={it} stockByWarehouse={stockByWarehouse} margin={margin} stockColor={stockColor} />}
-                    {viewMode === 'workspace' && (
+                    {/* Workspace sections — full drill-down below the
+                        dashboard. Operators who need details keep scrolling;
+                        the rail's section nav anchors here. */}
                     <div className="px-4 md:px-10 py-6 md:py-10 max-w-3xl mx-auto space-y-12">
 
                         {/* PULSE */}
@@ -684,7 +611,6 @@ export default function ProductsDetailPage() {
 
                         <div className="h-32" />
                     </div>
-                    )}
                 </main>
             </div>
 
@@ -942,24 +868,23 @@ function ProductAuditTimeline({ productId }: { productId: number }) {
 /* ═════════════════════════════════════════════════════════════
  *  ANALYTICS VIEW — the simple-first dashboard
  *  ----------------------------------------------------------------
- *  Quick-scan layout: meters · alerts · stock split · business
- *  metrics · best supplier · recent activity. The goal is "in 5
- *  seconds, do I know enough to act?". For deeper drill-down the
- *  operator switches the rail toggle to Workspace.
+ *  Quick-scan layout: action bar · meters · alerts · stock split ·
+ *  business metrics · best supplier. Goal: "in 5 seconds, do I know
+ *  enough to act?". Sections below this dashboard hold the deeper
+ *  drill-down — the rail's TOC anchors there.
  *
- *  Anything that needs endpoints we don't have yet (sales velocity
- *  charts, supplier price history, loss analysis time-series) renders
- *  as an honest empty state with a hint about what it'll show — so
- *  the layout reads as the right shape from day one.
+ *  Empty states for missing endpoints (sales velocity, supplier
+ *  history) render as honest "shows up here once …" so the layout
+ *  reads as the right shape from day one.
  * ═════════════════════════════════════════════════════════════ */
 function AnalyticsView({
-    it, stockByWarehouse, margin, stockColor, onSwitchToWorkspace,
+    it, stockByWarehouse, margin, stockColor, onScrollToSections,
 }: {
     it: Record<string, any>
     stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>
     margin: number | null
     stockColor: string
-    onSwitchToWorkspace: () => void
+    onScrollToSections: () => void
 }) {
     const onHand = Number(it.on_hand_qty || 0)
     const minStock = Number(it.min_stock_level || 0)
@@ -998,9 +923,9 @@ function AnalyticsView({
                 <ActionButton color="var(--app-warning, #f59e0b)"  icon={<Edit3 size={13} />}        label="Adjust stock"  onClick={() => toast.info('Stock adjustment flow not wired yet')} />
                 <ActionButton color="var(--app-accent)"            icon={<Calendar size={13} />}     label="Expiry alert"  onClick={() => toast.info('Expiry alert flow not wired yet')} />
                 <span className="ml-auto text-tp-xxs text-app-muted-foreground">
-                    Need everything?{' '}
-                    <button onClick={onSwitchToWorkspace} className="font-bold underline" style={{ color: 'var(--app-primary)' }}>
-                        Open full workspace
+                    Need details?{' '}
+                    <button onClick={onScrollToSections} className="font-bold underline" style={{ color: 'var(--app-primary)' }}>
+                        Jump to sections
                     </button>
                 </span>
             </div>
@@ -1106,22 +1031,7 @@ function AnalyticsView({
                 </div>
             )}
 
-            {/* ── Recent activity (audit timeline, last 12) ── */}
-            <div className="rounded-2xl p-4 space-y-3"
-                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                <div className="flex items-center gap-2">
-                    <Inbox size={14} style={{ color: 'var(--app-muted-foreground)' }} />
-                    <h3 className="text-tp-md font-black text-app-foreground">Recent activity</h3>
-                    <button onClick={onSwitchToWorkspace}
-                        className="ml-auto text-tp-xxs font-bold underline"
-                        style={{ color: 'var(--app-primary)' }}>
-                        Open full timeline
-                    </button>
-                </div>
-                <ProductAuditTimeline productId={Number(it.id)} />
-            </div>
-
-            <div className="h-16" />
+            <div className="h-2" />
         </div>
     )
 }
@@ -1165,595 +1075,6 @@ function BigStat({ label, value, hint, color }: { label: string; value: string; 
             <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">{label}</p>
             <p className="text-tp-lg font-black tabular-nums tracking-tight" style={{ color }}>{value}</p>
             {hint && <p className="text-tp-xxs text-app-muted-foreground truncate">{hint}</p>}
-        </div>
-    )
-}
-
-
-/* ═════════════════════════════════════════════════════════════
- *  PHILOSOPHY 2 — COCKPIT VIEW
- *  ----------------------------------------------------------------
- *  Action-first. The page asks "what do I do RIGHT NOW?" and
- *  surfaces the answer as recommended actions, ranked by urgency.
- *  Data is supporting context inside each recommendation card.
- *
- *  Recommendations are computed from the product state — no manual
- *  curation. Add a new condition by appending to `recommendations`.
- * ═════════════════════════════════════════════════════════════ */
-type Recommendation = {
-    id: string
-    severity: 'critical' | 'warning' | 'info'
-    icon: typeof ShoppingCart
-    title: string
-    why: string
-    cta: { label: string; onClick: () => void }
-}
-function CockpitView({ it, stockByWarehouse, margin, stockColor }: {
-    it: Record<string, any>; stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number }>; margin: number | null; stockColor: string
-}) {
-    const onHand = Number(it.on_hand_qty || 0)
-    const minStock = Number(it.min_stock_level || 0)
-    const reorder = Number(it.reorder_point || 0)
-    const recommendations: Recommendation[] = []
-
-    if (onHand <= 0) {
-        recommendations.push({
-            id: 'oos', severity: 'critical', icon: ShoppingCart,
-            title: 'Out of stock — order now',
-            why: `Zero units across ${stockByWarehouse.length || 'all'} warehouse${stockByWarehouse.length === 1 ? '' : 's'}. Last reorder threshold was ${fmtQty(reorder)}.`,
-            cta: { label: 'Open purchase order', onClick: () => toast.info('PO flow not wired yet') },
-        })
-    } else if (reorder > 0 && onHand <= reorder) {
-        recommendations.push({
-            id: 'reorder', severity: 'warning', icon: ShoppingCart,
-            title: `At reorder point — order ${Math.max(reorder * 2 - onHand, reorder)} units`,
-            why: `On-hand ${fmtQty(onHand)} vs reorder ${fmtQty(reorder)}. Suggested order = 2× reorder − on-hand.`,
-            cta: { label: 'Open purchase order', onClick: () => toast.info('PO flow not wired yet') },
-        })
-    } else if (minStock > 0 && onHand <= minStock) {
-        recommendations.push({
-            id: 'low', severity: 'warning', icon: AlertTriangle,
-            title: 'Low stock — review reorder point',
-            why: `On-hand ${fmtQty(onHand)} vs min ${fmtQty(minStock)}. Either increase the reorder point or schedule a transfer.`,
-            cta: { label: 'Adjust reorder', onClick: () => toast.info('Adjust flow not wired yet') },
-        })
-    }
-    if (margin != null && margin < 10) {
-        recommendations.push({
-            id: 'margin', severity: 'warning', icon: TrendingUp,
-            title: `Margin only ${margin.toFixed(1)}% — review price`,
-            why: `Selling ${fmt(it.selling_price_ttc)} / cost ${fmt(it.cost_price)}. Below the 10% healthy threshold.`,
-            cta: { label: 'Edit price', onClick: () => toast.info('Edit flow not wired yet') },
-        })
-    }
-    if (it.group_sync_status === 'BROKEN') {
-        recommendations.push({
-            id: 'group', severity: 'warning', icon: AlertTriangle,
-            title: 'Group price diverged',
-            why: `Local price ${fmt(it.selling_price_ttc)} differs from group expected price. Pick a side or restore the group sync.`,
-            cta: { label: 'Resolve in workspace', onClick: () => toast.info('Workspace pricing section') },
-        })
-    }
-    if (it.is_active === false) {
-        recommendations.push({
-            id: 'inactive', severity: 'info', icon: AlertTriangle,
-            title: 'Product is inactive',
-            why: 'Inactive products hide from POS / catalogues. Reactivate or archive permanently.',
-            cta: { label: 'Reactivate', onClick: () => toast.info('Reactivate flow not wired yet') },
-        })
-    }
-    if (recommendations.length === 0) {
-        recommendations.push({
-            id: 'all-good', severity: 'info', icon: CheckCircle2,
-            title: 'Everything looks good',
-            why: 'Stock above reorder, margin healthy, group in sync, product active. Nothing requires attention right now.',
-            cta: { label: 'Open analytics', onClick: () => toast.info('Switch to Analytics in the rail') },
-        })
-    }
-
-    const tone = (s: Recommendation['severity']) =>
-        s === 'critical' ? { color: 'var(--app-error)' }
-        : s === 'warning' ? { color: 'var(--app-warning, #f59e0b)' }
-        : { color: 'var(--app-info, #3b82f6)' }
-
-    return (
-        <div className="px-4 md:px-8 py-5 md:py-8 max-w-3xl mx-auto space-y-4">
-            <div>
-                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">Cockpit</p>
-                <h2 className="text-2xl font-black text-app-foreground tracking-tight mt-0.5">What needs attention</h2>
-                <p className="text-tp-sm text-app-muted-foreground mt-1">
-                    Auto-ranked recommendations based on this product&apos;s current state. Most urgent first.
-                </p>
-            </div>
-            <div className="space-y-2.5">
-                {recommendations.map((r, i) => {
-                    const Icon = r.icon
-                    const t = tone(r.severity)
-                    return (
-                        <div key={r.id} className="rounded-2xl p-4 flex items-start gap-3"
-                             style={{
-                                 background: i === 0 ? `color-mix(in srgb, ${t.color} 6%, var(--app-surface))` : 'var(--app-surface)',
-                                 border: `1px solid color-mix(in srgb, ${t.color} ${i === 0 ? 30 : 18}%, var(--app-border))`,
-                             }}>
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                                 style={{ background: `color-mix(in srgb, ${t.color} 14%, transparent)`, color: t.color }}>
-                                <Icon size={18} />
-                            </div>
-                            <div className="flex-1 min-w-0 space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-tp-md font-black text-app-foreground">{r.title}</h3>
-                                    <span className="text-tp-xxs font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
-                                          style={{ background: `color-mix(in srgb, ${t.color} 12%, transparent)`, color: t.color }}>
-                                        {r.severity}
-                                    </span>
-                                </div>
-                                <p className="text-tp-sm text-app-muted-foreground leading-snug">{r.why}</p>
-                                <div className="pt-1">
-                                    <button onClick={r.cta.onClick}
-                                        className="inline-flex items-center gap-1.5 text-tp-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all hover:brightness-110"
-                                        style={{ background: t.color, color: 'white' }}>
-                                        {r.cta.label} <ChevronRight size={11} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
-            {/* Snapshot strip — quiet, supporting context */}
-            <div className="rounded-xl p-3 grid grid-cols-2 sm:grid-cols-4 gap-2"
-                 style={{ background: 'color-mix(in srgb, var(--app-foreground) 3%, transparent)' }}>
-                <Snapshot label="On hand"  value={fmtQty(onHand)} color={stockColor} />
-                <Snapshot label="Available" value={fmtQty(it.available_qty)} color="var(--app-primary)" />
-                <Snapshot label="Margin" value={margin != null ? `${margin.toFixed(1)}%` : '—'} color={margin != null && margin < 10 ? 'var(--app-warning)' : 'var(--app-success)'} />
-                <Snapshot label="Reorder at" value={fmtQty(reorder)} color="var(--app-muted-foreground)" />
-            </div>
-        </div>
-    )
-}
-function Snapshot({ label, value, color }: { label: string; value: string; color: string }) {
-    return (
-        <div>
-            <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">{label}</p>
-            <p className="text-tp-md font-black tabular-nums" style={{ color }}>{value}</p>
-        </div>
-    )
-}
-
-
-/* ═════════════════════════════════════════════════════════════
- *  PHILOSOPHY 3 — Q&A VIEW
- *  ----------------------------------------------------------------
- *  Each section is a question an operator typically asks about a
- *  product. The data answers in plain English. Conversational —
- *  feels like the system understands what you want.
- * ═════════════════════════════════════════════════════════════ */
-function QnAView({ it, stockByWarehouse, margin, stockColor }: {
-    it: Record<string, any>; stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number }>; margin: number | null; stockColor: string
-}) {
-    const onHand = Number(it.on_hand_qty || 0)
-    const reorder = Number(it.reorder_point || 0)
-    const totalProfit = Number(it.total_profit ?? 0)
-    return (
-        <div className="px-4 md:px-8 py-5 md:py-8 max-w-3xl mx-auto space-y-6">
-            <Question icon={Box} accent="var(--app-info, #3b82f6)" question="How much do I have?">
-                <p className="text-tp-md text-app-foreground leading-relaxed">
-                    <span className="font-black tabular-nums" style={{ color: stockColor }}>{fmtQty(onHand)} units</span> on hand
-                    {Number(it.reserved_qty) > 0 && <> · <span className="font-bold tabular-nums">{fmtQty(it.reserved_qty)}</span> reserved</>}
-                    {' — '}<span className="font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>{fmtQty(it.available_qty)}</span> available to allocate.
-                    {reorder > 0 && (
-                        <>{' '}Reorder point set at <span className="font-bold tabular-nums">{fmtQty(reorder)}</span>.</>
-                    )}
-                </p>
-                {stockByWarehouse.length > 0 && (
-                    <div className="mt-3 space-y-1">
-                        <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">Per warehouse</p>
-                        {stockByWarehouse.slice(0, 5).map(s => (
-                            <div key={s.warehouse} className="flex items-center justify-between text-tp-sm py-1">
-                                <span className="text-app-foreground">{s.warehouse_name || `Warehouse #${s.warehouse}`}</span>
-                                <span className="font-mono font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>{fmtQty(s.quantity)}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </Question>
-
-            <Question icon={DollarSign} accent="var(--app-success)" question="Am I making money?">
-                {margin != null ? (
-                    <p className="text-tp-md text-app-foreground leading-relaxed">
-                        Each unit costs <span className="font-black tabular-nums" style={{ color: 'var(--app-info)' }}>{fmt(it.cost_price)}</span>{' '}
-                        and sells for <span className="font-black tabular-nums" style={{ color: 'var(--app-success)' }}>{fmt(it.selling_price_ttc)}</span>{' '}
-                        — that&apos;s a <span className={`font-black tabular-nums`} style={{ color: margin < 10 ? 'var(--app-warning)' : 'var(--app-success)' }}>{margin.toFixed(1)}% margin</span>.
-                        {it.group_expected_price && Number(it.group_expected_price) !== Number(it.selling_price_ttc) && (
-                            <>{' '}Your pricing group expects <span className="font-bold tabular-nums">{fmt(it.group_expected_price)}</span> — you&apos;re currently diverging.</>
-                        )}
-                    </p>
-                ) : (
-                    <p className="text-tp-md text-app-muted-foreground">Set both cost and selling price to compute margin.</p>
-                )}
-            </Question>
-
-            <Question icon={TrendingUp} accent="var(--app-accent)" question="How fast is it moving?">
-                <p className="text-tp-md text-app-muted-foreground leading-relaxed">
-                    {Number(it.total_sold) > 0
-                        ? <>Sold <span className="font-black text-app-foreground tabular-nums">{fmtQty(it.total_sold)}</span> units lifetime, generating <span className="font-black text-app-foreground tabular-nums">{fmt(totalProfit)}</span> profit.</>
-                        : <>No sales recorded yet. Sales velocity will appear here once transactions land.</>}
-                </p>
-            </Question>
-
-            <Question icon={Truck} accent="var(--app-warning)" question="When should I reorder?">
-                {reorder > 0 ? (
-                    <p className="text-tp-md text-app-foreground leading-relaxed">
-                        {onHand <= reorder ? (
-                            <>You&apos;re <span className="font-black" style={{ color: 'var(--app-warning)' }}>at or below the reorder point</span>. Suggested order: <span className="font-black tabular-nums">{fmtQty(Math.max(reorder * 2 - onHand, reorder))}</span> units.</>
-                        ) : (
-                            <>You have <span className="font-black tabular-nums">{fmtQty(onHand - reorder)}</span> units of headroom above the reorder point of <span className="font-bold tabular-nums">{fmtQty(reorder)}</span>.</>
-                        )}
-                    </p>
-                ) : (
-                    <p className="text-tp-md text-app-muted-foreground">No reorder point configured. Set one to get reorder recommendations.</p>
-                )}
-            </Question>
-
-            <Question icon={Tag} accent="var(--app-primary)" question="What's it linked to?">
-                <p className="text-tp-md text-app-foreground leading-relaxed">
-                    Brand <span className="font-bold">{it.brand_name || '—'}</span> ·
-                    Category <span className="font-bold">{it.category_name || '—'}</span> ·
-                    Unit <span className="font-bold">{it.unit_name || it.unit_code || '—'}</span>
-                    {it.product_group_name && (
-                        <>{' · Pricing group '}<span className="font-bold">{it.product_group_name}</span></>
-                    )}
-                </p>
-            </Question>
-        </div>
-    )
-}
-function Question({ icon: Icon, accent, question, children }: { icon: typeof Box; accent: string; question: string; children: React.ReactNode }) {
-    return (
-        <div>
-            <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                     style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)`, color: accent }}>
-                    <Icon size={13} />
-                </div>
-                <h3 className="text-tp-lg font-black text-app-foreground tracking-tight">{question}</h3>
-            </div>
-            <div className="pl-9">{children}</div>
-        </div>
-    )
-}
-
-
-/* ═════════════════════════════════════════════════════════════
- *  PHILOSOPHY 4 — LANES VIEW
- *  ----------------------------------------------------------------
- *  Three vertical lanes mirroring how the product flows through the
- *  business: Buy → Stock → Sell. Each lane has its own column with
- *  the metrics + actions that belong to that life-stage.
- * ═════════════════════════════════════════════════════════════ */
-function LanesView({ it, stockByWarehouse, margin, stockColor }: {
-    it: Record<string, any>; stockByWarehouse: Array<{ warehouse: number; warehouse_name?: string; quantity: number }>; margin: number | null; stockColor: string
-}) {
-    return (
-        <div className="px-4 md:px-6 py-5 md:py-6 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                {/* BUY */}
-                <Lane icon={ShoppingCart} accent="var(--app-warning, #f59e0b)" title="Buy" subtitle="Acquisition flow">
-                    <LaneRow label="Cost price"      value={fmt(it.cost_price)} accent="var(--app-info)" />
-                    <LaneRow label="VAT rate"        value={it.tva_rate != null ? `${it.tva_rate}%` : '—'} />
-                    <LaneRow label="Reorder point"   value={fmtQty(it.reorder_point)} accent="var(--app-warning)" />
-                    <LaneRow label="Best supplier"   value={String(it.best_supplier_name || '—')} />
-                    <LaneRow label="Best price"      value={it.best_supplier_price != null ? fmt(it.best_supplier_price) : '—'} accent="var(--app-success)" />
-                    <LaneRow label="Lifetime POs"    value={fmtQty(it.total_purchases ?? it.purchases_count ?? 0)} />
-                    <LaneAction label="Open purchase order" color="var(--app-warning, #f59e0b)" icon={<ShoppingCart size={12} />} onClick={() => toast.info('PO flow not wired yet')} />
-                </Lane>
-
-                {/* STOCK */}
-                <Lane icon={Box} accent="var(--app-info, #3b82f6)" title="Stock" subtitle="What we hold today">
-                    <LaneRow label="On hand"         value={fmtQty(it.on_hand_qty)} accent={stockColor} bold />
-                    <LaneRow label="Reserved"        value={fmtQty(it.reserved_qty)} accent="var(--app-accent)" />
-                    <LaneRow label="Available"       value={fmtQty(it.available_qty)} accent="var(--app-primary)" />
-                    <LaneRow label="Min · Max"       value={`${fmtQty(it.min_stock_level)} · ${fmtQty(it.max_stock_level)}`} />
-                    {stockByWarehouse.length > 0 && (
-                        <div className="pt-2 mt-2 border-t border-app-border/40 space-y-1">
-                            <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">By warehouse</p>
-                            {stockByWarehouse.slice(0, 4).map(s => (
-                                <div key={s.warehouse} className="flex items-center justify-between text-tp-xs">
-                                    <span className="text-app-foreground truncate">{s.warehouse_name || `Warehouse #${s.warehouse}`}</span>
-                                    <span className="font-mono font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>{fmtQty(s.quantity)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    <LaneAction label="Adjust stock" color="var(--app-info, #3b82f6)" icon={<Edit3 size={12} />} onClick={() => toast.info('Adjust flow not wired yet')} />
-                </Lane>
-
-                {/* SELL */}
-                <Lane icon={DollarSign} accent="var(--app-success)" title="Sell" subtitle="Outbound performance">
-                    <LaneRow label="Selling TTC"     value={fmt(it.selling_price_ttc)} accent="var(--app-success)" bold />
-                    <LaneRow label="Selling HT"      value={fmt(it.selling_price_ht)} />
-                    <LaneRow label="Margin"          value={margin != null ? `${margin.toFixed(1)}%` : '—'} accent={margin != null && margin < 10 ? 'var(--app-warning)' : 'var(--app-primary)'} bold />
-                    <LaneRow label="Lifetime sold"   value={fmtQty(it.total_sold ?? 0)} accent="var(--app-success)" />
-                    <LaneRow label="Total profit"    value={fmt(it.total_profit ?? 0)} accent="var(--app-accent)" />
-                    {it.group_expected_price && Number(it.group_expected_price) !== Number(it.selling_price_ttc) && (
-                        <div className="rounded-lg px-2 py-1.5 mt-2 text-tp-xs"
-                             style={{ background: 'color-mix(in srgb, var(--app-error) 6%, transparent)', color: 'var(--app-error)' }}>
-                            Group expects {fmt(it.group_expected_price)} — divergence
-                        </div>
-                    )}
-                    <LaneAction label="Edit price" color="var(--app-success)" icon={<Edit3 size={12} />} onClick={() => toast.info('Edit flow not wired yet')} />
-                </Lane>
-            </div>
-        </div>
-    )
-}
-function Lane({ icon: Icon, accent, title, subtitle, children }: { icon: typeof Box; accent: string; title: string; subtitle: string; children: React.ReactNode }) {
-    return (
-        <div className="rounded-2xl overflow-hidden flex flex-col"
-             style={{ background: 'var(--app-surface)', border: `1px solid color-mix(in srgb, ${accent} 25%, var(--app-border))` }}>
-            <div className="px-4 py-3 flex items-center gap-2"
-                 style={{ background: `color-mix(in srgb, ${accent} 6%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${accent} 18%, var(--app-border))` }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                     style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)`, color: accent }}>
-                    <Icon size={15} />
-                </div>
-                <div>
-                    <h3 className="text-tp-md font-black text-app-foreground">{title}</h3>
-                    <p className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: accent }}>{subtitle}</p>
-                </div>
-            </div>
-            <div className="flex-1 p-3 space-y-1">{children}</div>
-        </div>
-    )
-}
-function LaneRow({ label, value, accent, bold }: { label: string; value: string; accent?: string; bold?: boolean }) {
-    return (
-        <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-app-bg/40">
-            <span className="text-tp-xs font-bold text-app-muted-foreground">{label}</span>
-            <span className={`tabular-nums ${bold ? 'text-tp-md font-black' : 'text-tp-sm font-bold'}`}
-                  style={{ color: accent || 'var(--app-foreground)' }}>{value}</span>
-        </div>
-    )
-}
-function LaneAction({ label, color, icon, onClick }: { label: string; color: string; icon: React.ReactNode; onClick: () => void }) {
-    return (
-        <button type="button" onClick={onClick}
-            className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 rounded-lg text-tp-xs font-black uppercase tracking-wider transition-all hover:brightness-110"
-            style={{ background: color, color: 'white' }}>
-            {icon} {label}
-        </button>
-    )
-}
-
-
-/* ═════════════════════════════════════════════════════════════
- *  PHILOSOPHY 5 — TIMELINE VIEW
- *  ----------------------------------------------------------------
- *  The product IS its history. Vertical timeline as the dominant
- *  surface; current state shown in a sticky header above the spine.
- *  Audit-natively oriented — best for compliance / forensic use.
- * ═════════════════════════════════════════════════════════════ */
-function TimelineView({ it, margin, stockColor }: { it: Record<string, any>; margin: number | null; stockColor: string }) {
-    return (
-        <div className="px-4 md:px-8 py-5 md:py-8 max-w-3xl mx-auto space-y-4">
-            {/* Sticky header — current state */}
-            <div className="sticky top-0 z-10 -mx-4 md:-mx-8 px-4 md:px-8 py-3"
-                 style={{ background: 'color-mix(in srgb, var(--app-surface) 92%, transparent)', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--app-border)' }}>
-                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">Current state</p>
-                <div className="flex items-center gap-3 mt-1 flex-wrap text-tp-sm">
-                    <span className="font-black text-app-foreground">{String(it.name)}</span>
-                    <span className="font-mono text-app-muted-foreground">{String(it.sku || `#${it.id}`)}</span>
-                    <span className="font-bold tabular-nums" style={{ color: stockColor }}>{fmtQty(it.on_hand_qty)} on hand</span>
-                    <span className="font-bold tabular-nums" style={{ color: 'var(--app-success)' }}>{fmt(it.selling_price_ttc)}</span>
-                    {margin != null && <span className="font-bold tabular-nums" style={{ color: 'var(--app-primary)' }}>{margin.toFixed(1)}% margin</span>}
-                </div>
-            </div>
-
-            <div>
-                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">Timeline</p>
-                <h2 className="text-2xl font-black text-app-foreground tracking-tight mt-0.5">Every change, top to bottom</h2>
-                <p className="text-tp-sm text-app-muted-foreground mt-1">
-                    Most recent first. Stock movements and sales transactions will join the audit events here once those endpoints land.
-                </p>
-            </div>
-
-            <ProductAuditTimeline productId={Number(it.id)} />
-        </div>
-    )
-}
-
-
-/* ═════════════════════════════════════════════════════════════
- *  PHILOSOPHY GALLERY — top-strip selector
- *  ----------------------------------------------------------------
- *  Shows every philosophy as a thumbnail card with a *visual* hint
- *  of its information arrangement, so the operator picks by shape
- *  rather than by reading text. Sticky at the top of the main column
- *  so swapping is one tap from any view.
- * ═════════════════════════════════════════════════════════════ */
-type PhilosophyId = 'analytics' | 'cockpit' | 'qa' | 'lanes' | 'timeline' | 'workspace'
-
-function PhilosophyGallery({ active, onPick }: { active: PhilosophyId; onPick: (id: PhilosophyId) => void }) {
-    const items: { id: PhilosophyId; label: string; tag: string; accent: string; preview: React.ReactNode }[] = [
-        {
-            id: 'analytics', label: 'Analytics', tag: 'Quick read', accent: 'var(--app-primary)',
-            preview: <PreviewAnalytics />,
-        },
-        {
-            id: 'cockpit', label: 'Cockpit', tag: 'What to do now', accent: 'var(--app-error)',
-            preview: <PreviewCockpit />,
-        },
-        {
-            id: 'qa', label: 'Q & A', tag: 'Plain-English', accent: 'var(--app-success)',
-            preview: <PreviewQnA />,
-        },
-        {
-            id: 'lanes', label: 'Lanes', tag: 'Buy · Stock · Sell', accent: 'var(--app-warning, #f59e0b)',
-            preview: <PreviewLanes />,
-        },
-        {
-            id: 'timeline', label: 'Timeline', tag: 'Chronological', accent: 'var(--app-accent)',
-            preview: <PreviewTimeline />,
-        },
-        {
-            id: 'workspace', label: 'Workspace', tag: 'Full sections', accent: 'var(--app-info, #3b82f6)',
-            preview: <PreviewWorkspace />,
-        },
-    ]
-
-    return (
-        <div className="sticky top-0 z-20 px-4 md:px-8 py-3"
-             style={{ background: 'color-mix(in srgb, var(--app-surface) 92%, transparent)', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--app-border)' }}>
-            <div className="flex items-center gap-2 mb-2">
-                <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground">Design philosophy</p>
-                <span className="text-tp-xxs text-app-muted-foreground">— pick by shape, not by name</span>
-            </div>
-            <div className="flex items-stretch gap-2 overflow-x-auto custom-scrollbar -mx-1 px-1">
-                {items.map(p => {
-                    const isActive = active === p.id
-                    return (
-                        <button key={p.id} type="button" onClick={() => onPick(p.id)}
-                            className="flex-shrink-0 rounded-xl p-2 text-left transition-all hover:brightness-105 active:scale-[0.98]"
-                            style={{
-                                width: 130,
-                                background: isActive
-                                    ? `color-mix(in srgb, ${p.accent} 10%, var(--app-surface))`
-                                    : 'var(--app-surface)',
-                                border: `1px solid ${isActive
-                                    ? `color-mix(in srgb, ${p.accent} 45%, transparent)`
-                                    : 'var(--app-border)'}`,
-                                boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${p.accent} 18%, transparent)` : undefined,
-                            }}
-                            title={`${p.label} — ${p.tag}`}>
-                            {/* Thumbnail */}
-                            <div className="rounded-lg overflow-hidden mb-1.5"
-                                 style={{
-                                     height: 56,
-                                     background: 'color-mix(in srgb, var(--app-foreground) 4%, transparent)',
-                                     border: `1px solid color-mix(in srgb, ${p.accent} 18%, transparent)`,
-                                 }}>
-                                <div className="w-full h-full p-1.5" style={{ color: p.accent }}>
-                                    {p.preview}
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-tp-xs font-black truncate"
-                                      style={{ color: isActive ? p.accent : 'var(--app-foreground)' }}>
-                                    {p.label}
-                                </span>
-                                {isActive && (
-                                    <Check size={9} style={{ color: p.accent }} />
-                                )}
-                            </div>
-                            <p className="text-tp-xxs font-bold text-app-muted-foreground truncate">{p.tag}</p>
-                        </button>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
-
-/* ─── Tiny SVG-ish thumbnails (CSS only — no SVG payload) ───
-   Each thumbnail is a 4–8 element abstract diagram of how that
-   philosophy arranges information. Same currentColor for every
-   element so they pick up the philosophy's accent automatically. */
-function PreviewAnalytics() {
-    return (
-        <div className="w-full h-full flex flex-col gap-1">
-            <div className="flex gap-0.5">
-                <div className="flex-1 h-2 rounded-sm" style={{ background: 'currentColor', opacity: 0.6 }} />
-                <div className="flex-1 h-2 rounded-sm" style={{ background: 'currentColor', opacity: 0.4 }} />
-                <div className="flex-1 h-2 rounded-sm" style={{ background: 'currentColor', opacity: 0.8 }} />
-            </div>
-            <div className="flex-1 flex gap-0.5">
-                <div className="flex-1 rounded-sm" style={{ background: 'currentColor', opacity: 0.15 }} />
-                <div className="flex-1 rounded-sm" style={{ background: 'currentColor', opacity: 0.15 }} />
-            </div>
-            <div className="h-1.5 rounded-sm" style={{ background: 'currentColor', opacity: 0.1 }} />
-        </div>
-    )
-}
-function PreviewCockpit() {
-    return (
-        <div className="w-full h-full flex flex-col gap-1">
-            <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: 'currentColor' }} />
-                <div className="flex-1 h-2.5 rounded-sm" style={{ background: 'currentColor', opacity: 0.85 }} />
-            </div>
-            <div className="flex items-center gap-1">
-                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: 'currentColor', opacity: 0.6 }} />
-                <div className="flex-1 h-2 rounded-sm" style={{ background: 'currentColor', opacity: 0.4 }} />
-            </div>
-            <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'currentColor', opacity: 0.4 }} />
-                <div className="flex-1 h-1.5 rounded-sm" style={{ background: 'currentColor', opacity: 0.25 }} />
-            </div>
-        </div>
-    )
-}
-function PreviewQnA() {
-    return (
-        <div className="w-full h-full flex flex-col justify-around">
-            <div>
-                <div className="h-1.5 rounded-sm w-2/3" style={{ background: 'currentColor', opacity: 0.85 }} />
-                <div className="h-1 mt-0.5 rounded-sm w-full" style={{ background: 'currentColor', opacity: 0.25 }} />
-            </div>
-            <div>
-                <div className="h-1.5 rounded-sm w-3/4" style={{ background: 'currentColor', opacity: 0.85 }} />
-                <div className="h-1 mt-0.5 rounded-sm w-5/6" style={{ background: 'currentColor', opacity: 0.25 }} />
-            </div>
-            <div>
-                <div className="h-1.5 rounded-sm w-1/2" style={{ background: 'currentColor', opacity: 0.85 }} />
-                <div className="h-1 mt-0.5 rounded-sm w-4/5" style={{ background: 'currentColor', opacity: 0.25 }} />
-            </div>
-        </div>
-    )
-}
-function PreviewLanes() {
-    return (
-        <div className="w-full h-full flex gap-0.5">
-            {[0.7, 0.5, 0.85].map((op, i) => (
-                <div key={i} className="flex-1 rounded-sm flex flex-col gap-0.5 p-0.5"
-                     style={{ background: 'currentColor', opacity: op * 0.18 }}>
-                    <div className="h-1 rounded-sm" style={{ background: 'currentColor', opacity: op }} />
-                    <div className="h-0.5 rounded-sm w-3/4" style={{ background: 'currentColor', opacity: op * 0.6 }} />
-                    <div className="h-0.5 rounded-sm w-1/2" style={{ background: 'currentColor', opacity: op * 0.6 }} />
-                </div>
-            ))}
-        </div>
-    )
-}
-function PreviewTimeline() {
-    return (
-        <div className="w-full h-full flex pl-1.5">
-            <div className="w-px relative" style={{ background: 'currentColor', opacity: 0.3 }}>
-                <div className="absolute -left-1 top-0 w-2 h-2 rounded-full" style={{ background: 'currentColor' }} />
-                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full" style={{ background: 'currentColor', opacity: 0.6 }} />
-                <div className="absolute -left-1 bottom-0 w-2 h-2 rounded-full" style={{ background: 'currentColor', opacity: 0.4 }} />
-            </div>
-            <div className="flex-1 flex flex-col justify-between pl-2 py-0.5">
-                <div className="h-1 rounded-sm w-4/5" style={{ background: 'currentColor', opacity: 0.7 }} />
-                <div className="h-1 rounded-sm w-3/5" style={{ background: 'currentColor', opacity: 0.5 }} />
-                <div className="h-1 rounded-sm w-2/3" style={{ background: 'currentColor', opacity: 0.35 }} />
-            </div>
-        </div>
-    )
-}
-function PreviewWorkspace() {
-    return (
-        <div className="w-full h-full flex gap-1">
-            <div className="w-3 flex flex-col gap-0.5">
-                {[0.85, 0.55, 0.55, 0.55, 0.55].map((op, i) => (
-                    <div key={i} className="h-1 rounded-sm" style={{ background: 'currentColor', opacity: op }} />
-                ))}
-            </div>
-            <div className="flex-1 flex flex-col gap-0.5">
-                <div className="h-1.5 rounded-sm" style={{ background: 'currentColor', opacity: 0.5 }} />
-                <div className="flex-1 rounded-sm" style={{ background: 'currentColor', opacity: 0.12 }} />
-                <div className="h-1.5 rounded-sm" style={{ background: 'currentColor', opacity: 0.5 }} />
-                <div className="flex-1 rounded-sm" style={{ background: 'currentColor', opacity: 0.12 }} />
-            </div>
         </div>
     )
 }

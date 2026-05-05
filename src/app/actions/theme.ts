@@ -130,13 +130,6 @@ async function apiCall<T>(
     tenantHeaders['X-Tenant-Id'] = tenantSlug
   }
 
-  console.log('[API Call]', {
-    endpoint,
-    url,
-    hasToken: !!token,
-    tokenPreview: token ? `${token.substring(0, 10)}...` : 'none'
-  })
-
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -147,19 +140,10 @@ async function apiCall<T>(
     },
   })
 
-  console.log('[API Response]', {
-    endpoint,
-    status: response.status,
-    ok: response.ok
-  })
-
   if (!response.ok) {
     const error = await response.text()
-    console.warn('[API Error]', {
-      endpoint,
-      status: response.status,
-      error: error.substring(0, 200)
-    })
+    // Only warn on actual failures — successful calls are noise.
+    console.warn('[Theme API]', endpoint, response.status, error.substring(0, 200))
     throw new Error(`API Error: ${response.status} - ${error}`)
   }
 
@@ -170,38 +154,22 @@ async function apiCall<T>(
 // THEME QUERIES
 // ============================================================================
 
-/**
- * Get all available themes (system + custom)
- */
 export async function getThemes(tenantSlug?: string): Promise<ThemesListResponse> {
   try {
-    console.log('[Theme Action] Fetching themes from:', `${API_BASE}/api/ui-themes/`)
     const result = await apiCall<any>('ui-themes/', {}, tenantSlug)
-    console.log('[Theme Action] Successfully loaded themes:', {
-      systemCount: result.system?.length || 0,
-      customCount: result.custom?.length || 0
-    })
-
-    // Transform snake_case to camelCase for TypeScript
     return {
       system: (result.system || []).map(transformThemeFromAPI),
       custom: (result.custom || []).map(transformThemeFromAPI),
       current: {
         theme_slug: result.current?.theme_slug || 'finance-pro',
-        color_mode: result.current?.color_mode || 'dark'
-      }
+        color_mode: result.current?.color_mode || 'dark',
+      },
     }
   } catch (error) {
-    console.warn('[Theme Action] Failed to fetch themes:', error)
-    console.warn('[Theme Action] API_BASE:', API_BASE)
-    // Return empty data instead of throwing
+    console.warn('[Theme Action] fetch failed:', error)
     return {
-      system: [],
-      custom: [],
-      current: {
-        theme_slug: 'finance-pro',
-        color_mode: 'dark'
-      }
+      system: [], custom: [],
+      current: { theme_slug: 'finance-pro', color_mode: 'dark' },
     }
   }
 }

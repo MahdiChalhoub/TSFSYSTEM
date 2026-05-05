@@ -16,10 +16,7 @@ export async function getSites() {
         const result = await erpFetch('sites/')
         return result.map((site: Record<string, any>) => ({
             ...site,
-            _count: {
-                warehouses: 0, // Django doesn't provide this by default, but we can add it later if needed
-                users: 0
-            }
+            _count: { warehouses: 0, users: 0 },
         }))
     } catch (error: unknown) {
         handleAuthError(error)
