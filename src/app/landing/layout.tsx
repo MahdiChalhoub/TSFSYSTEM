@@ -21,19 +21,19 @@ export default function LandingLayout({
             <header className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800/50">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <div className="w-10 h-10 bg-app-success rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
                             <span className="text-white font-black text-xl">{PLATFORM_CONFIG.name.charAt(0)}</span>
                         </div>
                         <span className="text-2xl font-black tracking-tighter">
                             {PLATFORM_CONFIG.name.split(' ')[0]}
-                            <span className="text-emerald-500">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
+                            <span className="text-app-success">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
                         </span>
                     </div>
 
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
+                    <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-app-muted-foreground">
                         <a href="#features" className="hover:text-white transition-colors">Features</a>
                         <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-                        <a href="#register" className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
+                        <a href="#register" className="bg-app-success hover:bg-app-success text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
                             Get Started
                         </a>
                     </nav>
@@ -45,11 +45,11 @@ export default function LandingLayout({
             </main>
 
             <footer className="bg-slate-950 border-t border-slate-900 py-20">
-                <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-slate-400">
+                <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-app-muted-foreground">
                     <div className="col-span-2">
                         <span className="text-2xl font-black text-white tracking-tighter mb-4 block">
                             {PLATFORM_CONFIG.name.split(' ')[0]}
-                            <span className="text-emerald-500">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
+                            <span className="text-app-success">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
                         </span>
                         <p className="max-w-xs leading-relaxed">
                             The ultimate SaaS platform for modern business management.
@@ -73,7 +73,7 @@ export default function LandingLayout({
                         </ul>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
+                <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-app-muted-foreground">
                     &copy; {new Date().getFullYear()} {PLATFORM_CONFIG.federation_name}. All rights reserved.
                 </div>
             </footer>

@@ -38,14 +38,14 @@ interface LifecycleBarProps {
 
 const STATUS_CONFIG: Record<LifecycleStatus, { label: string; color: string; icon: any }> = {
     DRAFT: { label: 'Draft', color: 'bg-muted text-muted-foreground', icon: Circle },
-    SUBMITTED: { label: 'Submitted', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20', icon: Send },
-    VERIFIED: { label: 'Verified', color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', icon: ShieldCheck },
-    APPROVED: { label: 'Approved', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: CheckCircle2 },
+    SUBMITTED: { label: 'Submitted', color: 'bg-app-info/10 text-app-info border-app-info/20', icon: Send },
+    VERIFIED: { label: 'Verified', color: 'bg-app-info/10 text-app-info border-app-info/20', icon: ShieldCheck },
+    APPROVED: { label: 'Approved', color: 'bg-app-success/10 text-app-success border-app-success/20', icon: CheckCircle2 },
     POSTED: { label: 'Posted', color: 'bg-violet-500 text-white', icon: Lock },
     LOCKED: { label: 'Locked', color: 'bg-slate-900 text-white', icon: Lock },
-    REJECTED: { label: 'Rejected', color: 'bg-red-500/10 text-red-500 border-red-500/20', icon: XCircle },
-    CANCELLED: { label: 'Cancelled', color: 'bg-gray-500/10 text-gray-500 border-gray-500/20', icon: XCircle },
-    REVERSED: { label: 'Reversed', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20', icon: RotateCcw },
+    REJECTED: { label: 'Rejected', color: 'bg-app-error/10 text-app-error border-app-error/20', icon: XCircle },
+    CANCELLED: { label: 'Cancelled', color: 'bg-gray-500/10 text-app-muted-foreground border-gray-500/20', icon: XCircle },
+    REVERSED: { label: 'Reversed', color: 'bg-app-warning/10 text-app-warning border-app-warning/20', icon: RotateCcw },
 }
 
 const STEPS: LifecycleStatus[] = ['DRAFT', 'SUBMITTED', 'VERIFIED', 'APPROVED', 'POSTED']
@@ -83,7 +83,7 @@ export function LifecycleBar({ status, approvals = [], onAction, canAction, isLo
                     )}
 
                     {status === 'VERIFIED' && canAction('approve', 2) && (
-                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => onAction('approve', { level: 2 })} disabled={isLoading}>
+                        <Button size="sm" className="bg-app-success hover:bg-app-success" onClick={() => onAction('approve', { level: 2 })} disabled={isLoading}>
                             <CheckCircle2 className="w-4 h-4 mr-2" /> Approve L2
                         </Button>
                     )}

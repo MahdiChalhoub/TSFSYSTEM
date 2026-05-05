@@ -43,11 +43,11 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 const BEHAVIOR_BADGES: Record<string, { label: string; cls: string }> = {
-    ADDED_TO_TTC: { label: '+ TTC', cls: 'bg-blue-500/15 text-blue-400' },
-    WITHHELD_FROM_AP: { label: '− AP', cls: 'bg-amber-500/15 text-amber-400' },
+    ADDED_TO_TTC: { label: '+ TTC', cls: 'bg-app-info/15 text-blue-400' },
+    WITHHELD_FROM_AP: { label: '− AP', cls: 'bg-app-warning/15 text-amber-400' },
     EMBEDDED_IN_PRICE: { label: '∈ Price', cls: 'bg-purple-500/15 text-purple-400' },
-    RECOVERED: { label: 'Recovered', cls: 'bg-emerald-500/15 text-emerald-400' },
-    NON_RECOVERABLE: { label: 'Non-rec', cls: 'bg-rose-500/15 text-rose-400' },
+    RECOVERED: { label: 'Recovered', cls: 'bg-app-success/15 text-emerald-400' },
+    NON_RECOVERABLE: { label: 'Non-rec', cls: 'bg-app-error/15 text-rose-400' },
 }
 
 function formatN(v: number | string | undefined, fallback = '—') {
@@ -106,7 +106,7 @@ export function TaxLinePreviewTable({
                                 <tr key={idx} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
                                     <td className="px-4 py-2">
                                         <div className="flex items-center gap-1.5">
-                                            <span className={`font-semibold ${TYPE_COLORS[line.type] || 'text-gray-400'}`}>{line.type}</span>
+                                            <span className={`font-semibold ${TYPE_COLORS[line.type] || 'text-app-muted-foreground'}`}>{line.type}</span>
                                             {line.name && <span className="text-[10px]" style={{ color: 'var(--app-muted)' }}>({line.name})</span>}
                                         </div>
                                     </td>

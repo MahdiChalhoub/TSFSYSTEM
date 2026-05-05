@@ -412,7 +412,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                     {/* Product Count Preview */}
                     {productPreview !== null && (
                         <div className="flex items-center gap-3 p-4 bg-app-info-bg dark:bg-blue-950/30 rounded-lg border border-app-info dark:border-blue-800">
-                            <div className="p-2 bg-blue-600 rounded-lg"><Package className="w-5 h-5 text-white" /></div>
+                            <div className="p-2 bg-app-info rounded-lg"><Package className="w-5 h-5 text-white" /></div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Products to count</p>
                                 <p className="text-2xl font-bold text-app-info dark:text-blue-300">{productPreview.toLocaleString()}</p>

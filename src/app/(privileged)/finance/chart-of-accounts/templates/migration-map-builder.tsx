@@ -410,8 +410,8 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                                     })
                                 }}
                                     className={`px-2 py-1 rounded text-tp-xxs font-bold uppercase tracking-wider transition-all ${mapStatus === s
-                                        ? s === 'PUBLISHED' ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/30'
-                                            : s === 'APPROVED' ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/30'
+                                        ? s === 'PUBLISHED' ? 'bg-app-success/20 text-green-400 ring-1 ring-green-500/30'
+                                            : s === 'APPROVED' ? 'bg-app-info/20 text-blue-400 ring-1 ring-app-info/30'
                                                 : 'bg-app-primary/20 text-app-primary ring-1 ring-app-primary/30'
                                         : 'bg-app-surface text-app-muted-foreground hover:bg-app-hover'
                                         }`}>
@@ -429,9 +429,9 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Overall Score */}
                         <div className="flex items-center gap-2">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${qualityReport.quality_score >= 80 ? 'bg-green-500/15 text-green-400' :
-                                qualityReport.quality_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                                    'bg-red-500/15 text-app-error'
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${qualityReport.quality_score >= 80 ? 'bg-app-success/15 text-green-400' :
+                                qualityReport.quality_score >= 60 ? 'bg-app-warning/15 text-amber-400' :
+                                    'bg-app-error/15 text-app-error'
                                 }`}>
                                 {Math.round(qualityReport.quality_score)}
                             </div>
@@ -450,9 +450,9 @@ export default function MigrationMapBuilder({ templates, templateKeys }: Props) 
                         </div>
                         {/* Confidence */}
                         <div className="flex items-center gap-1">
-                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-green-500/15 text-green-400">{qualityReport.confidence.high} hi</span>
-                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-amber-500/15 text-amber-400">{qualityReport.confidence.medium} md</span>
-                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-red-500/15 text-app-error">{qualityReport.confidence.low} lo</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-app-success/15 text-green-400">{qualityReport.confidence.high} hi</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-app-warning/15 text-amber-400">{qualityReport.confidence.medium} md</span>
+                            <span className="px-1.5 py-0.5 rounded text-tp-xxs font-bold bg-app-error/15 text-app-error">{qualityReport.confidence.low} lo</span>
                         </div>
                         <div className="h-8 w-px bg-app-border/50 hidden sm:block" />
                         {/* Critical Roles */}

@@ -206,7 +206,7 @@ export default function DeferredExpensesPage() {
                                 <p className="text-3xl font-bold text-indigo-900 mt-1">{totalCommitted.toLocaleString()}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-indigo-200/60 flex items-center justify-center">
-                                <DollarSign size={22} className="text-indigo-500" />
+                                <DollarSign size={22} className="text-app-info" />
                             </div>
                         </div>
                     </CardContent>

@@ -94,13 +94,13 @@ export function FilterChips({
           <Badge
             key={condition.id}
             variant="secondary"
-            className="gap-2 px-3 py-1.5 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors group"
+            className="gap-2 px-3 py-1.5 cursor-pointer hover:bg-app-error-soft dark:hover:bg-red-900/20 transition-colors group"
             onClick={() => onRemoveCondition(condition.id)}
           >
             <span className="font-semibold">{field.label}</span>
             <span className="text-app-muted-foreground">{getOperatorLabel(condition.operator)}</span>
-            {value && <span className="text-blue-600 dark:text-blue-400">{value}</span>}
-            <X className="w-3 h-3 opacity-50 group-hover:opacity-100 group-hover:text-red-600 dark:group-hover:text-red-400" />
+            {value && <span className="text-app-info dark:text-blue-400">{value}</span>}
+            <X className="w-3 h-3 opacity-50 group-hover:opacity-100 group-hover:text-app-error dark:group-hover:text-red-400" />
           </Badge>
         )
       })}

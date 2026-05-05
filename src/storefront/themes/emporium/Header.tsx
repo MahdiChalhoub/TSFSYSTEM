@@ -43,7 +43,7 @@ export default function EmporiumHeader() {
                 <div className="max-w-7xl mx-auto flex justify-between items-center text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-1.5"><MapPin size={12} className="text-app-muted-foreground" /> Deliver to <span className="text-app-foreground">Global</span></div>
-                        <Link href="#" className="hover:text-amber-600 transition-colors">Sell on {storeName}</Link>
+                        <Link href="#" className="hover:text-app-warning transition-colors">Sell on {storeName}</Link>
                     </div>
                     <div className="flex items-center gap-6">
                         <Link href="#" className="flex items-center gap-1.5 hover:text-app-foreground transition-colors"><HelpCircle size={12} /> Support</Link>
@@ -60,7 +60,7 @@ export default function EmporiumHeader() {
                         {orgLogo ? (
                             <img src={orgLogo} alt={storeName} className="w-10 h-10 rounded-xl object-cover border border-app-border" />
                         ) : (
-                            <div className="w-10 h-10 bg-yellow-400 border border-yellow-500 shadow-sm rounded-xl flex items-center justify-center text-app-foreground">
+                            <div className="w-10 h-10 bg-yellow-400 border border-app-warning shadow-sm rounded-xl flex items-center justify-center text-app-foreground">
                                 <Store size={20} />
                             </div>
                         )}
@@ -82,7 +82,7 @@ export default function EmporiumHeader() {
                             className="w-full h-12 bg-app-surface-2 border-y border-app-border px-4 text-sm font-medium focus:outline-none"
                         />
                     </div>
-                    <button className="h-12 w-16 bg-yellow-400 border border-yellow-500 rounded-r-xl flex items-center justify-center text-app-foreground hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-200/50 active:scale-95">
+                    <button className="h-12 w-16 bg-yellow-400 border border-app-warning rounded-r-xl flex items-center justify-center text-app-foreground hover:bg-app-warning transition-all shadow-lg shadow-yellow-200/50 active:scale-95">
                         <Search size={22} />
                     </button>
                 </div>
@@ -91,7 +91,7 @@ export default function EmporiumHeader() {
                 <div className="flex items-center gap-2 lg:gap-4 shrink-0">
                     {isAuthenticated ? (
                         <Link href={`/tenant/${slug}/account`} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-app-bg transition-all group">
-                            <div className="w-10 h-10 bg-app-surface-2 border border-app-border rounded-full flex items-center justify-center text-app-muted-foreground group-hover:bg-yellow-400 group-hover:border-yellow-500 group-hover:text-app-foreground transition-all">
+                            <div className="w-10 h-10 bg-app-surface-2 border border-app-border rounded-full flex items-center justify-center text-app-muted-foreground group-hover:bg-yellow-400 group-hover:border-app-warning group-hover:text-app-foreground transition-all">
                                 <User size={20} />
                             </div>
                             <div className="hidden lg:block text-left">
@@ -101,7 +101,7 @@ export default function EmporiumHeader() {
                         </Link>
                     ) : (
                         <Link href={`/tenant/${slug}/register`} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-app-bg transition-all group">
-                            <div className="w-10 h-10 bg-app-surface-2 border border-app-border rounded-full flex items-center justify-center text-app-muted-foreground group-hover:bg-yellow-400 group-hover:border-yellow-500 group-hover:text-app-foreground transition-all">
+                            <div className="w-10 h-10 bg-app-surface-2 border border-app-border rounded-full flex items-center justify-center text-app-muted-foreground group-hover:bg-yellow-400 group-hover:border-app-warning group-hover:text-app-foreground transition-all">
                                 <User size={20} />
                             </div>
                             <div className="hidden lg:block text-left">
@@ -115,7 +115,7 @@ export default function EmporiumHeader() {
 
                     <button
                         onClick={() => setCartOpen(true)}
-                        className="relative w-12 h-12 flex items-center justify-center text-app-foreground hover:text-yellow-600 transition-all active:scale-90"
+                        className="relative w-12 h-12 flex items-center justify-center text-app-foreground hover:text-app-warning transition-all active:scale-90"
                     >
                         <ShoppingCart size={24} />
                         {cartCount > 0 && (
@@ -133,12 +133,12 @@ export default function EmporiumHeader() {
 
             {/* Sub Nav / Category Bar - Desktop Only */}
             <div className="max-w-7xl mx-auto px-6 hidden lg:flex items-center gap-8 py-3">
-                <button className="flex items-center gap-2 text-sm font-black text-app-foreground uppercase tracking-wider hover:text-yellow-600 transition-colors">
+                <button className="flex items-center gap-2 text-sm font-black text-app-foreground uppercase tracking-wider hover:text-app-warning transition-colors">
                     <Menu size={16} /> Shop by Category
                 </button>
                 <nav className="flex items-center gap-6">
                     <Link href={`/tenant/${slug}`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">New Releases</Link>
-                    <Link href={`/tenant/${slug}/search`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors text-orange-600">Flash Deals</Link>
+                    <Link href={`/tenant/${slug}/search`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors text-app-warning">Flash Deals</Link>
                     <Link href={`/tenant/${slug}/categories`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Global Brands</Link>
                     <Link href={`/tenant/${slug}/register`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Gift Cards</Link>
                 </nav>
@@ -158,7 +158,7 @@ export default function EmporiumHeader() {
                     <nav className="space-y-1">
                         <Link href={`/tenant/${slug}`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-app-foreground font-black text-sm rounded-xl hover:bg-app-bg">HOME</Link>
                         <Link href={`/tenant/${slug}/categories`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-app-foreground font-black text-sm rounded-xl hover:bg-app-bg">CATEGORIES</Link>
-                        <Link href={`/tenant/${slug}/search`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-app-foreground font-black text-sm rounded-xl hover:bg-app-bg text-orange-600">FLASH DEALS</Link>
+                        <Link href={`/tenant/${slug}/search`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-app-foreground font-black text-sm rounded-xl hover:bg-app-bg text-app-warning">FLASH DEALS</Link>
                     </nav>
                 </div>
             )}

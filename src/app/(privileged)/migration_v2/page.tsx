@@ -59,8 +59,8 @@ const IMPORT_MODULES = [
         label: 'Stock / Inventory',
         description: 'Opening stock balances and reconciliation',
         icon: Box,
-        color: 'bg-cyan-50 dark:bg-cyan-900/30',
-        iconColor: 'text-cyan-600',
+        color: 'bg-app-info-soft dark:bg-cyan-900/30',
+        iconColor: 'text-app-info',
     },
 ]
 

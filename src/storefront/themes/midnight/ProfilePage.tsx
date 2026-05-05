@@ -27,11 +27,11 @@ export default function MidnightProfilePage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
                 <div className="text-center space-y-8">
-                    <div className="w-24 h-24 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-blue-400 rotate-12">
+                    <div className="w-24 h-24 bg-app-info/10 border border-app-info/20 rounded-[2rem] flex items-center justify-center mx-auto text-blue-400 rotate-12">
                         <Shield size={48} />
                     </div>
                     <h1 className="text-3xl font-black text-white italic">Session Required</h1>
-                    <Link href={path('/login')} className="inline-block px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
+                    <Link href={path('/login')} className="inline-block px-10 py-4 bg-app-success text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
                 </div>
             </div>
         )
@@ -61,7 +61,7 @@ export default function MidnightProfilePage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-app-info/5 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
@@ -71,8 +71,8 @@ export default function MidnightProfilePage() {
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Identity <span className="text-blue-400">Control</span></h1>
                 </div>
 
-                {message && <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-xs font-bold flex items-center gap-3"><CheckCircle2 size={16} />{message}</div>}
-                {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+                {message && <div className="p-4 bg-app-success/10 border border-app-success/20 rounded-2xl text-emerald-400 text-xs font-bold flex items-center gap-3"><CheckCircle2 size={16} />{message}</div>}
+                {error && <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3rem] space-y-6 relative overflow-hidden">
@@ -82,17 +82,17 @@ export default function MidnightProfilePage() {
                             <div className="relative">
                                 <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="text" value={name} onChange={e => setName(e.target.value)}
-                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Full Name" />
+                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="Full Name" />
                             </div>
                             <div className="relative">
                                 <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Email" />
+                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="Email" />
                             </div>
                             <div className="relative">
                                 <Building2 size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="text" value={company} onChange={e => setCompany(e.target.value)}
-                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Company (optional)" />
+                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="Company (optional)" />
                             </div>
                         </div>
                     </div>
@@ -104,21 +104,21 @@ export default function MidnightProfilePage() {
                             <div className="relative">
                                 <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type={showPass ? 'text' : 'password'} value={currentPass} onChange={e => setCurrentPass(e.target.value)}
-                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-14 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Current Password" />
+                                    className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-14 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="Current Password" />
                                 <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white transition-colors">
                                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
                             <input type={showPass ? 'text' : 'password'} value={newPass} onChange={e => setNewPass(e.target.value)}
-                                className="w-full bg-slate-950/60 border border-white/5 px-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="New Password (min 8 chars)" />
+                                className="w-full bg-slate-950/60 border border-white/5 px-5 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="New Password (min 8 chars)" />
                             <input type={showPass ? 'text' : 'password'} value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
-                                className="w-full bg-slate-950/60 border border-white/5 px-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Confirm New Password" />
+                                className="w-full bg-slate-950/60 border border-white/5 px-5 py-4 rounded-2xl text-white outline-none focus:border-app-info transition-all font-medium" placeholder="Confirm New Password" />
                         </div>
                     </div>
                 </div>
 
                 <button onClick={handleSave} disabled={saving}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white p-5 rounded-[2rem] font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-xl shadow-blue-900/30">
+                    className="w-full bg-app-info hover:bg-app-info text-white p-5 rounded-[2rem] font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-xl shadow-blue-900/30">
                     {saving ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Save size={18} /> Update Identity</>}
                 </button>
             </div>

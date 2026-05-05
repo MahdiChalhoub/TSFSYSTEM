@@ -94,7 +94,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                     <div className="flex justify-between items-center mb-8">
                         <h3 className="text-lg font-bold text-app-foreground font-serif lowercase italic">Profit trends (Last 6 Months)</h3>
                         <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
-                            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Income</div>
+                            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-app-success"></div> Income</div>
                             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-stone-300"></div> Expense</div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                 <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
                                     <div className="w-full flex justify-center gap-1 h-full items-end">
                                         <div
-                                            className="w-1/3 bg-emerald-500 rounded-t-lg transition-all duration-500 group-hover:bg-emerald-600"
+                                            className="w-1/3 bg-app-success rounded-t-lg transition-all duration-500 group-hover:bg-app-success"
                                             style={{ height: `${incHeight}%` }}
                                             title={`Income: ${t.income.toFixed(0)}`}
                                         ></div>
@@ -171,7 +171,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                 <th className="p-6 text-right">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-stone-50">
+                        <tbody className="divide-y divide-app-border">
                             {stats.recentEntries.map((entry: Record<string, any>) => (
                                 <tr key={entry.id} className="hover:bg-app-surface/50 transition-colors group">
                                     <td className="p-6 text-app-muted-foreground font-mono text-xs">

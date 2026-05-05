@@ -168,9 +168,9 @@ export default function DriverDeliveryPage() {
  <h1 className="text-sm font-black">Delivery Driver View</h1>
  <p className="text-[11px] text-app-foreground/50">Order #{delivery.order_ref || delivery.id}</p>
  </div>
- <span className={`ml-auto text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${delivery.status === 'IN_TRANSIT' ? 'bg-blue-500/30 text-blue-300' :
+ <span className={`ml-auto text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${delivery.status === 'IN_TRANSIT' ? 'bg-app-info/30 text-blue-300' :
  delivery.status === 'PENDING' ? 'bg-app-warning/30 text-amber-300' :
- 'bg-slate-500/30 text-slate-300'
+ 'bg-slate-500/30 text-app-muted-foreground'
  }`}>{delivery.status}</span>
  </div>
 
@@ -217,7 +217,7 @@ export default function DriverDeliveryPage() {
  </div>
  {/* 🔑 Code 1: Register ↔ Driver — shown to driver, give to cashier */}
  {delivery.require_pos_return_code && delivery.pos_return_code && (
- <div className="mt-3 bg-indigo-900/60 border border-indigo-500/30 rounded-xl p-3">
+ <div className="mt-3 bg-indigo-900/60 border border-app-info/30 rounded-xl p-3">
  <div className="flex items-center gap-1.5 mb-1">
  <KeyRound size={12} className="text-indigo-300" />
  <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Your Return Code</span>
@@ -236,7 +236,7 @@ export default function DriverDeliveryPage() {
  <button
  onClick={handleUpdateGPS}
  disabled={gpsUpdating}
- className="w-full py-3 px-4 rounded-2xl bg-indigo-600/60 border border-indigo-500/40 flex items-center justify-between active:scale-98 transition-all disabled:opacity-60"
+ className="w-full py-3 px-4 rounded-2xl bg-app-info/60 border border-app-info/40 flex items-center justify-between active:scale-98 transition-all disabled:opacity-60"
  >
  <div className="flex items-center gap-2.5">
  <Navigation size={16} className={gpsUpdating ? 'animate-pulse text-indigo-300' : 'text-indigo-300'} />
@@ -290,7 +290,7 @@ export default function DriverDeliveryPage() {
  <button
  onClick={handleConfirmDelivery}
  disabled={submitting}
- className="w-full py-4 rounded-xl bg-emerald-500 text-app-foreground font-black text-base hover:bg-emerald-400 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+ className="w-full py-4 rounded-xl bg-app-success text-app-foreground font-black text-base hover:bg-emerald-400 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
  >
  {submitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle size={20} />}
  Confirm Delivery

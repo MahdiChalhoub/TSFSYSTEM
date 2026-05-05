@@ -272,8 +272,8 @@ export default function SaaSPlatformDashboard() {
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${org.is_active
-                                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                                ? 'bg-app-success/15 text-emerald-400 border border-app-success/30'
+                                                : 'bg-app-error/15 text-rose-400 border border-app-error/30'
                                             }`}>
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </span>

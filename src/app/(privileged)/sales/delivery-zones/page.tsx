@@ -115,7 +115,7 @@ export default function DeliveryZonesPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-success flex items-center justify-center">
                             <MapPin size={20} className="text-white" />
                         </div>
                         Delivery Zones
@@ -123,7 +123,7 @@ export default function DeliveryZonesPage() {
                     <p className="text-sm text-app-muted-foreground mt-1">Configure delivery zones with fees and estimated transit times</p>
                 </div>
                 <button onClick={startCreate}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-all flex items-center gap-2">
+                    className="px-4 py-2 bg-app-success text-white rounded-lg text-sm font-bold hover:bg-app-success transition-all flex items-center gap-2">
                     <Plus size={16} /> Add Zone
                 </button>
             </header>
@@ -132,7 +132,7 @@ export default function DeliveryZonesPage() {
                 <Card className="border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Layers size={24} className="text-teal-500" />
+                            <Layers size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Zones</p>
                                 <p className="text-2xl font-bold">{zones.length}</p>
@@ -169,7 +169,7 @@ export default function DeliveryZonesPage() {
 
             {/* Create/Edit Form */}
             {showForm && (
-                <Card className="border-2 border-teal-200">
+                <Card className="border-2 border-app-success">
                     <CardHeader className="py-3 flex flex-row items-center justify-between">
                         <CardTitle className="text-base">{editId ? 'Edit Zone' : 'New Zone'}</CardTitle>
                         <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground"><X size={18} /></button>
@@ -204,7 +204,7 @@ export default function DeliveryZonesPage() {
                                     Cancel
                                 </button>
                                 <button onClick={handleSave}
-                                    className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 flex items-center gap-1">
+                                    className="px-4 py-1.5 bg-app-success text-white rounded-lg text-xs font-bold hover:bg-app-success flex items-center gap-1">
                                     <Check size={14} /> {editId ? 'Update' : 'Create'}
                                 </button>
                             </div>
@@ -219,7 +219,7 @@ export default function DeliveryZonesPage() {
                     <CardContent className="text-center py-16 text-app-muted-foreground">
                         <MapPin size={48} className="mx-auto mb-3 opacity-30" />
                         <p>No delivery zones configured</p>
-                        <button onClick={startCreate} className="mt-3 text-teal-600 text-sm font-medium hover:underline">Create your first zone</button>
+                        <button onClick={startCreate} className="mt-3 text-app-success text-sm font-medium hover:underline">Create your first zone</button>
                     </CardContent>
                 </Card>
             ) : (
@@ -229,8 +229,8 @@ export default function DeliveryZonesPage() {
                             <CardContent className="py-4">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                                            <MapPin size={16} className="text-teal-600" />
+                                        <div className="w-8 h-8 rounded-lg bg-app-success-soft flex items-center justify-center">
+                                            <MapPin size={16} className="text-app-success" />
                                         </div>
                                         <div>
                                             <p className="font-bold text-sm">{z.name}</p>

@@ -73,7 +73,7 @@ export default function GlobalInventoryManager({
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Header Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
+                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-app-border flex items-center gap-6">
                     <div className="w-16 h-16 rounded-3xl bg-app-info-bg text-app-info flex items-center justify-center">
                         <Package size={32} />
                     </div>
@@ -82,7 +82,7 @@ export default function GlobalInventoryManager({
                         <div className="text-3xl font-black text-app-foreground">{stats.totalItems.toLocaleString()}</div>
                     </div>
                 </div>
-                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
+                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-app-border flex items-center gap-6">
                     <div className="w-16 h-16 rounded-3xl bg-app-success-bg text-app-success flex items-center justify-center">
                         <TrendingUp size={32} />
                     </div>
@@ -91,7 +91,7 @@ export default function GlobalInventoryManager({
                         <div className="text-3xl font-black text-app-foreground">{stats.totalStock.toLocaleString()}</div>
                     </div>
                 </div>
-                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-gray-50 flex items-center gap-6">
+                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/5 border border-app-border flex items-center gap-6">
                     <div className="w-16 h-16 rounded-3xl bg-app-warning-bg text-app-warning flex items-center justify-center">
                         <DollarSign size={32} />
                     </div>
@@ -136,7 +136,7 @@ export default function GlobalInventoryManager({
                                 <th className="px-8 py-6 text-[10px] font-black text-app-warning uppercase tracking-[0.2em] border-b border-app-border text-right">Value (Cost)</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-app-border">
                             {data.products.map((product) => (
                                 <tr key={product.id} className="hover:bg-app-surface transition-colors group">
                                     <td className="px-8 py-6">
@@ -160,7 +160,7 @@ export default function GlobalInventoryManager({
                                         </div>
                                     </td>
                                     {data.sites.map((site) => (
-                                        <td key={site.id} className="px-6 py-6 text-center border-l border-gray-50/50">
+                                        <td key={site.id} className="px-6 py-6 text-center border-l border-app-border/50">
                                             <div className={clsx(
                                                 "inline-block px-3 py-1.5 rounded-xl font-black text-sm",
                                                 product.siteStock[site.id] > 0 ? "bg-app-info-bg text-app-info" : "bg-app-surface text-app-faint"

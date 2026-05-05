@@ -46,7 +46,7 @@ export default function ModuleGate({ module, moduleName, children }: ModuleGateP
     if (state === 'loading') {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-app-muted-foreground animate-spin" />
             </div>
         );
     }
@@ -55,13 +55,13 @@ export default function ModuleGate({ module, moduleName, children }: ModuleGateP
         const displayName = moduleName || module.charAt(0).toUpperCase() + module.slice(1);
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-                <div className="w-20 h-20 rounded-3xl bg-red-50 flex items-center justify-center mb-6">
+                <div className="w-20 h-20 rounded-3xl bg-app-error-soft flex items-center justify-center mb-6">
                     <ShieldX className="w-10 h-10 text-red-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-app-foreground mb-2">
                     Module Not Available
                 </h2>
-                <p className="text-gray-500 max-w-md mb-6">
+                <p className="text-app-muted-foreground max-w-md mb-6">
                     The <strong>{displayName}</strong> module is not enabled for your organization.
                     Contact your administrator to activate it.
                 </p>

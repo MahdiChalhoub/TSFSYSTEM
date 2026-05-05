@@ -25,9 +25,9 @@ export function QuickProducts({ products, onSelect }: QuickProductsProps) {
  <button
  key={product.id}
  onClick={() => onSelect(product)}
- className="w-full text-left p-3 rounded-xl border border-app-border hover:border-indigo-200 hover:bg-indigo-50/50 transition-all group"
+ className="w-full text-left p-3 rounded-xl border border-app-border hover:border-app-info hover:bg-app-info-soft/50 transition-all group"
  >
- <div className="text-xs font-bold text-app-foreground group-hover:text-indigo-600 truncate">{product.name}</div>
+ <div className="text-xs font-bold text-app-foreground group-hover:text-app-info truncate">{product.name}</div>
  <div className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter mt-1">${product.price.toFixed(2)}</div>
  </button>
  ))

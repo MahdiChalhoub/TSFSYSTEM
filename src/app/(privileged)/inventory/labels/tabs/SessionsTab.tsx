@@ -178,7 +178,7 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
                                 <button onClick={() => doAction('reprint_exact', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-primary/10" title="Exact Reprint"><RotateCcw size={13} style={{ color: v('--app-primary') }} /></button>
                                 <button onClick={() => doAction('reprint_regenerate', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-warning/10" title="Regenerate"><RefreshCw size={13} style={{ color: v('--app-warning') }} /></button>
                             </>}
-                            {s.status && !['COMPLETED', 'CANCELLED'].includes(s.status) && <button onClick={() => doAction('cancel', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-rose-500/10" title="Cancel"><XCircle size={13} className="text-app-error" /></button>}
+                            {s.status && !['COMPLETED', 'CANCELLED'].includes(s.status) && <button onClick={() => doAction('cancel', s.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-error/10" title="Cancel"><XCircle size={13} className="text-app-error" /></button>}
                         </div>
                     </div>
                 ))}

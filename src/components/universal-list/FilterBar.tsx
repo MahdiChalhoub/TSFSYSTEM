@@ -40,7 +40,7 @@ export default function FilterBar({
  value={search}
  onChange={e => onSearchChange(e.target.value)}
  placeholder={searchPlaceholder}
- className="w-full pl-9 pr-4 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 focus:border-app-info outline-none transition-all"
+ className="w-full pl-9 pr-4 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-app-info focus:border-app-info outline-none transition-all"
  />
  {search && (
  <button
@@ -74,7 +74,7 @@ export default function FilterBar({
  <Filter size={13} />
  More Filters
  {activeCount > 0 && (
- <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-app-foreground text-[10px] rounded-full">
+ <span className="ml-1 px-1.5 py-0.5 bg-app-info text-app-foreground text-[10px] rounded-full">
  {activeCount}
  </span>
  )}
@@ -95,7 +95,7 @@ export default function FilterBar({
  <select
  value={values[filter.key] ?? ''}
  onChange={e => onFilterChange(filter.key, e.target.value)}
- className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 outline-none"
+ className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-app-info outline-none"
  >
  <option value="">All</option>
  {filter.options?.map(opt => (
@@ -118,7 +118,7 @@ export default function FilterBar({
  value={values[filter.key] ?? ''}
  onChange={e => onFilterChange(filter.key, e.target.value)}
  placeholder={filter.placeholder || filter.label}
- className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 outline-none"
+ className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-app-info outline-none"
  />
  )}
  </div>
@@ -189,7 +189,7 @@ function FilterDropdown({
  value={value ?? ''}
  onChange={e => onChange(e.target.value)}
  placeholder={filter.placeholder || filter.label}
- className="px-3 py-2 text-xs border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 outline-none"
+ className="px-3 py-2 text-xs border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-app-info outline-none"
  />
  );
 }

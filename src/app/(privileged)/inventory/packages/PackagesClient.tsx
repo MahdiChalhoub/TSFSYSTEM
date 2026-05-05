@@ -26,7 +26,7 @@ import {
     Package, Plus, Pencil, Trash2, Ruler, ArrowRight, ArrowRightLeft, Layers,
     Loader2, X, Check, ChevronRight, Box, Sparkles, Bookmark,
     GitBranch, Tag, ShieldCheck, FolderTree, ExternalLink, Zap,
-    TrendingUp, Info,
+    TrendingUp, Info, Archive, History, User as UserIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -38,6 +38,8 @@ import {
     createPackagingRule, deletePackagingRule,
 } from '@/app/actions/inventory/packaging-suggestions'
 import { TemplateFormModal } from './_shared/TemplateFormModal'
+import { buildPackagesDataTools } from './_lib/dataTools'
+import { useAdmin } from '@/context/AdminContext'
 import '@/lib/tours/definitions/inventory-packages'
 
 type Option = { id: number; name: string; code?: string }
@@ -100,8 +102,18 @@ type RuleRow = {
 type ProductPackagingRow = {
     id: number
     product?: number
+    /** Product-level identity — shown as the row's main title. */
     product_name?: string
+    product_sku?: string
+    /** Product-level fallback barcode (the master SKU's own scan code). */
+    product_barcode?: string
+    /** Per-package display name, e.g. "Can 330ml" — describes the package
+     *  shape this product was sold in, not the product itself. */
     display_name?: string
+    /** Per-package SKU (independent of the product SKU). */
+    sku?: string
+    /** Per-package barcode — what scans at the POS for THIS specific
+     *  packaging level. Distinct from `product_barcode` (the base SKU). */
     barcode?: string
     effective_selling_price?: number
     ratio?: number | string
@@ -122,12 +134,26 @@ interface Props {
     loadErrors?: Record<string, string>
 }
 
-export default function PackagesClient({ initialTemplates, units, categories, brands, attributes, attributeValuesByParent, loadErrors }: Props) {
+export default function PackagesClient({ initialTemplates, units, categories, brands, attributes, attributeValuesByParent, loadErrors, currentUser }: Props & { currentUser?: { is_staff?: boolean; is_superuser?: boolean } | null }) {
     const router = useRouter()
     const [templates, setTemplates] = useState<Template[]>(initialTemplates)
     const [editing, setEditing] = useState<Template | null>(null)
     const [showForm, setShowForm] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState<Template | null>(null)
+    // Toolbar toggle: include archived rows in the listing. Backend
+    // filterset surfaces it via `?include_archived=1`. Defaults off so
+    // the catalog view stays focused on active templates.
+    const [showArchived, setShowArchived] = useState(false)
+    // Bulk-delete request — same pattern as the Units page. We capture
+    // the toolbar's `clear` callback so the dialog can wipe the
+    // selection after a successful run.
+    const [bulkDeleteRequest, setBulkDeleteRequest] = useState<{ ids: number[]; clear: () => void } | null>(null)
+    const [bulkDeleting, setBulkDeleting] = useState(false)
+    // Bulk-archive request — flips `is_archived` on every selected row.
+    // Lower-friction than delete because templates retain their history.
+    const [bulkArchiveRequest, setBulkArchiveRequest] = useState<{ ids: number[]; clear: () => void } | null>(null)
+    const [bulkArchiving, setBulkArchiving] = useState(false)
+    const isStaff = !!(currentUser?.is_staff || currentUser?.is_superuser)
 
     useEffect(() => { setTemplates(initialTemplates) }, [initialTemplates])
 
@@ -143,13 +169,21 @@ export default function PackagesClient({ initialTemplates, units, categories, br
 
     const refresh = useCallback(async () => {
         try {
-            const data = await erpFetch('unit-packages/', { cache: 'no-store' } as RequestInit) as { results?: Template[] } | Template[]
+            // Hides archived rows by default. The toolbar toggle adds
+            // `?include_archived=1` so admins can review / restore them
+            // without leaving the page.
+            const url = showArchived ? 'unit-packages/?include_archived=1' : 'unit-packages/'
+            const data = await erpFetch(url, { cache: 'no-store' } as RequestInit) as { results?: Template[] } | Template[]
             setTemplates(Array.isArray(data) ? data : (data?.results ?? []))
         } catch (e: unknown) {
             toast.error('Failed to refresh templates', { description: e instanceof Error ? e.message : 'network error' })
         }
         router.refresh()
-    }, [router])
+    }, [router, showArchived])
+
+    // Re-fetch when the archived toggle flips so the operator sees the
+    // change immediately without waiting for the next manual refresh.
+    useEffect(() => { refresh() }, [showArchived, refresh])
 
     /* ── Stats ────────────────────────────────────────────── */
     const stats = useMemo(() => {
@@ -268,6 +302,53 @@ export default function PackagesClient({ initialTemplates, units, categories, br
         } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Delete failed') }
     }
 
+    const handleBulkDelete = async () => {
+        if (!bulkDeleteRequest) return
+        const { ids, clear } = bulkDeleteRequest
+        setBulkDeleting(true)
+        let ok = 0, fail = 0
+        for (const id of ids) {
+            try {
+                await erpFetch(`unit-packages/${id}/`, { method: 'DELETE' })
+                ok++
+            } catch { fail++ }
+        }
+        setBulkDeleting(false)
+        setBulkDeleteRequest(null)
+        if (ok) toast.success(`Deleted ${ok} template${ok === 1 ? '' : 's'}`)
+        if (fail) toast.error(`${fail} template${fail === 1 ? '' : 's'} failed — may be referenced by ProductPackagings`)
+        clear()
+        refresh()
+    }
+
+    // Toggle archive across the selected set. If everything is already
+    // archived, restore them; otherwise archive the rest. Mirrors the
+    // single-row "Restore" button on archived rows.
+    const handleBulkArchive = async () => {
+        if (!bulkArchiveRequest) return
+        const { ids, clear } = bulkArchiveRequest
+        setBulkArchiving(true)
+        const allArchived = ids.every(id => templates.find(t => t.id === id)?.is_archived)
+        const target = !allArchived
+        let ok = 0, fail = 0
+        for (const id of ids) {
+            try {
+                await erpFetch(`unit-packages/${id}/`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_archived: target }),
+                })
+                ok++
+            } catch { fail++ }
+        }
+        setBulkArchiving(false)
+        setBulkArchiveRequest(null)
+        if (ok) toast.success(`${target ? 'Archived' : 'Restored'} ${ok} template${ok === 1 ? '' : 's'}`)
+        if (fail) toast.error(`${fail} template${fail === 1 ? '' : 's'} failed`)
+        clear()
+        refresh()
+    }
+
     return (
         <TreeMasterPage
             config={{
@@ -284,11 +365,47 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     { label: 'Avg Ratio', value: `×${stats.avgRatio}`, icon: <TrendingUp size={11} />, color: 'var(--app-muted-foreground)' },
                 ],
                 searchPlaceholder: 'Search templates by name, code, unit… (Ctrl+K)',
-                primaryAction: { label: 'New Template', icon: <Plus size={14} />, onClick: openNewForm },
+                primaryAction: { label: 'New Template', icon: <Plus size={14} />, onClick: openNewForm, dataTour: 'add-btn' },
                 secondaryActions: [
+                    { label: showArchived ? 'Hide archived' : 'Show archived', icon: <Archive size={13} />, onClick: () => setShowArchived(s => !s), active: showArchived, activeColor: 'var(--app-warning)', dataTour: 'pkg-archive-toggle' },
                     { label: 'Units', icon: <Ruler size={13} />, href: '/inventory/units' },
                     { label: 'Rules', icon: <ShieldCheck size={13} />, href: '/inventory/packaging-suggestions' },
                 ],
+                dataTools: buildPackagesDataTools(templates, units),
+                selectable: true,
+                onBulkDelete: (ids, clear) => setBulkDeleteRequest({ ids, clear }),
+                // Custom bulk-action toolbar adds an "Archive" verb next
+                // to the default Move/Delete pair so the operator can
+                // soft-deactivate without losing history.
+                bulkActions: ({ count, ids, clearSelection }) => (
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 12px 36px rgba(0,0,0,0.22)' }}>
+                        <div className="px-3 py-1.5 rounded-xl text-tp-sm font-bold"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                            {count} selected
+                        </div>
+                        <button type="button"
+                            onClick={() => setBulkArchiveRequest({ ids, clear: clearSelection })}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                            <Archive size={13} /> {showArchived ? 'Restore / archive' : 'Archive'}
+                        </button>
+                        <button type="button"
+                            onClick={() => setBulkDeleteRequest({ ids, clear: clearSelection })}
+                            disabled={!isStaff}
+                            title={isStaff ? 'Permanently delete the selected templates' : 'Only staff can hard-delete templates'}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-tp-sm font-bold transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: 'color-mix(in srgb, var(--app-error, #ef4444) 10%, transparent)', color: 'var(--app-error, #ef4444)', border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 25%, transparent)' }}>
+                            <Trash2 size={13} /> Delete
+                        </button>
+                        <button type="button" onClick={clearSelection}
+                            title="Clear selection (Esc)"
+                            className="w-8 h-8 flex items-center justify-center rounded-xl transition-all hover:bg-app-border/40"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
+                            <X size={14} />
+                        </button>
+                    </div>
+                ),
                 columnHeaders: [
                     { label: 'Template', width: 'auto', sortKey: 'name' },
                     { label: 'Ratio', width: '60px', color: 'var(--app-info)', hideOnMobile: true, sortKey: 'ratio' },
@@ -347,6 +464,27 @@ export default function PackagesClient({ initialTemplates, units, categories, br
                     title={`Delete template "${deleteTarget?.name}"?`}
                     description="Products currently using this template shape keep their existing ProductPackaging rows. Suggestion rules targeting this template are removed."
                     confirmText="Delete" variant="danger"
+                />
+                <ConfirmDialog
+                    open={bulkDeleteRequest !== null}
+                    onOpenChange={(o) => { if (!o && !bulkDeleting) setBulkDeleteRequest(null) }}
+                    onConfirm={handleBulkDelete}
+                    title={`Delete ${bulkDeleteRequest?.ids.length ?? 0} template${(bulkDeleteRequest?.ids.length ?? 0) === 1 ? '' : 's'}?`}
+                    description="Templates referenced by existing ProductPackaging rows may fail to delete — those will be reported back so you can fix them and retry. Past ProductPackagings keep their data."
+                    confirmText={bulkDeleting ? 'Deleting…' : 'Delete'}
+                    variant="danger"
+                />
+                <ConfirmDialog
+                    open={bulkArchiveRequest !== null}
+                    onOpenChange={(o) => { if (!o && !bulkArchiving) setBulkArchiveRequest(null) }}
+                    onConfirm={handleBulkArchive}
+                    title={
+                        (bulkArchiveRequest?.ids ?? []).every(id => templates.find(t => t.id === id)?.is_archived)
+                            ? `Restore ${bulkArchiveRequest?.ids.length ?? 0} template${(bulkArchiveRequest?.ids.length ?? 0) === 1 ? '' : 's'}?`
+                            : `Archive ${bulkArchiveRequest?.ids.length ?? 0} template${(bulkArchiveRequest?.ids.length ?? 0) === 1 ? '' : 's'}?`
+                    }
+                    description="Archived templates are hidden from default listings and the suggestion engine. Existing ProductPackaging rows that reference them stay intact. Toggle ‘Show archived’ in the toolbar to view / restore."
+                    confirmText={bulkArchiving ? 'Working…' : 'Confirm'}
                 />
             </>}
             detailPanel={(rawNode, { onClose, onPin }) => {
@@ -656,7 +794,7 @@ function UsageCountBadge({ tpl }: { tpl: Template }) {
 /* ═══════════════════════════════════════════════════════════
  *  DETAIL PANEL — Overview / Links / Usage
  * ═══════════════════════════════════════════════════════════ */
-type DetailTab = 'overview' | 'links' | 'usage'
+type DetailTab = 'overview' | 'links' | 'usage' | 'audit'
 
 interface TemplateDetailPanelProps {
     tpl: Template
@@ -749,6 +887,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
         { key: 'overview', label: 'Overview', icon: <Layers size={12} />, color: 'var(--app-info)' },
         { key: 'links', label: 'Links', icon: <GitBranch size={12} />, count: rulesLoaded ? rules.length : undefined, color: 'var(--app-info)' },
         { key: 'usage', label: 'Usage', icon: <Package size={12} />, count: productsLoaded ? products.length : undefined, color: 'var(--app-success)' },
+        { key: 'audit', label: 'Audit', icon: <History size={12} />, color: 'var(--app-muted-foreground)' },
     ]
 
     return (
@@ -816,6 +955,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
                     />
                 )}
                 {tab === 'usage' && <UsageTab products={products} loaded={productsLoaded} tpl={tpl} />}
+                {tab === 'audit' && <TemplateAuditTimeline tplId={tpl.id} />}
             </div>
         </div>
     )
@@ -988,26 +1128,78 @@ function LinksTab({ tpl, rules, loaded, adding, setAdding, newLink, setNewLink, 
 }
 
 function UsageTab({ products, loaded, tpl }: { products: ProductPackagingRow[]; loaded: boolean; tpl: Template }) {
+    // Open the product inside the app's tab system instead of spawning a
+    // new browser tab. Falls back to a direct navigation when used outside
+    // the privileged shell (where AdminContext isn't mounted).
+    const admin = useAdminSafe()
+    const openProduct = (id: number | undefined, label: string) => {
+        if (!id) return
+        const path = `/inventory/products/${id}`
+        if (admin?.openTab) admin.openTab(label, path)
+        else window.location.assign(path)
+    }
     if (!loaded) return <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-app-primary" /></div>
     if (products.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                 <Package size={22} className="text-app-muted-foreground mb-2 opacity-40" />
                 <p className="text-tp-md font-bold text-app-muted-foreground">No product packagings on this unit yet</p>
-                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[280px]">Add a product packaging on this unit to start tracking. Rows that match this template's ratio (×{Number(tpl.ratio).toLocaleString()}) get badged below.</p>
+                <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[280px]">
+                    Add a product packaging on this unit to start tracking. Rows that match this template&apos;s ratio (×{Number(tpl.ratio).toLocaleString()}) get badged below.
+                </p>
             </div>
         )
     }
+
     // Three categories of "adopter" the operator cares about:
     //   - strict (template_id = this template) → official adoption
     //   - ratio  (same ratio, different/no template) → likely should be linked
-    //   - other  (same unit, different ratio) → for context only
+    //   - other  (same unit, different ratio) → context only
     const strictCount = products.filter(p => Number(p.template) === Number(tpl.id)).length
     const ratioCount  = products.filter(p => Number(p.template) !== Number(tpl.id) && Number(p.ratio) === Number(tpl.ratio)).length
+
     return (
-        <div className="p-3 space-y-1">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+        <div className="p-3 space-y-3">
+            {/* ── Explainer banner ────────────────────────────
+                Tells the operator what this list means + maps the
+                badge colors to the underlying relationship state. */}
+            <div className="rounded-xl p-2.5"
+                 style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 18%, transparent)' }}>
+                <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                         style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 14%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
+                        <Info size={12} />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                        <p className="text-tp-sm font-bold text-app-foreground">What you&apos;re seeing</p>
+                        <p className="text-tp-xs text-app-muted-foreground leading-snug">
+                            Every <span className="font-bold text-app-foreground">ProductPackaging</span> row whose <code className="font-mono">unit</code> matches this template&apos;s unit. Each row is one product&apos;s instance of a packaging — the template defines the <em>shape</em> (ratio &times; unit); the product fills in its own <em>barcode</em> and <em>price</em>.
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap pt-1">
+                            <span className="text-tp-xxs font-bold flex items-center gap-1.5"
+                                  style={{ color: 'var(--app-success)' }}>
+                                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-success)' }} />
+                                ✓ adopted = template_id matches (strict link)
+                            </span>
+                            <span className="text-tp-xxs font-bold flex items-center gap-1.5"
+                                  style={{ color: 'var(--app-warning)' }}>
+                                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-warning)' }} />
+                                ratio match = same ratio, no template link yet
+                            </span>
+                            <span className="text-tp-xxs font-bold flex items-center gap-1.5"
+                                  style={{ color: 'var(--app-muted-foreground)' }}>
+                                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-muted-foreground)' }} />
+                                same-unit context (different ratio)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Counters strip ── */}
+            <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-tp-xxs font-bold uppercase tracking-widest"
+                      style={{ color: 'var(--app-muted-foreground)' }}>
                     {products.length} on this unit
                 </span>
                 {strictCount > 0 && (
@@ -1023,52 +1215,200 @@ function UsageTab({ products, loaded, tpl }: { products: ProductPackagingRow[]; 
                     </span>
                 )}
             </div>
-            {products.map((pp) => {
-                const isStrict = Number(pp.template) === Number(tpl.id)
-                const isRatioMatch = !isStrict && Number(pp.ratio) === Number(tpl.ratio)
-                const accent = isStrict ? 'var(--app-success)' : isRatioMatch ? 'var(--app-warning)' : 'var(--app-muted-foreground)'
-                return (
-                    <div key={pp.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-app-surface/50 transition-all group">
-                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: `color-mix(in srgb, ${accent} 10%, transparent)`, color: accent }}><Package size={11} /></div>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-tp-sm font-bold truncate flex items-center gap-1.5">
-                                <span className="truncate">{pp.product_name || `Product #${pp.product}`}</span>
-                                {pp.display_name && <span className="text-app-muted-foreground font-normal truncate">· {pp.display_name}</span>}
-                                {isStrict && (
-                                    <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
-                                        style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}
-                                        title="Officially adopted this template (template_id matches)">
-                                        ✓ adopted
-                                    </span>
-                                )}
-                                {isRatioMatch && (
-                                    <span className="text-tp-xxs font-black px-1 py-0.5 rounded flex-shrink-0"
-                                        style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}
-                                        title="Same ratio but no template link — likely should be adopted">
-                                        ratio match
-                                    </span>
-                                )}
+
+            {/* ── Cards (one per ProductPackaging) ── */}
+            <div className="space-y-1.5">
+                {products.map((pp) => {
+                    const isStrict = Number(pp.template) === Number(tpl.id)
+                    const isRatioMatch = !isStrict && Number(pp.ratio) === Number(tpl.ratio)
+                    const accent = isStrict ? 'var(--app-success)' : isRatioMatch ? 'var(--app-warning)' : 'var(--app-muted-foreground)'
+                    const productLabel = pp.product_name || (pp.product ? `Product #${pp.product}` : 'Unnamed product')
+                    const samePackageBarcode = pp.barcode && pp.product_barcode && pp.barcode === pp.product_barcode
+                    return (
+                        <div key={pp.id} className="rounded-xl p-2.5 group"
+                            style={{ background: 'var(--app-bg)', border: `1px solid color-mix(in srgb, ${accent} 25%, var(--app-border))` }}>
+                            {/* Header: product name + adoption badge + open-product button */}
+                            <div className="flex items-start gap-2">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)`, color: accent }}>
+                                    <Package size={13} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-tp-md font-bold text-app-foreground truncate" title={productLabel}>
+                                            {productLabel}
+                                        </span>
+                                        {pp.product_sku && (
+                                            <span className="font-mono text-tp-xxs px-1 py-0.5 rounded"
+                                                  style={{ background: 'color-mix(in srgb, var(--app-foreground) 6%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                                SKU {pp.product_sku}
+                                            </span>
+                                        )}
+                                        {isStrict && (
+                                            <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-success) 14%, transparent)', color: 'var(--app-success)' }}
+                                                title="ProductPackaging.template == this template — official adopter">
+                                                ✓ adopted
+                                            </span>
+                                        )}
+                                        {isRatioMatch && (
+                                            <span className="text-tp-xxs font-black px-1.5 py-0.5 rounded flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning) 14%, transparent)', color: 'var(--app-warning)' }}
+                                                title="Same ratio but template_id is unset — likely should be linked">
+                                                ratio match
+                                            </span>
+                                        )}
+                                    </div>
+                                    {/* Sub-line: package shape this product is sold in */}
+                                    <div className="text-tp-xs text-app-muted-foreground mt-0.5">
+                                        Sold as <span className="font-bold text-app-foreground">{pp.display_name || pp.name || 'package'}</span>
+                                        {' · '}<span className="font-mono">×{pp.ratio}</span> base units
+                                    </div>
+                                </div>
+                                <button type="button"
+                                    onClick={() => openProduct(pp.product, productLabel)}
+                                    title="Open this product in a new app tab"
+                                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-app-border/50 flex-shrink-0"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>
+                                    <ExternalLink size={12} />
+                                </button>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>×{pp.ratio}</span>
-                                {pp.barcode && <span className="font-mono text-tp-xxs font-bold" style={{ color: 'var(--app-info)' }}>{pp.barcode}</span>}
-                                {(pp.effective_selling_price ?? 0) > 0 && (
-                                    <span className="text-tp-xxs font-bold" style={{ color: 'var(--app-warning)' }}>
-                                        {Number(pp.effective_selling_price).toLocaleString()}
-                                    </span>
+
+                            {/* ── Relation chain ──
+                                Visual chain showing who's linked to whom:
+                                  Template (this page) ─→ Product (master) ─→ ProductPackaging instance
+                                Each chip is a real entity; the arrows show the FK direction. */}
+                            <div className="mt-2 -mx-0.5 px-2 py-1.5 rounded-lg overflow-x-auto custom-scrollbar"
+                                 style={{ background: 'color-mix(in srgb, var(--app-foreground) 3%, transparent)', border: '1px dashed color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
+                                <div className="flex items-center gap-1.5 min-w-max">
+                                    <ChainChip
+                                        icon={<Box size={10} />}
+                                        label="Template"
+                                        value={tpl.name}
+                                        sub={`×${Number(tpl.ratio).toLocaleString()} ${tpl.unit_code || tpl.unit_name || ''}`}
+                                        accent="var(--app-primary)"
+                                    />
+                                    <ChainArrow strict={isStrict} />
+                                    <ChainChip
+                                        icon={<Tag size={10} />}
+                                        label="Product"
+                                        value={productLabel}
+                                        sub={pp.product_sku ? `SKU ${pp.product_sku}` : undefined}
+                                        accent="var(--app-info, #3b82f6)"
+                                        onClick={() => openProduct(pp.product, productLabel)}
+                                    />
+                                    <ChainArrow strict={isStrict} />
+                                    <ChainChip
+                                        icon={<Package size={10} />}
+                                        label="Packaging"
+                                        value={pp.display_name || pp.name || `Package #${pp.id}`}
+                                        sub={pp.barcode || pp.sku || `id ${pp.id}`}
+                                        accent={accent}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Labelled fact strip — every cell is named so the row stops reading like a row of mystery numbers. */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2 pt-2"
+                                 style={{ borderTop: '1px dashed color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                                {/* Package barcode (per-packaging) */}
+                                <Fact label="Package barcode"
+                                      value={pp.barcode || '—'}
+                                      hint={samePackageBarcode ? 'Same as product barcode (single-pack item)' : pp.barcode ? 'Scans at POS as this packaging level' : 'No package-level barcode set'}
+                                      mono accent={pp.barcode ? 'var(--app-info, #3b82f6)' : undefined} />
+                                {/* Product master barcode */}
+                                {pp.product_barcode && pp.product_barcode !== pp.barcode && (
+                                    <Fact label="Product barcode"
+                                          value={pp.product_barcode}
+                                          hint="The base SKU's master barcode — for reference"
+                                          mono accent="var(--app-muted-foreground)" />
                                 )}
+                                {/* Price */}
+                                <Fact label="Selling price"
+                                      value={(pp.effective_selling_price ?? 0) > 0 ? Number(pp.effective_selling_price).toLocaleString() : '—'}
+                                      hint="Effective sale price for this packaging level"
+                                      accent={(pp.effective_selling_price ?? 0) > 0 ? 'var(--app-warning)' : undefined} />
                             </div>
                         </div>
-                        <a href={`/inventory/products/${pp.product}`} target="_blank" rel="noreferrer"
-                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-app-border/50">
-                            <ExternalLink size={11} />
-                        </a>
-                    </div>
-                )
-            })}
+                    )
+                })}
+            </div>
         </div>
     )
+}
+
+/** Labelled cell for the Usage tab fact strip. */
+function Fact({ label, value, hint, mono, accent }: { label: string; value: React.ReactNode; hint?: string; mono?: boolean; accent?: string }) {
+    return (
+        <div className="rounded-lg px-2 py-1.5"
+             style={{ background: 'color-mix(in srgb, var(--app-foreground) 4%, transparent)' }}
+             title={hint}>
+            <div className="text-tp-xxs font-bold uppercase tracking-widest"
+                 style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
+            <div className={`text-tp-sm font-bold truncate ${mono ? 'font-mono' : ''}`}
+                 style={{ color: accent || 'var(--app-foreground)' }}>{value}</div>
+        </div>
+    )
+}
+
+/* ─── Relation chain helpers ───
+ *  Visualises the entity chain in the Usage tab:
+ *    Template ──→ Product ──→ ProductPackaging
+ *  Each chip is a tiny labelled box with its identity; arrows render
+ *  in green when the relation is "strict" (template_id matches), grey
+ *  otherwise. Optional onClick makes the chip behave as a tab-opener.
+ */
+function ChainChip({ icon, label, value, sub, accent, onClick }: {
+    icon: React.ReactNode
+    label: string
+    value: string
+    sub?: string
+    accent: string
+    onClick?: () => void
+}) {
+    const Element = onClick ? 'button' : 'div'
+    return (
+        <Element
+            type={onClick ? 'button' : undefined}
+            onClick={onClick}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-left ${onClick ? 'hover:brightness-110 active:scale-[0.97] cursor-pointer transition-all' : ''}`}
+            style={{
+                background: `color-mix(in srgb, ${accent} 8%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
+                color: accent,
+            }}
+            title={`${label}: ${value}${sub ? ` (${sub})` : ''}`}
+        >
+            <span className="flex-shrink-0">{icon}</span>
+            <span className="flex flex-col leading-tight">
+                <span className="text-tp-xxs font-bold uppercase tracking-widest opacity-70">{label}</span>
+                <span className="text-tp-xs font-bold text-app-foreground truncate max-w-[140px]">{value}</span>
+                {sub && (
+                    <span className="text-tp-xxs font-mono opacity-60 truncate max-w-[140px]">{sub}</span>
+                )}
+            </span>
+        </Element>
+    )
+}
+
+function ChainArrow({ strict }: { strict: boolean }) {
+    const color = strict ? 'var(--app-success)' : 'var(--app-muted-foreground)'
+    return (
+        <span className="flex items-center" style={{ color }}>
+            <ArrowRight size={12} />
+        </span>
+    )
+}
+
+/** Safe wrapper around useAdmin — falls back gracefully when the
+ *  panel mounts outside the privileged shell (e.g. in a test or a
+ *  storybook). Returns null in that case so callers can branch. */
+function useAdminSafe(): { openTab: (title: string, path: string) => void } | null {
+    try {
+        return useAdmin() as unknown as { openTab: (title: string, path: string) => void }
+    } catch {
+        return null
+    }
 }
 
 interface LinkSelectProps {
@@ -1110,6 +1450,127 @@ function StatTile({ label, value, icon, color }: { label: string; value: string 
                 <div className="text-sm font-bold tabular-nums" style={{ color: 'var(--app-foreground)' }}>{value}</div>
                 <div className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>{label}</div>
             </div>
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  TEMPLATE AUDIT TIMELINE
+ *  ----------------------
+ *  Compact who-changed-what view scoped to a single template.
+ *  Reads the kernel audit-trail (`resource_type=unitpackage`,
+ *  `resource_id=<id>`) — same data the per-Unit timeline uses,
+ *  same component shape so the page reads consistently.
+ * ═══════════════════════════════════════════════════════════ */
+type TplAuditFieldChange = { field_name: string; old_value: string | null; new_value: string | null }
+type TplAuditEntry = {
+    id: number
+    action: string
+    timestamp: string
+    username?: string
+    field_changes?: TplAuditFieldChange[]
+}
+
+function tplTimeAgo(ts: string): string {
+    const ms = Date.now() - new Date(ts).getTime()
+    if (Number.isNaN(ms)) return ts
+    const m = Math.floor(ms / 60000)
+    if (m < 1) return 'just now'
+    if (m < 60) return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h ago`
+    const d = Math.floor(h / 24)
+    if (d < 30) return `${d}d ago`
+    return new Date(ts).toLocaleDateString()
+}
+
+function tplActionTone(action: string): { bg: string; fg: string } {
+    const tail = (action.split('.').pop() || '').toLowerCase()
+    if (tail === 'create') return { bg: 'color-mix(in srgb, var(--app-success) 12%, transparent)', fg: 'var(--app-success)' }
+    if (tail === 'delete') return { bg: 'color-mix(in srgb, var(--app-error) 12%, transparent)', fg: 'var(--app-error)' }
+    return { bg: 'color-mix(in srgb, var(--app-info) 12%, transparent)', fg: 'var(--app-info)' }
+}
+
+function TemplateAuditTimeline({ tplId }: { tplId: number }) {
+    const [entries, setEntries] = useState<TplAuditEntry[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let cancelled = false
+        setLoading(true)
+        setError(null)
+        erpFetch(`inventory/audit-trail/?resource_type=unitpackage&resource_id=${tplId}&limit=80`)
+            .then((data: unknown) => {
+                if (cancelled) return
+                const list = Array.isArray(data) ? data : ((data as { results?: TplAuditEntry[] })?.results ?? [])
+                setEntries(list as TplAuditEntry[])
+            })
+            .catch((e: unknown) => {
+                if (cancelled) return
+                setError(e instanceof Error ? e.message : 'Failed to load history')
+            })
+            .finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
+    }, [tplId])
+
+    if (loading) return <div className="flex items-center justify-center py-8"><Loader2 size={16} className="animate-spin text-app-muted-foreground" /></div>
+    if (error) return <div className="p-3 text-tp-sm text-app-muted-foreground">Audit log isn&apos;t available on this deployment.</div>
+    if (entries.length === 0) return (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+            <History size={20} className="text-app-muted-foreground mb-2 opacity-40" />
+            <p className="text-tp-md font-bold text-app-muted-foreground">No history yet</p>
+            <p className="text-tp-xs text-app-muted-foreground mt-1 max-w-[260px]">
+                Edits to this template show up here — who changed what, when.
+            </p>
+        </div>
+    )
+
+    return (
+        <div className="p-3 space-y-2">
+            <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
+                {entries.length} event{entries.length === 1 ? '' : 's'} · most recent first
+            </p>
+            {entries.map(e => {
+                const tone = tplActionTone(e.action)
+                const tail = (e.action.split('.').pop() || '').toLowerCase()
+                return (
+                    <div key={e.id} className="rounded-xl p-2.5 space-y-1.5"
+                         style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-tp-xxs font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                  style={{ background: tone.bg, color: tone.fg }}>
+                                {tail || e.action}
+                            </span>
+                            <div className="flex items-center gap-1 text-tp-xxs text-app-muted-foreground">
+                                <UserIcon size={10} /><span className="truncate max-w-[120px]">{e.username || 'system'}</span>
+                            </div>
+                            <span className="text-tp-xxs text-app-muted-foreground" title={e.timestamp}>
+                                {tplTimeAgo(e.timestamp)}
+                            </span>
+                        </div>
+                        {e.field_changes && e.field_changes.length > 0 && (
+                            <div className="space-y-0.5">
+                                {e.field_changes.map((fc, i) => (
+                                    <div key={i} className="text-tp-xs flex items-center gap-1.5 flex-wrap">
+                                        <span className="font-mono font-bold" style={{ color: 'var(--app-foreground)' }}>{fc.field_name}</span>
+                                        <span className="font-mono px-1 rounded" title="before"
+                                              style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-muted-foreground)', textDecoration: 'line-through' }}>
+                                            {fc.old_value ?? '∅'}
+                                        </span>
+                                        <ChevronRight size={9} className="opacity-50" />
+                                        <span className="font-mono px-1 rounded" title="after"
+                                              style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-foreground)' }}>
+                                            {fc.new_value ?? '∅'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
         </div>
     )
 }

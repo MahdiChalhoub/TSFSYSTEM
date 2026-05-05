@@ -195,7 +195,7 @@ export default function DiscountRulesPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                             <Percent size={20} className="text-white" />
                         </div>
                         Discount & Promotions
@@ -203,7 +203,7 @@ export default function DiscountRulesPage() {
                     <p className="text-sm text-app-muted-foreground mt-1">Manage promotional rules, coupon codes, and automatic discounts</p>
                 </div>
                 <button onClick={startCreate}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                    className="px-4 py-2 bg-app-info text-white rounded-lg text-sm font-bold hover:bg-app-info transition-all flex items-center gap-2">
                     <Plus size={16} /> Create Rule
                 </button>
             </header>
@@ -371,7 +371,7 @@ export default function DiscountRulesPage() {
 
                         <div className="flex justify-end gap-3 mt-8 border-t pt-6">
                             <button onClick={() => setShowForm(false)} className="px-6 py-2 bg-app-surface-2 text-app-muted-foreground rounded-lg text-sm font-bold hover:bg-app-surface-2">Cancel</button>
-                            <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 flex items-center gap-2">
+                            <button onClick={handleSave} className="px-6 py-2 bg-app-info text-white rounded-lg text-sm font-bold hover:bg-app-info flex items-center gap-2">
                                 <Check size={16} /> {editId ? 'Update Rule' : 'Save Rule'}
                             </button>
                         </div>

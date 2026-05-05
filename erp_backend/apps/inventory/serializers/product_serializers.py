@@ -44,12 +44,19 @@ class ProductPackagingSerializer(serializers.ModelSerializer):
     effective_purchase_price = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
     unit_selling_price = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
     unit_name = serializers.CharField(source='unit.name', read_only=True, default=None)
+    # Product identity bits — surfaced so list views (Packages → Usage tab)
+    # can show "Coca-Cola 330ml" instead of "Product #420". Without these
+    # the consumer falls back to the FK id which reads as a bug.
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    product_sku = serializers.CharField(source='product.sku', read_only=True, default=None)
+    product_barcode = serializers.CharField(source='product.barcode', read_only=True, default=None)
     volume_cm3 = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True, allow_null=True)
 
     class Meta:
         model = ProductPackaging
         fields = [
-            'id', 'product', 'name', 'display_name', 'sku', 'barcode', 'image_url',
+            'id', 'product', 'product_name', 'product_sku', 'product_barcode',
+            'name', 'display_name', 'sku', 'barcode', 'image_url',
             'unit', 'unit_name', 'level', 'ratio',
             # FK to the UnitPackage template this row was cloned from. Auto-
             # populated server-side; surfaced so the Packages → Usage tab
@@ -276,19 +283,36 @@ class ProductSerializer(serializers.ModelSerializer):
         return resolve_pipeline_status_for(self, obj)
 
     def _resolve_warehouse(self, obj):
-        """Resolve warehouse from request query param ?warehouse=<id>."""
+        """Resolve warehouse from request query param ?warehouse=<id>.
+        Cached on the request — without the cache, every stock-related
+        SerializerMethodField (on_hand, reserved, available, in/out
+        transfer) would re-hit the Warehouse table per row, and per row × 4
+        methods × N rows is a quiet N+1 that only kicks in when a warehouse
+        filter is active. The cache key is keyed by org id so a serializer
+        instance still resolves correctly across mixed-tenant rows. """
         request = self.context.get('request')
-        if request:
-            wh_id = request.query_params.get('warehouse') or request.query_params.get('site')
-            if wh_id:
-                try:
-                    from apps.inventory.models import Warehouse
-                    return Warehouse.objects.filter(
-                        id=int(wh_id), organization=obj.organization
-                    ).first()
-                except (ValueError, TypeError):
-                    pass
-        return None
+        if not request:
+            return None
+        cache_attr = '_resolve_warehouse_cache'
+        cache: dict = getattr(request, cache_attr, None) or {}
+        if not cache:
+            setattr(request, cache_attr, cache)
+        org_id = getattr(obj, 'organization_id', None) or getattr(obj.organization, 'id', None)
+        key = ('wh', org_id)
+        if key in cache:
+            return cache[key]
+        wh_id = request.query_params.get('warehouse') or request.query_params.get('site')
+        result = None
+        if wh_id:
+            try:
+                from apps.inventory.models import Warehouse
+                result = Warehouse.objects.filter(
+                    id=int(wh_id), organization=obj.organization
+                ).first()
+            except (ValueError, TypeError):
+                pass
+        cache[key] = result
+        return result
 
     def _sibling_ids(self):
         """Return all product ids in the parent ListSerializer instance, or None."""

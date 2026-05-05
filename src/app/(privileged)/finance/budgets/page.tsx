@@ -151,7 +151,7 @@ export default function BudgetsPage() {
       align: 'right',
       render: (budget) => {
         const util = parseFloat(budget.utilization_rate || 0)
-        const color = util > 100 ? 'text-app-error' : util > 80 ? 'text-orange-600' : 'text-app-success'
+        const color = util > 100 ? 'text-app-error' : util > 80 ? 'text-app-warning' : 'text-app-success'
         return (
           <span className={`font-bold text-sm ${color}`}>
             {util.toFixed(1)}%
@@ -305,10 +305,10 @@ export default function BudgetsPage() {
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-orange-200/60 flex items-center justify-center">
-                <AlertTriangle size={22} className="text-orange-700" />
+                <AlertTriangle size={22} className="text-app-warning" />
               </div>
               <div>
-                <p className="text-xs font-bold text-orange-600 uppercase tracking-widest">Warnings</p>
+                <p className="text-xs font-bold text-app-warning uppercase tracking-widest">Warnings</p>
                 <p className="text-2xl font-bold text-orange-900 mt-0.5">{warningAlerts}</p>
               </div>
             </div>

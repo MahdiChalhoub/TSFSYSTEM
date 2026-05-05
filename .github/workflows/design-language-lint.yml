@@ -1,0 +1,48 @@
+name: design-language lint
+
+# Catches new design-language violations on every PR. Compares the
+# current branch against scripts/lint/.design-baseline.json:
+#
+#   - REGRESSIONS (new violations) → fail the build
+#   - IMPROVEMENTS (removals)      → reported but never fail
+#
+# This lets us enforce the design language WITHOUT first migrating the
+# 4k+ legacy violations. Each PR can either drive the count down (great)
+# or hold steady (fine). Adding new violations costs CI time + needs an
+# explicit baseline bump in the PR.
+#
+# To raise the baseline (after a justified addition or after fixing a
+# big chunk of legacy):
+#   npm run lint:design:baseline
+#   git add scripts/lint/.design-baseline.json
+#   git commit -m "lint: bump design baseline"
+#
+# To check locally before pushing:
+#   npm run lint:design:diff
+
+on:
+  pull_request:
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.ts'
+      - 'src/**/*.css'
+      - 'scripts/lint/check_design_language.mjs'
+      - 'scripts/lint/codemod_design_language.mjs'
+      - 'scripts/lint/.design-baseline.json'
+      - '.github/workflows/design-language-lint.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.ts'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run design language diff
+        run: node scripts/lint/check_design_language.mjs --diff

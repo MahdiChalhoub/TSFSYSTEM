@@ -88,7 +88,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {/* 🛡️ Header: Premium Identity Section */}
  <div className="relative px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden">
  {/* Background Glow */}
- <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-[120px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+ <div className="absolute top-0 right-0 w-96 h-96 bg-app-info/10 blur-[120px] rounded-full -mr-20 -mt-20 pointer-events-none" />
 
  <div className="relative flex items-center gap-6">
  <div className="relative group">
@@ -158,7 +158,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  className={clsx(
  "flex items-center gap-2 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all",
  activeTab === tab.id
- ? "text-indigo-400 border-indigo-400"
+ ? "text-indigo-400 border-app-info"
  : "text-app-foreground/30 border-transparent hover:text-app-foreground/60"
  )}
  >
@@ -173,7 +173,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {loading ? (
  <div className="h-full flex flex-col items-center justify-center">
  <div className="relative">
- <div className="w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+ <div className="w-16 h-16 border-4 border-app-info/20 border-t-indigo-500 rounded-full animate-spin"></div>
  <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-400 animate-pulse" size={24} />
  </div>
  <p className="mt-6 text-xs font-black text-app-foreground/30 uppercase tracking-[0.3em] animate-pulse">Scanning Vault Data...</p>
@@ -210,7 +210,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {/* Tier Progress Card */}
  <div className="lg:col-span-2 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-[2rem] p-8 border border-app-foreground/10 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-8">
- <Milestone className="text-indigo-500/20 group-hover:text-indigo-500/40 transition-all duration-700" size={120} />
+ <Milestone className="text-app-info/20 group-hover:text-app-info/40 transition-all duration-700" size={120} />
  </div>
 
  <div className="relative">
@@ -252,7 +252,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
 
  {/* Quick Summary Card */}
  <div className="bg-app-surface/50 rounded-[2rem] p-8 border border-app-foreground/10 flex flex-col items-center justify-center text-center">
- <div className="w-24 h-24 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mb-6">
+ <div className="w-24 h-24 rounded-full bg-app-info/10 border border-app-info/30 flex items-center justify-center mb-6">
  <Star className="text-indigo-400" size={40} />
  </div>
  <h4 className="text-lg font-black text-app-foreground mb-2">Fidelity Score</h4>
@@ -281,8 +281,8 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {/* Points Engine visualization */}
  <div className="bg-gradient-to-br from-teal-500/10 to-transparent rounded-[2rem] p-8 border border-app-foreground/10 flex flex-col items-center justify-center text-center">
  <div className="relative mb-8">
- <div className="absolute -inset-8 bg-teal-500/20 blur-[40px] rounded-full animate-pulse" />
- <div className="relative w-32 h-32 rounded-full border-4 border-teal-500/30 flex flex-col items-center justify-center bg-app-surface shadow-2xl">
+ <div className="absolute -inset-8 bg-app-success/20 blur-[40px] rounded-full animate-pulse" />
+ <div className="relative w-32 h-32 rounded-full border-4 border-app-success/30 flex flex-col items-center justify-center bg-app-surface shadow-2xl">
  <span className="text-4xl font-black text-app-foreground">{fidelity?.loyalty.toLocaleString() || 0}</span>
  <span className="text-[10px] font-black text-teal-400 uppercase tracking-tighter">Points</span>
  </div>
@@ -390,7 +390,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  <div className="px-8 py-6 bg-black/20 border-t border-app-foreground/5 flex items-center justify-between">
  <div className="flex items-center gap-6">
  <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+ <div className="w-2 h-2 rounded-full bg-app-info shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
  <span className="text-[10px] font-black text-app-foreground/40 uppercase tracking-widest">Client Sync: Active</span>
  </div>
  <div className="hidden sm:flex items-center gap-2">
@@ -404,7 +404,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  Export Record
  </button>
  <button
- className="group relative px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-app-foreground text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-indigo-500/20"
+ className="group relative px-6 py-2.5 rounded-xl bg-app-info hover:bg-app-info text-app-foreground text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-indigo-500/20"
  >
  <span className="relative z-10 flex items-center gap-2">
  <TrendingUp size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

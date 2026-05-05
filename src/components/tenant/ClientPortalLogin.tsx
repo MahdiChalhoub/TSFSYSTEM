@@ -32,7 +32,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent" />
                 <div className="relative space-y-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-emerald-400">
+                        <div className="w-14 h-14 bg-app-success/20 border border-app-success/30 rounded-2xl flex items-center justify-center text-emerald-400">
                             <User size={24} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -60,7 +60,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                             className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/5 rounded-xl text-sm text-white font-semibold hover:bg-white/10 transition-all relative">
                             <ShoppingBag size={16} className="text-emerald-400" /> Cart
                             {cart.length > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full text-[10px] flex items-center justify-center font-black text-white">
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-app-success rounded-full text-[10px] flex items-center justify-center font-black text-white">
                                     {cart.length}
                                 </span>
                             )}
@@ -68,7 +68,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                     </div>
 
                     <button onClick={logout}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold hover:bg-red-500/20 transition-all">
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-app-error/10 border border-app-error/20 rounded-xl text-sm text-red-400 font-semibold hover:bg-app-error/20 transition-all">
                         <LogOut size={16} /> Sign Out
                     </button>
                 </div>
@@ -85,15 +85,15 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                     <div className="flex justify-between items-start">
                         <div>
                             <h2 className="text-xl font-bold text-white">Client Login</h2>
-                            <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase mt-1">Access your orders, wallet & support</p>
+                            <p className="text-[10px] text-app-muted-foreground font-medium tracking-wide uppercase mt-1">Access your orders, wallet & support</p>
                         </div>
-                        <button onClick={() => setShowForm(false)} className="text-slate-500 hover:text-white transition-colors">
+                        <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-white transition-colors">
                             <X size={20} />
                         </button>
                     </div>
 
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+                        <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
                             <AlertCircle size={18} className="shrink-0" />
                             {error}
                         </div>
@@ -106,7 +106,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-blue-500 transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-700"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-info transition-all focus:ring-4 focus:ring-app-info/5 placeholder:text-app-muted-foreground"
                         />
                         <input
                             type="password"
@@ -114,17 +114,17 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-blue-500 transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-700"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-info transition-all focus:ring-4 focus:ring-app-info/5 placeholder:text-app-muted-foreground"
                         />
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60"
+                            className="w-full bg-app-info hover:bg-app-info text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60"
                         >
                             {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
                         </button>
                         <p className="text-center">
-                            <button type="button" className="text-sm text-slate-500 hover:text-blue-400 transition-colors font-medium">
+                            <button type="button" className="text-sm text-app-muted-foreground hover:text-blue-400 transition-colors font-medium">
                                 Forgot password?
                             </button>
                         </p>
@@ -139,12 +139,12 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
         <div className="space-y-3">
             <button
                 onClick={() => setShowForm(true)}
-                className="w-full p-5 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-blue-400 font-bold flex items-center justify-center gap-3 hover:bg-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full p-5 bg-app-info/20 border border-app-info/30 rounded-2xl text-blue-400 font-bold flex items-center justify-center gap-3 hover:bg-app-info/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
                 <LogIn size={20} /> Client Portal Login
             </button>
             <a href={`/tenant/${slug}/register`}
-                className="block text-center text-sm text-slate-500 hover:text-emerald-400 transition-colors font-medium">
+                className="block text-center text-sm text-app-muted-foreground hover:text-emerald-400 transition-colors font-medium">
                 New here? <span className="underline">Create an account</span>
             </a>
         </div>

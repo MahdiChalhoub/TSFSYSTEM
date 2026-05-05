@@ -269,7 +269,7 @@ export function MultiPaymentDashboard({
  {remaining > 0 && !amountBuffer && (
  <button
  onClick={() => setAmountBuffer(remaining.toFixed(2))}
- className="absolute bottom-6 right-8 h-10 px-6 rounded-xl bg-emerald- gradient text-app-foreground text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shadow-xl shadow-app-primary/20 border border-emerald-400/30"
+ className="absolute bottom-6 right-8 h-10 px-6 rounded-xl bg-emerald- gradient text-app-foreground text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shadow-xl shadow-app-primary/20 border border-app-success/30"
  >
  Fidelity Fill
  </button>
@@ -291,7 +291,7 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  isSelected
- ? "bg-emerald-gradient border-emerald-400 text-app-foreground shadow-2xl shadow-app-primary/20 scale-[1.02]"
+ ? "bg-emerald-gradient border-app-success text-app-foreground shadow-2xl shadow-app-primary/20 scale-[1.02]"
  : "bg-app-foreground/5 border-app-foreground/10 text-app-foreground/40 hover:bg-app-foreground/10 hover:border-app-primary/30"
  )}
  >
@@ -319,7 +319,7 @@ export function MultiPaymentDashboard({
  className={clsx(
  "w-full h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  selectedMethod?.startsWith('ACCT:')
- ? "bg-emerald-gradient border-emerald-400 text-app-foreground shadow-2xl shadow-app-primary/20 scale-[1.02]"
+ ? "bg-emerald-gradient border-app-success text-app-foreground shadow-2xl shadow-app-primary/20 scale-[1.02]"
  : "bg-app-foreground/5 border-app-foreground/10 text-app-foreground/40 hover:bg-app-foreground/10 hover:border-app-primary/30"
  )}
  >
@@ -396,7 +396,7 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-2xl border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  (client.balance || 0) > 0 && remaining > 0
- ? "bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border-app-warning/30 text-app-foreground hover:from-amber-600/40 hover:to-yellow-600/40 hover:border-amber-400/50 active:scale-[0.98]"
+ ? "bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border-app-warning/30 text-app-foreground hover:from-amber-600/40 hover:to-yellow-600/40 hover:border-app-warning/50 active:scale-[0.98]"
  : "bg-app-foreground/5 border-app-foreground/5 text-app-foreground/15 cursor-not-allowed"
  )}
  >
@@ -422,13 +422,13 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-2xl border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  remaining > 0 && (remaining <= availableCredit || client?.id === 1)
- ? "bg-gradient-to-r from-rose-600/20 to-red-600/20 border-rose-500/30 text-app-foreground hover:from-rose-600/40 hover:to-red-600/40 hover:border-rose-400/50 active:scale-[0.98]"
+ ? "bg-gradient-to-r from-rose-600/20 to-red-600/20 border-app-error/30 text-app-foreground hover:from-rose-600/40 hover:to-red-600/40 hover:border-app-error/50 active:scale-[0.98]"
  : "bg-app-foreground/5 border-app-foreground/5 text-app-foreground/15 cursor-not-allowed"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center",
- remaining > 0 ? "bg-rose-500/30 text-rose-300" : "bg-app-foreground/5 text-app-foreground/10"
+ remaining > 0 ? "bg-app-error/30 text-rose-300" : "bg-app-foreground/5 text-app-foreground/10"
  )}>
  <UserPlus size={20} />
  </div>
@@ -441,7 +441,7 @@ export function MultiPaymentDashboard({
  </span>
  </div>
  {remaining > 0 && (remaining <= availableCredit || client?.id === 1) && (
- <div className="text-[9px] font-black text-rose-300 uppercase tracking-widest bg-rose-500/20 px-3 py-1.5 rounded-lg">Apply</div>
+ <div className="text-[9px] font-black text-rose-300 uppercase tracking-widest bg-app-error/20 px-3 py-1.5 rounded-lg">Apply</div>
  )}
  </button>
  </div>
@@ -457,7 +457,7 @@ export function MultiPaymentDashboard({
  onClick={() => handleNumpadAction(d)}
  className={clsx(
  "h-14 rounded-2xl font-black text-xl transition-all active:scale-90 flex items-center justify-center",
- d === 'C' ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-app-foreground" :
+ d === 'C' ? "bg-app-error/10 text-app-error border border-app-error/20 hover:bg-app-error hover:text-app-foreground" :
  d === 'X' ? "bg-app-warning-bg text-app-warning border border-app-warning/20 hover:bg-app-warning hover:text-app-foreground" :
  "bg-app-foreground/5 text-app-foreground hover:bg-app-foreground/10 border border-app-foreground/5"
  )}
@@ -467,7 +467,7 @@ export function MultiPaymentDashboard({
  ))}
  <button
  onClick={() => handleAddLeg()}
- className="col-span-2 h-14 bg-emerald-gradient text-app-foreground rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:scale-105 hover:shadow-2xl hover:shadow-app-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-400/30 shadow-lg"
+ className="col-span-2 h-14 bg-emerald-gradient text-app-foreground rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:scale-105 hover:shadow-2xl hover:shadow-app-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2 border border-app-success/30 shadow-lg"
  >
  <Plus size={18} strokeWidth={4} />
  Apply Entry
@@ -487,7 +487,7 @@ export function MultiPaymentDashboard({
  <div className={clsx(
  "text-6xl font-black tabular-nums tracking-tighter transition-all duration-700",
  Math.abs(remaining) < 0.01 ? "text-app-primary" :
- remaining < 0 ? "text-app-warning" : "text-rose-600"
+ remaining < 0 ? "text-app-warning" : "text-app-error"
  )}>
  {currency}{formatNumber(remaining)}
  </div>
@@ -519,12 +519,12 @@ export function MultiPaymentDashboard({
  {/* Deficit Warning */}
  <div className={clsx(
  "p-5 rounded-2xl border flex items-center justify-between animate-in slide-in-from-right-4 duration-500",
- remaining > availableCredit && client?.id !== 1 ? "bg-app-error-bg border-app-error" : "bg-rose-50 border-rose-200"
+ remaining > availableCredit && client?.id !== 1 ? "bg-app-error-bg border-app-error" : "bg-app-error-soft border-app-error"
  )}>
  <div className="flex items-center gap-4">
  <div className={clsx(
  "w-12 h-12 rounded-xl flex items-center justify-center text-app-foreground shadow-lg",
- remaining > availableCredit && client?.id !== 1 ? "bg-app-error" : "bg-rose-600"
+ remaining > availableCredit && client?.id !== 1 ? "bg-app-error" : "bg-app-error"
  )}>
  <AlertCircle size={24} />
  </div>
@@ -546,7 +546,7 @@ export function MultiPaymentDashboard({
  "h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-2xl shadow-rose-600/20",
  remaining > availableCredit && client?.id !== 1
  ? "bg-app-surface-3 text-app-muted-foreground cursor-not-allowed shadow-none"
- : "bg-rose-600 text-app-foreground hover:bg-rose-700 active:scale-95 border border-rose-400/30"
+ : "bg-app-error text-app-foreground hover:bg-app-error active:scale-95 border border-app-error/30"
  )}
  >
  <UserPlus size={16} />
@@ -556,14 +556,14 @@ export function MultiPaymentDashboard({
 
  {/* Round Off / Coin Discount */}
  {remaining <= ROUND_OFF_MAX && remaining > 0.01 && (
- <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-200 animate-in slide-in-from-right-4 duration-700">
+ <div className="p-4 bg-app-info-soft rounded-2xl border border-app-info animate-in slide-in-from-right-4 duration-700">
  <div className="flex items-center gap-3 mb-3">
- <div className="w-10 h-10 rounded-xl bg-indigo-500 text-app-foreground flex items-center justify-center shadow-lg shadow-indigo-500/30">
+ <div className="w-10 h-10 rounded-xl bg-app-info text-app-foreground flex items-center justify-center shadow-lg shadow-indigo-500/30">
  <Percent size={20} />
  </div>
  <div>
  <p className="text-xs font-black text-indigo-900 uppercase tracking-wider">Round Off Discount</p>
- <p className="text-[10px] text-indigo-500 font-bold uppercase">Posts to Round-Off account for audit</p>
+ <p className="text-[10px] text-app-info font-bold uppercase">Posts to Round-Off account for audit</p>
  </div>
  </div>
  <div className="flex items-center gap-2 flex-wrap">
@@ -584,7 +584,7 @@ export function MultiPaymentDashboard({
  })}
  <button
  onClick={() => handleRoundOff()}
- className="h-10 px-4 bg-emerald-gradient text-app-foreground rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-all active:scale-95 shadow-lg shadow-app-primary/20 flex items-center gap-2 border border-emerald-400/30"
+ className="h-10 px-4 bg-emerald-gradient text-app-foreground rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-all active:scale-95 shadow-lg shadow-app-primary/20 flex items-center gap-2 border border-app-success/30"
  >
  <Percent size={14} />
  Full Adjustment
@@ -606,7 +606,7 @@ export function MultiPaymentDashboard({
  </div>
  <button
  onClick={handleSurplusToWallet}
- className="h-12 px-6 bg-app-warning text-app-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all flex items-center gap-3 shadow-xl shadow-amber-600/20 active:scale-95"
+ className="h-12 px-6 bg-app-warning text-app-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-app-warning transition-all flex items-center gap-3 shadow-xl shadow-amber-600/20 active:scale-95"
  >
  <Wallet size={16} />
  Add to Wallet
@@ -667,7 +667,7 @@ export function MultiPaymentDashboard({
  return next;
  });
  }}
- className="w-10 h-10 rounded-xl bg-app-foreground/5 text-app-foreground/20 hover:bg-rose-500 hover:text-app-foreground flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg"
+ className="w-10 h-10 rounded-xl bg-app-foreground/5 text-app-foreground/20 hover:bg-app-error hover:text-app-foreground flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg"
  >
  <Trash2 size={18} />
  </button>

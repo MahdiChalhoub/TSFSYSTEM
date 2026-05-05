@@ -71,7 +71,7 @@ export function ProductList({ categoryId, unitId }: { categoryId?: number, unitI
  </div>
  </div>
  <div className="text-right ml-4">
- <p className={`text-xl font-mono font-black leading-none ${p.stock_level > 0 ? 'text-app-foreground' : 'text-rose-500'}`}>
+ <p className={`text-xl font-mono font-black leading-none ${p.stock_level > 0 ? 'text-app-foreground' : 'text-app-error'}`}>
  {p.stock_level || 0}
  </p>
  <span className="text-[8px] text-app-muted-foreground uppercase font-black tracking-widest">{p.unit_name || 'Units'}</span>

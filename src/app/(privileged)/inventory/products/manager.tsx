@@ -13,7 +13,7 @@
  * See _components/ for ProductRow, FiltersPanel, CustomizePanel, etc.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useDeferredValue } from 'react'
 import { getListViewPolicy } from '@/app/actions/listview-policies'
 import { useRouter } from 'next/navigation'
 import { useAdmin } from '@/context/AdminContext'
@@ -223,7 +223,19 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
 
   // ── Filtering (delegated to _lib/filters.ts) ──
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters])
-  const filtered = useMemo(() => applyFilters(items, search, filters), [items, search, filters])
+  /* useDeferredValue keeps the search input snappy when the result list is
+   *  large: the input updates immediately on every keystroke, but
+   *  `deferredSearch`/`deferredFilters` track behind whenever React is busy.
+   *  React reconciles the cheap input change first, then the heavy
+   *  applyFilters → paginated → row render runs against the deferred value
+   *  at lower priority. Net effect: typing feels instant even with 5k rows
+   *  loaded. */
+  const deferredSearch = useDeferredValue(search)
+  const deferredFilters = useDeferredValue(filters)
+  const filtered = useMemo(
+    () => applyFilters(items, deferredSearch, deferredFilters),
+    [items, deferredSearch, deferredFilters],
+  )
   const hasFilters = !!search || activeFilterCount > 0
 
   // Reset to page 1 when filters change
@@ -331,6 +343,18 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
   ], [triggerRequest])
 
   const handleToggleSelect = useCallback((id: number | string) => toggleSelect(Number(id)), [toggleSelect])
+
+  const handleColumnReorder = useCallback((newOrder: string[]) => {
+    setColumnOrder(newOrder)
+    const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: newOrder } : p)
+    setProfiles(updated)
+    saveProfiles(updated)
+    const ap = updated.find(p => p.id === activeProfileId)
+    if (ap) syncProfileToBackend(ap)
+  }, [profiles, activeProfileId])
+
+  const handleToggleFilters = useCallback(() => setShowFilters(s => !s), [])
+  const handleOpenCustomize = useCallback(() => setShowCustomize(true), [])
 
   /* ═══════════════════════════════════════════════════════════
    *  RENDER
@@ -553,13 +577,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           centerAlignedCols={CENTER_ALIGNED_COLS}
           growCols={GROW_COLS}
           columnOrder={columnOrder}
-          onColumnReorder={newOrder => {
-            setColumnOrder(newOrder)
-            const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: newOrder } : p)
-            setProfiles(updated); saveProfiles(updated)
-            const ap = updated.find(p => p.id === activeProfileId)
-            if (ap) syncProfileToBackend(ap)
-          }}
+          onColumnReorder={handleColumnReorder}
           policyHiddenColumns={policyHiddenColumns}
           entityLabel="Product"
           /* ── Integrated Toolbar ── */
@@ -568,9 +586,9 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
           searchRef={searchRef as React.RefObject<HTMLInputElement>}
           showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
+          onToggleFilters={handleToggleFilters}
           activeFilterCount={activeFilterCount}
-          onToggleCustomize={() => setShowCustomize(true)}
+          onToggleCustomize={handleOpenCustomize}
           /* ── Row rendering ── */
           renderRowIcon={renderRowIcon}
           renderRowTitle={renderRowTitle}

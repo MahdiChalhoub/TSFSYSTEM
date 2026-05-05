@@ -100,7 +100,7 @@ export default function ReportBuilderPage() {
                         <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Custom Financial Reports</p>
                     </div>
                 </div>
-                <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-app-primary-foreground text-sm font-semibold transition-colors">
+                <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-info hover:bg-app-info text-app-primary-foreground text-sm font-semibold transition-colors">
                     <Plus size={14} />
                     New Report
                 </button>
@@ -136,7 +136,7 @@ export default function ReportBuilderPage() {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-app-primary-foreground text-sm font-semibold">Create Report</button>
+                        <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-app-info hover:bg-app-info text-app-primary-foreground text-sm font-semibold">Create Report</button>
                         <button onClick={() => setShowNew(false)} className="px-4 py-2 rounded-xl bg-app-surface hover:bg-app-surface text-app-muted-foreground text-sm">Cancel</button>
                     </div>
                 </div>
@@ -201,7 +201,7 @@ export default function ReportBuilderPage() {
                                 <p className="text-sm text-app-muted-foreground">{selected.data_source}</p>
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={() => handleRun()} disabled={running} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-app-primary-foreground text-sm font-semibold disabled:opacity-50">
+                                <button onClick={() => handleRun()} disabled={running} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-app-info hover:bg-app-info text-app-primary-foreground text-sm font-semibold disabled:opacity-50">
                                     {running ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />}
                                     {running ? 'Running...' : 'Run Report'}
                                 </button>

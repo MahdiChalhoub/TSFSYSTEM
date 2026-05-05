@@ -161,6 +161,118 @@ const C = {
     yellow: (s) => `\x1b[33m${s}\x1b[0m`,
     green: (s) => `\x1b[32m${s}\x1b[0m`,
     dim: (s) => `\x1b[2m${s}\x1b[0m`,
+    cyan: (s) => `\x1b[36m${s}\x1b[0m`,
+}
+
+// ── Baseline tracking ────────────────────────────────────────────────
+// Persist a per-file violation snapshot so PRs can show "added 3,
+// removed 12 since baseline" instead of just total counts. This is
+// what flips the lint from informational to enforcement-capable
+// without blocking on the legacy 6k+ violations.
+//
+// Usage:
+//   node scripts/lint/check_design_language.mjs --save-baseline
+//     → writes scripts/lint/.design-baseline.json with current counts
+//
+//   node scripts/lint/check_design_language.mjs --diff
+//     → compares against baseline and exits non-zero only if NEW
+//       violations were added (regressions). Removed violations are
+//       reported but never fail the run.
+//
+//   (default — no flags)
+//     → just prints the current report
+//
+const baselinePath = join(repoRoot, 'scripts', 'lint', '.design-baseline.json')
+const saveBaseline = process.argv.includes('--save-baseline')
+const showDiff     = process.argv.includes('--diff')
+
+// Per-file violation counts (the diff unit — counting per-line is too
+// noisy when files get reformatted).
+const currentByFile = {}
+for (const v of violations) {
+    if (!currentByFile[v.file]) currentByFile[v.file] = {}
+    const counts = currentByFile[v.file]
+    counts[v.rule] = (counts[v.rule] || 0) + 1
+}
+
+if (saveBaseline) {
+    await fs.writeFile(
+        baselinePath,
+        JSON.stringify({
+            generated_at: new Date().toISOString(),
+            total_violations: violations.length,
+            files: currentByFile,
+        }, null, 2),
+        'utf8'
+    )
+    console.log()
+    console.log(C.green(`✓ Baseline saved to ${relative(repoRoot, baselinePath)}`))
+    console.log(C.dim(`  ${violations.length} violations across ${Object.keys(currentByFile).length} files frozen.`))
+    console.log(C.dim(`  Future runs with --diff fail only if NEW violations are added.`))
+    process.exit(0)
+}
+
+// ── Diff mode: compare current run against the saved baseline ────────
+if (showDiff) {
+    let baseline
+    try {
+        baseline = JSON.parse(await fs.readFile(baselinePath, 'utf8'))
+    } catch {
+        console.error(C.red('No baseline found.') + ' Run with --save-baseline first.')
+        process.exit(2)
+    }
+
+    let added = 0, removed = 0
+    const newRegressions = []   // files where count went UP
+
+    // Files currently violating that were also in baseline → diff per rule.
+    // Files currently violating that were NOT in baseline → all are new.
+    for (const [file, rules] of Object.entries(currentByFile)) {
+        const baseRules = baseline.files[file] || {}
+        for (const [rule, count] of Object.entries(rules)) {
+            const wasCount = baseRules[rule] || 0
+            if (count > wasCount) {
+                added += (count - wasCount)
+                newRegressions.push({ file, rule, was: wasCount, now: count })
+            }
+        }
+    }
+
+    // Files in baseline that improved or disappeared.
+    for (const [file, rules] of Object.entries(baseline.files)) {
+        const curRules = currentByFile[file] || {}
+        for (const [rule, count] of Object.entries(rules)) {
+            const nowCount = curRules[rule] || 0
+            if (count > nowCount) removed += (count - nowCount)
+        }
+    }
+
+    console.log(C.bold(`Design Language Diff`) + C.dim(`  vs baseline ${baseline.generated_at}`))
+    console.log()
+    console.log(`  ${C.green('-' + String(removed).padStart(4))}  removed (improvements)`)
+    console.log(`  ${C.red  ('+' + String(added).padStart(4))}  added   (regressions)`)
+    console.log(`  ${C.cyan(' ' + String(violations.length).padStart(4))}  current total (was ${baseline.total_violations})`)
+    console.log()
+
+    if (newRegressions.length > 0) {
+        console.log(C.bold('Regressions:'))
+        for (const r of newRegressions.slice(0, 25)) {
+            console.log(`  ${C.red(`+${r.now - r.was}`)}  ${r.file}  ${C.yellow(r.rule)}  ${C.dim(`(was ${r.was}, now ${r.now})`)}`)
+        }
+        if (newRegressions.length > 25) {
+            console.log(C.dim(`  … +${newRegressions.length - 25} more files regressed`))
+        }
+        console.log()
+        console.log(C.red(`✗ ${added} new violation${added === 1 ? '' : 's'} introduced — fix or update baseline.`))
+        process.exit(1)
+    }
+
+    if (removed > 0) {
+        console.log(C.green(`✓ Clean — no regressions, ${removed} violations cleaned up since baseline.`))
+    } else {
+        console.log(C.green('✓ Clean — no regressions.'))
+    }
+    process.exit(0)
 }
 
 console.log()

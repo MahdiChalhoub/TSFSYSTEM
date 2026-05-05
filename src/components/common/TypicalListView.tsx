@@ -216,7 +216,7 @@ export function TypicalListView<T, D = any>(props: TypicalListViewProps<T, D>) {
         label: 'Edit', icon: <Pencil size={12} className="text-app-muted-foreground" />, onClick: () => actions.onEdit!(row)
       })
       if (actions.onDelete) items.push({
-        label: 'Delete', icon: <Trash2 size={12} className="text-red-500" />, onClick: () => actions.onDelete!(row)
+        label: 'Delete', icon: <Trash2 size={12} className="text-app-error" />, onClick: () => actions.onDelete!(row)
       })
       return items
     }
@@ -255,10 +255,10 @@ export function TypicalListView<T, D = any>(props: TypicalListViewProps<T, D>) {
           </span>
         )}
         {lifecycle.getVerified?.(row) && (
-          <CheckCircle2 size={12} className="text-emerald-500" />
+          <CheckCircle2 size={12} className="text-app-success" />
         )}
         {lifecycle.getLocked?.(row) && (
-          <Lock size={12} className="text-amber-500" />
+          <Lock size={12} className="text-app-warning" />
         )}
       </div>
     )

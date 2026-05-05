@@ -90,7 +90,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                     🏆 Leaderboard
                 </button>
                 <button onClick={() => setTab('my')}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
+                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-app-info text-white shadow-lg shadow-indigo-200' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
                     📊 My History
                 </button>
             </div>
@@ -103,7 +103,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <Trophy size={20} className="text-app-warning" /> Top Performers
                         </h2>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-app-border">
                         {leaderboard.length === 0 ? (
                             <div className="text-center py-16">
                                 <Trophy size={48} className="mx-auto text-app-faint mb-4" />
@@ -149,7 +149,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <BarChart3 size={20} className="text-app-info" /> Performance History
                         </h2>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-app-border">
                         {myPerformance.length === 0 ? (
                             <div className="text-center py-16">
                                 <BarChart3 size={48} className="mx-auto text-app-faint mb-4" />

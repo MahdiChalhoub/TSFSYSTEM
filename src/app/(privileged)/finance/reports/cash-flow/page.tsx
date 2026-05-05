@@ -256,8 +256,8 @@ export default function CashFlowReportPage() {
           <Card className="rounded-2xl">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                  <ArrowDownCircle size={20} className="text-orange-700" />
+                <div className="w-10 h-10 rounded-xl bg-app-warning-soft flex items-center justify-center">
+                  <ArrowDownCircle size={20} className="text-app-warning" />
                 </div>
                 <CardTitle>Financing Activities</CardTitle>
               </div>

@@ -28,33 +28,33 @@ export default function MidnightSearchPage({ initialQuery }: SearchPageProps) {
             <h1 className="text-3xl font-black text-white tracking-tight mb-6">Search Products</h1>
 
             <div className="relative mb-8">
-                <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                 <input
                     type="text"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search by name, SKU, or category..."
                     autoFocus
-                    className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700 text-lg"
+                    className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-app-success/30 transition-all placeholder:text-app-muted-foreground text-lg"
                 />
                 {search && (
-                    <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                    <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white">
                         <X size={18} />
                     </button>
                 )}
             </div>
 
             {search && (
-                <p className="text-xs text-slate-500 mb-6">
+                <p className="text-xs text-app-muted-foreground mb-6">
                     {results.length} result{results.length !== 1 ? 's' : ''} for &quot;<span className="text-white">{search}</span>&quot;
                 </p>
             )}
 
             {search && results.length === 0 && (
                 <div className="py-16 text-center space-y-3">
-                    <ShoppingBag size={36} className="mx-auto text-slate-600" />
+                    <ShoppingBag size={36} className="mx-auto text-app-muted-foreground" />
                     <p className="text-white font-bold">No products found</p>
-                    <p className="text-slate-500 text-sm">Try a different search term</p>
+                    <p className="text-app-muted-foreground text-sm">Try a different search term</p>
                 </div>
             )}
 
@@ -68,9 +68,9 @@ export default function MidnightSearchPage({ initialQuery }: SearchPageProps) {
 
             {!search && (
                 <div className="py-16 text-center space-y-3">
-                    <Search size={36} className="mx-auto text-slate-600" />
+                    <Search size={36} className="mx-auto text-app-muted-foreground" />
                     <p className="text-white font-bold">Start typing to search</p>
-                    <p className="text-slate-500 text-sm">Search across all products in the catalog</p>
+                    <p className="text-app-muted-foreground text-sm">Search across all products in the catalog</p>
                 </div>
             )}
         </div>

@@ -57,7 +57,7 @@ export default function BoutiqueFooter() {
                     <p className="text-xs text-indigo-400">
                         © {new Date().getFullYear()} {orgName}. All rights reserved.
                     </p>
-                    <p className="text-xs text-indigo-500 flex items-center gap-1">
+                    <p className="text-xs text-app-info flex items-center gap-1">
                         Made with <Heart size={10} className="text-pink-400 fill-pink-400" /> by TSF Platform
                     </p>
                 </div>

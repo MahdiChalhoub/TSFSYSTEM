@@ -216,7 +216,7 @@ export default function NewFinancialEventPage() {
 
                             <div className="flex justify-end gap-3 pt-4">
                                 <Button type="button" variant="outline" onClick={() => setSelectedType(null)}>Cancel</Button>
-                                <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                <Button type="submit" disabled={loading} className="bg-app-success hover:bg-app-success text-white">
                                     {loading ? "Processing..." : "Create & Post Immediately"}
                                 </Button>
                             </div>

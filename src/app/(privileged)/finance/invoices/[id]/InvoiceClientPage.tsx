@@ -189,11 +189,11 @@ export function InvoiceClientPage({ invoice, currency }: InvoiceClientPageProps)
 
                 {/* Reversal Info */}
                 {invoice.status === 'REVERSED' && (
-                    <div className="bg-orange-500/10 border border-orange-500/20 p-6 rounded-[2rem] flex items-start gap-3">
-                        <AlertTriangle className="text-orange-500 shrink-0 mt-0.5" size={18} />
+                    <div className="bg-app-warning/10 border border-app-warning/20 p-6 rounded-[2rem] flex items-start gap-3">
+                        <AlertTriangle className="text-app-warning shrink-0 mt-0.5" size={18} />
                         <div>
-                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest block mb-1">Reversed Document</span>
-                            <p className="text-xs text-orange-700 font-medium">
+                            <span className="text-[10px] font-black text-app-warning uppercase tracking-widest block mb-1">Reversed Document</span>
+                            <p className="text-xs text-app-warning font-medium">
                                 This document has been reversed. Offsetting accounting entries have been generated.
                             </p>
                         </div>

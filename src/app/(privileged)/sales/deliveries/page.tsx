@@ -99,7 +99,7 @@ export default function DeliveryOrdersPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Delivery Management
@@ -307,7 +307,7 @@ export default function DeliveryOrdersPage() {
                                 .slice(0, 10)
                                 .map(d => (
                                     <div key={`timeline-${d.id}`} className="flex items-center gap-3 text-sm">
-                                        <div className={`w-2 h-2 rounded-full ${d.status === 'DELIVERED' ? 'bg-green-500' : d.status === 'IN_TRANSIT' ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                                        <div className={`w-2 h-2 rounded-full ${d.status === 'DELIVERED' ? 'bg-app-success' : d.status === 'IN_TRANSIT' ? 'bg-app-info' : 'bg-gray-400'}`} />
                                         <span className="font-mono text-xs text-app-muted-foreground w-14">DEL-{d.id}</span>
                                         <span className="font-medium">{d.recipient_name || d.contact_name || 'Unknown'}</span>
                                         <span className="text-app-muted-foreground">{'\u2192'}</span>

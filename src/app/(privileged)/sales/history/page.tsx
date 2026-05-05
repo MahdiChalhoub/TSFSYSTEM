@@ -106,7 +106,7 @@ export default function OrderHistoryPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center shadow-lg shadow-indigo-200">
                             <HistoryIcon size={20} className="text-white" />
                         </div>
                         Transaction History
@@ -219,12 +219,12 @@ export default function OrderHistoryPage() {
                                         <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
-                                                className="p-2 bg-app-info-bg text-app-info rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                className="p-2 bg-app-info-bg text-app-info rounded-lg hover:bg-app-info hover:text-white transition-all shadow-sm"
                                                 title="Download Invoice PDF"
                                             >
                                                 <FileText size={18} />
                                             </button>
-                                            <button className="p-2 bg-app-success-bg text-app-success rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                            <button className="p-2 bg-app-success-bg text-app-success rounded-lg hover:bg-app-success hover:text-white transition-all shadow-sm">
                                                 <Printer size={18} />
                                             </button>
                                             <Link

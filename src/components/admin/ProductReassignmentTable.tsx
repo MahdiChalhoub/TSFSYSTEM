@@ -85,7 +85,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
 
     if (products.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 p-12">
+            <div className="flex flex-col items-center justify-center h-full text-app-muted-foreground p-12">
                 <p>No products in this category.</p>
             </div>
         );
@@ -94,16 +94,16 @@ export function ProductReassignmentTable({ products, categories, currentCategory
     return (
         <div className="flex flex-col h-full">
             {/* Toolbar */}
-            <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+            <div className="p-4 bg-white border-b border-app-border flex items-center justify-between sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={toggleSelectAll}
-                        className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900"
+                        className="flex items-center gap-2 text-sm font-semibold text-app-muted-foreground hover:text-app-foreground"
                     >
-                        {allSelected ? <CheckSquare size={18} className="text-emerald-600" /> : <Square size={18} />}
+                        {allSelected ? <CheckSquare size={18} className="text-app-success" /> : <Square size={18} />}
                         Select All
                     </button>
-                    <span className="text-xs text-gray-400 border-l pl-4 border-gray-200">
+                    <span className="text-xs text-app-muted-foreground border-l pl-4 border-app-border">
                         {selectedProductIds.length} selected
                     </span>
                 </div>
@@ -111,7 +111,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                 <button
                     disabled={selectedProductIds.length === 0}
                     onClick={() => setIsMoveModalOpen(true)}
-                    className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+                    className="bg-app-success disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
                 >
                     <ArrowRightLeft size={16} />
                     Move Selected
@@ -128,27 +128,27 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                             className={`
                                 cursor-pointer border rounded-xl p-3 flex items-center gap-4 transition-all
                                 ${selectedProductIds.includes(product.id)
-                                    ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500/20'
-                                    : 'bg-white border-gray-100 hover:border-emerald-200 hover:shadow-sm'
+                                    ? 'bg-app-success-soft border-app-success ring-1 ring-emerald-500/20'
+                                    : 'bg-white border-app-border hover:border-app-success hover:shadow-sm'
                                 }
                             `}
                         >
-                            <div className="text-gray-400">
+                            <div className="text-app-muted-foreground">
                                 {selectedProductIds.includes(product.id)
-                                    ? <CheckSquare size={20} className="text-emerald-500" />
+                                    ? <CheckSquare size={20} className="text-app-success" />
                                     : <Square size={20} />
                                 }
                             </div>
 
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-app-muted-foreground">
                                 IMG
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-gray-900 truncate">{product.name}</h4>
-                                <div className="text-xs text-gray-500 flex gap-2">
+                                <h4 className="font-medium text-app-foreground truncate">{product.name}</h4>
+                                <div className="text-xs text-app-muted-foreground flex gap-2">
                                     {product.brand_name && <span className="bg-gray-100 px-1.5 rounded">{product.brand_name}</span>}
-                                    {product.unit_name && <span className="text-gray-400">{product.unit_name}</span>}
+                                    {product.unit_name && <span className="text-app-muted-foreground">{product.unit_name}</span>}
                                 </div>
                             </div>
                         </div>
@@ -160,9 +160,9 @@ export function ProductReassignmentTable({ products, categories, currentCategory
             {isMoveModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="font-bold text-lg text-gray-900">Move {selectedProductIds.length} Products</h3>
-                            <p className="text-xs text-gray-500">Select the destination category.</p>
+                        <div className="px-6 py-4 border-b border-app-border bg-gray-50/50">
+                            <h3 className="font-bold text-lg text-app-foreground">Move {selectedProductIds.length} Products</h3>
+                            <p className="text-xs text-app-muted-foreground">Select the destination category.</p>
                         </div>
 
                         <div className="p-6 overflow-y-auto flex-1">
@@ -180,17 +180,17 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                             />
                         </div>
 
-                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                        <div className="px-6 py-4 border-t border-app-border bg-gray-50 flex justify-end gap-3">
                             <button
                                 onClick={() => setIsMoveModalOpen(false)}
-                                className="px-4 py-2 rounded-lg text-gray-600 font-medium hover:bg-gray-200 transition-colors"
+                                className="px-4 py-2 rounded-lg text-app-muted-foreground font-medium hover:bg-gray-200 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleMove}
                                 disabled={pending || targetCategoryId.length === 0}
-                                className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
+                                className="bg-app-success disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
                             >
                                 {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                 Confirm Move

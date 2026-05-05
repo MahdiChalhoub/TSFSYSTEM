@@ -586,7 +586,7 @@ export default function SmartProductForm({
                                             <Tags className="w-3.5 h-3.5 text-app-warning" />
                                             <span className="text-[10px] font-bold text-app-warning uppercase tracking-widest">Product Attributes</span>
                                             {attrCount > 0 && (
-                                                <span className="text-[9px] font-bold bg-amber-500/10 text-app-warning px-1.5 py-0.5 rounded-full">
+                                                <span className="text-[9px] font-bold bg-app-warning/10 text-app-warning px-1.5 py-0.5 rounded-full">
                                                     {attrCount} selected
                                                 </span>
                                             )}
@@ -931,7 +931,7 @@ export default function SmartProductForm({
                                     </div>
 
                                     {/* ═══ 3. Expiry & Shelf Life ═══ */}
-                                    <div className="p-4 rounded-xl bg-gradient-to-b from-amber-50/30 to-orange-50/20 border border-amber-200/40">
+                                    <div className="p-4 rounded-xl bg-gradient-to-b from-amber-50/30 to-orange-50/20 border border-app-warning/40">
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="text-[11px] font-bold text-app-foreground flex items-center gap-1.5">
                                                 <span className="text-[14px]">🕐</span>
@@ -1001,7 +1001,7 @@ export default function SmartProductForm({
 
                                                 {/* Computed summary */}
                                                 {mfgShelfLife > 0 && (
-                                                    <div className="p-3 rounded-lg bg-app-surface/60 border border-amber-200/50 space-y-1.5">
+                                                    <div className="p-3 rounded-lg bg-app-surface/60 border border-app-warning/50 space-y-1.5">
                                                         <p className="text-[9px] font-bold text-app-warning uppercase tracking-wider">Shelf Life Summary</p>
                                                         <div className="flex items-center gap-2">
                                                             <div className="flex-1 h-5 bg-app-warning-bg rounded-full overflow-hidden relative">

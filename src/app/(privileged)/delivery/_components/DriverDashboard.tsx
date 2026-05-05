@@ -125,7 +125,7 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
                         <MetricProgress label="Fuel Efficiency" value={76} color="bg-app-warning" />
                     </div>
 
-                    <div className="mt-8 p-4 rounded-lg bg-app-success/10 border border-emerald-500/20">
+                    <div className="mt-8 p-4 rounded-lg bg-app-success/10 border border-app-success/20">
                         <p className="text-xs text-app-success font-medium mb-1">Monthly Bonus Eligibility</p>
                         <p className="text-xs text-white/70">This driver is eligible for the performance bonus this month based on current metrics.</p>
                     </div>

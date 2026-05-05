@@ -213,18 +213,18 @@ export default function SmartDatePicker({
                 type="button"
                 onClick={() => setOpen(!open)}
                 className={`w-full border rounded-lg p-3 text-sm font-medium bg-app-background text-left flex items-center gap-2 min-h-[48px] transition-all outline-none ${open
-                        ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                        ? 'border-app-success ring-2 ring-emerald-500/20'
                         : 'border-app-border hover:border-app-muted-foreground/40'
                     } ${value ? 'text-app-foreground' : 'text-app-muted-foreground'}`}
             >
-                <Calendar size={16} className={value ? 'text-emerald-500' : 'text-app-muted-foreground'} />
+                <Calendar size={16} className={value ? 'text-app-success' : 'text-app-muted-foreground'} />
                 <span className="flex-1 truncate">
                     {value ? formatDisplay(value) : placeholder}
                 </span>
                 {value && (
                     <span
                         onClick={handleClear}
-                        className="p-0.5 rounded hover:bg-app-background text-app-muted-foreground hover:text-red-500 transition-colors"
+                        className="p-0.5 rounded hover:bg-app-background text-app-muted-foreground hover:text-app-error transition-colors"
                     >
                         <X size={14} />
                     </span>
@@ -244,7 +244,7 @@ export default function SmartDatePicker({
                                     key={p.days}
                                     type="button"
                                     onClick={() => selectPreset(p.days)}
-                                    className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors whitespace-nowrap"
+                                    className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-app-success-soft text-app-success hover:bg-app-success-soft dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition-colors whitespace-nowrap"
                                 >
                                     {p.label}
                                 </button>
@@ -252,7 +252,7 @@ export default function SmartDatePicker({
                             <button
                                 type="button"
                                 onClick={goToToday}
-                                className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors ml-auto"
+                                className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-app-info-soft text-app-info hover:bg-app-info-soft dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors ml-auto"
                             >
                                 Today
                             </button>
@@ -334,18 +334,18 @@ export default function SmartDatePicker({
                         relative aspect-square flex items-center justify-center rounded-lg text-xs font-bold transition-all
                         ${disabled ? 'text-app-muted-foreground/30 cursor-not-allowed' : 'cursor-pointer'}
                         ${isSelected
-                                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900/40'
+                                                    ? 'bg-app-success text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900/40'
                                                     : isToday
-                                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 font-black'
+                                                        ? 'bg-app-info-soft text-app-info dark:bg-blue-900/40 dark:text-blue-400 font-black'
                                                         : isPast
                                                             ? 'text-app-muted-foreground/60 hover:bg-app-background'
-                                                            : 'text-app-foreground hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                                            : 'text-app-foreground hover:bg-app-success-soft dark:hover:bg-emerald-900/20'
                                                 }
                       `}
                                         >
                                             {day}
                                             {isToday && !isSelected && (
-                                                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500" />
+                                                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-app-info" />
                                             )}
                                         </button>
                                     )
@@ -366,9 +366,9 @@ export default function SmartDatePicker({
                                         type="button"
                                         onClick={() => selectMonth(i)}
                                         className={`py-2.5 rounded-lg text-xs font-bold transition-all ${isSelected
-                                                ? 'bg-emerald-500 text-white shadow-md'
+                                                ? 'bg-app-success text-white shadow-md'
                                                 : isCurrent
-                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+                                                    ? 'bg-app-info-soft text-app-info dark:bg-blue-900/40 dark:text-blue-400'
                                                     : 'text-app-foreground hover:bg-app-background'
                                             }`}
                                     >
@@ -391,9 +391,9 @@ export default function SmartDatePicker({
                                         type="button"
                                         onClick={() => selectYear(y)}
                                         className={`py-2.5 rounded-lg text-xs font-bold transition-all ${isSelected
-                                                ? 'bg-emerald-500 text-white shadow-md'
+                                                ? 'bg-app-success text-white shadow-md'
                                                 : isCurrent
-                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+                                                    ? 'bg-app-info-soft text-app-info dark:bg-blue-900/40 dark:text-blue-400'
                                                     : 'text-app-foreground hover:bg-app-background'
                                             }`}
                                     >

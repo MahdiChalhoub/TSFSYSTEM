@@ -26,7 +26,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
  COMPLETED: { label: 'COMPLETED', color: 'text-app-primary bg-app-primary/10 border-app-primary/20', icon: CheckCircle2 },
  INVOICED: { label: 'INVOICED', color: 'text-app-info bg-app-info-bg border-app-info/20', icon: FileText },
  PENDING: { label: 'PENDING', color: 'text-app-warning bg-app-warning-bg border-app-warning/20', icon: Clock },
- CANCELLED: { label: 'CANCELLED', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', icon: XCircle },
+ CANCELLED: { label: 'CANCELLED', color: 'text-rose-400 bg-app-error/10 border-app-error/20', icon: XCircle },
  DRAFT: { label: 'DRAFT', color: 'text-app-muted-foreground bg-app-foreground/5 border-app-foreground/10', icon: FileText },
 };
 
@@ -123,7 +123,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  <RefreshCw size={16} className={loading ? 'animate-spin text-app-primary' : ''} />
  </button>
  <button onClick={onClose}
- className="w-10 h-10 rounded-xl bg-app-foreground/5 hover:bg-rose-500/20 text-app-foreground/40 hover:text-rose-500 transition-all flex items-center justify-center border border-app-foreground/10">
+ className="w-10 h-10 rounded-xl bg-app-foreground/5 hover:bg-app-error/20 text-app-foreground/40 hover:text-app-error transition-all flex items-center justify-center border border-app-foreground/10">
  <X size={18} />
  </button>
  </div>
@@ -275,7 +275,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  <button
  onClick={() => handlePrint(selectedOrder)}
  disabled={printingId === selectedOrder.id}
- className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-[2rem] bg-emerald-gradient text-app-foreground shadow-xl shadow-app-primary/20 hover:scale-110 active:scale-95 transition-all border border-emerald-400/30 group/btn"
+ className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-[2rem] bg-emerald-gradient text-app-foreground shadow-xl shadow-app-primary/20 hover:scale-110 active:scale-95 transition-all border border-app-success/30 group/btn"
  >
  {printingId === selectedOrder.id
  ? <Loader2 size={24} className="animate-spin" />

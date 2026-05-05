@@ -62,7 +62,7 @@ export default function SalesReturnsPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-100">
+                        <div className="w-10 h-10 rounded-xl bg-app-warning flex items-center justify-center shadow-lg shadow-amber-100">
                             <RotateCcw size={20} className="text-white" />
                         </div>
                         Customer Returns
@@ -109,7 +109,7 @@ export default function SalesReturnsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="h-8 bg-app-success-bg text-app-success border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all font-bold text-[10px] uppercase"
+                                                        className="h-8 bg-app-success-bg text-app-success border-emerald-100 hover:bg-app-success hover:text-white transition-all font-bold text-[10px] uppercase"
                                                         onClick={() => approveReturn(ret.id)}
                                                     >
                                                         <CheckCircle2 size={14} className="mr-1" /> Approve

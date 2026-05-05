@@ -34,8 +34,8 @@ const MODULE_COLORS: Record<string, string> = {
     finance: 'bg-app-primary/10 text-app-success border-app-success/20',
     hr: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     sales: 'bg-app-warning/10 text-app-warning border-app-warning/20',
-    inventory: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    workspace: 'bg-indigo-500/10 text-app-info border-app-info/20',
+    inventory: 'bg-app-info/10 text-cyan-400 border-app-info/20',
+    workspace: 'bg-app-info/10 text-app-info border-app-info/20',
     manual: 'bg-app-error/10 text-app-error border-app-error/20',
 };
 

@@ -46,7 +46,7 @@ export default function GlobalNotFound() {
                     </Link>
                 </div>
 
-                <p className="text-[10px] text-gray-300 font-mono uppercase tracking-widest pt-4">
+                <p className="text-[10px] text-app-muted-foreground font-mono uppercase tracking-widest pt-4">
                     404 • Page Not Found
                 </p>
             </div>

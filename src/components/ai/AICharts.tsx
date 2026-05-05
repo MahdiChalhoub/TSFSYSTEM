@@ -42,7 +42,7 @@ export function AIChart({ chart }: AIChartProps) {
 
     if (!data || data.length === 0) {
         return (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-app-muted-foreground">
                 No data available for chart
             </div>
         )
@@ -184,14 +184,14 @@ export function AIChart({ chart }: AIChartProps) {
                 )
 
             default:
-                return <p className="text-gray-500">Unsupported chart type: {type}</p>
+                return <p className="text-app-muted-foreground">Unsupported chart type: {type}</p>
         }
     }
 
     return (
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-app-border">
             {title && (
-                <h4 className="text-sm font-semibold text-gray-700 mb-4">{title}</h4>
+                <h4 className="text-sm font-semibold text-app-muted-foreground mb-4">{title}</h4>
             )}
             {renderChart()}
         </div>
@@ -229,11 +229,11 @@ interface AnalysisInsight {
 
 export function AIInsightCard({ insight }: { insight: AnalysisInsight }) {
     const colors = {
-        success: 'bg-green-50 border-green-200 text-green-800',
-        warning: 'bg-amber-50 border-amber-200 text-amber-800',
-        info: 'bg-blue-50 border-blue-200 text-blue-800',
-        trend_up: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-        trend_down: 'bg-rose-50 border-rose-200 text-rose-800'
+        success: 'bg-app-success-soft border-app-success text-app-success',
+        warning: 'bg-app-warning-soft border-app-warning text-app-warning',
+        info: 'bg-app-info-soft border-app-info text-app-info',
+        trend_up: 'bg-app-success-soft border-app-success text-app-success',
+        trend_down: 'bg-app-error-soft border-app-error text-app-error'
     }
 
     const icons = {
@@ -273,23 +273,23 @@ interface StrategyRecommendation {
 
 export function AIStrategyCard({ strategy }: { strategy: StrategyRecommendation }) {
     const priorityColors = {
-        high: 'bg-red-100 text-red-700 border-red-200',
-        medium: 'bg-amber-100 text-amber-700 border-amber-200',
-        low: 'bg-blue-100 text-blue-700 border-blue-200'
+        high: 'bg-app-error-soft text-app-error border-app-error',
+        medium: 'bg-app-warning-soft text-app-warning border-app-warning',
+        low: 'bg-app-info-soft text-app-info border-app-info'
     }
 
     return (
-        <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-200">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-app-border">
             <div className="flex items-center gap-2 mb-2">
                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${priorityColors[strategy.priority]}`}>
                     {strategy.priority.toUpperCase()}
                 </span>
-                <span className="text-sm font-medium text-gray-500">{strategy.category}</span>
+                <span className="text-sm font-medium text-app-muted-foreground">{strategy.category}</span>
             </div>
-            <h4 className="font-bold text-gray-900 mb-2">{strategy.action}</h4>
-            <p className="text-sm text-gray-600">{strategy.impact}</p>
+            <h4 className="font-bold text-app-foreground mb-2">{strategy.action}</h4>
+            <p className="text-sm text-app-muted-foreground">{strategy.impact}</p>
             {strategy.timeline && (
-                <p className="text-xs text-gray-400 mt-2">Timeline: {strategy.timeline}</p>
+                <p className="text-xs text-app-muted-foreground mt-2">Timeline: {strategy.timeline}</p>
             )}
         </div>
     )

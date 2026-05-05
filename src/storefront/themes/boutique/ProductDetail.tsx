@@ -38,7 +38,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
             <div className="max-w-6xl mx-auto px-6 py-10">
                 {/* Back */}
                 <Link href={`/tenant/${slug}`}
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-violet-600 mb-8 font-medium transition">
+                    className="inline-flex items-center gap-2 text-sm text-app-muted-foreground hover:text-violet-600 mb-8 font-medium transition">
                     <ArrowLeft size={16} /> Back to Store
                 </Link>
 
@@ -65,7 +65,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                     {/* Details */}
                     <div className="flex flex-col justify-center">
                         {product.sku && (
-                            <p className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2">SKU: {product.sku}</p>
+                            <p className="text-xs font-mono text-app-muted-foreground uppercase tracking-wider mb-2">SKU: {product.sku}</p>
                         )}
 
                         <h1 className="text-3xl md:text-4xl font-bold text-indigo-950 tracking-tight"
@@ -76,9 +76,9 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                         {/* Rating placeholder */}
                         <div className="flex items-center gap-1 mt-3">
                             {[1, 2, 3, 4, 5].map(i => (
-                                <Star key={i} size={16} className={i <= 4 ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                                <Star key={i} size={16} className={i <= 4 ? 'text-amber-400 fill-amber-400' : 'text-app-muted-foreground'} />
                             ))}
-                            <span className="text-xs text-gray-400 ml-2 font-medium">4.0 (Premium Selection)</span>
+                            <span className="text-xs text-app-muted-foreground ml-2 font-medium">4.0 (Premium Selection)</span>
                         </div>
 
                         {/* Price */}
@@ -87,7 +87,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 <div className="flex items-baseline gap-3">
                                     <span className="text-4xl font-bold text-violet-600">${price?.toFixed(2)}</span>
                                     {product.tax_rate ? (
-                                        <span className="text-xs text-gray-400">incl. {product.tax_rate}% tax</span>
+                                        <span className="text-xs text-app-muted-foreground">incl. {product.tax_rate}% tax</span>
                                     ) : null}
                                 </div>
                             ) : (
@@ -99,7 +99,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
 
                         {/* Description */}
                         {product.description && (
-                            <p className="mt-6 text-gray-500 leading-relaxed text-sm">
+                            <p className="mt-6 text-app-muted-foreground leading-relaxed text-sm">
                                 {product.description}
                             </p>
                         )}
@@ -107,7 +107,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                         {/* Stock */}
                         <div className="mt-6 flex items-center gap-3">
                             <div className={`w-2.5 h-2.5 rounded-full ${inStock ? 'bg-green-400' : 'bg-red-400'}`} />
-                            <span className={`text-sm font-medium ${inStock ? 'text-green-600' : 'text-red-500'}`}>
+                            <span className={`text-sm font-medium ${inStock ? 'text-app-success' : 'text-app-error'}`}>
                                 {inStock
                                     ? product.stock_quantity !== undefined
                                         ? `${product.stock_quantity} in stock`
@@ -121,17 +121,17 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                             {showPrice && !isQuoteMode && (
                                 <>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500 font-medium">Quantity</span>
+                                        <span className="text-sm text-app-muted-foreground font-medium">Quantity</span>
                                         <div className="flex items-center border border-violet-200 rounded-xl overflow-hidden">
                                             <button onClick={() => setQty(Math.max(1, qty - 1))}
-                                                className="px-3 py-2.5 text-gray-500 hover:bg-violet-50 transition">
+                                                className="px-3 py-2.5 text-app-muted-foreground hover:bg-violet-50 transition">
                                                 <Minus size={16} />
                                             </button>
                                             <span className="px-5 py-2.5 text-sm font-bold text-indigo-950 min-w-[40px] text-center">
                                                 {qty}
                                             </span>
                                             <button onClick={() => setQty(qty + 1)}
-                                                className="px-3 py-2.5 text-gray-500 hover:bg-violet-50 transition">
+                                                className="px-3 py-2.5 text-app-muted-foreground hover:bg-violet-50 transition">
                                                 <Plus size={16} />
                                             </button>
                                         </div>
@@ -140,10 +140,10 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                     <div className="flex gap-3">
                                         <button onClick={handleAdd} disabled={!inStock}
                                             className={`flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg ${inCart
-                                                    ? 'bg-green-500 text-white shadow-green-200'
+                                                    ? 'bg-app-success text-white shadow-green-200'
                                                     : inStock
                                                         ? 'bg-violet-600 text-white hover:bg-violet-700 shadow-violet-200'
-                                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                                        : 'bg-gray-200 text-app-muted-foreground cursor-not-allowed shadow-none'
                                                 }`}>
                                             <ShoppingBag size={18} />
                                             {inCart ? '✓ Added to Cart' : 'Add to Cart'}
@@ -151,8 +151,8 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
 
                                         <button onClick={() => toggleWishlist(product.id)}
                                             className={`p-4 rounded-2xl border transition ${inWishlist
-                                                    ? 'bg-pink-50 border-pink-200 text-pink-500'
-                                                    : 'border-violet-200 text-gray-400 hover:text-pink-500 hover:border-pink-200'
+                                                    ? 'bg-app-error-soft border-app-error text-app-error'
+                                                    : 'border-violet-200 text-app-muted-foreground hover:text-app-error hover:border-app-error'
                                                 }`}>
                                             <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
                                         </button>
@@ -171,7 +171,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 <div key={i} className="text-center p-3 rounded-xl bg-violet-50/50 border border-violet-100">
                                     <badge.icon size={20} className="mx-auto text-violet-500 mb-1.5" />
                                     <p className="text-xs font-bold text-indigo-950">{badge.label}</p>
-                                    <p className="text-[10px] text-gray-400">{badge.sub}</p>
+                                    <p className="text-[10px] text-app-muted-foreground">{badge.sub}</p>
                                 </div>
                             ))}
                         </div>

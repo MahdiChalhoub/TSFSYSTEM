@@ -126,7 +126,7 @@ export function FileUploader({
                     relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
                     transition-all duration-200 group
                     ${dragOver
-                        ? 'border-emerald-500 bg-emerald-500/10 scale-[1.02]'
+                        ? 'border-app-success bg-app-success/10 scale-[1.02]'
                         : 'border-gray-700 hover:border-gray-500 bg-gray-900/30 hover:bg-gray-800/30'
                     }
                 `}
@@ -139,11 +139,11 @@ export function FileUploader({
                     accept={acceptAttr}
                     onChange={(e) => handleFiles(e.target.files)}
                 />
-                <Upload size={32} className={`mx-auto mb-3 transition-colors ${dragOver ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
-                <p className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
+                <Upload size={32} className={`mx-auto mb-3 transition-colors ${dragOver ? 'text-emerald-400' : 'text-app-muted-foreground group-hover:text-app-muted-foreground'}`} />
+                <p className="text-sm text-app-muted-foreground group-hover:text-gray-200 transition-colors">
                     <span className="text-emerald-400 font-medium">Click to upload</span> or drag & drop
                 </p>
-                <p className="text-xs text-gray-600 mt-2">
+                <p className="text-xs text-app-muted-foreground mt-2">
                     Max {maxSizeMb} MB{acceptedTypes ? ` · ${acceptedTypes.join(', ').toUpperCase()}` : ''}
                 </p>
             </div>
@@ -155,10 +155,10 @@ export function FileUploader({
                         const Icon = getFileIcon(f.result?.content_type || '');
                         return (
                             <div key={idx} className="flex items-center gap-3 px-4 py-3 bg-gray-900/50 rounded-xl border border-gray-800">
-                                <Icon size={18} className="text-gray-400 shrink-0" />
+                                <Icon size={18} className="text-app-muted-foreground shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm text-gray-200 truncate">{f.name}</p>
-                                    <p className="text-xs text-gray-500">{formatBytes(f.size)}</p>
+                                    <p className="text-xs text-app-muted-foreground">{formatBytes(f.size)}</p>
                                 </div>
                                 {f.status === 'uploading' && <Loader2 size={16} className="text-blue-400 animate-spin shrink-0" />}
                                 {f.status === 'done' && <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />}
@@ -170,7 +170,7 @@ export function FileUploader({
                                 )}
                                 <button
                                     onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
-                                    className="text-gray-600 hover:text-red-400 transition-colors shrink-0"
+                                    className="text-app-muted-foreground hover:text-red-400 transition-colors shrink-0"
                                 >
                                     <X size={14} />
                                 </button>

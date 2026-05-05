@@ -28,7 +28,7 @@ const PAYMENT_ICONS: Record<string, string> = {
 const TYPE_CONFIG: Record<string, { color: string, bg: string }> = {
     SALE: { color: 'text-app-success', bg: 'bg-app-success-bg' },
     PURCHASE: { color: 'text-app-info', bg: 'bg-app-info-bg' },
-    RETURN: { color: 'text-orange-700', bg: 'bg-orange-50' },
+    RETURN: { color: 'text-app-warning', bg: 'bg-app-warning-soft' },
 }
 
 export default function CashRegisterPage() {
@@ -83,7 +83,7 @@ export default function CashRegisterPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-success flex items-center justify-center">
                             <Banknote size={20} className="text-white" />
                         </div>
                         Cash Register
@@ -147,12 +147,12 @@ export default function CashRegisterPage() {
                 <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                                <RotateCcw size={20} className="text-orange-600" />
+                            <div className="w-10 h-10 rounded-full bg-app-warning-soft flex items-center justify-center">
+                                <RotateCcw size={20} className="text-app-warning" />
                             </div>
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Returns</p>
-                                <p className="text-2xl font-bold text-orange-700">{fmt(returns.total)}</p>
+                                <p className="text-2xl font-bold text-app-warning">{fmt(returns.total)}</p>
                                 <p className="text-xs text-app-muted-foreground">{returns.count} return{returns.count !== 1 ? 's' : ''}</p>
                             </div>
                         </div>
@@ -216,8 +216,8 @@ export default function CashRegisterPage() {
                             .map(([name, stats]: [string, any]) => (
                                 <div key={name} className="flex items-center justify-between py-1 border-b last:border-0">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                                            <span className="text-[10px] font-bold text-indigo-600">
+                                        <div className="w-6 h-6 rounded-full bg-app-info-soft flex items-center justify-center">
+                                            <span className="text-[10px] font-bold text-app-info">
                                                 {name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
@@ -251,7 +251,7 @@ export default function CashRegisterPage() {
                                         title={`${i}:00 — ${fmt(val)}`}
                                     >
                                         <div
-                                            className={`w-full rounded-t transition-all ${isActive ? 'bg-emerald-400 hover:bg-emerald-500' : 'bg-app-surface-2'
+                                            className={`w-full rounded-t transition-all ${isActive ? 'bg-emerald-400 hover:bg-app-success' : 'bg-app-surface-2'
                                                 }`}
                                             style={{ height: `${Math.max(pct, 2)}%` }}
                                         />

@@ -232,8 +232,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 {/* ── Security Overlay for Cart when in Payment Mode ── */}
                 {isMultiPayMode && (
                     <div className="absolute top-0 right-0 w-[42%] h-full bg-app-foreground/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
-                        <div className="bg-app-foreground/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
-                            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                        <div className="bg-app-foreground/90 p-6 rounded-3xl shadow-2xl border border-app-warning flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+                            <div className="w-16 h-16 rounded-full bg-app-warning-soft flex items-center justify-center text-app-warning">
                                 <Lock size={32} />
                             </div>
                             <div>
@@ -251,7 +251,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 )}
 
                 {/* ════ LEFT COLUMN (58%) ════ */}
-                <aside className="w-[58%] flex flex-col bg-app-surface border-r border-gray-200/80 shrink-0 overflow-hidden relative">
+                <aside className="w-[58%] flex flex-col bg-app-surface border-r border-app-border/80 shrink-0 overflow-hidden relative">
                     {isMultiPayMode ? (
                         <MultiPaymentDashboard
                             totalAmount={totalAmount}
@@ -285,7 +285,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     {/* Avatar — click to toggle search */}
                                     <button
                                         onClick={() => setShowClientPanel(p => !p)}
-                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-app-foreground text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-indigo-300 transition-all"
+                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-app-foreground text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-app-info transition-all"
                                     >
                                         {showClientPanel
                                             ? <Search size={12} />
@@ -341,22 +341,22 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                                     setSearchResults([]);
                                                                     setShowClientPanel(false);
                                                                 }}
-                                                                className="w-full text-left px-3 py-2.5 hover:bg-indigo-50 border-b border-gray-50 last:border-0 flex items-center justify-between group transition-colors"
+                                                                className="w-full text-left px-3 py-2.5 hover:bg-app-info-soft border-b border-app-border last:border-0 flex items-center justify-between group transition-colors"
                                                             >
                                                                 <div className="flex items-center gap-2 min-w-0">
-                                                                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-black shrink-0">
+                                                                    <div className="w-7 h-7 rounded-full bg-app-info-soft flex items-center justify-center text-app-info text-[10px] font-black shrink-0">
                                                                         {c.name?.charAt(0) || 'C'}
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <p className="text-[11px] font-black text-app-foreground truncate group-hover:text-indigo-700">{c.name}</p>
+                                                                        <p className="text-[11px] font-black text-app-foreground truncate group-hover:text-app-info">{c.name}</p>
                                                                         {c.phone && <p className="text-[9px] text-app-muted-foreground font-mono">{c.phone}</p>}
                                                                         {(c as any).address && (c as any).address !== 'N/A' && <p className="text-[9px] text-app-muted-foreground truncate">{(c as any).address}</p>}
-                                                                        {(c as any).customer_tier && (c as any).customer_tier !== 'STANDARD' && <p className="text-[9px] font-bold text-indigo-500 uppercase">{(c as any).customer_tier}</p>}
+                                                                        {(c as any).customer_tier && (c as any).customer_tier !== 'STANDARD' && <p className="text-[9px] font-bold text-app-info uppercase">{(c as any).customer_tier}</p>}
                                                                     </div>
                                                                 </div>
                                                                 <div className="shrink-0 ml-2 text-right">
-                                                                    <p className="text-[9px] font-black text-emerald-600">{currency}{formatNumber(c.balance || 0)}</p>
-                                                                    <p className="text-[8px] text-amber-500 font-bold">{c.loyalty || 0}pts</p>
+                                                                    <p className="text-[9px] font-black text-app-success">{currency}{formatNumber(c.balance || 0)}</p>
+                                                                    <p className="text-[8px] text-app-warning font-bold">{c.loyalty || 0}pts</p>
                                                                 </div>
                                                             </button>
                                                         ))}
@@ -369,7 +369,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 onClick={() => setShowClientPanel(true)}
                                                 className="w-full text-left truncate group"
                                             >
-                                                <p className="text-[12px] font-black text-app-foreground truncate leading-none group-hover:text-indigo-600 transition-colors">
+                                                <p className="text-[12px] font-black text-app-foreground truncate leading-none group-hover:text-app-info transition-colors">
                                                     {selectedClient?.name || 'Walk-in'}
                                                 </p>
                                                 {selectedClient?.phone && (
@@ -383,25 +383,25 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <div className="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
 
                                         {/* Balance */}
-                                        <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0">
+                                        <span className="bg-app-success-soft text-app-success border border-emerald-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0">
                                             BAL {currency}{formatNumber(selectedClient?.balance || 0)}
                                         </span>
 
                                         {/* Credit limit */}
                                         {(selectedClient?.creditLimit || (selectedClient as any)?.credit_limit) > 0 && (
-                                            <span className="bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0">
+                                            <span className="bg-app-info-soft text-app-info border border-blue-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0">
                                                 CR {currency}{formatNumber(selectedClient?.creditLimit || (selectedClient as any)?.credit_limit || 0)}
                                             </span>
                                         )}
 
                                         {/* Loyalty */}
-                                        <span className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 whitespace-nowrap shrink-0">
+                                        <span className="bg-app-warning-soft text-app-warning border border-amber-100 px-1.5 py-0.5 rounded-md text-[9px] font-black flex items-center gap-0.5 whitespace-nowrap shrink-0">
                                             <Star size={7} />{selectedClient?.loyalty || 0}pts
                                         </span>
 
                                         {/* Customer Tier (VIP / Wholesale / Retail / Standard) */}
                                         {(selectedClient as any)?.customer_tier && (selectedClient as any).customer_tier !== 'STANDARD' && (
-                                            <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0 uppercase">
+                                            <span className="bg-app-info-soft text-app-info border border-indigo-100 px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap shrink-0 uppercase">
                                                 {(selectedClient as any).customer_tier}
                                             </span>
                                         )}
@@ -421,7 +421,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         <select
                                             value={deliveryZone}
                                             onChange={(e) => onSetDeliveryZone(e.target.value)}
-                                            className="pl-5 pr-5 py-1 bg-app-surface border border-app-border rounded-lg text-[10px] font-black outline-none appearance-none cursor-pointer focus:border-emerald-400 transition-all uppercase tracking-wider"
+                                            className="pl-5 pr-5 py-1 bg-app-surface border border-app-border rounded-lg text-[10px] font-black outline-none appearance-none cursor-pointer focus:border-app-success transition-all uppercase tracking-wider"
                                         >
                                             {deliveryZones.map(z => (
                                                 <option key={z.id} value={z.name}>{z.name}</option>
@@ -452,14 +452,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             id="pos-product-search"
                                             type="text"
                                             placeholder="Search products, scan barcode..."
-                                            className="w-full pl-8 pr-10 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs outline-none focus:bg-app-surface focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all font-medium"
+                                            className="w-full pl-8 pr-10 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs outline-none focus:bg-app-surface focus:border-app-success focus:ring-2 focus:ring-emerald-50 transition-all font-medium"
                                             value={searchQuery}
                                             onChange={(e) => onSetSearchQuery(e.target.value)}
                                         />
                                         {searchQuery && (
                                             <button
                                                 onClick={() => onSetSearchQuery('')}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-app-muted-foreground hover:text-rose-500 transition-colors"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-app-muted-foreground hover:text-app-error transition-colors"
                                             >
                                                 <X size={12} />
                                             </button>
@@ -471,8 +471,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         className={clsx(
                                             "p-1.5 rounded-lg border transition-all shrink-0 active:scale-95 shadow-sm",
                                             showNumpad
-                                                ? "bg-amber-100 border-amber-300 text-amber-700 ring-2 ring-amber-50"
-                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-amber-300 hover:text-amber-600"
+                                                ? "bg-app-warning-soft border-app-warning text-app-warning ring-2 ring-amber-50"
+                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-app-warning hover:text-app-warning"
                                         )}
                                     >
                                         <Calculator size={18} />
@@ -489,7 +489,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 }}
                                                 className={clsx(
                                                     "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
-                                                    (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-app-foreground shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-indigo-300 hover:text-indigo-600'
+                                                    (activeCategoryId === null && currentParentId === null) ? 'bg-app-info border-indigo-600 text-app-foreground shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-info hover:text-app-info'
                                                 )}
                                             >ALL</button>
                                             {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
@@ -503,8 +503,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     className={clsx(
                                                         "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
                                                         (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                            ? 'bg-emerald-600 border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
-                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
+                                                            ? 'bg-app-success border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
+                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-success hover:text-app-success'
                                                     )}
                                                 >{cat.name}</button>
                                             ))}
@@ -519,7 +519,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     onSetActiveCategoryId(grandParentId);
                                                     setLeftExpanded(true);
                                                 }}
-                                                className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-app-foreground rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                                className="h-9 px-4 bg-app-info border border-indigo-600 text-app-foreground rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
                                             >
                                                 <ArrowLeft size={14} />
                                                 {currentParentName}
@@ -535,8 +535,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     className={clsx(
                                                         "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
                                                         activeCategoryId === cat.id
-                                                            ? 'bg-emerald-600 border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
-                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
+                                                            ? 'bg-app-success border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
+                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-success hover:text-app-success'
                                                     )}
                                                 >{cat.name}</button>
                                             ))}
@@ -545,14 +545,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </div>
                             </div>
                             {/* Toggle View Mode */}
-                            <div className="px-3 py-1 border-b border-gray-50 flex items-center justify-between shrink-0 bg-app-bg/50">
+                            <div className="px-3 py-1 border-b border-app-border flex items-center justify-between shrink-0 bg-app-bg/50">
                                 <span className="text-[10px] font-semibold text-app-muted-foreground flex items-center gap-1">
-                                    <span className="w-1 h-1 bg-emerald-500 rounded-full" />
+                                    <span className="w-1 h-1 bg-app-success rounded-full" />
                                     {leftExpanded ? 'Products' : 'Categories'}
                                 </span>
                                 <button
                                     onClick={() => setLeftExpanded(!leftExpanded)}
-                                    className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+                                    className="text-[10px] font-semibold text-app-success hover:text-app-success flex items-center gap-1 transition-colors"
                                 >
                                     {leftExpanded ? <EyeOff size={10} /> : <Eye size={10} />}
                                     {leftExpanded ? 'Categories' : 'Products'}
@@ -602,7 +602,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                         onSetCurrentParentId(grandParentId);
                                                         onSetActiveCategoryId(grandParentId);
                                                     }}
-                                                    className="p-8 rounded-2xl bg-[#f0f4ff] border border-indigo-100 text-indigo-600 text-center hover:bg-indigo-100 transition-all flex flex-col items-center justify-center font-black uppercase text-[12px] tracking-widest gap-2 shadow-sm"
+                                                    className="p-8 rounded-2xl bg-[#f0f4ff] border border-indigo-100 text-app-info text-center hover:bg-app-info-soft transition-all flex flex-col items-center justify-center font-black uppercase text-[12px] tracking-widest gap-2 shadow-sm"
                                                 >
                                                     <ArrowLeft size={24} />
                                                     BACK
@@ -631,20 +631,20 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                         className={clsx(
                                                             "p-6 rounded-2xl border text-center group hover:shadow-2xl transition-all bg-app-surface relative flex flex-col items-center justify-center gap-3",
                                                             (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                                ? "border-emerald-400 ring-4 ring-emerald-50 shadow-xl"
-                                                                : "border-app-border hover:border-emerald-200"
+                                                                ? "border-app-success ring-4 ring-emerald-50 shadow-xl"
+                                                                : "border-app-border hover:border-app-success"
                                                         )}
                                                     >
                                                         <div className={clsx(
                                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-app-foreground rotate-12' : 'bg-app-bg text-app-muted-foreground group-hover:bg-emerald-50 group-hover:text-emerald-500'
+                                                            (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-app-success text-app-foreground rotate-12' : 'bg-app-bg text-app-muted-foreground group-hover:bg-app-success-soft group-hover:text-app-success'
                                                         )}>
                                                             <Tag size={20} />
                                                         </div>
                                                         <div className="flex flex-col items-center">
                                                             <span className={clsx(
                                                                 "text-[13px] font-black uppercase tracking-wider transition-colors line-clamp-2",
-                                                                (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-700' : 'text-app-foreground'
+                                                                (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-app-success' : 'text-app-foreground'
                                                             )}>{cat.name}</span>
                                                             {hasChildren && <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tighter">Browse Sub-items</span>}
                                                         </div>
@@ -666,21 +666,21 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             willChange: 'transform'
                                         }}
                                         className={clsx(
-                                            "z-[50] w-[280px] p-2 bg-app-foreground/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
+                                            "z-[50] w-[280px] p-2 bg-app-foreground/95 backdrop-blur-md rounded-2xl border border-app-warning shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
                                             !isDragging && "transition-transform duration-200 ease-out"
                                         )}
                                     >
                                         <div
                                             onMouseDown={startDragging}
-                                            className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-amber-50 rounded-lg p-1 transition-colors group/handle"
+                                            className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-app-warning-soft rounded-lg p-1 transition-colors group/handle"
                                         >
                                             <div className="flex items-center gap-1.5">
-                                                <GripHorizontal size={14} className="text-amber-400 group-hover/handle:text-amber-600 transition-colors" />
-                                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                                <GripHorizontal size={14} className="text-amber-400 group-hover/handle:text-app-warning transition-colors" />
+                                                <span className="text-[10px] font-black text-app-warning uppercase tracking-widest">
                                                     {isMultiPayMode ? 'Multi Pay' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
                                                 </span>
                                             </div>
-                                            <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-app-foreground transition-all">
+                                            <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-app-warning-soft text-app-warning hover:bg-app-warning hover:text-app-foreground transition-all">
                                                 <X size={12} />
                                             </button>
                                         </div>
@@ -716,7 +716,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 </aside>
 
                 {/* ════ VERTICAL PAYMENT COLUMN (72px) ════ */}
-                <div className="w-[72px] bg-app-surface border-r border-gray-200/80 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)]">
+                <div className="w-[72px] bg-app-surface border-r border-app-border/80 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)]">
                     <span className="text-[9px] font-black text-app-muted-foreground uppercase tracking-tighter mb-1">Pay</span>
                     {paymentMethods.filter((m: any) => {
                         const key = typeof m === 'string' ? m : m.key;
@@ -757,14 +757,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     !isLinked
                                         ? "bg-app-bg border-app-border text-app-muted-foreground cursor-not-allowed opacity-50"
                                         : isActive || (isMultiPayMode && key.includes('MULTI'))
-                                            ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
+                                            ? "bg-app-success-soft border-app-success text-app-success shadow-lg shadow-emerald-50 scale-105"
                                             : "bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                                 )}
                             >
                                 <Icon size={20} className={clsx("transition-transform", isActive ? "scale-110" : "group-hover:scale-110")} />
                                 <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">{label}</span>
                                 {isActive && (
-                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-full" />
+                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-app-success rounded-full" />
                                 )}
                                 {!isLinked && (
                                     <div className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center">
@@ -783,14 +783,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 className={clsx(
                                     "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
                                     paymentMethod === 'DELIVERY'
-                                        ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
+                                        ? "bg-app-success-soft border-app-success text-app-success shadow-lg shadow-emerald-50 scale-105"
                                         : "bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                                 )}
                             >
                                 <MapPin size={20} className={clsx("transition-transform", paymentMethod === 'DELIVERY' ? "scale-110" : "group-hover:scale-110")} />
                                 <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">DELIVE...</span>
                                 {paymentMethod === 'DELIVERY' && (
-                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-full" />
+                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-app-success rounded-full" />
                                 )}
                             </button>
                         )}
@@ -817,9 +817,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
                     {/* ════ NORMAL CART VIEW ════ */}
                     <div className="flex flex-col h-full bg-[#fafbfc] overflow-hidden">
-                        <div className="px-3 py-1.5 border-b border-gray-200/80 bg-app-surface flex items-center justify-between shrink-0">
+                        <div className="px-3 py-1.5 border-b border-app-border/80 bg-app-surface flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-app-success animate-pulse" />
                                 <h2 className="text-xs font-bold text-app-foreground">Order</h2>
                                 <span className="text-[10px] text-app-muted-foreground font-medium">{uniqueItems} lines · {totalPieces} pcs</span>
                             </div>
@@ -827,7 +827,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <button onClick={() => {
                                     props.onSetPendingOverrideAction({ label: 'Clear entire cart', execute: () => onClearCart(true) });
                                     onSetOverrideOpen(true);
-                                }} className="text-[10px] text-app-muted-foreground hover:text-rose-500 font-medium transition-colors">Clear</button>
+                                }} className="text-[10px] text-app-muted-foreground hover:text-app-error font-medium transition-colors">Clear</button>
                             )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -837,7 +837,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <p className="text-xs text-app-muted-foreground">No items yet</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-50">
+                                <div className="divide-y divide-app-border">
                                     {cart.map((item: any, idx: number) => (
                                         <div
                                             key={item.productId}
@@ -845,11 +845,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             className={clsx(
                                                 "px-2.5 py-1.5 group transition-colors duration-300 flex flex-col gap-1.5 cursor-pointer",
                                                 selectedCartIdx === idx && highlightedItemId === item.productId
-                                                    ? "bg-teal-100 ring-1 ring-teal-300"
+                                                    ? "bg-app-success-soft ring-1 ring-teal-300"
                                                     : selectedCartIdx === idx
-                                                        ? "bg-amber-50 ring-1 ring-amber-200"
+                                                        ? "bg-app-warning-soft ring-1 ring-amber-200"
                                                         : highlightedItemId === item.productId
-                                                            ? "bg-emerald-100 ring-1 ring-emerald-200"
+                                                            ? "bg-app-success-soft ring-1 ring-emerald-200"
                                                             : "hover:bg-app-surface"
                                             )}
                                         >
@@ -863,18 +863,18 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     />
                                                 ) : (() => {
                                                     const CART_COLORS = [
-                                                        'bg-rose-50 text-rose-600 border-rose-100',
-                                                        'bg-amber-50 text-amber-600 border-amber-100',
-                                                        'bg-emerald-50 text-emerald-600 border-emerald-100',
-                                                        'bg-cyan-50 text-cyan-600 border-cyan-100',
-                                                        'bg-blue-50 text-blue-600 border-blue-100',
-                                                        'bg-indigo-50 text-indigo-600 border-indigo-100',
+                                                        'bg-app-error-soft text-app-error border-rose-100',
+                                                        'bg-app-warning-soft text-app-warning border-amber-100',
+                                                        'bg-app-success-soft text-app-success border-emerald-100',
+                                                        'bg-app-info-soft text-app-info border-cyan-100',
+                                                        'bg-app-info-soft text-app-info border-blue-100',
+                                                        'bg-app-info-soft text-app-info border-indigo-100',
                                                         'bg-violet-50 text-violet-600 border-violet-100',
-                                                        'bg-fuchsia-50 text-fuchsia-600 border-fuchsia-100',
-                                                        'bg-pink-50 text-pink-600 border-pink-100',
-                                                        'bg-teal-50 text-teal-600 border-teal-100',
-                                                        'bg-lime-50 text-lime-600 border-lime-100',
-                                                        'bg-orange-50 text-orange-600 border-orange-100',
+                                                        'bg-app-error-soft text-app-error border-fuchsia-100',
+                                                        'bg-app-error-soft text-app-error border-pink-100',
+                                                        'bg-app-success-soft text-app-success border-teal-100',
+                                                        'bg-app-success-soft text-app-success border-lime-100',
+                                                        'bg-app-warning-soft text-app-warning border-orange-100',
                                                     ];
                                                     return (
                                                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 border ${CART_COLORS[item.productId % CART_COLORS.length]}`}>
@@ -883,44 +883,44 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     );
                                                 })()}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[14px] font-black text-app-foreground truncate leading-tight group-hover:text-emerald-600">{item.name}</p>
+                                                    <p className="text-[14px] font-black text-app-foreground truncate leading-tight group-hover:text-app-success">{item.name}</p>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         {item.barcode && <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-tighter">#{item.barcode}</span>}
-                                                        <span className="bg-emerald-50 text-emerald-700 px-1 rounded text-[10px] font-black">Stock: {item.stock || 0}</span>
+                                                        <span className="bg-app-success-soft text-app-success px-1 rounded text-[10px] font-black">Stock: {item.stock || 0}</span>
                                                     </div>
                                                 </div>
                                                 <span
                                                     onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
-                                                    className="text-[12px] font-black text-app-muted-foreground shrink-0 hover:text-emerald-600 transition-colors"
+                                                    className="text-[12px] font-black text-app-muted-foreground shrink-0 hover:text-app-success transition-colors"
                                                 >
                                                     {currency}{Number(item.price).toFixed(2)}
                                                 </span>
                                                 <div className="flex items-center gap-px shrink-0">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -1); }}
-                                                        className="w-6 h-6 rounded-lg bg-app-surface-2 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-app-muted-foreground transition-all border border-transparent"
+                                                        className="w-6 h-6 rounded-lg bg-app-surface-2 hover:bg-app-error-soft hover:text-app-error flex items-center justify-center text-app-muted-foreground transition-all border border-transparent"
                                                     >
                                                         <Minus size={12} />
                                                     </button>
                                                     <span
                                                         onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
-                                                        className="w-7 text-center text-[13px] font-black tabular-nums text-app-foreground hover:text-emerald-600 transition-colors"
+                                                        className="w-7 text-center text-[13px] font-black tabular-nums text-app-foreground hover:text-app-success transition-colors"
                                                     >
                                                         {item.quantity}
                                                     </span>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
-                                                        className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-app-foreground text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
+                                                        className="w-6 h-6 rounded-lg bg-app-success-soft hover:bg-app-success hover:text-app-foreground text-app-success flex items-center justify-center transition-all border border-emerald-100"
                                                     >
                                                         <Plus size={12} />
                                                     </button>
                                                 </div>
-                                                <p className="text-[13px] font-black text-emerald-700 tabular-nums shrink-0 w-16 text-right">
+                                                <p className="text-[13px] font-black text-app-success tabular-nums shrink-0 w-16 text-right">
                                                     {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                                 </p>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -item.quantity); }}
-                                                    className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-foreground transition-all shrink-0 flex items-center justify-center border border-rose-100"
+                                                    className="ml-2 w-8 h-8 rounded-lg bg-app-error-soft text-app-error hover:bg-app-error hover:text-app-foreground transition-all shrink-0 flex items-center justify-center border border-rose-100"
                                                     title="Delete product from cart"
                                                 >
                                                     <Trash2 size={14} />
@@ -934,7 +934,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                         type="text"
                                                         placeholder="Add note (gift, customization)..."
                                                         defaultValue={item.note || ''}
-                                                        className="w-full text-[11px] bg-app-surface border border-app-border rounded px-2 py-1 outline-none text-app-foreground placeholder:text-app-muted-foreground focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition-all font-medium shadow-sm"
+                                                        className="w-full text-[11px] bg-app-surface border border-app-border rounded px-2 py-1 outline-none text-app-foreground placeholder:text-app-muted-foreground focus:ring-1 focus:ring-emerald-400 focus:border-app-success transition-all font-medium shadow-sm"
                                                         onBlur={(e) => { (props as any).onUpdateLineNote?.(item.productId, e.target.value); }}
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
@@ -949,7 +949,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </div>
                             )}
                         </div>
-                        <div className="border-t-2 border-emerald-500/20 bg-gradient-to-b from-white to-gray-50/80 px-3 py-3 shrink-0 space-y-2.5">
+                        <div className="border-t-2 border-app-success/20 bg-gradient-to-b from-white to-gray-50/80 px-3 py-3 shrink-0 space-y-2.5">
                             {/* ── Summary Row ── */}
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-app-bg rounded-xl p-2 text-center">
@@ -958,28 +958,28 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </div>
                                 <div
                                     onClick={() => { setNumpadMode('disc'); setShowNumpad(true); }}
-                                    className="bg-amber-50/60 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-50 transition-colors group"
+                                    className="bg-app-warning-soft/60 rounded-xl p-2 text-center cursor-pointer hover:bg-app-warning-soft transition-colors group"
                                 >
                                     <div className="flex items-center justify-center gap-1">
-                                        <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Discount</span>
+                                        <span className="text-[8px] font-black text-app-warning uppercase tracking-widest">Discount</span>
                                         <div className="flex items-center bg-app-foreground/80 rounded px-1 py-px">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
-                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-app-muted-foreground")}
+                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-app-warning bg-app-warning-soft" : "text-app-muted-foreground")}
                                             >{currency}</button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onSetDiscountType('percentage'); }}
-                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-amber-700 bg-amber-100" : "text-app-muted-foreground")}
+                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-app-warning bg-app-warning-soft" : "text-app-muted-foreground")}
                                             >%</button>
                                         </div>
                                     </div>
                                     <span className={clsx(
                                         "text-sm font-black tabular-nums",
-                                        discount > 0 ? "text-amber-600" : "text-app-muted-foreground"
+                                        discount > 0 ? "text-app-warning" : "text-app-muted-foreground"
                                     )}>{discount > 0 ? `-${formatNumber(discountType === 'percentage' ? total * discount / 100 : discount)}` : '0'}</span>
                                 </div>
-                                <div className="bg-emerald-50 rounded-xl p-2 text-center">
-                                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest block">Total</span>
+                                <div className="bg-app-success-soft rounded-xl p-2 text-center">
+                                    <span className="text-[8px] font-black text-app-success uppercase tracking-widest block">Total</span>
                                     <span className="text-lg font-black text-app-foreground tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
                                 </div>
                             </div>
@@ -999,11 +999,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 }
                                             }}
                                             placeholder={formatNumber(totalAmount)}
-                                            className="w-full pt-5 pb-2 px-2.5 text-right bg-app-surface border-2 border-app-border rounded-l-xl text-base font-black outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
+                                            className="w-full pt-5 pb-2 px-2.5 text-right bg-app-surface border-2 border-app-border rounded-l-xl text-base font-black outline-none focus:border-app-success focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
                                         />
                                         <button
                                             onClick={() => onSetCashReceived(String(totalAmount))}
-                                            className="px-2.5 pt-5 pb-2 bg-indigo-50 border-2 border-l-0 border-indigo-200 rounded-r-xl text-[10px] font-black text-indigo-600 hover:bg-indigo-100 transition-all whitespace-nowrap flex items-center gap-0.5 tabular-nums"
+                                            className="px-2.5 pt-5 pb-2 bg-app-info-soft border-2 border-l-0 border-app-info rounded-r-xl text-[10px] font-black text-app-info hover:bg-app-info-soft transition-all whitespace-nowrap flex items-center gap-0.5 tabular-nums"
                                             title="Auto-fill with bill total"
                                         >
                                             <span className="text-indigo-300">|</span> {currency}{formatNumber(totalAmount)}
@@ -1039,8 +1039,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         className={clsx(
                                             "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border-2 transition-all",
                                             storeChangeInWallet
-                                                ? "bg-blue-500 border-blue-500 text-app-foreground shadow-md shadow-blue-100"
-                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-blue-300 hover:bg-blue-50"
+                                                ? "bg-app-info border-app-info text-app-foreground shadow-md shadow-blue-100"
+                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-app-info hover:bg-app-info-soft"
                                         )}
                                     >
                                         <Wallet size={14} />

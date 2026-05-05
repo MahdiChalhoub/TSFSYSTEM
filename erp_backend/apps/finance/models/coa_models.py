@@ -573,6 +573,11 @@ class FinancialAccount(TenantModel):
 
     class Meta:
         db_table = 'financialaccount'
+        indexes = [
+            models.Index(fields=['organization', 'is_active']),
+            models.Index(fields=['organization', 'type']),
+            models.Index(fields=['organization', 'is_pos_enabled']),
+        ]
 
     def __str__(self):
         return self.name

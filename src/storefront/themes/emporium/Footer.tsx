@@ -11,21 +11,21 @@ export default function EmporiumFooter() {
             <div className="border-b border-app-border bg-slate-50/50">
                 <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
                     <div className="space-y-4">
-                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-yellow-500">
+                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-warning">
                             <ShieldCheck size={24} />
                         </div>
                         <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Secure Shopping</h4>
                         <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">Your data is protected by industry-leading encryption and buyer protection policies.</p>
                     </div>
                     <div className="space-y-4">
-                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-indigo-500">
+                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-info">
                             <Globe size={24} />
                         </div>
                         <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Worldwide Delivery</h4>
                         <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">We partner with global logistics leaders to ensure fast delivery to over 120 countries.</p>
                     </div>
                     <div className="space-y-4">
-                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-emerald-500">
+                        <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-success">
                             <CreditCard size={24} />
                         </div>
                         <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Flexible Payments</h4>
@@ -52,7 +52,7 @@ export default function EmporiumFooter() {
                         <Link href={`/tenant/${slug}`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Home</Link>
                         <Link href={`/tenant/${slug}/categories`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Categories</Link>
                         <Link href={`/tenant/${slug}/search`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Search Results</Link>
-                        <Link href={`/tenant/${slug}/register`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors text-amber-600">Flash Sales</Link>
+                        <Link href={`/tenant/${slug}/register`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors text-app-warning">Flash Sales</Link>
                     </nav>
                 </div>
                 <div className="space-y-6">

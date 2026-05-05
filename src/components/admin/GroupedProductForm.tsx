@@ -170,10 +170,10 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         <div className="space-y-8 max-w-5xl mx-auto pb-20">
             {/* Master Settings */}
             <div className="card-premium p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2 flex items-center gap-2">
-                    <Box className="text-emerald-600" /> Master Identity (Parfum / Family)
+                <h3 className="text-lg font-bold text-app-foreground mb-4 border-b pb-2 flex items-center gap-2">
+                    <Box className="text-app-success" /> Master Identity (Parfum / Family)
                 </h3>
-                <p className="text-sm text-gray-500 mb-4 px-2">Define the Category, Brand, and Product details here.</p>
+                <p className="text-sm text-app-muted-foreground mb-4 px-2">Define the Category, Brand, and Product details here.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Product Name - Full Width */}
                     <div className="col-span-2">
@@ -197,7 +197,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                             <option value="">Select Category...</option>
                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">≡ƒÆí This will filter available brands</p>
+                        <p className="text-xs text-app-muted-foreground mt-1">≡ƒÆí This will filter available brands</p>
                     </div>
 
                     {/* Step 2: Brand SECOND (filtered by category) */}
@@ -223,12 +223,12 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                             )}
                         </select>
                         {master.categoryId && filteredBrands.length > 0 && (
-                            <p className="text-xs text-emerald-600 mt-1">
+                            <p className="text-xs text-app-success mt-1">
                                 Γ£ô Showing {filteredBrands.length} brand(s) for selected category
                             </p>
                         )}
                         {!master.categoryId && (
-                            <p className="text-xs text-amber-600 mt-1">
+                            <p className="text-xs text-app-warning mt-1">
                                 ΓÜá Select a category first to filter brands
                             </p>
                         )}
@@ -252,8 +252,8 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
             {/* Variants */}
             <div className="card-premium p-6">
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <Globe className="text-blue-600" /> Country Variants
+                    <h3 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                        <Globe className="text-app-info" /> Country Variants
                     </h3>
                     <button onClick={addVariant} className="btn-secondary text-sm py-1.5">
                         <Plus size={16} /> Add Variant
@@ -262,19 +262,19 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
 
                 <div className="space-y-4">
                     {variants.map((variant, index) => (
-                        <div key={variant.id} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative group">
+                        <div key={variant.id} className="p-4 bg-gray-50 border border-app-border rounded-xl relative group">
                             <button
                                 onClick={() => removeVariant(variant.id)}
-                                className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                className="absolute top-2 right-2 p-1.5 text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft rounded-lg transition-colors"
                             >
                                 <Trash2 size={16} />
                             </button>
 
                             <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="text-[10px] uppercase font-bold text-gray-500">Origin Country</label>
+                                    <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Origin Country</label>
                                     <select
-                                        className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                        className="w-full text-sm p-2 rounded-lg border border-app-border"
                                         value={variant.countryId}
                                         onChange={e => updateVariant(variant.id, 'countryId', e.target.value)}
                                     >
@@ -290,9 +290,9 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500">SKU</label>
+                                    <label className="text-[10px] uppercase font-bold text-app-muted-foreground">SKU</label>
                                     <input
-                                        className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                        className="w-full text-sm p-2 rounded-lg border border-app-border"
                                         value={variant.sku}
                                         onChange={e => updateVariant(variant.id, 'sku', e.target.value)}
                                         placeholder="SKU-123"
@@ -300,9 +300,9 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500">Barcode</label>
+                                    <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Barcode</label>
                                     <input
-                                        className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                        className="w-full text-sm p-2 rounded-lg border border-app-border"
                                         value={variant.barcode}
                                         onChange={e => updateVariant(variant.id, 'barcode', e.target.value)}
                                         placeholder="Scan..."
@@ -311,19 +311,19 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
 
                                 <div className="flex gap-1">
                                     <div className="flex-1">
-                                        <label className="text-[10px] uppercase font-bold text-gray-500">Emballage / Size</label>
+                                        <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Emballage / Size</label>
                                         <input
                                             type="number"
-                                            className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                            className="w-full text-sm p-2 rounded-lg border border-app-border"
                                             value={variant.size}
                                             onChange={e => updateVariant(variant.id, 'size', e.target.value)}
                                             placeholder="300"
                                         />
                                     </div>
                                     <div className="w-16">
-                                        <label className="text-[10px] uppercase font-bold text-gray-500">Unit</label>
+                                        <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Unit</label>
                                         <select
-                                            className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                            className="w-full text-sm p-2 rounded-lg border border-app-border"
                                             value={variant.sizeUnitId}
                                             onChange={e => updateVariant(variant.id, 'sizeUnitId', e.target.value)}
                                         >
@@ -336,19 +336,19 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500">Cost $</label>
+                                    <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Cost $</label>
                                     <input
                                         type="number"
-                                        className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                        className="w-full text-sm p-2 rounded-lg border border-app-border"
                                         value={variant.costPrice}
                                         onChange={e => updateVariant(variant.id, 'costPrice', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-gray-500">Price $</label>
+                                    <label className="text-[10px] uppercase font-bold text-app-muted-foreground">Price $</label>
                                     <input
                                         type="number"
-                                        className="w-full text-sm p-2 rounded-lg border border-gray-200"
+                                        className="w-full text-sm p-2 rounded-lg border border-app-border"
                                         value={variant.basePrice}
                                         onChange={e => updateVariant(variant.id, 'basePrice', e.target.value)}
                                     />
@@ -359,11 +359,11 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur border-t border-gray-200 flex justify-end gap-4 z-40 md:pl-72">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur border-t border-app-border flex justify-end gap-4 z-40 md:pl-72">
                 <button
                     onClick={handleSubmit}
                     disabled={pending}
-                    className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg flex items-center gap-2"
+                    className="bg-app-success text-white px-8 py-3 rounded-xl font-bold hover:bg-app-success transition-all shadow-lg flex items-center gap-2"
                 >
                     {pending ? <Loader2 className="animate-spin" /> : <Save />}
                     Save Product Group

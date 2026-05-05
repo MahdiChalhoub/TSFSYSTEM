@@ -209,7 +209,7 @@ export default function ComboManager({
                                                 {fmt((c.price_override ?? c.component_price) * c.quantity)}
                                             </p>
                                             {c.price_override && (
-                                                <p className="text-xs text-orange-500">Override: {fmt(c.price_override)}</p>
+                                                <p className="text-xs text-app-warning">Override: {fmt(c.price_override)}</p>
                                             )}
                                         </div>
                                         <button

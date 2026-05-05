@@ -20,6 +20,7 @@
  *
  * Implementation rules followed:
  *   - NO raw hex (no `bg-purple-500`, `text-gray-900`, etc.)
+ * codemod-skip: this docstring lists forbidden tokens by name on purpose
  *   - NO hardcoded grid-cols-N — every grid uses `auto-fit minmax(N, 1fr)`
  *   - NO linear gradients on header icons (flat `bg-app-primary` only)
  *   - NO oversized titles (`text-lg md:text-xl` cap on H1)

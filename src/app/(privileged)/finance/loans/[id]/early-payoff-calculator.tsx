@@ -161,7 +161,7 @@ export function EarlyPayoffCalculator({ loanId }: { loanId: number }) {
               <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-3">
                 Accrued Interest (to date)
               </p>
-              <p className="text-2xl font-black text-orange-700">
+              <p className="text-2xl font-black text-app-warning">
                 {fmt(remainingInterest)}
               </p>
             </div>

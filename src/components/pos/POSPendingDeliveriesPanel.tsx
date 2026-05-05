@@ -171,7 +171,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </p>
  )}
  {d.driver && (
- <p className="text-xs text-indigo-500 mt-0.5">
+ <p className="text-xs text-app-info mt-0.5">
  🚴 {d.driver.full_name || d.driver.username}
  </p>
  )}
@@ -183,9 +183,9 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  */}
  {d.require_client_delivery_code && d.client_delivery_code && (
  <div className="mt-2 flex items-center gap-2">
- <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-lg px-2.5 py-1">
- <Hash size={10} className="text-orange-500" />
- <span className="text-base font-black text-orange-600 tracking-widest">
+ <div className="flex items-center gap-1.5 bg-app-warning-soft border border-app-warning rounded-lg px-2.5 py-1">
+ <Hash size={10} className="text-app-warning" />
+ <span className="text-base font-black text-app-warning tracking-widest">
  {d.client_delivery_code}
  </span>
  </div>
@@ -196,7 +196,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </div>
  <button
  onClick={() => navigator.clipboard?.writeText(d.client_delivery_code!)}
- className="w-5 h-5 flex items-center justify-center text-app-muted-foreground hover:text-orange-500 transition-all"
+ className="w-5 h-5 flex items-center justify-center text-app-muted-foreground hover:text-app-warning transition-all"
  title="Copy"
  >
  <Copy size={10} />
@@ -210,7 +210,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  href={`/delivery/${d.id}?token=${d.tracking_code}`}
  target="_blank"
  rel="noopener noreferrer"
- className="mt-1 flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-600 transition-all"
+ className="mt-1 flex items-center gap-1 text-[10px] text-indigo-400 hover:text-app-info transition-all"
  >
  <ExternalLink size={9} />
  Driver link
@@ -251,8 +251,8 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  * Protects driver: cashier cannot assign cash without driver's code
  */}
  {needsReturnCode && (
- <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2">
- <KeyRound size={12} className="text-indigo-500 shrink-0" />
+ <div className="flex items-center gap-2 bg-app-info-soft border border-app-info rounded-xl px-3 py-2">
+ <KeyRound size={12} className="text-app-info shrink-0" />
  <input
  type="number"
  inputMode="numeric"
@@ -263,7 +263,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  ...prev,
  [d.id]: e.target.value.slice(0, 6)
  }))}
- className="flex-1 bg-transparent text-sm font-black tracking-widest text-indigo-700 placeholder:text-indigo-300 focus:outline-none"
+ className="flex-1 bg-transparent text-sm font-black tracking-widest text-app-info placeholder:text-indigo-300 focus:outline-none"
  />
  </div>
  )}

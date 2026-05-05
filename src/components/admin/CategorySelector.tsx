@@ -59,7 +59,7 @@ export function CategorySelector({ categories, onChange, initialCategoryId }: Pr
         // Level 0
         const roots = getChildren(null);
         if (roots.length === 0 && categories.length === 0) {
-            return <p className="text-sm text-gray-500 italic">No categories defined.</p>;
+            return <p className="text-sm text-app-muted-foreground italic">No categories defined.</p>;
         }
 
         selects.push({
@@ -86,15 +86,15 @@ export function CategorySelector({ categories, onChange, initialCategoryId }: Pr
             <div className="space-y-3">
                 {selects.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                        {idx > 0 && <ChevronRight className="text-gray-400" size={16} />}
+                        {idx > 0 && <ChevronRight className="text-app-muted-foreground" size={16} />}
                         <div className="flex-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
+                            <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-1">
                                 {idx === 0 ? 'Main Category' : `Sub-Category (Level ${idx})`}
                             </label>
                             <select
                                 value={s.selected || ''}
                                 onChange={(e) => handleSelect(idx, e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all bg-white"
+                                className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-success focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all bg-white"
                             >
                                 <option value="" disabled>Select...</option>
                                 {s.options.map(c => (

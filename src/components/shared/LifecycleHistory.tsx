@@ -83,17 +83,17 @@ export function LifecycleHistory({ model, instanceId, trigger }: LifecycleHistor
   const getActionColor = (action: string) => {
     switch (action) {
       case 'LOCK':
-        return 'text-orange-600';
+        return 'text-app-warning';
       case 'UNLOCK':
-        return 'text-blue-600';
+        return 'text-app-info';
       case 'VERIFY':
-        return 'text-green-600';
+        return 'text-app-success';
       case 'UNVERIFY':
-        return 'text-red-600';
+        return 'text-app-error';
       case 'CONFIRM':
-        return 'text-green-700';
+        return 'text-app-success';
       default:
-        return 'text-gray-600';
+        return 'text-app-muted-foreground';
     }
   };
 
@@ -157,7 +157,7 @@ export function LifecycleHistory({ model, instanceId, trigger }: LifecycleHistor
                     )}
 
                     {entry.meta?.override && (
-                      <p className="mt-1 text-xs text-orange-600">
+                      <p className="mt-1 text-xs text-app-warning">
                         Skipped {entry.meta.skipped_levels} level(s)
                       </p>
                     )}

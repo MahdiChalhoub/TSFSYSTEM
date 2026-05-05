@@ -44,6 +44,10 @@ class SalesReturn(TenantModel):
     class Meta:
         db_table = 'sales_return'
         ordering = ['-return_date', '-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'created_at']),
+        ]
 
     def __str__(self):
         return f"RET-{self.id} (Order #{self.original_order_id})"
@@ -170,6 +174,10 @@ class PurchaseReturn(TenantModel):
     class Meta:
         db_table = 'purchase_return'
         ordering = ['-return_date', '-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'supplier']),
+        ]
 
     def __str__(self):
         return f"PRET-{self.id} (PO #{self.original_order_id})"

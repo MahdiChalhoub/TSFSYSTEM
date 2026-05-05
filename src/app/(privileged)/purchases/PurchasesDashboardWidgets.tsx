@@ -208,7 +208,7 @@ export function SupplierPerformance({ data }: { data: any[] }) {
 
             <Link
                 href="/purchases/dashboard"
-                className="mt-5 flex items-center justify-center gap-2 py-3 rounded-2xl bg-app-background/60 hover:bg-indigo-500/8 border border-app-border/50 hover:border-app-info/20 text-[10px] font-black uppercase tracking-[0.18em] text-app-muted-foreground hover:text-app-info transition-all"
+                className="mt-5 flex items-center justify-center gap-2 py-3 rounded-2xl bg-app-background/60 hover:bg-app-info/8 border border-app-border/50 hover:border-app-info/20 text-[10px] font-black uppercase tracking-[0.18em] text-app-muted-foreground hover:text-app-info transition-all"
             >
                 Full Analytics <ArrowRight size={11} />
             </Link>
@@ -240,7 +240,7 @@ export function ProcurementActivityFeed({ orders }: { orders: any[] }) {
                         {orders.slice(0, 12).map((order, i) => (
                             <div key={i} className="group relative pl-5 pb-5 border-l border-app-border/40 last:border-0 last:pb-0">
                                 {/* Timeline dot */}
-                                <div className="absolute left-[-4.5px] top-1 w-2 h-2 rounded-full bg-indigo-500 border-2 border-app-surface ring-2 ring-indigo-500/20" />
+                                <div className="absolute left-[-4.5px] top-1 w-2 h-2 rounded-full bg-app-info border-2 border-app-surface ring-2 ring-app-info/20" />
 
                                 <Link href={`/purchases/${order.id}`} className="flex items-start justify-between gap-2 hover:bg-app-background/50 rounded-xl px-3 py-2.5 -mx-3 transition-colors">
                                     <div className="min-w-0 flex-1">
@@ -248,7 +248,7 @@ export function ProcurementActivityFeed({ orders }: { orders: any[] }) {
                                             <span className="text-[11px] font-black text-app-foreground uppercase tracking-tight">
                                                 {order.po_number || `PO-${order.id}`}
                                             </span>
-                                            <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-app-info text-[8px] font-black uppercase tracking-wider">
+                                            <span className="px-1.5 py-0.5 rounded-md bg-app-info/10 text-app-info text-[8px] font-black uppercase tracking-wider">
                                                 {order.status}
                                             </span>
                                         </div>

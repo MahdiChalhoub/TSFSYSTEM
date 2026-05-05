@@ -147,10 +147,10 @@ export default function DebugOverlay() {
             {!isOpen ? (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+                    className="w-14 h-14 bg-app-info text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
                 >
                     <Activity size={24} className="group-hover:animate-pulse" />
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-app-error border-2 border-white rounded-full"></div>
                 </button>
             ) : (
                 <div className="w-[450px] bg-white rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
@@ -168,7 +168,7 @@ export default function DebugOverlay() {
 
                         <div className="flex gap-4">
                             <div className="flex-1 flex items-center gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-md">
-                                <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                                <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-app-warning' : 'bg-app-success'}`}>
                                     <ShieldCheck size={16} />
                                 </div>
                                 <div>
@@ -177,7 +177,7 @@ export default function DebugOverlay() {
                                 </div>
                             </div>
                             <div className="flex-1 flex items-center gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5">
-                                <div className="p-2 rounded-lg bg-indigo-500">
+                                <div className="p-2 rounded-lg bg-app-info">
                                     <Database size={16} />
                                 </div>
                                 <div>
@@ -191,19 +191,19 @@ export default function DebugOverlay() {
                         <div className="flex gap-1 mt-6 bg-black/10 p-1 rounded-xl">
                             <button
                                 onClick={() => setActiveTab('logic')}
-                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'logic' ? 'bg-white text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'logic' ? 'bg-white text-app-info shadow-sm' : 'text-white/60 hover:text-white'}`}
                             >
                                 Page Logic
                             </button>
                             <button
                                 onClick={() => setActiveTab('ledger')}
-                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'ledger' ? 'bg-white text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'ledger' ? 'bg-white text-app-info shadow-sm' : 'text-white/60 hover:text-white'}`}
                             >
                                 Ledger Audit
                             </button>
                             <button
                                 onClick={() => setActiveTab('flow')}
-                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'flow' ? 'bg-white text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'flow' ? 'bg-white text-app-info shadow-sm' : 'text-white/60 hover:text-white'}`}
                             >
                                 Inspector
                             </button>
@@ -217,38 +217,38 @@ export default function DebugOverlay() {
                                 <>
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Info size={14} className="text-indigo-600" />
-                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{logic.title}</span>
+                                            <Info size={14} className="text-app-info" />
+                                            <span className="text-[10px] font-black text-app-info uppercase tracking-wider">{logic.title}</span>
                                         </div>
-                                        <p className="text-xs text-gray-600 font-medium leading-relaxed">
+                                        <p className="text-xs text-app-muted-foreground font-medium leading-relaxed">
                                             {logic.description}
                                         </p>
                                     </div>
 
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
-                                            <Settings size={14} className="text-gray-400" />
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Active Linkages</span>
+                                            <Settings size={14} className="text-app-muted-foreground" />
+                                            <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Active Linkages</span>
                                         </div>
                                         <div className="space-y-2">
                                             {logic.linkage.map((item, i) => (
-                                                <div key={i} className="flex items-start gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                                <div key={i} className="flex items-start gap-2 bg-gray-50 p-2.5 rounded-xl border border-app-border">
                                                     <ChevronRight size={12} className="text-indigo-400 mt-0.5 shrink-0" />
-                                                    <span className="text-[11px] font-bold text-gray-700">{item}</span>
+                                                    <span className="text-[11px] font-bold text-app-muted-foreground">{item}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-gray-100">
-                                        <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                                    <div className="pt-4 border-t border-app-border">
+                                        <div className="bg-app-info-soft p-4 rounded-2xl border border-indigo-100">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Bug size={14} className="text-indigo-600" />
-                                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Integration Status</span>
+                                                <Bug size={14} className="text-app-info" />
+                                                <span className="text-[10px] font-black text-app-info uppercase tracking-wider">Integration Status</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                                                <span className="text-xs font-black text-emerald-700">Linkage Verified</span>
+                                                <div className="w-2 h-2 bg-app-success rounded-full animate-pulse"></div>
+                                                <span className="text-xs font-black text-app-success">Linkage Verified</span>
                                             </div>
                                         </div>
                                     </div>
@@ -265,7 +265,7 @@ export default function DebugOverlay() {
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center shrink-0 text-[10px] font-bold text-gray-400 font-mono">
+                    <div className="p-4 bg-gray-50 border-t border-app-border flex justify-between items-center shrink-0 text-[10px] font-bold text-app-muted-foreground font-mono">
                         <span>P: {pathname}</span>
                         <div className="flex items-center gap-2">
                             <span className="text-indigo-400">v1.1.0-inspector</span>
@@ -284,29 +284,29 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Terminal size={14} className="text-indigo-600" />
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Page Inspector</span>
+                    <Terminal size={14} className="text-app-info" />
+                    <span className="text-[10px] font-black text-app-info uppercase tracking-wider">Page Inspector</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Interactive</span>
+                    <div className="w-2 h-2 bg-app-success rounded-full animate-pulse"></div>
+                    <span className="text-[9px] font-bold text-app-muted-foreground uppercase">Interactive</span>
                 </div>
             </div>
 
             <div className="space-y-4">
                 {/* READ Section */}
-                <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-                    <div className="p-3 bg-white border-b border-gray-100 flex items-center gap-2">
-                        <ArrowDownCircle size={14} className="text-blue-500" />
-                        <span className="text-[10px] font-black text-blue-600 uppercase">Input / Data Reading</span>
+                <div className="bg-gray-50 rounded-2xl border border-app-border overflow-hidden">
+                    <div className="p-3 bg-white border-b border-app-border flex items-center gap-2">
+                        <ArrowDownCircle size={14} className="text-app-info" />
+                        <span className="text-[10px] font-black text-app-info uppercase">Input / Data Reading</span>
                     </div>
                     <div className="p-4">
-                        <p className="text-[11px] font-bold text-gray-700 leading-relaxed">
+                        <p className="text-[11px] font-bold text-app-muted-foreground leading-relaxed">
                             On page mount, he is reading:
                         </p>
                         <div className="mt-2 space-y-1">
                             {readDetails.map((detail, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 bg-white p-2 rounded-lg border border-gray-100 italic">
+                                <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-app-muted-foreground bg-white p-2 rounded-lg border border-app-border italic">
                                     <span>{detail}</span>
                                 </div>
                             ))}
@@ -315,18 +315,18 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
                 </div>
 
                 {/* WRITE Section */}
-                <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-                    <div className="p-3 bg-white border-b border-gray-100 flex items-center gap-2">
-                        <ArrowUpCircle size={14} className="text-emerald-500" />
-                        <span className="text-[10px] font-black text-emerald-600 uppercase">Output / Data Saving</span>
+                <div className="bg-gray-50 rounded-2xl border border-app-border overflow-hidden">
+                    <div className="p-3 bg-white border-b border-app-border flex items-center gap-2">
+                        <ArrowUpCircle size={14} className="text-app-success" />
+                        <span className="text-[10px] font-black text-app-success uppercase">Output / Data Saving</span>
                     </div>
                     <div className="p-4">
-                        <p className="text-[11px] font-bold text-gray-700 leading-relaxed">
+                        <p className="text-[11px] font-bold text-app-muted-foreground leading-relaxed">
                             On save, he will execute:
                         </p>
                         <div className="mt-2 space-y-1">
                             {writeDetails.map((detail, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 bg-white p-2 rounded-lg border border-gray-100 italic">
+                                <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-app-muted-foreground bg-white p-2 rounded-lg border border-app-border italic">
                                     <span>{detail}</span>
                                 </div>
                             ))}
@@ -336,13 +336,13 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
 
                 {/* LAST RESULT */}
                 {lastOperation && (
-                    <div className={`rounded-2xl border p-4 animate-in fade-in slide-in-from-top-2 duration-500 ${lastOperation.status === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                    <div className={`rounded-2xl border p-4 animate-in fade-in slide-in-from-top-2 duration-500 ${lastOperation.status === 'SUCCESS' ? 'bg-app-success-soft border-emerald-100' : 'bg-app-error-soft border-rose-100'}`}>
                         <div className="flex items-center gap-2 mb-2">
-                            <div className={`w-2 h-2 rounded-full ${lastOperation.status === 'SUCCESS' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                            <span className={`text-[10px] font-black uppercase ${lastOperation.status === 'SUCCESS' ? 'text-emerald-700' : 'text-rose-700'}`}>Last Transaction Result</span>
+                            <div className={`w-2 h-2 rounded-full ${lastOperation.status === 'SUCCESS' ? 'bg-app-success' : 'bg-app-error'}`}></div>
+                            <span className={`text-[10px] font-black uppercase ${lastOperation.status === 'SUCCESS' ? 'text-app-success' : 'text-app-error'}`}>Last Transaction Result</span>
                         </div>
-                        <p className="text-[11px] font-black text-gray-900">{lastOperation.details}</p>
-                        <p className="text-[9px] font-bold text-gray-400 mt-2 uppercase">{new Date(lastOperation.timestamp).toLocaleTimeString()}</p>
+                        <p className="text-[11px] font-black text-app-foreground">{lastOperation.details}</p>
+                        <p className="text-[9px] font-bold text-app-muted-foreground mt-2 uppercase">{new Date(lastOperation.timestamp).toLocaleTimeString()}</p>
                     </div>
                 )}
             </div>
@@ -355,43 +355,43 @@ function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Database size={14} className="text-indigo-600" />
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Last 5 Journal Entries</span>
+                    <Database size={14} className="text-app-info" />
+                    <span className="text-[10px] font-black text-app-info uppercase tracking-wider">Last 5 Journal Entries</span>
                 </div>
-                <span className="text-[9px] font-bold text-gray-400 uppercase">Live from DB</span>
+                <span className="text-[9px] font-bold text-app-muted-foreground uppercase">Live from DB</span>
             </div>
 
             <div className="space-y-4">
                 {recentLedger.length === 0 ? (
-                    <div className="p-8 text-center text-gray-400 text-xs font-medium">
+                    <div className="p-8 text-center text-app-muted-foreground text-xs font-medium">
                         No recent transactions found.
                     </div>
                 ) : (
                     recentLedger.map((entry) => (
-                        <div key={entry.id} className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:border-indigo-200 transition-colors">
-                            <div className="p-3 bg-white border-b border-gray-100 flex justify-between items-center">
+                        <div key={entry.id} className="bg-gray-50 rounded-2xl border border-app-border overflow-hidden shadow-sm hover:border-app-info transition-colors">
+                            <div className="p-3 bg-white border-b border-app-border flex justify-between items-center">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{entry.reference}</span>
-                                    <span className="text-[9px] text-gray-400 font-bold">{new Date(entry.transactionDate).toLocaleString()}</span>
+                                    <span className="text-[10px] font-black text-app-info uppercase tracking-tight">{entry.reference}</span>
+                                    <span className="text-[9px] text-app-muted-foreground font-bold">{new Date(entry.transactionDate).toLocaleString()}</span>
                                 </div>
-                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${entry.status === 'POSTED' ? 'bg-app-success-soft text-app-success' : 'bg-app-warning-soft text-app-warning'}`}>
                                     {entry.status}
                                 </span>
                             </div>
                             <div className="p-3">
-                                <p className="text-[11px] font-bold text-gray-700 mb-2 truncate">{entry.description}</p>
+                                <p className="text-[11px] font-bold text-app-muted-foreground mb-2 truncate">{entry.description}</p>
                                 <div className="space-y-1.5 font-mono">
                                     {entry.lines.map((line: Record<string, any>) => (
-                                        <div key={line.id} className="flex justify-between items-center text-[9px] leading-none py-1 border-b border-gray-50 last:border-0">
+                                        <div key={line.id} className="flex justify-between items-center text-[9px] leading-none py-1 border-b border-app-border last:border-0">
                                             <div className="flex gap-2">
-                                                <span className="text-gray-400 w-8">{line.account?.code}</span>
-                                                <span className="text-gray-600 truncate max-w-[150px]">{line.account?.name}</span>
+                                                <span className="text-app-muted-foreground w-8">{line.account?.code}</span>
+                                                <span className="text-app-muted-foreground truncate max-w-[150px]">{line.account?.name}</span>
                                             </div>
                                             <div className="flex gap-4">
-                                                <span className={line.debit > 0 ? 'text-emerald-600 font-black' : 'text-transparent'}>
+                                                <span className={line.debit > 0 ? 'text-app-success font-black' : 'text-transparent'}>
                                                     {Number(line.debit).toFixed(2)}
                                                 </span>
-                                                <span className={line.credit > 0 ? 'text-rose-600 font-black' : 'text-transparent'}>
+                                                <span className={line.credit > 0 ? 'text-app-error font-black' : 'text-transparent'}>
                                                     {Number(line.credit).toFixed(2)}
                                                 </span>
                                             </div>

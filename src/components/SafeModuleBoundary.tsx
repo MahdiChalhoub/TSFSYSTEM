@@ -32,8 +32,8 @@ export class SafeModuleBoundary extends Component<Props, State> {
             if (this.props.fallback) return this.props.fallback;
 
             return (
-                <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center gap-3">
-                    <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
+                <div className="p-4 rounded-xl border border-app-error/20 bg-app-error/5 flex items-center gap-3">
+                    <div className="p-2 bg-app-error/10 rounded-lg text-red-400">
                         <AlertCircle size={20} />
                     </div>
                     <div>

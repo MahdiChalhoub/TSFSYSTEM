@@ -39,7 +39,7 @@ function healthBg(score: number) {
 }
 
 function statusBadge(status: string | null) {
-    if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 as IconComponent }
+    if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: CheckCircle2 as IconComponent }
     const map: Record<string, { label: string; cls: string; icon: IconComponent }> = {
         PENDING: { label: 'Requested', cls: 'bg-app-info-bg text-app-info ring-blue-200', icon: Clock },
         APPROVED: { label: 'Approved', cls: 'bg-app-info-bg text-app-info ring-indigo-200', icon: CheckCircle2 },
@@ -54,7 +54,7 @@ function orderTypeBadge(type: string | null) {
     if (!type) return null
     const map: Record<string, { label: string; cls: string; icon: IconComponent }> = {
         stock_adjustment: { label: 'Adjustment', cls: 'bg-purple-50 text-purple-700', icon: BarChart3 },
-        stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
+        stock_transfer: { label: 'Transfer', cls: 'bg-app-info-soft text-app-info', icon: Truck },
         purchase_order: { label: 'Purchase', cls: 'bg-app-warning-bg text-app-warning', icon: ShoppingCart },
     }
     return map[type] || { label: type, cls: 'bg-app-surface text-app-muted-foreground', icon: FileText as IconComponent }
@@ -256,7 +256,7 @@ export default function ProductAnalyticsPage() {
             {/* ── KPI Cards ── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
-                    { label: 'Total Products', value: kpis.total, icon: Package, gradient: 'from-slate-600 to-slate-700', ring: 'ring-slate-200' },
+                    { label: 'Total Products', value: kpis.total, icon: Package, gradient: 'from-slate-600 to-slate-700', ring: 'ring-app-border' },
                     { label: 'Low Stock', value: kpis.lowStock, icon: AlertTriangle, gradient: 'from-red-500 to-rose-500', ring: 'ring-red-200' },
                     { label: 'Requested', value: kpis.requested, icon: Clock, gradient: 'from-blue-500 to-indigo-500', ring: 'ring-blue-200' },
                     { label: 'Orders Pending', value: kpis.pending, icon: FileText, gradient: 'from-emerald-500 to-green-500', ring: 'ring-emerald-200' },
@@ -356,7 +356,7 @@ export default function ProductAnalyticsPage() {
                         </button>
                         <button
                             onClick={() => openRequest('transfer_request', Array.from(selectedIds))}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-info text-white text-sm font-semibold hover:bg-app-info transition-colors shadow-sm"
                         >
                             <Truck size={16} /> Transfer Request
                         </button>
@@ -408,7 +408,7 @@ export default function ProductAnalyticsPage() {
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-app-border">
                             {loading ? (
                                 <tr>
                                     <td colSpan={8} className="p-16 text-center">
@@ -553,7 +553,7 @@ export default function ProductAnalyticsPage() {
                                                 <button
                                                     onClick={() => openRequest('transfer_request', [p.id])}
                                                     title="Create Transfer Request"
-                                                    className="p-2 rounded-lg hover:bg-cyan-50 text-app-muted-foreground hover:text-cyan-600 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-app-info-soft text-app-muted-foreground hover:text-app-info transition-colors"
                                                 >
                                                     <Truck size={16} />
                                                 </button>
@@ -635,7 +635,7 @@ export default function ProductAnalyticsPage() {
                                 disabled={requestLoading}
                                 className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-colors shadow-lg disabled:opacity-50 ${requestType === 'purchase_request'
                                     ? 'bg-violet-600 hover:bg-violet-700 shadow-violet-500/25'
-                                    : 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/25'
+                                    : 'bg-app-info hover:bg-app-info shadow-cyan-500/25'
                                     }`}
                             >
                                 {requestLoading ? (

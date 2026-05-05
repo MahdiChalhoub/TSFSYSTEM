@@ -58,7 +58,7 @@ export default function TaxReportsPage() {
         <div className="p-6 space-y-6">
             <header>
                 <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-app-error flex items-center justify-center">
                         <Receipt size={20} className="text-white" />
                     </div>
                     Tax Reports
@@ -188,7 +188,7 @@ export default function TaxReportsPage() {
                             </div>
                             <div className="text-center p-4 bg-app-surface rounded-xl">
                                 <p className="text-xs text-app-muted-foreground uppercase mb-1">Discounts Applied</p>
-                                <p className="text-2xl font-bold text-orange-600">{fmt(Number(summary.sales?.discount || 0))}</p>
+                                <p className="text-2xl font-bold text-app-warning">{fmt(Number(summary.sales?.discount || 0))}</p>
                             </div>
                             <div className="text-center p-4 bg-app-surface rounded-xl">
                                 <p className="text-xs text-app-muted-foreground uppercase mb-1">Net Revenue</p>

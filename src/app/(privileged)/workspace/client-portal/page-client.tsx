@@ -85,10 +85,10 @@ export default function ClientPortalAdminPage() {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="bg-app-surface p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
  <div className="flex justify-between items-start mb-4">
- <div className="w-12 h-12 rounded-2xl bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center">
+ <div className="w-12 h-12 rounded-2xl bg-app-error-soft text-app-error flex items-center justify-center">
  <DollarSign size={24} />
  </div>
- <Badge variant="outline" className="text-fuchsia-500 bg-fuchsia-50 border-0 font-black text-[10px]">
+ <Badge variant="outline" className="text-app-error bg-app-error-soft border-0 font-black text-[10px]">
  WALLET
  </Badge>
  </div>
@@ -123,7 +123,7 @@ export default function ClientPortalAdminPage() {
  {/* Tabs */}
  <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-app-border p-1.5 w-fit">
  {([['wallets', 'Client Wallets', Wallet], ['tickets', 'Support Tickets', MessageSquare], ['quotes', 'Quote Requests', FileQuestion]] as const).map(([key, label, Icon]) => (
- <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-fuchsia-600 text-app-foreground shadow-lg shadow-fuchsia-900/40' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
+ <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-app-error text-app-foreground shadow-lg shadow-fuchsia-900/40' : 'text-app-muted-foreground hover:text-app-foreground'}`}>
  <Icon size={14} />
  {label}
  {key === 'tickets' && openTickets.length > 0 && <span className="bg-app-warning text-app-foreground text-[10px] font-bold px-1.5 rounded-full">{openTickets.length}</span>}

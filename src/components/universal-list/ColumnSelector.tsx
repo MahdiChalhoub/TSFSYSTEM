@@ -81,7 +81,7 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  } hover:bg-app-bg`}
  >
  <div className={`w-4 h-4 rounded border flex items-center justify-center ${isActive
- ? 'bg-blue-600 border-blue-600'
+ ? 'bg-app-info border-blue-600'
  : 'border-app-border'
  }`}>
  {isActive && <Check size={10} className="text-app-foreground" />}

@@ -420,7 +420,7 @@ export default function OrderHistoryPage() {
  align: 'right',
  render: (order) => {
  const due = parseFloat(String(order.total_amount ?? 0)) - parseFloat(String(order.total_paid ?? 0))
- return <span className={`font-black tracking-tighter ${due > 0 ? 'text-app-error' : 'text-stone-300'}`}>{fmt(due)}</span>
+ return <span className={`font-black tracking-tighter ${due > 0 ? 'text-app-error' : 'text-app-muted-foreground'}`}>{fmt(due)}</span>
  }
  },
  {
@@ -460,7 +460,7 @@ export default function OrderHistoryPage() {
  label: 'Ajouté par',
  render: (order) => (
  <div className="flex items-center gap-1.5">
- <User size={12} className="text-stone-300" />
+ <User size={12} className="text-app-muted-foreground" />
  <span className="text-xs text-app-muted-foreground font-medium">{order.user_name || 'System'}</span>
  </div>
  )
@@ -505,7 +505,7 @@ export default function OrderHistoryPage() {
  onClick={() => toggleVerify(order.id, order.is_verified)}
  className="transition-transform active:scale-95"
  >
- {order.is_verified ? <Badge className="bg-indigo-600 text-app-foreground border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
+ {order.is_verified ? <Badge className="bg-app-info text-app-foreground border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
  </button>
  )
  }
@@ -546,7 +546,7 @@ export default function OrderHistoryPage() {
  <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-muted-foreground hover:text-app-info hover:bg-app-bg transition-all">
  <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
  </Button>
- <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+ <Button asChild className="h-12 px-6 rounded-2xl bg-app-info hover:bg-app-info text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
  <Link href="/sales">
  <ArrowUpRight size={18} /> Terminal
  </Link>
@@ -605,10 +605,10 @@ export default function OrderHistoryPage() {
  <th className="px-4 py-3 text-right">Total</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-stone-50">
+ <tbody className="divide-y divide-app-border">
  {order.lines?.map((line: any, i: number) => (
  <tr key={i} className="hover:bg-stone-50/50 transition-colors">
- <td className="px-4 py-3 font-semibold text-stone-700">{line.product_name || `Produit #${line.product}`}</td>
+ <td className="px-4 py-3 font-semibold text-app-muted-foreground">{line.product_name || `Produit #${line.product}`}</td>
  <td className="px-4 py-3 text-center font-bold text-app-muted-foreground">{line.quantity}</td>
  <td className="px-4 py-3 text-right text-app-muted-foreground">{fmt(parseFloat(line.unit_price))}</td>
  <td className="px-4 py-3 text-right font-black text-app-foreground">{fmt(parseFloat(line.subtotal))}</td>
@@ -628,7 +628,7 @@ export default function OrderHistoryPage() {
  placeholder="Rechercher par n° facture, client..."
  value={searchQuery}
  onChange={e => setSearchQuery(e.target.value)}
- className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-indigo-500/30 transition-all focus:bg-app-surface focus:shadow-sm"
+ className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-app-info/30 transition-all focus:bg-app-surface focus:shadow-sm"
  />
  </div>
  <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-muted-foreground gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">

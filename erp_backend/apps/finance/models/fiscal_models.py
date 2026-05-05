@@ -150,6 +150,10 @@ class FiscalPeriod(TenantModel):
         db_table = 'fiscalperiod'
         unique_together = ('name', 'fiscal_year')
         ordering = ['start_date']
+        indexes = [
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'fiscal_year', 'status']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.fiscal_year.name})"

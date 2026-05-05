@@ -43,7 +43,7 @@ export default function BoutiqueHeader() {
                         </Link>
 
                         {/* Desktop nav */}
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600"
+                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-app-muted-foreground"
                             style={{ fontFamily: "'DM Sans', sans-serif" }}>
                             <Link href={base} className="hover:text-violet-600 transition">Home</Link>
                             <Link href={`${base}/categories`} className="hover:text-violet-600 transition">Collections</Link>
@@ -53,22 +53,22 @@ export default function BoutiqueHeader() {
                         {/* Actions */}
                         <div className="flex items-center gap-1 sm:gap-3">
                             <Link href={`${base}/search`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition">
+                                className="p-2.5 rounded-xl text-app-muted-foreground hover:text-violet-600 hover:bg-violet-50 transition">
                                 <Search size={20} />
                             </Link>
 
                             <Link href={`${base}/account/wishlist`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-pink-500 hover:bg-pink-50 transition relative">
+                                className="p-2.5 rounded-xl text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition relative">
                                 <Heart size={20} />
                                 {wishlistCount > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-pink-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-app-error text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                                         {wishlistCount}
                                     </span>
                                 )}
                             </Link>
 
                             <Link href={`${base}/cart`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition relative">
+                                className="p-2.5 rounded-xl text-app-muted-foreground hover:text-violet-600 hover:bg-violet-50 transition relative">
                                 <ShoppingBag size={20} />
                                 {cartCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-violet-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function BoutiqueHeader() {
                             {isAuthenticated ? (
                                 <div className="relative">
                                     <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-1.5 p-2 rounded-xl text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition text-sm font-medium"
+                                        className="flex items-center gap-1.5 p-2 rounded-xl text-app-muted-foreground hover:text-violet-600 hover:bg-violet-50 transition text-sm font-medium"
                                         style={{ fontFamily: "'DM Sans', sans-serif" }}>
                                         <User size={18} />
                                         <span className="hidden sm:inline max-w-[80px] truncate">{user?.name?.split(' ')[0]}</span>
@@ -92,16 +92,16 @@ export default function BoutiqueHeader() {
                                             <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-violet-100 py-2 z-50"
                                                 style={{ fontFamily: "'DM Sans', sans-serif" }}>
                                                 <Link href={`${base}/account`} onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-violet-50 hover:text-violet-600">
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-app-muted-foreground hover:bg-violet-50 hover:text-violet-600">
                                                     <User size={15} /> My Account
                                                 </Link>
                                                 <Link href={`${base}/account/orders`} onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-violet-50 hover:text-violet-600">
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-app-muted-foreground hover:bg-violet-50 hover:text-violet-600">
                                                     <Package size={15} /> Orders
                                                 </Link>
                                                 <hr className="my-1 border-violet-100" />
                                                 <button onClick={() => { logout(); setUserMenuOpen(false) }}
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 w-full text-left">
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-app-error hover:bg-app-error-soft w-full text-left">
                                                     <LogOut size={15} /> Sign Out
                                                 </button>
                                             </div>
@@ -116,7 +116,7 @@ export default function BoutiqueHeader() {
                                 </Link>
                             )}
 
-                            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 text-gray-600">
+                            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 text-app-muted-foreground">
                                 <Menu size={22} />
                             </button>
                         </div>
@@ -129,7 +129,7 @@ export default function BoutiqueHeader() {
                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
                         <div className="absolute right-0 top-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col"
                             style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                            <button onClick={() => setMobileOpen(false)} className="self-end p-2 text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setMobileOpen(false)} className="self-end p-2 text-app-muted-foreground hover:text-app-muted-foreground">
                                 <X size={20} />
                             </button>
                             <nav className="mt-6 flex flex-col gap-1">
@@ -141,7 +141,7 @@ export default function BoutiqueHeader() {
                                     { label: 'Wishlist', href: `${base}/account/wishlist` },
                                 ].map(link => (
                                     <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
-                                        className="px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
+                                        className="px-4 py-3 rounded-xl text-app-muted-foreground hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
                                         {link.label}
                                     </Link>
                                 ))}
@@ -149,7 +149,7 @@ export default function BoutiqueHeader() {
                             <div className="mt-auto pt-4 border-t border-violet-100">
                                 {isAuthenticated ? (
                                     <button onClick={() => { logout(); setMobileOpen(false) }}
-                                        className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-red-50 rounded-xl font-medium">
+                                        className="w-full px-4 py-3 text-left text-sm text-app-error hover:bg-app-error-soft rounded-xl font-medium">
                                         Sign Out
                                     </button>
                                 ) : (

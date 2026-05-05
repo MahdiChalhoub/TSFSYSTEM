@@ -103,7 +103,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 onChange={e => { setPassword(e.target.value); setPasswordError('') }}
                                 placeholder="Enter your login password"
                                 autoFocus
-                                className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors ${passwordError ? 'border-red-500/50 bg-red-500/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors ${passwordError ? 'border-app-error/50 bg-app-error/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
                             />
                             {passwordError && (
                                 <p className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
@@ -142,7 +142,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 value={confirmPin}
                                 onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 placeholder="● ● ● ●"
-                                className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-red-500/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-app-error/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
                             />
                             {confirmPin && confirmPin !== newPin && (
                                 <p className="text-[9px] text-red-400 mt-1">PINs do not match</p>

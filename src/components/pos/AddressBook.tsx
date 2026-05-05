@@ -88,7 +88,7 @@ const TYPE_MAP = Object.fromEntries(ENTRY_TYPES.map(t => [t.key, t]));
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
  PENDING: { label: 'Pending Review', bg: 'bg-app-warning-bg', text: 'text-app-warning', icon: Clock },
  APPROVED: { label: 'Approved', bg: 'bg-app-primary-light', text: 'text-app-primary', icon: Check },
- REJECTED: { label: 'Rejected', bg: 'bg-rose-50', text: 'text-rose-600', icon: XCircle },
+ REJECTED: { label: 'Rejected', bg: 'bg-app-error-soft', text: 'text-app-error', icon: XCircle },
  NEED_INFO: { label: 'Info Requested', bg: 'bg-app-info-bg', text: 'text-app-info', icon: HelpCircle },
  MODIFIED: { label: 'Resubmitted', bg: 'bg-violet-50', text: 'text-violet-600', icon: RefreshCw },
 };
@@ -375,11 +375,11 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Out</span>
- <span className="text-sm font-black text-rose-600">{formatMoney(summary.totalOut)}</span>
+ <span className="text-sm font-black text-app-error">{formatMoney(summary.totalOut)}</span>
  </div>
  <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Balance</span>
- <span className={`text-sm font-black ${summary.netBalance >= 0 ? 'text-app-primary' : 'text-rose-600'}`}>
+ <span className={`text-sm font-black ${summary.netBalance >= 0 ? 'text-app-primary' : 'text-app-error'}`}>
  {summary.netBalance >= 0 ? '+' : '-'}{formatMoney(summary.netBalance)}
  </span>
  </div>
@@ -404,7 +404,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <p className="text-[10px] text-app-muted-foreground">Log all money in/out during your shift</p>
  </div>
  ) : (
- <div className="divide-y divide-gray-50">
+ <div className="divide-y divide-app-border">
  {entries.map((entry) => {
  const TypeIcon = getTypeIcon(entry.entryType);
  const statusCfg = STATUS_CONFIG[entry.status] || STATUS_CONFIG.PENDING;
@@ -414,7 +414,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  return (
  <div key={entry.id} className={clsx(
  "px-4 py-3 hover:bg-app-bg/50 transition-colors",
- entry.status === 'REJECTED' && 'bg-rose-50/30',
+ entry.status === 'REJECTED' && 'bg-app-error-soft/30',
  entry.status === 'NEED_INFO' && 'bg-app-info-bg/30',
  )}>
  <div className="flex items-start justify-between gap-3">
@@ -422,7 +422,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="flex items-start gap-2.5 flex-1 min-w-0">
  <div className={clsx(
  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
- isIn ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-500'
+ isIn ? 'bg-app-primary-light text-app-primary' : 'bg-app-error-soft text-app-error'
  )}>
  <TypeIcon size={14} />
  </div>
@@ -431,7 +431,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
  <span className={clsx(
  "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
- isIn ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-600'
+ isIn ? 'bg-app-primary-light text-app-primary' : 'bg-app-error-soft text-app-error'
  )}>
  {getTypeLabel(entry.entryType)}
  </span>
@@ -483,7 +483,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <span className="text-[9px] text-app-muted-foreground">by {entry.cashierName}</span>
  </div>
  {entry.rejectionNotes && (
- <p className="text-[10px] text-rose-400 mt-1 italic bg-rose-50 px-2 py-1 rounded">
+ <p className="text-[10px] text-rose-400 mt-1 italic bg-app-error-soft px-2 py-1 rounded">
  💬 {entry.rejectionNotes}
  </p>
  )}
@@ -499,7 +499,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="text-right shrink-0">
  <p className={clsx(
  "text-sm font-black",
- isIn ? 'text-app-primary' : 'text-rose-600'
+ isIn ? 'text-app-primary' : 'text-app-error'
  )}>
  {isIn ? '+' : '-'}{formatMoney(isIn ? entry.amountIn : entry.amountOut)}
  </p>
@@ -520,14 +520,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </button>
  <button
  onClick={() => { setShowRejectForm(showRejectForm === entry.id ? null : entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-rose-500 text-app-foreground hover:bg-rose-600 transition-all"
+ className="p-1 rounded-md bg-app-error text-app-foreground hover:bg-app-error transition-all"
  title="Reject"
  >
  <XCircle size={10} />
  </button>
  <button
  onClick={() => { setShowRejectForm(entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-blue-500 text-app-foreground hover:bg-blue-600 transition-all"
+ className="p-1 rounded-md bg-app-info text-app-foreground hover:bg-app-info transition-all"
  title="Request Info"
  >
  <HelpCircle size={10} />
@@ -549,7 +549,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {entry.status === 'PENDING' && entry.cashierId === cashierId && !isManager && (
  <button
  onClick={() => handleDelete(entry.id)}
- className="mt-1 p-1 rounded-md text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all"
+ className="mt-1 p-1 rounded-md text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition-all"
  title="Delete entry"
  >
  <Trash2 size={10} />
@@ -571,14 +571,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'reject')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-rose-500 text-app-foreground rounded-lg text-[10px] font-bold hover:bg-rose-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-app-error text-app-foreground rounded-lg text-[10px] font-bold hover:bg-app-error disabled:opacity-50"
  >
  Reject
  </button>
  <button
  onClick={() => handleReview(entry.id, 'need_info')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-blue-500 text-app-foreground rounded-lg text-[10px] font-bold hover:bg-blue-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-app-info text-app-foreground rounded-lg text-[10px] font-bold hover:bg-app-info disabled:opacity-50"
  >
  Need Info
  </button>
@@ -597,7 +597,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  />
  <button
  onClick={() => handleRespond(entry.id)}
- className="px-3 py-1.5 bg-blue-500 text-app-foreground rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
+ className="px-3 py-1.5 bg-app-info text-app-foreground rounded-lg text-xs font-bold hover:bg-app-info flex items-center gap-1"
  >
  <Send size={10} /> Resubmit
  </button>
@@ -637,7 +637,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  isSelected
  ? t.dir === 'IN'
  ? 'bg-app-primary-light border-app-success text-app-success ring-2 ring-emerald-100'
- : 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-100'
+ : 'bg-app-error-soft border-app-error text-app-error ring-2 ring-rose-100'
  : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  )}
  >
@@ -662,7 +662,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div>
  <label className={clsx(
  "text-[9px] font-black uppercase tracking-widest block mb-1",
- selectedType.dir === 'IN' ? 'text-app-primary' : 'text-rose-600'
+ selectedType.dir === 'IN' ? 'text-app-primary' : 'text-app-error'
  )}>
  {selectedType.dir === 'IN' ? <><ArrowDownLeft size={8} className="inline" /> Amount In</> : <><ArrowUpRight size={8} className="inline" /> Amount Out</>}
  </label>
@@ -675,7 +675,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  "w-full px-3 py-2.5 border rounded-xl text-lg font-black outline-none focus:ring-2 text-center tabular-nums",
  selectedType.dir === 'IN'
  ? 'border-app-success text-app-success focus:ring-emerald-200'
- : 'border-rose-200 text-rose-700 focus:ring-rose-200'
+ : 'border-app-error text-app-error focus:ring-rose-200'
  )}
  />
  </div>
@@ -699,7 +699,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <span className="text-sm font-bold text-app-foreground">{form.supplierName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '' })); setInvoices([]); }}
- className="text-app-muted-foreground hover:text-rose-500 transition-colors"
+ className="text-app-muted-foreground hover:text-app-error transition-colors"
  >
  <X size={14} />
  </button>
@@ -723,14 +723,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  key={c.id}
  onClick={() => selectContact(c, true)}
- className="w-full px-3 py-2 text-left hover:bg-app-warning-bg transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+ className="w-full px-3 py-2 text-left hover:bg-app-warning-bg transition-colors flex items-center justify-between text-sm border-b border-app-border last:border-0"
  >
  <div>
  <span className="font-bold text-app-foreground">{c.name}</span>
  {c.phone && <span className="text-app-muted-foreground ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
- <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-rose-500' : 'text-app-primary')}>
+ <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-app-error' : 'text-app-primary')}>
  {currency}{Math.abs(c.balance).toFixed(0)}
  </span>
  )}
@@ -757,7 +757,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <span className="text-sm font-bold text-app-foreground">{form.clientName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '' })); setInvoices([]); }}
- className="text-app-muted-foreground hover:text-rose-500 transition-colors"
+ className="text-app-muted-foreground hover:text-app-error transition-colors"
  >
  <X size={14} />
  </button>
@@ -781,14 +781,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  key={c.id}
  onClick={() => selectContact(c, false)}
- className="w-full px-3 py-2 text-left hover:bg-app-primary-light transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+ className="w-full px-3 py-2 text-left hover:bg-app-primary-light transition-colors flex items-center justify-between text-sm border-b border-app-border last:border-0"
  >
  <div>
  <span className="font-bold text-app-foreground">{c.name}</span>
  {c.phone && <span className="text-app-muted-foreground ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
- <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-app-primary' : 'text-rose-500')}>
+ <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-app-primary' : 'text-app-error')}>
  {currency}{Math.abs(c.balance).toFixed(0)}
  </span>
  )}
@@ -828,7 +828,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className={clsx(
  "w-full px-3 py-2 rounded-lg border text-left flex items-center justify-between transition-all text-xs",
  isSelected
- ? 'bg-app-warning-bg border-amber-300 ring-2 ring-amber-100'
+ ? 'bg-app-warning-bg border-app-warning ring-2 ring-amber-100'
  : 'bg-app-surface border-app-border hover:border-app-border'
  )}
  >
@@ -840,7 +840,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {inv.dueDate && <span className="text-app-muted-foreground ml-1 text-[9px]">due {inv.dueDate}</span>}
  </div>
  <div className="text-right">
- <span className="font-black text-rose-600">{currency}{inv.balanceDue.toFixed(0)}</span>
+ <span className="font-black text-app-error">{currency}{inv.balanceDue.toFixed(0)}</span>
  {inv.paidAmount > 0 && (
  <span className="text-[9px] text-app-muted-foreground block">
  paid {currency}{inv.paidAmount.toFixed(0)} / {currency}{inv.totalAmount.toFixed(0)}
@@ -893,7 +893,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-app-foreground",
  selectedType.dir === 'IN'
  ? 'bg-app-primary hover:bg-app-primary shadow-emerald-100'
- : 'bg-rose-500 hover:bg-rose-600 shadow-rose-100',
+ : 'bg-app-error hover:bg-app-error shadow-rose-100',
  "disabled:opacity-50"
  )}
  >

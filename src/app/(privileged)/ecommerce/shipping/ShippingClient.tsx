@@ -185,7 +185,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                     </td>
                                     <td className="px-4 py-3">
                                         <button onClick={() => handleDelete(r.id)} id={`delete-rate-${r.id}`}
-                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-app-error/10 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </td>
@@ -209,7 +209,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                 <p className="text-xs text-[var(--app-muted-foreground)]">{selectedZone?.name}</p>
                             </div>
                         </div>
-                        {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
+                        {error && <p className="text-app-error text-sm bg-app-error/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
                             <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">Order Value Range</p>
                             <div className="grid grid-cols-2 gap-3">

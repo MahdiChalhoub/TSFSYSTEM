@@ -96,6 +96,13 @@ class Order(TenantModel):
 
     class Meta:
         db_table = 'pos_order'
+        indexes = [
+            models.Index(fields=['organization', 'type', 'created_at']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'created_at']),
+            models.Index(fields=['organization', 'contact']),
+            models.Index(fields=['organization', 'scope', 'created_at']),
+        ]
 
     def __str__(self):
         return f"ORD-{self.id} ({self.type})"
@@ -133,6 +140,10 @@ class OrderLine(TenantModel):
 
     class Meta:
         db_table = 'pos_orderline'
+        indexes = [
+            models.Index(fields=['order', 'product']),
+            models.Index(fields=['organization', 'product']),
+        ]
 
 
 # Import models from sub-files so Django discovers them for migrations

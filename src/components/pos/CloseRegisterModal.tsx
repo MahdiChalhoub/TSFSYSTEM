@@ -142,7 +142,7 @@ export default function CloseRegisterModal({
  value={cashCounted}
  onChange={e => setCashCounted(e.target.value)}
  placeholder="0"
- className="w-full px-4 py-3.5 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground text-2xl font-black outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500/30 text-center transition-all"
+ className="w-full px-4 py-3.5 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground text-2xl font-black outline-none focus:ring-2 focus:ring-app-error/40 focus:border-app-error/30 text-center transition-all"
  autoFocus
  />
  </div>
@@ -155,7 +155,7 @@ export default function CloseRegisterModal({
  onChange={e => setNotes(e.target.value)}
  rows={2}
  placeholder="Any notes about this shift..."
- className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-rose-500/40 resize-none"
+ className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-app-error/40 resize-none"
  />
  </div>
 
@@ -167,7 +167,7 @@ export default function CloseRegisterModal({
  <button
  onClick={handleClose}
  disabled={loading || cashCounted === ''}
- className="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-app-foreground font-black text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+ className="flex-1 py-3 rounded-2xl bg-app-error hover:bg-app-error text-app-foreground font-black text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
  >
  {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
  {loading ? 'Closing…' : 'Close Register'}

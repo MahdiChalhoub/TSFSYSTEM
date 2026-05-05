@@ -28,7 +28,7 @@ export function CartTable({
  <th className="p-4 pr-6 text-center">Action</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50 text-xs font-bold text-app-foreground">
+ <tbody className="divide-y divide-app-border text-xs font-bold text-app-foreground">
  {cart.length === 0 ? (
  <tr>
  <td colSpan={7} className="p-20 text-center text-app-muted-foreground italic">
@@ -56,7 +56,7 @@ export function CartTable({
  <td className="p-4 pr-6 text-center">
  <button
  onClick={() => onRemoveItem(item.productId)}
- className="p-1.5 text-app-muted-foreground hover:text-rose-500 transition-all"
+ className="p-1.5 text-app-muted-foreground hover:text-app-error transition-all"
  >
  <Trash2 size={16} />
  </button>

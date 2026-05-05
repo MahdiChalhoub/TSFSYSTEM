@@ -149,9 +149,9 @@ export default function TransferAnalysis() {
         <div className="space-y-6">
           {/* Executive Summary */}
           <Card className={`border-2 ${
-            analysis.approval_recommendation.decision === 'approve' ? 'border-green-500 bg-app-success-bg' :
-            analysis.approval_recommendation.decision === 'reject' ? 'border-red-500 bg-app-error-bg' :
-            'border-yellow-500 bg-app-warning-bg'
+            analysis.approval_recommendation.decision === 'approve' ? 'border-app-success bg-app-success-bg' :
+            analysis.approval_recommendation.decision === 'reject' ? 'border-app-error bg-app-error-bg' :
+            'border-app-warning bg-app-warning-bg'
           }`}>
             <CardHeader>
               <div className="flex items-center justify-between">

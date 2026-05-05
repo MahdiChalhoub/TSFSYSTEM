@@ -120,7 +120,7 @@ export default function POSQuickHold({
  <div className="flex items-center gap-2 px-4 py-3 border-b border-app-foreground/5">
  <BookOpen size={14} className="text-indigo-400 shrink-0" />
  <span className="text-app-foreground font-black text-sm flex-1">Held Carts</span>
- <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-black text-xs transition-all">
+ <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-app-info/20 hover:bg-app-info/30 text-indigo-300 font-black text-xs transition-all">
  <Plus size={10} /> Hold Current
  </button>
  <button onClick={() => setIsOpen(false)} className="w-6 h-6 rounded-lg text-app-foreground/25 hover:text-app-foreground flex items-center justify-center ml-1">
@@ -142,7 +142,7 @@ export default function POSQuickHold({
  onClick={() => handleRestore(hold)}
  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-app-foreground/5 text-left transition-all group"
  >
- <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+ <div className="w-8 h-8 rounded-xl bg-app-info/10 flex items-center justify-center shrink-0">
  <ShoppingBag size={14} className="text-indigo-400" />
  </div>
  <div className="flex-1 min-w-0">
@@ -157,7 +157,7 @@ export default function POSQuickHold({
  <span className="text-indigo-400 font-black text-xs tabular-nums">{fmt(hold.total, hold.currency)}</span>
  <button
  onClick={(e) => handleDelete(hold.id, e)}
- className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition-all"
+ className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-app-error/10 hover:bg-app-error/20 text-rose-400 flex items-center justify-center transition-all"
  >
  <Trash2 size={9} />
  </button>
@@ -221,13 +221,13 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  <div className="relative">
  <button
  onClick={() => setIsOpen(o => !o)}
- className="h-6 px-1.5 rounded bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 transition-all flex items-center gap-0.5 border border-indigo-500/20 relative"
+ className="h-6 px-1.5 rounded bg-app-info/15 text-indigo-400 hover:bg-app-info/25 transition-all flex items-center gap-0.5 border border-app-info/20 relative"
  title="Quick Hold (Ctrl+H)"
  >
  <Bookmark size={9} />
  <span className="text-[7px] font-black uppercase hidden xl:inline">Hold</span>
  {holds.length > 0 && (
- <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-500 text-app-foreground text-[7px] font-black rounded-full flex items-center justify-center">
+ <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-app-info text-app-foreground text-[7px] font-black rounded-full flex items-center justify-center">
  {holds.length > 9 ? '9+' : holds.length}
  </span>
  )}
@@ -243,7 +243,7 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  <div className="flex items-center gap-2 px-4 py-3 border-b border-app-foreground/5">
  <BookOpen size={14} className="text-indigo-400 shrink-0" />
  <span className="text-app-foreground font-black text-sm flex-1">Held Carts</span>
- <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-black text-xs transition-all">
+ <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-app-info/20 hover:bg-app-info/30 text-indigo-300 font-black text-xs transition-all">
  <Plus size={10} /> Save
  </button>
  </div>

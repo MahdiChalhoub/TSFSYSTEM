@@ -13,7 +13,7 @@ export default function PrivilegedError({
 }) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-app-surface p-8 text-center">
-            <div className="w-16 h-16 rounded-3xl bg-red-100 flex items-center justify-center text-red-600 mb-6 shadow-lg shadow-red-200">
+            <div className="w-16 h-16 rounded-3xl bg-app-error-soft flex items-center justify-center text-app-error mb-6 shadow-lg shadow-red-200">
                 <AlertCircle size={32} />
             </div>
             <h2 className="text-2xl font-black text-app-foreground tracking-tight underline decoration-red-500 decoration-4 underline-offset-4">
@@ -33,7 +33,7 @@ export default function PrivilegedError({
             <div className="mt-10 flex gap-4">
                 <Button
                     onClick={() => reset()}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-6 rounded-2xl font-black shadow-lg shadow-emerald-200 transition-all flex gap-3"
+                    className="bg-app-success hover:bg-app-success text-white px-8 py-6 rounded-2xl font-black shadow-lg shadow-emerald-200 transition-all flex gap-3"
                 >
                     <RotateCcw size={18} />
                     Try Again

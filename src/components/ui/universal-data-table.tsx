@@ -223,7 +223,7 @@ export function UniversalDataTable({
 
     const renderCell = (row: Record<string, any>, field: FieldMeta) => {
         const val = row[field.name];
-        if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
+        if (val === null || val === undefined) return <span className="text-app-muted-foreground">-</span>;
 
         switch (field.type) {
             case 'boolean':
@@ -250,38 +250,38 @@ export function UniversalDataTable({
     return (
         <div className="space-y-4">
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-app-border shadow-sm">
                 <div className="flex items-center gap-3 flex-1">
                     <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-muted-foreground" />
                         <Input
                             placeholder={`Search ${meta.verbose_name_plural}...`}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 h-11 rounded-2xl border-gray-100 focus:ring-emerald-500/10"
+                            className="pl-10 h-11 rounded-2xl border-app-border focus:ring-emerald-500/10"
                         />
                     </div>
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-gray-100">
+                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-app-border">
                                 <Filter className="h-4 w-4" />
                                 Filters
                                 {Object.keys(filters).length > 0 && (
-                                    <Badge className="ml-1 px-1.5 h-5 min-w-[20px] bg-emerald-500">{Object.keys(filters).length}</Badge>
+                                    <Badge className="ml-1 px-1.5 h-5 min-w-[20px] bg-app-success">{Object.keys(filters).length}</Badge>
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 p-6 rounded-[2rem] shadow-2xl border-gray-100">
+                        <PopoverContent className="w-80 p-6 rounded-[2rem] shadow-2xl border-app-border">
                             <div className="space-y-4">
-                                <h3 className="font-black uppercase tracking-tighter text-gray-900">Advanced Filters</h3>
+                                <h3 className="font-black uppercase tracking-tighter text-app-foreground">Advanced Filters</h3>
                                 <div className="space-y-4">
                                     {meta.fields.filter(f => f.filterable).slice(0, 5).map(field => (
                                         <div key={field.name} className="space-y-1.5">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{field.label}</label>
+                                            <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">{field.label}</label>
                                             {field.choices ? (
                                                 <select
-                                                    className="w-full h-10 px-3 rounded-xl border border-gray-100 bg-slate-50 text-xs"
+                                                    className="w-full h-10 px-3 rounded-xl border border-app-border bg-slate-50 text-xs"
                                                     value={filters[field.name] || ""}
                                                     onChange={(e) => setFilters(prev => ({ ...prev, [field.name]: e.target.value }))}
                                                 >
@@ -293,7 +293,7 @@ export function UniversalDataTable({
                                                     placeholder="Filter value..."
                                                     value={filters[field.name] || ""}
                                                     onChange={(e) => setFilters(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                                    className="h-10 rounded-xl border-gray-100 text-xs"
+                                                    className="h-10 rounded-xl border-app-border text-xs"
                                                 />
                                             )}
                                         </div>
@@ -301,7 +301,7 @@ export function UniversalDataTable({
                                 </div>
                                 <Button
                                     variant="ghost"
-                                    className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50"
+                                    className="w-full h-10 rounded-xl text-[10px] font-black uppercase tracking-widest text-app-error hover:bg-app-error-soft"
                                     onClick={() => setFilters({})}
                                 >
                                     Clear all filters
@@ -314,35 +314,35 @@ export function UniversalDataTable({
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-gray-100">
+                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-app-border">
                                 <Bookmark className="h-4 w-4" />
                                 Views
-                                {currentViewId && <Badge variant="secondary" className="bg-slate-100 text-slate-600 scale-90">Active</Badge>}
+                                {currentViewId && <Badge variant="secondary" className="bg-slate-100 text-app-muted-foreground scale-90">Active</Badge>}
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-64 p-2 rounded-2xl shadow-xl border-gray-100">
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-gray-400 px-3 py-2">Saved Layouts</DropdownMenuLabel>
+                        <DropdownMenuContent className="w-64 p-2 rounded-2xl shadow-xl border-app-border">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 py-2">Saved Layouts</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {savedViews.length === 0 && (
-                                <div className="px-3 py-4 text-center text-xs text-gray-400">No saved views yet</div>
+                                <div className="px-3 py-4 text-center text-xs text-app-muted-foreground">No saved views yet</div>
                             )}
                             {savedViews.map(view => (
                                 <DropdownMenuItem key={view.id} className="flex items-center justify-between group rounded-xl">
                                     <div className="flex-1 cursor-pointer" onClick={() => applyView(view)}>
-                                        <span className={currentViewId === view.id ? "font-bold text-emerald-600" : ""}>{view.name}</span>
-                                        {view.is_default && <Badge className="ml-2 scale-75 bg-amber-50 text-amber-600 border-amber-100">Default</Badge>}
+                                        <span className={currentViewId === view.id ? "font-bold text-app-success" : ""}>{view.name}</span>
+                                        {view.is_default && <Badge className="ml-2 scale-75 bg-app-warning-soft text-app-warning border-amber-100">Default</Badge>}
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button
                                             variant="ghost"
-                                            className={`h-6 w-6 p-0 ${view.is_default ? 'text-amber-500' : 'text-gray-300'}`}
+                                            className={`h-6 w-6 p-0 ${view.is_default ? 'text-app-warning' : 'text-app-muted-foreground'}`}
                                             onClick={(e) => { e.stopPropagation(); handleSetDefaultView(view.id); }}
                                         >
                                             <Star className={`h-3 w-3 ${view.is_default ? 'fill-current' : ''}`} />
                                         </Button>
                                         <Button
                                             variant="ghost"
-                                            className="h-6 w-6 p-0 text-red-400 hover:text-red-500 hover:bg-red-50"
+                                            className="h-6 w-6 p-0 text-red-400 hover:text-app-error hover:bg-app-error-soft"
                                             onClick={(e) => { e.stopPropagation(); handleDeleteView(view.id); }}
                                         >
                                             <Trash className="h-3 w-3" />
@@ -355,7 +355,7 @@ export function UniversalDataTable({
                                 {currentViewId && (
                                     <Button
                                         variant="outline"
-                                        className="w-full h-8 text-[9px] font-black uppercase tracking-widest gap-2 rounded-lg border-emerald-100 text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                                        className="w-full h-8 text-[9px] font-black uppercase tracking-widest gap-2 rounded-lg border-emerald-100 text-app-success bg-app-success-soft hover:bg-app-success-soft"
                                         onClick={handleUpdateCurrentView}
                                         disabled={isSaving}
                                     >
@@ -366,7 +366,7 @@ export function UniversalDataTable({
                                 <Input
                                     id="new-view-name"
                                     placeholder="New view name..."
-                                    className="h-9 text-xs rounded-xl border-gray-100"
+                                    className="h-9 text-xs rounded-xl border-app-border"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             handleSaveView(e.currentTarget.value);
@@ -376,7 +376,7 @@ export function UniversalDataTable({
                                 />
                                 <Button
                                     variant="outline"
-                                    className="w-full h-9 text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl border-gray-100 bg-slate-50 hover:bg-slate-100"
+                                    className="w-full h-9 text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl border-app-border bg-slate-50 hover:bg-slate-100"
                                     disabled={isSaving}
                                     onClick={() => {
                                         const input = document.getElementById('new-view-name') as HTMLInputElement;
@@ -395,13 +395,13 @@ export function UniversalDataTable({
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-gray-100">
+                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-app-border">
                                 <Settings2 className="h-4 w-4" />
                                 Columns
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 p-2 rounded-2xl shadow-xl border-gray-100">
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-gray-400 px-3 py-2">Visibility</DropdownMenuLabel>
+                        <DropdownMenuContent className="w-56 p-2 rounded-2xl shadow-xl border-app-border">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 py-2">Visibility</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <div className="max-h-64 overflow-auto">
                                 {meta.fields.map(field => (
@@ -418,23 +418,23 @@ export function UniversalDataTable({
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button variant="outline" className="h-11 w-11 p-0 rounded-2xl border-gray-100" onClick={loadData}>
+                    <Button variant="outline" className="h-11 w-11 p-0 rounded-2xl border-app-border" onClick={loadData}>
                         <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
                 </div>
             </div>
 
             {/* Table Area */}
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-[2rem] border border-app-border shadow-sm overflow-hidden">
                 <Table>
                     <TableHeader className="bg-slate-50/50">
-                        <TableRow className="hover:bg-transparent border-gray-100">
+                        <TableRow className="hover:bg-transparent border-app-border">
                             {visibleColumns.map(col => {
                                 const field = meta.fields.find(f => f.name === col);
                                 return (
                                     <TableHead
                                         key={col}
-                                        className="h-14 text-[10px] font-black uppercase tracking-widest text-gray-500 cursor-pointer hover:text-gray-900 transition-colors"
+                                        className="h-14 text-[10px] font-black uppercase tracking-widest text-app-muted-foreground cursor-pointer hover:text-app-foreground transition-colors"
                                         onClick={() => setSorting(prev => ({
                                             field: col,
                                             dir: prev?.field === col && prev.dir === 'asc' ? 'desc' : 'asc'
@@ -468,8 +468,8 @@ export function UniversalDataTable({
                                 <TableCell colSpan={visibleColumns.length + (actions ? 1 : 0)} className="h-64 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                         <EyeOff className="h-8 w-8 text-slate-200" />
-                                        <p className="text-sm font-medium text-slate-400">No records found matching your criteria</p>
-                                        <Button variant="link" className="text-xs text-emerald-600 font-bold" onClick={() => { setFilters({}); setSearch(""); }}>Reset all filters</Button>
+                                        <p className="text-sm font-medium text-app-muted-foreground">No records found matching your criteria</p>
+                                        <Button variant="link" className="text-xs text-app-success font-bold" onClick={() => { setFilters({}); setSearch(""); }}>Reset all filters</Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -478,12 +478,12 @@ export function UniversalDataTable({
                                 <TableRow
                                     key={(row.id as string | number) || idx}
                                     onClick={() => onRowClick?.(row)}
-                                    className={`group cursor-pointer border-gray-50 ${onRowClick ? 'hover:bg-slate-50/80 transition-all' : ''}`}
+                                    className={`group cursor-pointer border-app-border ${onRowClick ? 'hover:bg-slate-50/80 transition-all' : ''}`}
                                 >
                                     {visibleColumns.map(col => {
                                         const field = meta.fields.find(f => f.name === col);
                                         return (
-                                            <TableCell key={col} className="text-xs font-medium text-gray-600 py-4">
+                                            <TableCell key={col} className="text-xs font-medium text-app-muted-foreground py-4">
                                                 {field ? renderCell(row, field) : '-'}
                                             </TableCell>
                                         );
@@ -501,12 +501,12 @@ export function UniversalDataTable({
             </div>
 
             {/* Pagination Footer (Placeholder for now) */}
-            <div className="flex items-center justify-between px-6 py-4 bg-white/50 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <div className="flex items-center justify-between px-6 py-4 bg-white/50 rounded-2xl text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
                 <span>Showing {data.length} results</span>
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" disabled className="h-8 rounded-lg">Prev</Button>
                     <div className="flex items-center gap-1.5">
-                        <span className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">1</span>
+                        <span className="w-8 h-8 rounded-lg bg-app-success text-white flex items-center justify-center">1</span>
                     </div>
                     <Button variant="ghost" disabled className="h-8 rounded-lg">Next</Button>
                 </div>

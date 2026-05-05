@@ -38,12 +38,12 @@ export default function MidnightCheckoutPage() {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
                 <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-6">
-                    <CreditCard size={32} className="text-slate-600" />
+                    <CreditCard size={32} className="text-app-muted-foreground" />
                 </div>
                 <h2 className="text-2xl font-black text-white mb-2">Sign in to checkout</h2>
-                <p className="text-sm text-slate-500 mb-8">You need to be signed in to place an order</p>
+                <p className="text-sm text-app-muted-foreground mb-8">You need to be signed in to place an order</p>
                 <Link href={`/tenant/${slug}/register`}
-                    className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30">
+                    className="px-8 py-3 bg-app-success text-white rounded-xl font-bold text-sm hover:bg-app-success transition-all shadow-lg shadow-emerald-900/30">
                     Sign In
                 </Link>
             </div>
@@ -53,7 +53,7 @@ export default function MidnightCheckoutPage() {
     if (cart.length === 0 && step !== 'complete' && !stripeClientSecret) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                <Package size={48} className="text-slate-700 mb-4" />
+                <Package size={48} className="text-app-muted-foreground mb-4" />
                 <h2 className="text-xl font-black text-white mb-2">Your cart is empty</h2>
                 <Link href={`/tenant/${slug}`} className="text-emerald-400 text-sm hover:underline">Browse products</Link>
             </div>
@@ -113,19 +113,19 @@ export default function MidnightCheckoutPage() {
     if (step === 'complete') {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
+                <div className="w-20 h-20 bg-app-success/20 border border-app-success/30 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
                     <CheckCircle2 size={36} className="text-emerald-400" />
                 </div>
                 <h2 className="text-3xl font-black text-white mb-2">Order Placed!</h2>
-                <p className="text-slate-400 mb-1">Thank you for your order</p>
-                {orderId && <p className="text-xs text-slate-600 font-mono">Order #{orderId}</p>}
+                <p className="text-app-muted-foreground mb-1">Thank you for your order</p>
+                {orderId && <p className="text-xs text-app-muted-foreground font-mono">Order #{orderId}</p>}
                 <div className="flex gap-4 mt-8">
                     <Link href={`/tenant/${slug}/account/orders`}
                         className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/10 transition-all">
                         View Orders
                     </Link>
                     <Link href={`/tenant/${slug}`}
-                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all">
+                        className="px-6 py-3 bg-app-success text-white rounded-xl font-bold text-sm hover:bg-app-success transition-all">
                         Continue Shopping
                     </Link>
                 </div>
@@ -138,13 +138,13 @@ export default function MidnightCheckoutPage() {
             <div className="max-w-xl mx-auto px-4 py-8">
                 <div className="bg-slate-900/60 border border-white/5 rounded-3xl p-8 space-y-6">
                     <div className="text-center space-y-2 mb-4">
-                        <CreditCard size={40} className="text-emerald-500 mx-auto" />
+                        <CreditCard size={40} className="text-app-success mx-auto" />
                         <h2 className="text-2xl font-black text-white">Secure Payment</h2>
-                        <p className="text-slate-400 text-sm">Order #{orderId}</p>
+                        <p className="text-app-muted-foreground text-sm">Order #{orderId}</p>
                     </div>
 
                     <div className="flex justify-between items-center py-4 border-y border-white/5 mb-6">
-                        <span className="text-slate-400 text-sm">Amount to Pay</span>
+                        <span className="text-app-muted-foreground text-sm">Amount to Pay</span>
                         <span className="text-2xl font-black text-white">${cartTotal.toFixed(2)}</span>
                     </div>
 
@@ -159,7 +159,7 @@ export default function MidnightCheckoutPage() {
 
                     <button
                         onClick={() => setStripeClientSecret('')}
-                        className="w-full text-slate-500 text-xs font-bold hover:text-white transition-colors py-2"
+                        className="w-full text-app-muted-foreground text-xs font-bold hover:text-white transition-colors py-2"
                     >
                         Back to Billing Details
                     </button>
@@ -170,7 +170,7 @@ export default function MidnightCheckoutPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-4 transition-colors">
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-app-muted-foreground hover:text-white mb-4 transition-colors">
                 <ArrowLeft size={14} /> Back to Cart
             </button>
             <h1 className="text-3xl font-black text-white tracking-tight mb-8">Checkout</h1>
@@ -186,36 +186,36 @@ export default function MidnightCheckoutPage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Full Name</label>
+                                <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">Full Name</label>
                                 <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30" />
                             </div>
                             <div>
-                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Email</label>
+                                <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">Email</label>
                                 <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30" />
                             </div>
                             <div>
-                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Phone</label>
+                                <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">Phone</label>
                                 <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Optional"
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30 placeholder:text-app-foreground" />
                             </div>
                             <div>
-                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">City</label>
+                                <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">City</label>
                                 <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Optional"
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30 placeholder:text-app-foreground" />
                             </div>
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Address</label>
+                            <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">Address</label>
                             <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Delivery address (optional)"
-                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30 placeholder:text-app-foreground" />
                         </div>
                         <div>
-                            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Order Notes</label>
+                            <label className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-wider block mb-1">Order Notes</label>
                             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Special instructions..."
                                 rows={2}
-                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800 resize-none" />
+                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-app-success/30 placeholder:text-app-foreground resize-none" />
                         </div>
                     </div>
 
@@ -234,8 +234,8 @@ export default function MidnightCheckoutPage() {
                                     onClick={() => setForm({ ...form, paymentMethod: method.id })}
                                     className={`p-4 rounded-xl border text-left transition-all flex items-center gap-3
                                         ${form.paymentMethod === method.id
-                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                            : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/10'
+                                            ? 'bg-app-success/10 border-app-success/30 text-emerald-400'
+                                            : 'bg-white/5 border-white/5 text-app-muted-foreground hover:border-white/10'
                                         }`}>
                                     <method.icon size={18} />
                                     <span className="text-xs font-bold">{method.label}</span>
@@ -252,7 +252,7 @@ export default function MidnightCheckoutPage() {
                         <div className="space-y-3 max-h-48 overflow-y-auto">
                             {cart.map(item => (
                                 <div key={item.product_id} className="flex justify-between text-xs">
-                                    <span className="text-slate-400 truncate mr-2">{item.product_name} × {item.quantity}</span>
+                                    <span className="text-app-muted-foreground truncate mr-2">{item.product_name} × {item.quantity}</span>
                                     <span className="text-white font-bold shrink-0">{formatPrice(item.unit_price * item.quantity)}</span>
                                 </div>
                             ))}
@@ -260,18 +260,18 @@ export default function MidnightCheckoutPage() {
                         <div className="border-t border-white/5 pt-4 flex justify-between">
                             <span className="text-white font-bold text-sm">Total</span>
                             <span className="text-xl font-black text-white">
-                                <span className="text-emerald-500 mr-1">$</span>{cartTotal.toFixed(2)}
+                                <span className="text-app-success mr-1">$</span>{cartTotal.toFixed(2)}
                             </span>
                         </div>
 
                         {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-400">{error}</div>
+                            <div className="bg-app-error/10 border border-app-error/20 rounded-xl p-3 text-xs text-red-400">{error}</div>
                         )}
 
                         <button
                             onClick={handlePlaceOrder}
                             disabled={loading}
-                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50 flex items-center justify-center gap-2">
+                            className="w-full py-4 bg-app-success text-white rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-app-success transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50 flex items-center justify-center gap-2">
                             {loading ? (
                                 <><Loader2 size={18} className="animate-spin" /> Processing...</>
                             ) : (

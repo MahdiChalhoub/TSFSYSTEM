@@ -130,7 +130,7 @@ export default function SupplierPerformancePage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-success flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Supplier Performance
@@ -147,7 +147,7 @@ export default function SupplierPerformancePage() {
                 <Card className="border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Truck size={24} className="text-teal-500" />
+                            <Truck size={24} className="text-app-success" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Suppliers</p>
                                 <p className="text-2xl font-bold">{suppliers.length}</p>
@@ -216,8 +216,8 @@ export default function SupplierPerformancePage() {
                                         <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center">
-                                                    <span className="text-xs font-bold text-teal-600">
+                                                <div className="w-7 h-7 rounded-full bg-app-success-soft flex items-center justify-center">
+                                                    <span className="text-xs font-bold text-app-success">
                                                         {(s.name || '?').charAt(0)}
                                                     </span>
                                                 </div>

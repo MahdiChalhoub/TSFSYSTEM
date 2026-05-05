@@ -54,7 +54,7 @@ export default async function ContactsPage() {
                 <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                            <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center text-white shadow-lg shadow-indigo-100">
                                 <Users size={20} />
                             </div>
                             <span className="text-xs font-black text-app-info uppercase tracking-[0.3em]">Master Entity Management</span>
@@ -84,7 +84,7 @@ export default async function ContactsPage() {
                     </div>
                 </div>
 
-                <div className="bg-indigo-600 rounded-[50px] p-10 lg:p-16 relative overflow-hidden shadow-2xl shadow-indigo-200">
+                <div className="bg-app-info rounded-[50px] p-10 lg:p-16 relative overflow-hidden shadow-2xl shadow-indigo-200">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-app-surface opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-app-foreground opacity-5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 

@@ -20,7 +20,7 @@ const ACTION_CONFIG: Record<string, { label?: string; icon: React.ElementType, c
     UPDATE: { label: 'Update', icon: Edit, color: 'text-app-info', bg: 'bg-app-info-bg border-app-info' },
     DELETE: { label: 'Delete', icon: Trash2, color: 'text-app-error', bg: 'bg-app-error-bg border-app-error' },
     POST: { label: 'Post', icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-    REVERSE: { label: 'Reverse', icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+    REVERSE: { label: 'Reverse', icon: RotateCcw, color: 'text-app-warning', bg: 'bg-app-warning-soft border-app-warning' },
 }
 
 export default function AuditTrailPage() {

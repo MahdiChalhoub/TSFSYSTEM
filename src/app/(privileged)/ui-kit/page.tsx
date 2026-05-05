@@ -427,18 +427,18 @@ export default function UIKitShowcasePage() {
                 </AlertDescription>
               </Alert>
 
-              <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+              <Alert className="border-app-success bg-app-success-soft dark:bg-green-950">
+                <CheckCircle className="h-4 w-4 text-app-success" />
                 <AlertTitle className="text-green-900 dark:text-green-100">Success</AlertTitle>
-                <AlertDescription className="text-green-800 dark:text-green-200">
+                <AlertDescription className="text-app-success dark:text-green-200">
                   Operation completed successfully!
                 </AlertDescription>
               </Alert>
 
-              <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <Alert className="border-app-warning bg-app-warning-soft dark:bg-yellow-950">
+                <AlertCircle className="h-4 w-4 text-app-warning" />
                 <AlertTitle className="text-yellow-900 dark:text-yellow-100">Warning</AlertTitle>
-                <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                <AlertDescription className="text-app-warning dark:text-yellow-200">
                   Please review before proceeding.
                 </AlertDescription>
               </Alert>
@@ -469,10 +469,10 @@ export default function UIKitShowcasePage() {
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider">Status Badges</h3>
                 <div className="flex flex-wrap gap-3">
-                  <Badge className="bg-green-500">Active</Badge>
-                  <Badge className="bg-yellow-500">Pending</Badge>
-                  <Badge className="bg-red-500">Inactive</Badge>
-                  <Badge className="bg-blue-500">Processing</Badge>
+                  <Badge className="bg-app-success">Active</Badge>
+                  <Badge className="bg-app-warning">Pending</Badge>
+                  <Badge className="bg-app-error">Inactive</Badge>
+                  <Badge className="bg-app-info">Processing</Badge>
                   <Badge className="bg-purple-500">Draft</Badge>
                 </div>
               </div>
@@ -521,7 +521,7 @@ export default function UIKitShowcasePage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-app-foreground">John Doe</h3>
-                          <Badge className="bg-blue-500 text-xs">Pro</Badge>
+                          <Badge className="bg-app-info text-xs">Pro</Badge>
                         </div>
                         <p className="text-sm text-app-muted-foreground mb-3">john.doe@example.com</p>
                         <div className="flex gap-2">
@@ -542,7 +542,7 @@ export default function UIKitShowcasePage() {
                     <CardContent className="layout-card-padding">
                       <div className="flex justify-between items-start mb-4">
                         <Mail className="w-5 h-5 text-app-muted-foreground" />
-                        <Badge className="bg-green-500 text-xs">+12%</Badge>
+                        <Badge className="bg-app-success text-xs">+12%</Badge>
                       </div>
                       <p className="text-2xl font-black text-app-foreground">1,234</p>
                       <p className="text-xs text-app-muted-foreground uppercase tracking-wider mt-1">Messages</p>
@@ -552,7 +552,7 @@ export default function UIKitShowcasePage() {
                     <CardContent className="layout-card-padding">
                       <div className="flex justify-between items-start mb-4">
                         <Users className="w-5 h-5 text-app-muted-foreground" />
-                        <Badge className="bg-blue-500 text-xs">+5%</Badge>
+                        <Badge className="bg-app-info text-xs">+5%</Badge>
                       </div>
                       <p className="text-2xl font-black text-app-foreground">567</p>
                       <p className="text-xs text-app-muted-foreground uppercase tracking-wider mt-1">Users</p>
@@ -576,9 +576,9 @@ export default function UIKitShowcasePage() {
                 <h3 className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider">Feature List</h3>
                 <div className="space-y-2">
                   {[
-                    { icon: CheckCircle, text: 'Unlimited projects', color: 'text-green-500' },
-                    { icon: CheckCircle, text: 'Advanced analytics', color: 'text-green-500' },
-                    { icon: CheckCircle, text: 'Priority support', color: 'text-green-500' },
+                    { icon: CheckCircle, text: 'Unlimited projects', color: 'text-app-success' },
+                    { icon: CheckCircle, text: 'Advanced analytics', color: 'text-app-success' },
+                    { icon: CheckCircle, text: 'Priority support', color: 'text-app-success' },
                     { icon: XCircle, text: 'Custom domain', color: 'text-app-muted-foreground opacity-50' },
                   ].map((feature, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 layout-card-radius hover:bg-[var(--theme-surface-hover)] transition-colors">

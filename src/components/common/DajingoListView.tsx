@@ -34,6 +34,18 @@
  */
 
 import React, { useState, useRef, useMemo, useEffect } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+
+/* ── Virtualization threshold ─────────────────────────────────────────
+ *
+ * Once a page renders more rows than this, switch to row windowing.
+ * Below the threshold the cost of `useVirtualizer`'s setup outweighs
+ * the savings — `content-visibility: auto` already handles paint cost.
+ * Above ~30 rows the React-reconciliation cost of off-screen rows starts
+ * to add up, and absolute-positioning a 10-row window pays for itself.
+ */
+const VIRTUALIZE_THRESHOLD = 30
+const VIRTUAL_ROW_ESTIMATE = 40 // px — re-measured at runtime via measureElement
 import {
   Eye, MoreHorizontal, ChevronRight, ChevronDown,
   Loader2, Search, SlidersHorizontal, Settings2, X,
@@ -380,18 +392,16 @@ export function DajingoListView<T>({
           {loading ? (
             <div className="flex items-center justify-center py-20"><Loader2 size={24} className="animate-spin text-app-primary" /></div>
           ) : data.length > 0 ? (
-            data.map(row => (
-              <DajingoRow<T>
-                key={getRowId(row)}
-                row={row}
+            data.length > VIRTUALIZE_THRESHOLD ? (
+              <VirtualRowList<T>
+                data={data}
                 getRowId={getRowId}
+                scrollElementRef={scrollContainerRef}
                 orderedColumns={orderedColumns}
                 visibleColumns={visibleColumns}
                 columnWidths={columnWidths}
-                rightAlignedCols={rac}
-                centerAlignedCols={cac}
-                growCols={gc}
-                policyHiddenColumns={phc}
+                rac={rac} cac={cac} gc={gc}
+                phc={phc}
                 renderRowIcon={renderRowIcon}
                 renderRowTitle={renderRowTitle}
                 renderColumnCell={renderColumnCell}
@@ -399,10 +409,34 @@ export function DajingoListView<T>({
                 renderExpanded={renderExpanded}
                 onView={onView}
                 menuActions={menuActions}
-                isSelected={selectedIds ? selectedIds.has(getRowId(row)) : false}
+                selectedIds={selectedIds}
                 onToggleSelect={onToggleSelect}
               />
-            ))
+            ) : (
+              data.map(row => (
+                <DajingoRow<T>
+                  key={getRowId(row)}
+                  row={row}
+                  getRowId={getRowId}
+                  orderedColumns={orderedColumns}
+                  visibleColumns={visibleColumns}
+                  columnWidths={columnWidths}
+                  rightAlignedCols={rac}
+                  centerAlignedCols={cac}
+                  growCols={gc}
+                  policyHiddenColumns={phc}
+                  renderRowIcon={renderRowIcon}
+                  renderRowTitle={renderRowTitle}
+                  renderColumnCell={renderColumnCell}
+                  renderMobileCard={renderMobileCard}
+                  renderExpanded={renderExpanded}
+                  onView={onView}
+                  menuActions={menuActions}
+                  isSelected={selectedIds ? selectedIds.has(getRowId(row)) : false}
+                  onToggleSelect={onToggleSelect}
+                />
+              ))
+            )
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
               {emptyIcon && <div className="mb-3 opacity-40">{emptyIcon}</div>}
@@ -676,4 +710,105 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
 // Wrapper to preserve generic type
 function DajingoRow<T>(props: DajingoRowProps<T>) {
   return <DajingoRowInner {...props} />
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ *  VirtualRowList — windowed row renderer
+ * ─────────────────────────────────────────────────────────────────────
+ *  Wraps the row mapping in `useVirtualizer` so only the rows actually
+ *  in / near the viewport are mounted in the DOM. Offscreen rows neither
+ *  exist in the React tree nor in the DOM, so React skips reconciliation
+ *  and the browser skips layout entirely.
+ *
+ *  Why a sub-component: useVirtualizer is a hook, and we only want it
+ *  to run when virtualization is active. Putting it in its own
+ *  component lets the parent gate it on `data.length > THRESHOLD`
+ *  without violating the rules-of-hooks.
+ *
+ *  Heights: rows have variable height (expanded rows ≫ collapsed).
+ *  `measureElement` re-measures each row after mount via ResizeObserver,
+ *  so the virtualizer's height map adapts to whatever each row actually
+ *  takes. The estimate just needs to be in the right ballpark for the
+ *  initial render — anything 32-50px works. */
+interface VirtualRowListProps<T> {
+  data: T[]
+  getRowId: (row: T) => string | number
+  scrollElementRef: React.RefObject<HTMLDivElement | null>
+  orderedColumns: DajingoColumnDef[]
+  visibleColumns: Record<string, boolean>
+  columnWidths: Record<string, string>
+  rac: Set<string>
+  cac: Set<string>
+  gc: Set<string>
+  phc: Set<string>
+  renderRowIcon?: (row: T) => React.ReactNode
+  renderRowTitle: (row: T) => React.ReactNode
+  renderColumnCell: (key: string, row: T) => React.ReactNode
+  renderMobileCard?: (row: T, isOpen: boolean, onToggle: () => void) => React.ReactNode
+  renderExpanded?: (row: T) => React.ReactNode
+  onView?: (row: T) => void
+  menuActions?: (row: T) => DajingoMenuItem[]
+  selectedIds?: Set<string | number>
+  onToggleSelect?: (id: string | number) => void
+}
+
+function VirtualRowList<T>({
+  data, getRowId, scrollElementRef,
+  orderedColumns, visibleColumns, columnWidths,
+  rac, cac, gc, phc,
+  renderRowIcon, renderRowTitle, renderColumnCell,
+  renderMobileCard, renderExpanded,
+  onView, menuActions, selectedIds, onToggleSelect,
+}: VirtualRowListProps<T>) {
+  const virtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => scrollElementRef.current,
+    estimateSize: () => VIRTUAL_ROW_ESTIMATE,
+    overscan: 8, // render a few rows above/below the viewport for smooth scroll
+  })
+
+  const items = virtualizer.getVirtualItems()
+  return (
+    <div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative' }}>
+      {items.map(v => {
+        const row = data[v.index]
+        return (
+          <div
+            key={v.key}
+            data-index={v.index}
+            ref={virtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              transform: `translateY(${v.start}px)`,
+            }}
+          >
+            <DajingoRow<T>
+              row={row}
+              getRowId={getRowId}
+              orderedColumns={orderedColumns}
+              visibleColumns={visibleColumns}
+              columnWidths={columnWidths}
+              rightAlignedCols={rac}
+              centerAlignedCols={cac}
+              growCols={gc}
+              policyHiddenColumns={phc}
+              renderRowIcon={renderRowIcon}
+              renderRowTitle={renderRowTitle}
+              renderColumnCell={renderColumnCell}
+              renderMobileCard={renderMobileCard}
+              renderExpanded={renderExpanded}
+              onView={onView}
+              menuActions={menuActions}
+              isSelected={selectedIds ? selectedIds.has(getRowId(row)) : false}
+              onToggleSelect={onToggleSelect}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
 }

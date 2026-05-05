@@ -397,7 +397,7 @@ export function StepHeader({
       <div
         className={cn(
           'step-number',
-          status === 'completed' && 'bg-green-600',
+          status === 'completed' && 'bg-app-success',
           status === 'upcoming' && 'bg-gray-400'
         )}
       >
@@ -430,10 +430,10 @@ interface BadgeProps {
 export function Badge({ children, variant = 'primary', className }: BadgeProps) {
   const variants = {
     primary: 'bg-[var(--app-primary)] text-white',
-    success: 'bg-green-600 text-white',
-    warning: 'bg-yellow-600 text-white',
-    error: 'bg-red-600 text-white',
-    info: 'bg-blue-600 text-white'
+    success: 'bg-app-success text-white',
+    warning: 'bg-app-warning text-white',
+    error: 'bg-app-error text-white',
+    info: 'bg-app-info text-white'
   }
 
   return (
@@ -455,10 +455,10 @@ interface StatusIndicatorProps {
 
 export function StatusIndicator({ status, label, className }: StatusIndicatorProps) {
   const colors = {
-    online: 'bg-green-500',
+    online: 'bg-app-success',
     offline: 'bg-gray-400',
-    busy: 'bg-red-500',
-    away: 'bg-yellow-500'
+    busy: 'bg-app-error',
+    away: 'bg-app-warning'
   }
 
   return (

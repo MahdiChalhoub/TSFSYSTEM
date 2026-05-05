@@ -163,7 +163,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
               <span className="font-bold">{fmt(parseFloat(String(order.subtotal || 0)))}</span>
             </div>
             {order.discount_amount && parseFloat(String(order.discount_amount)) > 0 && (
-              <div className="flex justify-between text-sm text-amber-600">
+              <div className="flex justify-between text-sm text-app-warning">
                 <span>Discount</span>
                 <span className="font-bold">-{fmt(parseFloat(String(order.discount_amount)))}</span>
               </div>
@@ -180,13 +180,13 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
             </div>
             {order.total_paid && parseFloat(String(order.total_paid)) > 0 && (
               <>
-                <div className="flex justify-between text-sm text-emerald-600">
+                <div className="flex justify-between text-sm text-app-success">
                   <span>Paid</span>
                   <span className="font-bold">{fmt(parseFloat(String(order.total_paid)))}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-app-muted-foreground">Due</span>
-                  <span className="font-bold text-rose-600">
+                  <span className="font-bold text-app-error">
                     {fmt(parseFloat(String(order.amount_due || 0)))}
                   </span>
                 </div>
@@ -214,8 +214,8 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
             )}
             {order.staff_notes && (
               <div>
-                <p className="text-[9px] text-amber-600/60 uppercase mb-1">Staff Note</p>
-                <p className="text-xs text-amber-600">{order.staff_notes}</p>
+                <p className="text-[9px] text-app-warning/60 uppercase mb-1">Staff Note</p>
+                <p className="text-xs text-app-warning">{order.staff_notes}</p>
               </div>
             )}
           </CardContent>

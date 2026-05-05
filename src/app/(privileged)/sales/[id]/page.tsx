@@ -61,7 +61,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                     {isReturnable && (
                         <Link
                             href={`/sales/returns/new?order_id=${id}`}
-                            className="bg-rose-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all flex items-center gap-2"
+                            className="bg-app-error text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-app-error transition-all flex items-center gap-2"
                         >
                             <RotateCcw size={20} />
                             <span>Initiate Return</span>
@@ -110,7 +110,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                         <th className="p-6 text-right">Total</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-app-border">
                                     {order.lines?.map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">

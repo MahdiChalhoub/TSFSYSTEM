@@ -47,7 +47,7 @@ function num(v: unknown): number {
 const TYPE_BADGE: Record<string, string> = {
     EMPLOYEE: 'bg-app-info-bg text-app-info',
     PARTNER: 'bg-purple-100 text-purple-700',
-    BOTH: 'bg-teal-100 text-teal-700',
+    BOTH: 'bg-app-success-soft text-app-success',
 }
 
 export default function PayrollSummaryPage() {

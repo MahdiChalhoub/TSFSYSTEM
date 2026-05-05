@@ -66,12 +66,12 @@ type WizardStep = "LIST" | "SOURCE" | "UPLOAD" | "BUSINESSES" | "PREVIEW" | "RUN
 // ─────────────────────────────────────────────────────────────────────────────
 
 const statusConfig: Record<string, { color: string; icon: Record<string, any>; label: string }> = {
-    PENDING: { color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: FileUp, label: "Pending" },
-    PARSING: { color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Database, label: "Parsing" },
-    RUNNING: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Loader2, label: "Running" },
-    COMPLETED: { color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle2, label: "Completed" },
-    FAILED: { color: "bg-red-500/20 text-red-400 border-red-500/30", icon: XCircle, label: "Failed" },
-    ROLLED_BACK: { color: "bg-gray-500/20 text-gray-400 border-gray-500/30", icon: RotateCcw, label: "Rolled Back" },
+    PENDING: { color: "bg-slate-500/20 text-app-muted-foreground border-slate-500/30", icon: FileUp, label: "Pending" },
+    PARSING: { color: "bg-app-info/20 text-blue-400 border-app-info/30", icon: Database, label: "Parsing" },
+    RUNNING: { color: "bg-app-warning/20 text-amber-400 border-app-warning/30", icon: Loader2, label: "Running" },
+    COMPLETED: { color: "bg-app-success/20 text-emerald-400 border-app-success/30", icon: CheckCircle2, label: "Completed" },
+    FAILED: { color: "bg-app-error/20 text-red-400 border-app-error/30", icon: XCircle, label: "Failed" },
+    ROLLED_BACK: { color: "bg-gray-500/20 text-app-muted-foreground border-gray-500/30", icon: RotateCcw, label: "Rolled Back" },
 }
 
 const entityIcons: Record<string, any> = {
@@ -95,7 +95,7 @@ const IMPORT_SOURCES = [
         description: "Import from UltimatePOS (Laravel/MySQL) via SQL dump",
         icon: "🛒",
         available: true,
-        color: "from-orange-500/20 to-red-500/20 border-orange-500/30",
+        color: "from-orange-500/20 to-red-500/20 border-app-warning/30",
     },
     {
         id: "odoo",
@@ -111,7 +111,7 @@ const IMPORT_SOURCES = [
         description: "Import from QuickBooks (coming soon)",
         icon: "📊",
         available: false,
-        color: "from-green-500/10 to-emerald-500/10 border-green-500/20",
+        color: "from-green-500/10 to-emerald-500/10 border-app-success/20",
     },
     {
         id: "csv",
@@ -119,7 +119,7 @@ const IMPORT_SOURCES = [
         description: "Import from CSV or Excel files (coming soon)",
         icon: "📄",
         available: false,
-        color: "from-blue-500/10 to-cyan-500/10 border-blue-500/20",
+        color: "from-blue-500/10 to-cyan-500/10 border-app-info/20",
     },
 ]
 
@@ -385,7 +385,7 @@ export default function MigrationPage() {
 
             {/* Error Banner */}
             {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+                <div className="mb-6 p-4 rounded-xl bg-app-error/10 border border-app-error/30 flex items-center gap-3">
                     <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
                     <span className="text-red-300">{error}</span>
                     <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">✕</button>
@@ -462,25 +462,25 @@ export default function MigrationPage() {
                                         <div className="flex gap-2">
                                             {job.status === "PENDING" && (
                                                 <Button size="sm" variant="ghost" onClick={() => handlePreview(job)}
-                                                    className="text-blue-400 hover:bg-blue-500/10" title="Preview">
+                                                    className="text-blue-400 hover:bg-app-info/10" title="Preview">
                                                     <Eye className="w-4 h-4" />
                                                 </Button>
                                             )}
                                             {(job.status === "RUNNING" || job.status === "PARSING") && (
                                                 <Button size="sm" variant="ghost" onClick={() => viewResults(job)}
-                                                    className="text-amber-400 hover:bg-amber-500/10" title="View Progress">
+                                                    className="text-amber-400 hover:bg-app-warning/10" title="View Progress">
                                                     <BarChart3 className="w-4 h-4" />
                                                 </Button>
                                             )}
                                             {(job.status === "COMPLETED" || job.status === "FAILED") && (
                                                 <>
                                                     <Button size="sm" variant="ghost" onClick={() => viewResults(job)}
-                                                        className="text-emerald-400 hover:bg-emerald-500/10" title="View Results">
+                                                        className="text-emerald-400 hover:bg-app-success/10" title="View Results">
                                                         <BarChart3 className="w-4 h-4" />
                                                     </Button>
                                                     {job.status === "COMPLETED" && (
                                                         <Button size="sm" variant="ghost" onClick={() => handleRollback(job)}
-                                                            className="text-red-400 hover:bg-red-500/10" title="Rollback">
+                                                            className="text-red-400 hover:bg-app-error/10" title="Rollback">
                                                             <RotateCcw className="w-4 h-4" />
                                                         </Button>
                                                     )}
@@ -588,7 +588,7 @@ export default function MigrationPage() {
                             )}
                         </div>
 
-                        <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                        <div className="mt-6 p-4 rounded-xl bg-app-info/10 border border-app-info/20">
                             <h4 className="text-blue-400 font-medium text-sm flex items-center gap-2">
                                 <Server className="w-4 h-4" /> How to export from UltimatePOS
                             </h4>
@@ -630,12 +630,12 @@ export default function MigrationPage() {
                                     key={biz.id}
                                     onClick={() => handleSelectBusiness(biz)}
                                     className="w-full text-left p-5 rounded-2xl bg-white/5 border border-white/10
-                                        hover:bg-white/[0.08] hover:border-orange-500/30 hover:scale-[1.01]
+                                        hover:bg-white/[0.08] hover:border-app-warning/30 hover:scale-[1.01]
                                         transition-all group"
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20
-                                            border border-orange-500/30 flex items-center justify-center shrink-0">
+                                            border border-app-warning/30 flex items-center justify-center shrink-0">
                                             <Building2 className="w-5 h-5 text-orange-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -731,7 +731,7 @@ export default function MigrationPage() {
                                     })}
 
                                     {/* Sync mode toggle */}
-                                    <div className="mt-6 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                                    <div className="mt-6 p-4 rounded-xl bg-app-info/10 border border-app-info/20">
                                         <label className="flex items-center gap-3 cursor-pointer">
                                             <div className="relative">
                                                 <input
@@ -740,7 +740,7 @@ export default function MigrationPage() {
                                                     onChange={(e) => setSyncMode(e.target.checked)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-cyan-500 transition-colors" />
+                                                <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-app-info transition-colors" />
                                                 <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
                                                     peer-checked:translate-x-5 transition-transform" />
                                             </div>
@@ -848,10 +848,10 @@ export default function MigrationPage() {
                 <div className="max-w-3xl mx-auto space-y-6">
                     {/* Status banner */}
                     <Card className={`border backdrop-blur-xl ${activeJob.status === "COMPLETED"
-                        ? "bg-emerald-500/10 border-emerald-500/30"
+                        ? "bg-app-success/10 border-app-success/30"
                         : activeJob.status === "FAILED"
-                            ? "bg-red-500/10 border-red-500/30"
-                            : "bg-amber-500/10 border-amber-500/30"
+                            ? "bg-app-error/10 border-app-error/30"
+                            : "bg-app-warning/10 border-app-warning/30"
                         }`}>
                         <CardContent className="flex items-center gap-4 py-5">
                             {activeJob.status === "COMPLETED" ? (
@@ -944,7 +944,7 @@ export default function MigrationPage() {
                             <Button
                                 variant="ghost"
                                 onClick={() => handleRollback(activeJob)}
-                                className="text-red-400 hover:bg-red-500/10 border border-red-500/20"
+                                className="text-red-400 hover:bg-app-error/10 border border-app-error/20"
                             >
                                 <Trash2 className="w-4 h-4 mr-2" /> Rollback Import
                             </Button>

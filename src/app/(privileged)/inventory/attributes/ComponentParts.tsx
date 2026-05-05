@@ -67,7 +67,7 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
                     </h3>
                     {!isChild && (
                         <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
-                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition-all ${showAdvanced ? 'bg-amber-500 text-white' : 'bg-app-bg border border-app-border/40 text-app-muted-foreground'}`}>
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition-all ${showAdvanced ? 'bg-app-warning text-white' : 'bg-app-bg border border-app-border/40 text-app-muted-foreground'}`}>
                             <Sparkles size={10} /> {showAdvanced ? 'Hide Advanced' : 'Rules & Governance'}
                         </button>
                     )}
@@ -167,11 +167,11 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
                                     description="Include values in auto-generated product name"
                                     checked={showInName}
                                     onChange={setShowInName}
-                                    color="bg-amber-500"
+                                    color="bg-app-warning"
                                 />
 
                                 {showInName && (
-                                    <div className="ml-2 pl-3 border-l-2 border-amber-500/30 space-y-2 animate-in fade-in duration-150">
+                                    <div className="ml-2 pl-3 border-l-2 border-app-warning/30 space-y-2 animate-in fade-in duration-150">
                                         <div className="flex gap-3">
                                             <div className="flex-1">
                                                 <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Position</label>
@@ -197,7 +197,7 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
                                     description="Must select a value when creating products"
                                     checked={isRequired}
                                     onChange={setIsRequired}
-                                    color="bg-red-500"
+                                    color="bg-app-error"
                                 />
 
                                 <ToggleRow
@@ -213,7 +213,7 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
                                     description="Products with this attribute need individual barcodes"
                                     checked={requiresBarcode}
                                     onChange={setRequiresBarcode}
-                                    color="bg-orange-500"
+                                    color="bg-app-warning"
                                 />
                             </div>
                         </div>
@@ -373,10 +373,10 @@ export function EditModal({ item, tree, onSave, onCancel }: {
                                 <div className="text-[9px] font-black text-app-warning uppercase tracking-widest mb-3">📝 Nomenclature Rules</div>
 
                                 <ToggleRow label="Show in Product Name" description="Values appear in auto-generated display name"
-                                    checked={showInName} onChange={setShowInName} color="bg-amber-500" />
+                                    checked={showInName} onChange={setShowInName} color="bg-app-warning" />
 
                                 {showInName && (
-                                    <div className="animate-in fade-in duration-150 space-y-2 ml-2 mt-1 pl-3 border-l-2 border-amber-500/30">
+                                    <div className="animate-in fade-in duration-150 space-y-2 ml-2 mt-1 pl-3 border-l-2 border-app-warning/30">
                                         <div className="flex gap-3">
                                             <div className="flex-1">
                                                 <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Name Position</label>
@@ -401,13 +401,13 @@ export function EditModal({ item, tree, onSave, onCancel }: {
 
                                 <div className="space-y-2">
                                     <ToggleRow label="Required" description="Must select a value in linked categories"
-                                        checked={isRequired} onChange={setIsRequired} color="bg-red-500" />
+                                        checked={isRequired} onChange={setIsRequired} color="bg-app-error" />
 
                                     <ToggleRow label="Visible by Default" description="Show expanded in Add/Edit Product form"
                                         checked={showByDefault} onChange={setShowByDefault} color="bg-app-primary" />
 
                                     <ToggleRow label="Requires Barcode" description="Products with this attribute need individual barcodes"
-                                        checked={requiresBarcode} onChange={setRequiresBarcode} color="bg-orange-500" />
+                                        checked={requiresBarcode} onChange={setRequiresBarcode} color="bg-app-warning" />
                                 </div>
                             </div>
                         </>

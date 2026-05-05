@@ -26,13 +26,13 @@ const MODE_CONFIG = {
     label: 'Standard',
     icon: Maximize2,
     desc: 'Single view',
-    color: 'bg-slate-100 text-slate-700'
+    color: 'bg-slate-100 text-app-muted-foreground'
   },
   split: {
     label: 'Split',
     icon: Columns2,
     desc: '2-panel workspace',
-    color: 'bg-blue-100 text-blue-700'
+    color: 'bg-app-info-soft text-app-info'
   },
   workspace: {
     label: 'Workspace',
@@ -44,7 +44,7 @@ const MODE_CONFIG = {
     label: 'Command',
     icon: LayoutGrid,
     desc: '4-panel command center',
-    color: 'bg-emerald-100 text-emerald-700'
+    color: 'bg-app-success-soft text-app-success'
   }
 } as const
 
@@ -107,7 +107,7 @@ export function WorkspaceSwitcher({ className = '' }: { className?: string }) {
               <Icon size={14} />
               <span className="hidden xl:inline">{config.label}</span>
               {isUserOverride && (
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Manual override active" />
+                <span className="w-1.5 h-1.5 rounded-full bg-app-warning" title="Manual override active" />
               )}
             </button>
           )

@@ -159,7 +159,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                                 : <ToggleLeft size={22} className="text-[var(--app-muted-foreground)]" />}
                                         </button>
                                         <button onClick={() => handleDelete(p.id)} id={`delete-promo-${p.id}`}
-                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-app-error/10 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -183,7 +183,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                 <p className="text-xs text-[var(--app-muted-foreground)]">Automatic cart discount rule</p>
                             </div>
                         </div>
-                        {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
+                        {error && <p className="text-app-error text-sm bg-app-error/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
                             <div>
                                 <label className="app-label">Name</label>

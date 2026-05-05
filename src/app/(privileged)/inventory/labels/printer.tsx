@@ -202,7 +202,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                     <div className="relative mt-2">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
-                            className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                            className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-app-success outline-none"
                             placeholder="Search by name, SKU, or barcode..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
@@ -312,7 +312,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                             <button
                                 onClick={handlePrint}
                                 disabled={labelItems.length === 0}
-                                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-300/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-5 py-2 bg-app-success text-white text-sm font-bold rounded-xl hover:bg-app-success transition-all shadow-lg hover:shadow-emerald-300/50 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <Printer size={16} />
                                 Print {totalLabels > 0 ? `(${totalLabels})` : ''}

@@ -134,6 +134,12 @@ class Contact(TenantModel):
 
     class Meta:
         db_table = 'contact'
+        indexes = [
+            models.Index(fields=['organization', 'type']),
+            models.Index(fields=['organization', 'is_active']),
+            models.Index(fields=['organization', 'name']),
+            models.Index(fields=['organization', 'type', 'is_active']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.type})"

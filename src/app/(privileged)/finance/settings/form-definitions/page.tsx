@@ -68,7 +68,7 @@ function FieldEditor({
         update({ options: opts })
     }
 
-    const inputCls = 'w-full px-2.5 py-1.5 text-xs border border-app-border rounded-lg focus:outline-none focus:ring-1 focus:ring-stone-400'
+    const inputCls = 'w-full px-2.5 py-1.5 text-xs border border-app-border rounded-lg focus:outline-none focus:ring-1 focus:ring-app-border'
 
     return (
         <div className="border border-app-border rounded-xl overflow-hidden">
@@ -295,7 +295,7 @@ function FormEditorModal({
                                     <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Form Name *</label>
                                     <input value={name} onChange={e => handleNameChange(e.target.value)}
                                         placeholder="e.g. Supplier Custom Fields"
-                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-border" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Key * <span className="normal-case font-normal text-app-muted-foreground">(slug, unique per org)</span></label>
@@ -303,13 +303,13 @@ function FormEditorModal({
                                         onChange={e => { setKey(e.target.value); setKeyEdited(true) }}
                                         disabled={!!existing}
                                         placeholder="supplier_custom_fields"
-                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono disabled:bg-app-surface disabled:text-app-muted-foreground" />
+                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-border font-mono disabled:bg-app-surface disabled:text-app-muted-foreground" />
                                 </div>
                                 <div className="col-span-2 space-y-1">
                                     <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Description</label>
                                     <input value={description} onChange={e => setDescription(e.target.value)}
                                         placeholder="What this form is used for"
-                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                                        className="w-full px-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-app-border" />
                                 </div>
                             </div>
 
@@ -483,7 +483,7 @@ export default function FormDefinitionsPage() {
                         <div key={form.id}
                             className="bg-app-surface border border-app-border rounded-xl px-5 py-4 flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
                             {/* Status dot */}
-                            <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${form.is_active ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                            <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${form.is_active ? 'bg-app-success' : 'bg-stone-300'}`} />
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">

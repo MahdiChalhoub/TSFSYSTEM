@@ -143,7 +143,7 @@ export default function AttachmentManager({
  </div>
  <div className="w-full bg-app-info-bg rounded-full h-1.5 overflow-hidden">
  <div
- className="bg-blue-500 h-full rounded-full transition-all duration-300"
+ className="bg-app-info h-full rounded-full transition-all duration-300"
  style={{ width: `${chunked.progress}%` }}
  />
  </div>
@@ -168,11 +168,11 @@ export default function AttachmentManager({
  onDragLeave={onDragLeave}
  onDrop={onDrop}
  onClick={() => fileInputRef.current?.click()}
- className={`p-10 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:bg-app-bg hover:border-app-border'
+ className={`p-10 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-app-info bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:bg-app-bg hover:border-app-border'
  }`}
  >
  <div className="w-16 h-16 rounded-2xl bg-app-surface shadow-sm flex items-center justify-center mx-auto mb-4 border border-app-border">
- <Upload size={24} className="text-gray-300" />
+ <Upload size={24} className="text-app-muted-foreground" />
  </div>
  <p className="text-app-muted-foreground font-bold">No attachments yet</p>
  <p className="text-xs text-app-muted-foreground mt-1 font-medium">Drag and drop or click to upload</p>
@@ -230,10 +230,10 @@ export default function AttachmentManager({
  onDragLeave={onDragLeave}
  onDrop={onDrop}
  onClick={() => fileInputRef.current?.click()}
- className={`flex items-center justify-center border-2 border-dashed rounded-2xl p-3 transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:border-app-border'
+ className={`flex items-center justify-center border-2 border-dashed rounded-2xl p-3 transition-all cursor-pointer ${isDragging ? 'border-app-info bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:border-app-border'
  }`}
  >
- <Plus size={16} className="text-gray-300 mr-2" />
+ <Plus size={16} className="text-app-muted-foreground mr-2" />
  <span className="text-xs font-bold text-app-muted-foreground">Add More</span>
  </div>
  )}

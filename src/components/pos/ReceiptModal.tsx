@@ -47,7 +47,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
-                <div className="bg-emerald-600 p-8 text-center text-white relative">
+                <div className="bg-app-success p-8 text-center text-white relative">
                     <div className="absolute top-4 right-4 cursor-pointer hover:bg-white/20 p-2 rounded-full" onClick={onClose}>
                         <X size={20} />
                     </div>
@@ -60,29 +60,29 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
 
                 <div className="p-6 bg-white space-y-4">
                     <div className="text-center space-y-1 mb-6">
-                        <p className="text-sm text-gray-500 font-medium">What would you like to do next?</p>
+                        <p className="text-sm text-app-muted-foreground font-medium">What would you like to do next?</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={handlePrint}
-                            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+                            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-app-border hover:border-app-success hover:bg-app-success-soft transition-all group"
                         >
-                            <div className="w-12 h-12 rounded-xl bg-gray-50 group-hover:bg-emerald-100 flex items-center justify-center text-gray-400 group-hover:text-emerald-600 transition-colors">
+                            <div className="w-12 h-12 rounded-xl bg-gray-50 group-hover:bg-app-success-soft flex items-center justify-center text-app-muted-foreground group-hover:text-app-success transition-colors">
                                 <Printer size={24} />
                             </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-gray-600 group-hover:text-emerald-700">Print Receipt</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-app-muted-foreground group-hover:text-app-success">Print Receipt</span>
                         </button>
 
                         <button
                             onClick={handleDownload}
                             disabled={loading}
-                            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-gray-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+                            className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-app-border hover:border-app-info hover:bg-app-info-soft transition-all group"
                         >
-                            <div className="w-12 h-12 rounded-xl bg-gray-50 group-hover:bg-indigo-100 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 transition-colors">
+                            <div className="w-12 h-12 rounded-xl bg-gray-50 group-hover:bg-app-info-soft flex items-center justify-center text-app-muted-foreground group-hover:text-app-info transition-colors">
                                 <FileText size={24} />
                             </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-gray-600 group-hover:text-indigo-700">Get Invoice</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-app-muted-foreground group-hover:text-app-info">Get Invoice</span>
                         </button>
                     </div>
 

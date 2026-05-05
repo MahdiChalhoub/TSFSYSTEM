@@ -120,11 +120,11 @@
   }
 
   .card-premium:hover {
-    @apply -translate-y-1 shadow-xl border-emerald-500/20;
+    @apply -translate-y-1 shadow-xl border-app-success/20;
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
+    @apply w-full px-4 py-2.5 rounded-xl border border-app-border bg-gray-50/50 text-app-foreground focus:bg-white focus:border-app-success focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
   }
 
   /* Custom Scrollbar */
@@ -280,7 +280,7 @@
 /* Global Base Styles */
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    @apply bg-slate-50 text-app-foreground font-sans antialiased;
     /* Subtle background pattern */
     background-image:
       radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),

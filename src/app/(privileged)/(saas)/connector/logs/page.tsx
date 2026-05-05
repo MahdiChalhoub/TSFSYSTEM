@@ -159,7 +159,7 @@ export default function ConnectorLogsPage() {
                             <p className="text-sm mt-1">Logs are created when the Connector routes requests</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-app-border">
                             {logs.map((log) => (
                                 <div key={log.id} className="p-5 hover:bg-app-surface/50 transition-colors">
                                     <div className="flex items-center justify-between gap-4 mb-3">

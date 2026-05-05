@@ -37,7 +37,7 @@ const TXN_ICONS: Record<string, { icon: any; color: string }> = {
 const TIERS = [
     { name: 'Bronze', min: 0, color: 'from-amber-800 to-amber-900', accent: 'text-app-warning', bar: 'bg-app-warning' },
     { name: 'Silver', min: 500, color: 'from-slate-500 to-slate-600', accent: 'text-app-foreground', bar: 'bg-slate-400' },
-    { name: 'Gold', min: 2000, color: 'from-yellow-600 to-yellow-700', accent: 'text-app-warning', bar: 'bg-yellow-500' },
+    { name: 'Gold', min: 2000, color: 'from-yellow-600 to-yellow-700', accent: 'text-app-warning', bar: 'bg-app-warning' },
     { name: 'Platinum', min: 5000, color: 'from-cyan-600 to-cyan-700', accent: 'text-app-accent-cyan', bar: 'bg-app-accent-cyan' },
     { name: 'Diamond', min: 10000, color: 'from-violet-600 to-violet-700', accent: 'text-app-accent', bar: 'bg-violet-500' },
 ]

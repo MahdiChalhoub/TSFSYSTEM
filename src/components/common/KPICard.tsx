@@ -22,9 +22,9 @@ interface KPICardProps {
 const VARIANT_STYLES = {
  emerald: { iconBg: 'bg-app-primary-light', iconColor: 'text-app-primary', shadow: 'shadow-emerald-100' },
  amber: { iconBg: 'bg-app-warning-bg', iconColor: 'text-app-warning', shadow: 'shadow-amber-100' },
- rose: { iconBg: 'bg-rose-50', iconColor: 'text-rose-600', shadow: 'shadow-rose-100' },
+ rose: { iconBg: 'bg-app-error-soft', iconColor: 'text-app-error', shadow: 'shadow-rose-100' },
  slate: { iconBg: 'bg-app-bg', iconColor: 'text-app-muted-foreground', shadow: 'shadow-slate-100' },
- indigo: { iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600', shadow: 'shadow-indigo-100' },
+ indigo: { iconBg: 'bg-app-info-soft', iconColor: 'text-app-info', shadow: 'shadow-indigo-100' },
 }
 
 export default function KPICard({
@@ -49,7 +49,7 @@ export default function KPICard({
  {icon}
  </div>
  {change !== undefined && change !== 0 && (
- <span className={`badge-status ${change > 0 ? 'text-app-success bg-app-primary/10 border-app-primary/20' : 'text-rose-300 bg-rose-500/10 border-rose-500/20'}`}>
+ <span className={`badge-status ${change > 0 ? 'text-app-success bg-app-primary/10 border-app-primary/20' : 'text-rose-300 bg-app-error/10 border-app-error/20'}`}>
  {change > 0 ? <TrendingUp size={10} className="mr-1 inline" /> : <TrendingDown size={10} className="mr-1 inline" />}
  {change > 0 ? '+' : ''}{change}%
  </span>

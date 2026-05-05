@@ -14,12 +14,12 @@ interface Notification {
 }
 
 const TYPE_MAP: Record<string, { icon: any; color: string; bg: string }> = {
-    ORDER_UPDATE: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    ORDER_UPDATE: { icon: Package, color: 'text-blue-400', bg: 'bg-app-info/10' },
     ORDER_SHIPPED: { icon: Package, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    ORDER_DELIVERED: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    PROMO: { icon: Gift, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    ALERT: { icon: AlertTriangle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    WALLET: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    ORDER_DELIVERED: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
+    PROMO: { icon: Gift, color: 'text-amber-400', bg: 'bg-app-warning/10' },
+    ALERT: { icon: AlertTriangle, color: 'text-rose-400', bg: 'bg-app-error/10' },
+    WALLET: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
     INFO: { icon: Info, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
 }
 
@@ -86,7 +86,7 @@ export default function MidnightNotificationsPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-app-info/5 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
@@ -114,7 +114,7 @@ export default function MidnightNotificationsPage() {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-app-info border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="py-24 text-center space-y-8 bg-slate-900/20 border border-white/5 rounded-[3.5rem]">
@@ -130,7 +130,7 @@ export default function MidnightNotificationsPage() {
                             return (
                                 <div key={notif.id} onClick={() => !notif.is_read && markRead(notif.id)}
                                     className={`p-7 rounded-[2.5rem] flex items-start gap-6 transition-all cursor-pointer border group
-                                        ${notif.is_read ? 'bg-slate-900/30 border-white/5' : 'bg-slate-900/60 border-white/10 hover:border-blue-500/30 shadow-xl shadow-black/20'}`}>
+                                        ${notif.is_read ? 'bg-slate-900/30 border-white/5' : 'bg-slate-900/60 border-white/10 hover:border-app-info/30 shadow-xl shadow-black/20'}`}>
                                     <div className={`w-14 h-14 ${t.bg} rounded-2xl flex items-center justify-center ${t.color} flex-shrink-0 group-hover:scale-110 transition-transform`}>
                                         <Icon size={22} />
                                     </div>
@@ -139,8 +139,8 @@ export default function MidnightNotificationsPage() {
                                             <p className={`font-black italic text-sm ${notif.is_read ? 'text-app-muted-foreground' : 'text-white'}`}>{notif.title}</p>
                                             {!notif.is_read && (
                                                 <div className="relative flex-shrink-0">
-                                                    <span className="w-3 h-3 bg-blue-500 rounded-full block" />
-                                                    <span className="absolute inset-0 w-3 h-3 bg-blue-500 rounded-full animate-ping opacity-75" />
+                                                    <span className="w-3 h-3 bg-app-info rounded-full block" />
+                                                    <span className="absolute inset-0 w-3 h-3 bg-app-info rounded-full animate-ping opacity-75" />
                                                 </div>
                                             )}
                                         </div>

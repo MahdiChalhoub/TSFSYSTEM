@@ -348,7 +348,7 @@ function AttrCheckRow({ group, isLinked, color, onToggle }: {
                         REQ
                     </span>
                 )}
-                {group.requires_barcode && <Barcode size={10} className="text-orange-500" />}
+                {group.requires_barcode && <Barcode size={10} className="text-app-warning" />}
                 {group.show_in_name && <Hash size={10} className="text-app-warning" />}
             </div>
         </button>

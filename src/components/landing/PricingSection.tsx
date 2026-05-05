@@ -27,7 +27,7 @@ export default function PricingSection() {
         load()
     }, [])
 
-    if (loading) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-emerald-500" /></div>
+    if (loading) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-app-success" /></div>
     if (plans.length === 0) return null
 
     return (
@@ -36,7 +36,7 @@ export default function PricingSection() {
                 <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                     Power Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Empire</span>
                 </h2>
-                <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+                <p className="text-app-muted-foreground max-w-2xl mx-auto text-lg">
                     Choose the architecture that scales with your ambition.
                 </p>
             </div>
@@ -50,17 +50,17 @@ export default function PricingSection() {
                     return (
                         <Card key={plan.id} className={`backdrop-blur-xl rounded-[2rem] overflow-hidden flex flex-col transition-all hover:-translate-y-2 duration-300 group ${isCustom
                             ? 'bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-pink-900/40 border-purple-500/20 hover:border-purple-400/40'
-                            : 'bg-[#0f172a]/40 border-white/5 hover:border-emerald-500/30'
+                            : 'bg-[#0f172a]/40 border-white/5 hover:border-app-success/30'
                             }`}>
                             <CardHeader className="p-8 pb-0">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-2xl font-black text-white">{plan.name}</CardTitle>
                                     <div className="flex gap-1.5">
-                                        {plan.trial_days > 0 && <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">{plan.trial_days}d Free Trial</Badge>}
+                                        {plan.trial_days > 0 && <Badge className="bg-app-warning/20 text-amber-300 border-app-warning/30 text-[10px]">{plan.trial_days}d Free Trial</Badge>}
                                         {isCustom && <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">Enterprise</Badge>}
                                     </div>
                                 </div>
-                                <CardDescription className="text-slate-400 mt-2 min-h-[40px]">
+                                <CardDescription className="text-app-muted-foreground mt-2 min-h-[40px]">
                                     {plan.description || "Enterprise-grade features for scaling businesses."}
                                 </CardDescription>
                                 <div className="mt-6">
@@ -71,7 +71,7 @@ export default function PricingSection() {
                                     ) : (
                                         <>
                                             <span className="text-4xl font-black text-white">${parseFloat(plan.monthly_price).toFixed(0)}</span>
-                                            <span className="text-slate-500 font-bold text-sm uppercase tracking-wider ml-2">/ month</span>
+                                            <span className="text-app-muted-foreground font-bold text-sm uppercase tracking-wider ml-2">/ month</span>
                                         </>
                                     )}
                                 </div>
@@ -80,25 +80,25 @@ export default function PricingSection() {
                                 {/* Limits */}
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {limits.max_users != null && (
-                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                                             <Users size={12} className="text-emerald-400" />
                                             <span>{limits.max_users < 0 ? 'Unlimited' : limits.max_users} Users</span>
                                         </div>
                                     )}
                                     {limits.max_sites != null && (
-                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                                             <Building2 size={12} className="text-emerald-400" />
                                             <span>{limits.max_sites < 0 ? 'Unlimited' : limits.max_sites} Sites</span>
                                         </div>
                                     )}
                                     {limits.max_storage_gb != null && (
-                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                                             <HardDrive size={12} className="text-emerald-400" />
                                             <span>{limits.max_storage_gb < 0 ? 'Unlimited' : limits.max_storage_gb}GB Storage</span>
                                         </div>
                                     )}
                                     {limits.max_products != null && (
-                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                                             <Package size={12} className="text-emerald-400" />
                                             <span>{limits.max_products < 0 ? 'Unlimited' : limits.max_products >= 1000 ? `${(limits.max_products / 1000).toFixed(0)}K` : limits.max_products} Products</span>
                                         </div>
@@ -109,10 +109,10 @@ export default function PricingSection() {
                                 {plan.modules?.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5 mb-6">
                                         {plan.modules.slice(0, 5).map((m: string) => (
-                                            <Badge key={m} className="bg-white/5 text-slate-400 text-[9px] border-white/10 uppercase tracking-wider">{m}</Badge>
+                                            <Badge key={m} className="bg-white/5 text-app-muted-foreground text-[9px] border-white/10 uppercase tracking-wider">{m}</Badge>
                                         ))}
                                         {plan.modules.length > 5 && (
-                                            <Badge className="bg-white/5 text-slate-400 text-[9px] border-white/10">+{plan.modules.length - 5}</Badge>
+                                            <Badge className="bg-white/5 text-app-muted-foreground text-[9px] border-white/10">+{plan.modules.length - 5}</Badge>
                                         )}
                                     </div>
                                 )}
@@ -126,7 +126,7 @@ export default function PricingSection() {
                                         </Button>
                                     </a>
                                 ) : (
-                                    <Button className="w-full h-14 rounded-xl bg-white/5 hover:bg-emerald-600 hover:text-white text-emerald-400 border border-emerald-500/20 font-bold tracking-wide transition-all group-hover:bg-emerald-600 group-hover:text-white">
+                                    <Button className="w-full h-14 rounded-xl bg-white/5 hover:bg-app-success hover:text-white text-emerald-400 border border-app-success/20 font-bold tracking-wide transition-all group-hover:bg-app-success group-hover:text-white">
                                         {isFree ? 'Start Free' : 'Select Strategy'}
                                     </Button>
                                 )}

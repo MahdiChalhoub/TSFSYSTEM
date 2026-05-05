@@ -266,8 +266,8 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2 animate-in slide-in-from-right-5 ${toast.type === 'success'
-                    ? 'bg-emerald-500/90 text-white backdrop-blur'
-                    : 'bg-red-500/90 text-white backdrop-blur'
+                    ? 'bg-app-success/90 text-white backdrop-blur'
+                    : 'bg-app-error/90 text-white backdrop-blur'
                     }`}>
                     {toast.type === 'success' ? <Check className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                     {toast.message}
@@ -305,7 +305,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                     </h4>
 
                     {error && (
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-app-error/10 border border-app-error/30 text-red-400 text-sm">
                             <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
                         </div>
                     )}
@@ -589,17 +589,17 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-app-foreground text-sm truncate">{pkg.display_name}</span>
                                             {pkg.is_default_sale && (
-                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-app-warning/15 text-amber-400 border border-app-warning/20">
                                                     SALE
                                                 </span>
                                             )}
                                             {pkg.is_default_purchase && (
-                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-app-info/15 text-blue-400 border border-app-info/20">
                                                     BUY
                                                 </span>
                                             )}
                                             {!pkg.is_active && (
-                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/20">
+                                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-app-error/15 text-red-400 border border-app-error/20">
                                                     INACTIVE
                                                 </span>
                                             )}
@@ -644,7 +644,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                     </button>
                                     <button
                                         onClick={() => handleDelete(pkg)}
-                                        className="p-2 rounded-lg hover:bg-red-500/10 text-red-400 transition"
+                                        className="p-2 rounded-lg hover:bg-app-error/10 text-red-400 transition"
                                         title="Delete"
                                     >
                                         <Trash2 className="h-4 w-4" />

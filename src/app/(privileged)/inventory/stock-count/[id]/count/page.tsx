@@ -148,7 +148,7 @@ export default function CountingPage() {
                     </p>
                 </div>
                 {session?.status === 'IN_PROGRESS' && (
-                    <Button onClick={() => setShowCompleteConfirm(true)} disabled={isPending || countedCount === 0} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={() => setShowCompleteConfirm(true)} disabled={isPending || countedCount === 0} className="bg-app-success hover:bg-app-success">
                         <Send className="w-4 h-4 mr-2" /> Submit for Verification
                     </Button>
                 )}

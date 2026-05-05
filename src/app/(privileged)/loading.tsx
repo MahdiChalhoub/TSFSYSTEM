@@ -9,7 +9,7 @@ export default function Loading() {
             </div>
 
             {/* Tab bar skeleton */}
-            <div className="h-10 bg-app-surface border-b border-gray-50 px-6 flex items-center gap-2">
+            <div className="h-10 bg-app-surface border-b border-app-border px-6 flex items-center gap-2">
                 <div className="h-6 w-24 bg-app-surface-2 rounded-lg animate-pulse" />
                 <div className="h-6 w-20 bg-app-surface rounded-lg animate-pulse" />
             </div>

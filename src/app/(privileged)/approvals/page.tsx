@@ -135,17 +135,17 @@ interface TypeConfigEntry {
 }
 
 const TYPE_CONFIG: Record<ApprovalType, TypeConfigEntry> = {
-  PAYMENT: { label: 'Payment', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  PURCHASE: { label: 'Purchase', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+  PAYMENT: { label: 'Payment', icon: DollarSign, color: 'text-app-success', bg: 'bg-app-success-soft' },
+  PURCHASE: { label: 'Purchase', icon: ShoppingCart, color: 'text-app-info', bg: 'bg-app-info-soft' },
   EXPENSE: { label: 'Expense', icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
-  USER: { label: 'User', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
-  OPERATIONAL: { label: 'Operational', icon: Package, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-  LEAVE: { label: 'Leave', icon: Calendar, color: 'text-pink-600', bg: 'bg-pink-50' },
+  USER: { label: 'User', icon: Users, color: 'text-app-warning', bg: 'bg-app-warning-soft' },
+  OPERATIONAL: { label: 'Operational', icon: Package, color: 'text-app-info', bg: 'bg-app-info-soft' },
+  LEAVE: { label: 'Leave', icon: Calendar, color: 'text-app-error', bg: 'bg-app-error-soft' },
 }
 
 const PRIORITY_CONFIG: Record<ApprovalPriority, { label: string; color: string }> = {
-  HIGH: { label: 'High', color: 'bg-red-100 text-red-700 border-red-200' },
-  MEDIUM: { label: 'Medium', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  HIGH: { label: 'High', color: 'bg-app-error-soft text-app-error border-app-error' },
+  MEDIUM: { label: 'Medium', color: 'bg-app-warning-soft text-app-warning border-app-warning' },
   LOW: { label: 'Low', color: 'bg-app-surface-2 text-app-foreground border-app-border' },
 }
 
@@ -222,8 +222,8 @@ export default function ApprovalCenterPage() {
                 <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">Pending Items</p>
                 <p className="text-3xl font-black text-app-foreground">{stats.total}</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Clock size={24} className="text-blue-600" />
+              <div className="w-12 h-12 rounded-xl bg-app-info-soft flex items-center justify-center">
+                <Clock size={24} className="text-app-info" />
               </div>
             </div>
           </CardContent>
@@ -234,10 +234,10 @@ export default function ApprovalCenterPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">High Priority</p>
-                <p className="text-3xl font-black text-red-600">{stats.high}</p>
+                <p className="text-3xl font-black text-app-error">{stats.high}</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
-                <AlertTriangle size={24} className="text-red-600" />
+              <div className="w-12 h-12 rounded-xl bg-app-error-soft flex items-center justify-center">
+                <AlertTriangle size={24} className="text-app-error" />
               </div>
             </div>
           </CardContent>
@@ -248,10 +248,10 @@ export default function ApprovalCenterPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">Total Amount</p>
-                <p className="text-3xl font-black text-emerald-600">{fmt(stats.amount)}</p>
+                <p className="text-3xl font-black text-app-success">{fmt(stats.amount)}</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <DollarSign size={24} className="text-emerald-600" />
+              <div className="w-12 h-12 rounded-xl bg-app-success-soft flex items-center justify-center">
+                <DollarSign size={24} className="text-app-success" />
               </div>
             </div>
           </CardContent>
@@ -303,7 +303,7 @@ export default function ApprovalCenterPage() {
             {filteredApprovals.length === 0 ? (
               <Card className="border-app-border/30">
                 <CardContent className="p-12 text-center">
-                  <CheckCircle2 size={48} className="mx-auto mb-4 text-emerald-500 opacity-30" />
+                  <CheckCircle2 size={48} className="mx-auto mb-4 text-app-success opacity-30" />
                   <p className="text-sm font-bold text-app-muted-foreground">No pending approvals</p>
                   <p className="text-xs text-app-muted-foreground mt-1">All caught up! 🎉</p>
                 </CardContent>
@@ -340,7 +340,7 @@ export default function ApprovalCenterPage() {
                             <div className="flex items-center gap-4 text-xs text-app-muted-foreground">
                               <span>👤 {item.requester}</span>
                               <span>📅 {new Date(item.date).toLocaleDateString()}</span>
-                              {item.amount && <span className="font-bold text-emerald-600">{fmt(item.amount)}</span>}
+                              {item.amount && <span className="font-bold text-app-success">{fmt(item.amount)}</span>}
                             </div>
                           </div>
                         </div>
@@ -360,7 +360,7 @@ export default function ApprovalCenterPage() {
                           <Button
                             size="sm"
                             onClick={() => handleApprove(item.id)}
-                            className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="h-9 bg-app-success hover:bg-app-success text-white"
                           >
                             <CheckCircle2 size={14} className="mr-1" />
                             Approve
@@ -369,7 +369,7 @@ export default function ApprovalCenterPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleReject(item.id)}
-                            className="h-9 border-red-200 text-red-600 hover:bg-red-50"
+                            className="h-9 border-app-error text-app-error hover:bg-app-error-soft"
                           >
                             <XCircle size={14} className="mr-1" />
                             Reject

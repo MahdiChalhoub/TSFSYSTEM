@@ -166,7 +166,7 @@ function CreateReturnForm() {
                     <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
                         <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Reason</h3>
                         <textarea
-                            className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all outline-none text-sm"
+                            className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-rose-200 focus:border-app-error transition-all outline-none text-sm"
                             placeholder="Why is the customer returning these items? (e.g. Defective, Wrong Item, Customer Choice)"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -197,7 +197,7 @@ function CreateReturnForm() {
                             </div>
 
                             <Button
-                                className="w-full h-16 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-lg shadow-lg shadow-rose-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
+                                className="w-full h-16 rounded-2xl bg-app-error hover:bg-app-error text-white font-black text-lg shadow-lg shadow-rose-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
                                 onClick={handleSubmit}
                                 disabled={submitting || calculateTotals() === 0}
                             >

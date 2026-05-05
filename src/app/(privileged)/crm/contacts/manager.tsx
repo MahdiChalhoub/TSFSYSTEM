@@ -79,7 +79,7 @@ export default function ContactManager({
                     </button>
                     <button
                         onClick={() => { setModalType('CUSTOMER'); setIsModalOpen(true); }}
-                        className="flex-1 xl:flex-none px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 group"
+                        className="flex-1 xl:flex-none px-8 py-4 bg-app-info text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-app-info hover:-translate-y-1 transition-all flex items-center justify-center gap-2 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-500" />
                         Individual Client
@@ -131,7 +131,7 @@ export default function ContactManager({
                                         <span className={clsx(
                                             "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter flex items-center gap-0.5",
                                             contact.customer_tier === 'VIP' ? "bg-app-warning-bg text-app-warning" :
-                                                contact.customer_tier === 'WHOLESALE' ? "bg-cyan-100 text-cyan-700" : "bg-teal-100 text-teal-700"
+                                                contact.customer_tier === 'WHOLESALE' ? "bg-app-info-soft text-app-info" : "bg-app-success-soft text-app-success"
                                         )}>
                                             {contact.customer_tier === 'VIP' && <Star size={10} />}
                                             {contact.customer_tier}
@@ -170,7 +170,7 @@ export default function ContactManager({
                                 {Number(contact.balance) > 0 ? <TrendingUp size={16} /> : Number(contact.balance) < 0 ? <TrendingDown size={16} /> : null}
                                 ${Math.abs(Number(contact.balance)).toFixed(2)}
                             </div>
-                            <button className="mt-4 w-full py-2.5 rounded-xl bg-app-surface border border-app-border text-[10px] font-black uppercase tracking-widest text-app-muted-foreground hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
+                            <button className="mt-4 w-full py-2.5 rounded-xl bg-app-surface border border-app-border text-[10px] font-black uppercase tracking-widest text-app-muted-foreground hover:bg-app-info hover:text-white hover:border-indigo-600 transition-all shadow-sm">
                                 Full Statement
                             </button>
                         </div>

@@ -167,7 +167,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
             onFocus={() => { if (searchQuery) setShowResults(true) }}
             placeholder="Type code or name..."
             className={`w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-emerald-500/50 outline-none font-medium transition-all ${
-              value ? 'border-emerald-500/50 bg-emerald-500/5 text-app-foreground' : 'border-app-border text-app-muted-foreground'
+              value ? 'border-app-success/50 bg-app-success/5 text-app-foreground' : 'border-app-border text-app-muted-foreground'
             }`}
           />
           {value && (
@@ -182,8 +182,8 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                 const isLeaf = !hasChildren(acc.id)
                 return (
                   <button key={acc.id} type="button" onClick={() => selectFromSearch(acc)}
-                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-emerald-500/5 transition-colors border-b border-app-border/20 last:border-0">
-                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${isLeaf ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-app-success/5 transition-colors border-b border-app-border/20 last:border-0">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${isLeaf ? 'bg-app-success/10' : 'bg-app-warning/10'}`}>
                       {isLeaf ? <FileText size={9} className="text-app-success" /> : <FolderTree size={9} className="text-app-warning" />}
                     </div>
                     <span className="font-mono font-bold text-app-success">{acc.code}</span>
@@ -196,7 +196,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
           )}
         </div>
         <button type="button" onClick={openModal} title="Browse account tree step by step"
-          className="w-8 h-8 rounded-lg border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-app-success hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all shrink-0">
+          className="w-8 h-8 rounded-lg border border-app-border flex items-center justify-center text-app-muted-foreground hover:text-app-success hover:border-app-success/30 hover:bg-app-success/5 transition-all shrink-0">
           <FolderTree size={14} />
         </button>
       </div>
@@ -208,7 +208,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-app-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-app-success/10 flex items-center justify-center">
                   <FolderTree size={18} className="text-app-success" />
                 </div>
                 <div>
@@ -273,7 +273,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                       <select
                         value={selectedId != null ? String(selectedId) : ''}
                         onChange={e => handleCascadeChange(level, e.target.value ? Number(e.target.value) : null)}
-                        className="w-full p-2.5 pr-8 border border-app-border rounded-xl text-sm font-medium bg-app-surface text-app-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 appearance-none cursor-pointer"
+                        className="w-full p-2.5 pr-8 border border-app-border rounded-xl text-sm font-medium bg-app-surface text-app-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-app-success/50 appearance-none cursor-pointer"
                         autoFocus={level > 0}
                       >
                         <option value="">— Choose ({options.length} options) —</option>
@@ -297,7 +297,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                       const isLeaf = !hasChildren(acc.id)
                       return (
                         <div className={`mt-1.5 flex items-center gap-2 px-3 py-1.5 rounded-lg text-tp-xs font-bold ${
-                          isLeaf ? 'bg-emerald-500/10 text-app-success' : 'bg-amber-500/8 text-app-warning'
+                          isLeaf ? 'bg-app-success/10 text-app-success' : 'bg-app-warning/8 text-app-warning'
                         }`}>
                           {isLeaf ? <Check size={10} /> : <FolderTree size={10} />}
                           <span>{acc.code} — {acc.name}</span>
@@ -316,10 +316,10 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                 const acc = getDeepestSelection()
                 if (!acc || hasChildren(acc.id)) return null
                 return (
-                  <div className="mt-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-in fade-in duration-300">
+                  <div className="mt-2 p-4 rounded-xl bg-app-success/10 border border-app-success/20 animate-in fade-in duration-300">
                     <div className="text-tp-xs font-bold text-app-success uppercase tracking-wider mb-2">✓ Account Selected</div>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-app-success/15 flex items-center justify-center shrink-0">
                         <FileText size={18} className="text-app-success" />
                       </div>
                       <div className="min-w-0">
@@ -340,7 +340,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                 Cancel
               </button>
               <button type="button" onClick={confirmModal} disabled={!getDeepestSelection()}
-                className="px-6 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/20">
+                className="px-6 py-2 rounded-xl text-xs font-bold bg-app-success text-white hover:bg-app-success disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/20">
                 <Check size={12} className="inline mr-1.5" />Confirm
               </button>
             </div>

@@ -111,7 +111,7 @@ export default function QuotePage() {
 
     return (
         <div className="min-h-screen bg-app-bg p-4 lg:p-12 relative">
-            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-success/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-3xl mx-auto relative z-10 space-y-8">
                 <div className="space-y-2">
@@ -137,13 +137,13 @@ export default function QuotePage() {
                         <h2 className="text-lg font-bold text-white">Contact Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" placeholder="Full Name *" value={contactName} onChange={e => setContactName(e.target.value)} required
-                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
                             <input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} required
-                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
                             <input type="tel" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)}
-                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
                             <input type="text" placeholder="Company" value={company} onChange={e => setCompany(e.target.value)}
-                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
+                                className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
                         </div>
                     </div>
 
@@ -154,7 +154,7 @@ export default function QuotePage() {
                             <div className="flex gap-2">
                                 {cart.length > 0 && (
                                     <button type="button" onClick={importFromCart}
-                                        className="text-sm px-4 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-xl font-medium hover:bg-teal-500/20 transition-all">
+                                        className="text-sm px-4 py-2 bg-app-success/10 text-teal-400 border border-app-success/20 rounded-xl font-medium hover:bg-app-success/20 transition-all">
                                         Import from Cart ({cart.length})
                                     </button>
                                 )}
@@ -177,19 +177,19 @@ export default function QuotePage() {
                                         <div className="flex-1 space-y-3">
                                             <input type="text" placeholder="Product / Service name *" value={item.product_name}
                                                 onChange={e => updateItem(idx, 'product_name', e.target.value)} required
-                                                className="w-full bg-transparent border-b border-white/10 pb-2 text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint" />
+                                                className="w-full bg-transparent border-b border-white/10 pb-2 text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
                                             <div className="flex gap-3">
                                                 <div className="w-28">
                                                     <label className="text-[10px] text-app-faint uppercase tracking-wider block mb-1">Qty</label>
                                                     <input type="number" min="1" value={item.quantity}
                                                         onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white text-center outline-none focus:border-teal-500" />
+                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white text-center outline-none focus:border-app-success" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <label className="text-[10px] text-app-faint uppercase tracking-wider block mb-1">Notes</label>
                                                     <input type="text" placeholder="Specs, size, color..." value={item.notes}
                                                         onChange={e => updateItem(idx, 'notes', e.target.value)}
-                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white outline-none focus:border-teal-500 placeholder:text-app-faint" />
+                                                        className="w-full bg-transparent border border-white/10 p-2 rounded-lg text-white outline-none focus:border-app-success placeholder:text-app-faint" />
                                                 </div>
                                             </div>
                                         </div>
@@ -208,12 +208,12 @@ export default function QuotePage() {
                         <h2 className="text-lg font-bold text-white">Additional Message</h2>
                         <textarea placeholder="Delivery timeline, budget range, special requirements..." value={message}
                             onChange={e => setMessage(e.target.value)} rows={4}
-                            className="w-full bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-teal-500 transition-all placeholder:text-app-faint resize-none" />
+                            className="w-full bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint resize-none" />
                     </div>
 
                     {/* Submit */}
                     <button type="submit" disabled={submitting}
-                        className="w-full bg-teal-600 hover:bg-teal-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-teal-900/40 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-60 text-lg">
+                        className="w-full bg-app-success hover:bg-app-success text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-teal-900/40 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-60 text-lg">
                         {submitting ? <Loader2 className="animate-spin" size={22} /> : <><Send size={22} /> Submit Quote Request</>}
                     </button>
                 </form>

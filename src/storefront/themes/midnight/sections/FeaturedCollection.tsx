@@ -32,8 +32,8 @@ export default function MidnightFeaturedCollection({ settings, products, categor
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Live Catalog</span>
+                            <div className="w-2 h-2 rounded-full bg-app-success animate-pulse" />
+                            <span className="text-[10px] font-black text-app-success uppercase tracking-[0.3em]">Live Catalog</span>
                         </div>
                         <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
                             {title}
@@ -43,13 +43,13 @@ export default function MidnightFeaturedCollection({ settings, products, categor
                     <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-app-muted-foreground hover:text-white'}`}
+                            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-app-success text-white shadow-lg' : 'text-app-muted-foreground hover:text-white'}`}
                         >
                             <Grid size={18} />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-app-muted-foreground hover:text-white'}`}
+                            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-app-success text-white shadow-lg' : 'text-app-muted-foreground hover:text-white'}`}
                         >
                             <List size={18} />
                         </button>
@@ -66,7 +66,7 @@ export default function MidnightFeaturedCollection({ settings, products, categor
                                 placeholder="Search our collection..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="w-full bg-slate-900/50 border border-white/10 pl-14 pr-12 py-5 rounded-[2rem] text-white outline-none focus:border-emerald-500/30 transition-all placeholder:text-app-muted-foreground font-medium"
+                                className="w-full bg-slate-900/50 border border-white/10 pl-14 pr-12 py-5 rounded-[2rem] text-white outline-none focus:border-app-success/30 transition-all placeholder:text-app-muted-foreground font-medium"
                             />
                             {search && (
                                 <button onClick={() => setSearch('')} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white transition-colors">
@@ -80,7 +80,7 @@ export default function MidnightFeaturedCollection({ settings, products, categor
                         <select
                             value={selectedCategory || ''}
                             onChange={e => setSelectedCategory(e.target.value || null)}
-                            className="w-full appearance-none bg-slate-900/50 border border-white/10 px-6 py-5 rounded-[2rem] text-white outline-none focus:border-emerald-500/30 transition-all font-bold text-xs uppercase tracking-widest cursor-pointer"
+                            className="w-full appearance-none bg-slate-900/50 border border-white/10 px-6 py-5 rounded-[2rem] text-white outline-none focus:border-app-success/30 transition-all font-bold text-xs uppercase tracking-widest cursor-pointer"
                         >
                             <option value="">All Categories</option>
                             {(categories || []).map(cat => (

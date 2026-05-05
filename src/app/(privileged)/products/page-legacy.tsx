@@ -135,7 +135,7 @@ export default async function ProductsPage({
  <th className="py-8 px-10 text-right">Master Control</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50">
+ <tbody className="divide-y divide-app-border">
  {data.length === 0 ? (
  <tr>
  <td colSpan={5} className="py-32 text-center">

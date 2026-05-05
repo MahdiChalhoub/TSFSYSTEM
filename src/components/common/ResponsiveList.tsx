@@ -160,7 +160,7 @@ export function ExampleUsage() {
       key: 'status' as const,
       label: 'Status',
       render: (user: any) => (
-        <Badge className={user.status === 'Active' ? 'bg-green-500' : 'bg-yellow-500'}>
+        <Badge className={user.status === 'Active' ? 'bg-app-success' : 'bg-app-warning'}>
           {user.status}
         </Badge>
       ),

@@ -150,7 +150,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  onChange={e => setOverridePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
  placeholder={hasOverridePin || overrideDone ? 'Enter new override PIN' : 'Enter 4–6 digit PIN'}
  maxLength={6}
- className="w-full px-4 py-2.5 bg-app-surface border border-app-error rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-rose-300 focus:border-app-error tracking-[0.3em] text-center transition-all"
+ className="w-full px-4 py-2.5 bg-app-surface border border-app-error rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-app-error focus:border-app-error tracking-[0.3em] text-center transition-all"
  />
  <button onClick={() => setShowOverride(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground transition-colors">
  {showOverride ? <EyeOff size={16} /> : <Eye size={16} />}

@@ -113,7 +113,7 @@ export default function BudgetPlanningPage() {
         <div className="p-6 space-y-6">
             <header>
                 <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                         <Calculator size={20} className="text-white" />
                     </div>
                     Budget Overview
@@ -160,10 +160,10 @@ export default function BudgetPlanningPage() {
                 <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-r from-cyan-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Calculator size={24} className="text-cyan-500" />
+                            <Calculator size={24} className="text-app-info" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Margin</p>
-                                <p className="text-xl font-bold text-cyan-700">
+                                <p className="text-xl font-bold text-app-info">
                                     {totalIncome !== 0 ? ((netResult / Math.abs(totalIncome)) * 100).toFixed(1) : 0}%
                                 </p>
                             </div>

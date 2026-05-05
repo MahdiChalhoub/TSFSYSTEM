@@ -407,7 +407,7 @@ export default function InvoicesPage() {
                             {[{ key: '', label: 'All Types' }, { key: 'RETAIL', label: 'Retail' }, { key: 'WHOLESALE', label: 'Wholesale' }, { key: 'CONSIGNEE', label: 'Consignee' }, { key: 'STANDARD', label: 'Standard' }].map(st => (
                                 <button key={st.key} onClick={() => setSubTypeFilter(st.key)}
                                     className={`px-3 py-1.5 text-xs rounded-lg transition-all font-medium ${subTypeFilter === st.key
-                                        ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>
+                                        ? 'bg-app-info-soft text-app-info shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>
                                     {st.label}
                                 </button>
                             ))}

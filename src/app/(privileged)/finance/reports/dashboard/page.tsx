@@ -134,10 +134,10 @@ export default function FinancialReportsDashboardPage() {
               <CardContent className="pt-5 pb-4 px-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-orange-200/60 flex items-center justify-center">
-                    <TrendingDown size={22} className="text-orange-700" />
+                    <TrendingDown size={22} className="text-app-warning" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-orange-600 uppercase tracking-widest">Expenses</p>
+                    <p className="text-xs font-bold text-app-warning uppercase tracking-widest">Expenses</p>
                     <p className="text-2xl font-bold text-orange-900 mt-0.5">
                       {fmt(Math.abs(parseFloat(dashboard.profit_loss.expenses)))}
                     </p>
@@ -213,7 +213,7 @@ export default function FinancialReportsDashboardPage() {
                   <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-3">
                     Expenses
                   </p>
-                  <p className="text-3xl font-black text-orange-600">
+                  <p className="text-3xl font-black text-app-warning">
                     {fmt(Math.abs(parseFloat(dashboard.profit_loss.expenses)))}
                   </p>
                 </div>
@@ -261,7 +261,7 @@ export default function FinancialReportsDashboardPage() {
                   <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-3">
                     Total Liabilities
                   </p>
-                  <p className="text-3xl font-black text-orange-600">
+                  <p className="text-3xl font-black text-app-warning">
                     {fmt(dashboard.balance_sheet.total_liabilities)}
                   </p>
                 </div>

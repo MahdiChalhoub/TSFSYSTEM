@@ -106,7 +106,7 @@ export default function ContactDetailPage() {
                                         </Badge>
                                     )}
                                     {contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
-                                        <Badge className={contact.customer_tier === 'VIP' ? 'bg-app-warning-bg text-app-warning' : 'bg-cyan-100 text-cyan-700'}>
+                                        <Badge className={contact.customer_tier === 'VIP' ? 'bg-app-warning-bg text-app-warning' : 'bg-app-info-soft text-app-info'}>
                                             {contact.customer_tier === 'VIP' && '⭐ '}{contact.customer_tier}
                                         </Badge>
                                     )}

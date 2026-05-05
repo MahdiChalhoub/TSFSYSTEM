@@ -28,7 +28,7 @@ const PO_STATUS_STYLES: Record<string, { bg: string; text: string; icon: any }> 
     DRAFT: { bg: 'bg-app-surface-2/10', text: 'text-app-muted-foreground', icon: FileText },
     SUBMITTED: { bg: 'bg-app-info/10', text: 'text-app-info', icon: Clock },
     APPROVED: { bg: 'bg-app-primary/10', text: 'text-app-success', icon: CheckCircle2 },
-    SENT: { bg: 'bg-indigo-500/10', text: 'text-app-info', icon: Truck },
+    SENT: { bg: 'bg-app-info/10', text: 'text-app-info', icon: Truck },
     PARTIALLY_RECEIVED: { bg: 'bg-app-warning/10', text: 'text-app-warning', icon: Package },
     RECEIVED: { bg: 'bg-app-primary/10', text: 'text-app-success', icon: CheckCircle2 },
     REJECTED: { bg: 'bg-app-error/10', text: 'text-app-error', icon: XCircle },
@@ -167,7 +167,7 @@ export default function SupplierGatePreviewClient() {
                     <div className="p-8 pb-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-app-info/30 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-xl bg-app-info/20 border border-app-info/30 flex items-center justify-center">
                                     <Briefcase size={18} className="text-app-info" />
                                 </div>
                                 <div>

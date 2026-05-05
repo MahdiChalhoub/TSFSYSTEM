@@ -57,7 +57,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
     if (loading) return (
         <Card className="bg-app-surface border-app-border backdrop-blur-xl">
             <CardContent className="py-4 flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
+                <Loader2 className="w-4 h-4 text-app-success animate-spin" />
                 <span className="text-app-muted-foreground font-bold text-xs">Loading pipeline...</span>
             </CardContent>
         </Card>
@@ -68,8 +68,8 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
         if (jobStatus === 'PENDING') return (
             <Card className="bg-app-surface border-app-border">
                 <CardContent className="py-4 flex items-center justify-center gap-2">
-                    <Play className="w-4 h-4 text-gray-300" />
-                    <span className="text-gray-300 font-medium text-xs">Start the migration to track progress</span>
+                    <Play className="w-4 h-4 text-app-muted-foreground" />
+                    <span className="text-app-muted-foreground font-medium text-xs">Start the migration to track progress</span>
                 </CardContent>
             </Card>
         )
@@ -78,8 +78,8 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
             <Card className="bg-app-surface border-app-border">
                 <CardContent className="py-3 flex items-center justify-between gap-2 px-5">
                     <div className="flex items-center gap-2">
-                        <Loader2 className="w-3.5 h-3.5 text-gray-300 animate-spin" />
-                        <span className="text-gray-300 font-medium text-xs">Waiting for pipeline data...</span>
+                        <Loader2 className="w-3.5 h-3.5 text-app-muted-foreground animate-spin" />
+                        <span className="text-app-muted-foreground font-medium text-xs">Waiting for pipeline data...</span>
                     </div>
                     <button onClick={fetchPipeline} className="text-[10px] text-app-muted-foreground hover:text-app-muted-foreground font-bold uppercase tracking-wider">
                         Retry
@@ -102,10 +102,10 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                         Import Pipeline — {completedCount}/{totalSteps} steps
                     </CardTitle>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${completedCount === totalSteps
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-app-success-soft text-app-success'
                         : jobStatus === 'FAILED' || jobStatus === 'STALLED'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-blue-100 text-blue-700'
+                            ? 'bg-app-error-soft text-app-error'
+                            : 'bg-app-info-soft text-app-info'
                         }`}>
                         {completedCount === totalSteps ? '✓ All Done' :
                             jobStatus === 'RUNNING' ? `${pipelinePct}%` :
@@ -116,8 +116,8 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                 {/* Pipeline progress bar */}
                 <div className="w-full bg-app-border rounded-full h-1.5 mt-2 overflow-hidden">
                     <div
-                        className={`h-full rounded-full transition-all duration-700 ${completedCount === totalSteps ? 'bg-emerald-500'
-                            : jobStatus === 'FAILED' || jobStatus === 'STALLED' ? 'bg-red-500'
+                        className={`h-full rounded-full transition-all duration-700 ${completedCount === totalSteps ? 'bg-app-success'
+                            : jobStatus === 'FAILED' || jobStatus === 'STALLED' ? 'bg-app-error'
                                 : 'bg-gradient-to-r from-blue-500 to-purple-500'
                             }`}
                         style={{ width: `${pipelinePct}%` }}
@@ -127,17 +127,17 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
             <CardContent className="pt-3 pb-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
                     {pipeline.pipeline.map((step, i) => (
-                        <div key={step.name} className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg transition-all ${step.status === 'running' ? 'bg-blue-50' : ''
+                        <div key={step.name} className={`flex items-center gap-2.5 py-1.5 px-2 rounded-lg transition-all ${step.status === 'running' ? 'bg-app-info-soft' : ''
                             }`}>
                             {/* Step indicator */}
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${step.status === 'completed' ? 'bg-emerald-100'
-                                : step.status === 'running' ? 'bg-blue-200 animate-pulse border border-blue-300'
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${step.status === 'completed' ? 'bg-app-success-soft'
+                                : step.status === 'running' ? 'bg-blue-200 animate-pulse border border-app-info'
                                     : 'bg-app-surface-2'
                                 }`}>
                                 {step.status === 'completed' ? (
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <CheckCircle2 className="w-3 h-3 text-app-success" />
                                 ) : step.status === 'running' ? (
-                                    <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />
+                                    <Loader2 className="w-3 h-3 text-app-info animate-spin" />
                                 ) : (
                                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                                 )}
@@ -145,8 +145,8 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                             {/* Step label + sub-progress */}
                             <div className="flex flex-col min-w-0">
                                 <span className={`text-[11px] font-bold truncate ${step.status === 'completed' ? 'text-app-muted-foreground'
-                                    : step.status === 'running' ? 'text-blue-700 font-black'
-                                        : 'text-gray-300'
+                                    : step.status === 'running' ? 'text-app-info font-black'
+                                        : 'text-app-muted-foreground'
                                     }`}>
                                     {step.label.replace('Importing ', '').replace('Linking ', '')}
                                 </span>
@@ -164,7 +164,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                 {pipeline.can_resume && (
                     <div className="mt-4 pt-4 border-t border-app-border flex items-center gap-4">
                         <div className="flex-1">
-                            <p className="text-amber-600 text-xs font-black uppercase tracking-wider">
+                            <p className="text-app-warning text-xs font-black uppercase tracking-wider">
                                 Import stopped at step {completedCount + 1}/{totalSteps}
                             </p>
                             <p className="text-app-muted-foreground text-[10px] mt-0.5 font-bold">
@@ -186,8 +186,8 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                 {/* All OK Message */}
                 {completedCount === totalSteps && jobStatus === 'COMPLETED' && (
                     <div className="mt-6 pt-4 border-t border-emerald-100 flex items-center gap-3 justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        <span className="text-emerald-700 font-black text-sm uppercase tracking-tight">
+                        <CheckCircle2 className="w-5 h-5 text-app-success" />
+                        <span className="text-app-success font-black text-sm uppercase tracking-tight">
                             All {totalSteps} steps completed successfully!
                         </span>
                     </div>

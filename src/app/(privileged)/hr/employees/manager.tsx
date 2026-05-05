@@ -103,7 +103,7 @@ export default function EmployeeManager({
                 <div className="flex gap-4 w-full xl:w-auto">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex-1 xl:flex-none px-8 py-4 bg-indigo-600 text-white rounded-[28px] font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
+                        className="flex-1 xl:flex-none px-8 py-4 bg-app-info text-white rounded-[28px] font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-app-info hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform duration-500" />
                         Enroll New Employee
@@ -228,7 +228,7 @@ export default function EmployeeManager({
                                     <button className="py-3.5 rounded-2xl bg-app-surface text-[10px] font-black uppercase tracking-widest text-app-muted-foreground hover:bg-app-surface-2 hover:text-app-muted-foreground transition-all border border-transparent hover:border-app-border">
                                         View Profile
                                     </button>
-                                    <button className="py-3.5 rounded-2xl bg-app-info-bg text-app-info text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    <button className="py-3.5 rounded-2xl bg-app-info-bg text-app-info text-[10px] font-black uppercase tracking-widest hover:bg-app-info hover:text-white transition-all shadow-sm">
                                         Payroll Detail
                                     </button>
                                 </>

@@ -84,7 +84,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                                                 {/* Tree Connector Line */}
                                                 <div className={`absolute left-0 top-0 bottom-0 w-px bg-app-surface-2 ${isLast ? 'h-1/2' : ''}`}></div>
 
-                                                <div className="py-3 pr-4 pl-4 flex justify-between items-center border-b border-gray-50 last:border-0">
+                                                <div className="py-3 pr-4 pl-4 flex justify-between items-center border-b border-app-border last:border-0">
                                                     <div className="flex items-center gap-3">
                                                         {/* Horizontal Connector */}
                                                         <div className="absolute left-0 top-1/2 w-4 h-px bg-app-surface-2"></div>

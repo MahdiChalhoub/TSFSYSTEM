@@ -318,7 +318,7 @@ export default function TransferOrdersPage() {
                                                 <TableCell className="text-sm">{order.date}</TableCell>
                                                 <TableCell className="text-sm">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Warehouse className="h-3.5 w-3.5 text-orange-500" />
+                                                        <Warehouse className="h-3.5 w-3.5 text-app-warning" />
                                                         <span>{order.from_warehouse_name || `WH #${order.from_warehouse}`}</span>
                                                         <span className="text-muted-foreground">→</span>
                                                         <Warehouse className="h-3.5 w-3.5 text-app-success" />
@@ -331,7 +331,7 @@ export default function TransferOrdersPage() {
                                                     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${statusCfg.color}`}>
                                                         <StatusIcon className="h-3 w-3" /> {statusCfg.label}
                                                     </span>
-                                                    {order.is_posted && <Badge className="ml-1 bg-emerald-600 text-[10px]">Posted</Badge>}
+                                                    {order.is_posted && <Badge className="ml-1 bg-app-success text-[10px]">Posted</Badge>}
                                                 </TableCell>
                                                 <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                                                     <div className="flex items-center justify-end gap-1">
@@ -356,7 +356,7 @@ export default function TransferOrdersPage() {
                                                             </>
                                                         )}
                                                         {order.lifecycle_status === 'CONFIRMED' && !order.is_posted && (
-                                                            <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => handlePost(order.id)} disabled={isPending}>
+                                                            <Button size="sm" className="h-7 gap-1 text-xs bg-app-success hover:bg-app-success" onClick={() => handlePost(order.id)} disabled={isPending}>
                                                                 <Send className="h-3 w-3" /> Post
                                                             </Button>
                                                         )}

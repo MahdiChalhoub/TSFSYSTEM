@@ -115,7 +115,7 @@ export function SavedFilters({
               >
                 {/* Default star */}
                 {filter.isDefault && (
-                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <Star className="w-4 h-4 text-app-warning fill-yellow-500" />
                 )}
 
                 {/* Filter info */}
@@ -276,7 +276,7 @@ export function SavedFilters({
       {defaultFilter && (
         <div className="p-3 bg-app-bg rounded-lg border theme-border">
           <div className="flex items-center gap-2 text-sm">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <Star className="w-4 h-4 text-app-warning fill-yellow-500" />
             <span className="text-app-foreground">
               <span className="font-semibold">{defaultFilter.name}</span> is your default filter
             </span>

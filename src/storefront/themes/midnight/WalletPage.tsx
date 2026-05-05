@@ -47,11 +47,11 @@ export default function MidnightWalletPage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
                 <div className="text-center space-y-8">
-                    <div className="w-24 h-24 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-amber-400 rotate-12">
+                    <div className="w-24 h-24 bg-app-warning/10 border border-app-warning/20 rounded-[2rem] flex items-center justify-center mx-auto text-amber-400 rotate-12">
                         <Shield size={48} />
                     </div>
                     <h1 className="text-3xl font-black text-white italic">Session Required</h1>
-                    <Link href={path('/login')} className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest">
+                    <Link href={path('/login')} className="inline-flex items-center gap-3 px-10 py-4 bg-app-success text-white rounded-2xl font-black text-xs uppercase tracking-widest">
                         Authorize <ChevronRight size={16} />
                     </Link>
                 </div>
@@ -67,7 +67,7 @@ export default function MidnightWalletPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-warning/5 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
@@ -80,7 +80,7 @@ export default function MidnightWalletPage() {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-app-warning border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : wallet && (
                     <>
@@ -129,7 +129,7 @@ export default function MidnightWalletPage() {
                                         const isCredit = tx.type === 'CREDIT' || tx.type === 'REWARD'
                                         return (
                                             <div key={tx.id} className="flex items-center gap-6 p-5 bg-slate-950/50 border border-white/5 rounded-[2rem] hover:border-white/10 transition-all">
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isCredit ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isCredit ? 'bg-app-success/10 text-emerald-400' : 'bg-app-error/10 text-rose-400'}`}>
                                                     {tx.type === 'REWARD' ? <Gift size={20} /> : isCredit ? <ArrowDownRight size={20} /> : <ArrowUpRight size={20} />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">

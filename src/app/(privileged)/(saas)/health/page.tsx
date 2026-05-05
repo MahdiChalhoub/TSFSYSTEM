@@ -79,7 +79,7 @@ const MetricCard = ({ icon: Icon, title, value, subValue, colorClass = "text-app
 
 const LatencyBlock = ({ ms, label }: { ms: number; label: string }) => {
     const status = ms < 100 ? 'optimal' : ms < 500 ? 'fair' : 'degraded';
-    const color = status === 'optimal' ? 'text-emerald-500' : status === 'fair' ? 'text-amber-500' : 'text-rose-500';
+    const color = status === 'optimal' ? 'text-app-success' : status === 'fair' ? 'text-app-warning' : 'text-app-error';
     return (
         <div className="flex flex-col gap-1">
             <div className={`text-xl font-black ${color} tabular-nums`}>{ms.toFixed(0)}<span className="text-[10px] opacity-40 ml-0.5">ms</span></div>
@@ -199,19 +199,19 @@ export default function HealthPage() {
                             icon={Server} title="API Engine" 
                             value={health?.status === 'online' ? "Healthy" : "Check Logs"} 
                             subValue={health?.service || "Django Core"}
-                            colorClass="text-emerald-500"
+                            colorClass="text-app-success"
                         />
                         <MetricCard 
                             icon={Database} title="Database" 
                             value="Active" 
                             subValue="PostgreSQL Cluster"
-                            colorClass="text-blue-500"
+                            colorClass="text-app-info"
                         />
                         <MetricCard 
                             icon={Zap} title="Requests" 
                             value={health?.traffic?.requests_last_5min || 0} 
                             subValue={`${health?.traffic?.total_requests.toLocaleString() || 0} lifetime`}
-                            colorClass="text-amber-500"
+                            colorClass="text-app-warning"
                         />
                         <MetricCard 
                             icon={Clock} title="System Uptime" 
@@ -235,7 +235,7 @@ export default function HealthPage() {
                                             <p className="text-xs text-app-muted-foreground font-medium">Distribution across {health?.traffic?.tracked_window} requests</p>
                                         </div>
                                     </div>
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 font-bold">
+                                    <Badge className="bg-app-success/10 text-app-success border-app-success/20 px-3 py-1 font-bold">
                                         Avg {health?.latency?.avg_ms.toFixed(1)}ms
                                     </Badge>
                                 </div>
@@ -261,7 +261,7 @@ export default function HealthPage() {
                             <CardContent className="space-y-4">
                                 {Object.entries(health?.traffic?.status_breakdown || {}).sort().map(([bucket, count]) => {
                                     const pct = ((count / (health?.traffic?.tracked_window || 1)) * 100).toFixed(1)
-                                    const color = bucket === '2xx' ? 'bg-emerald-500' : bucket === '4xx' ? 'bg-amber-500' : 'bg-rose-500'
+                                    const color = bucket === '2xx' ? 'bg-app-success' : bucket === '4xx' ? 'bg-app-warning' : 'bg-app-error'
                                     return (
                                         <div key={bucket} className="space-y-1">
                                             <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-app-muted-foreground">
@@ -286,7 +286,7 @@ export default function HealthPage() {
                         <Card className="bg-app-surface/40 backdrop-blur-md border-app-border rounded-[2.5rem] shadow-2xl">
                             <CardHeader>
                                 <CardTitle className="text-xl font-black flex items-center gap-2">
-                                    <Globe size={20} className="text-blue-500" /> Current Session
+                                    <Globe size={20} className="text-app-info" /> Current Session
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
@@ -295,16 +295,16 @@ export default function HealthPage() {
                                         <div className="text-[10px] font-black text-app-muted-foreground uppercase">TTFB</div>
                                         <div className="text-sm font-medium text-app-foreground italic">Time to first byte</div>
                                     </div>
-                                    <div className="text-2xl font-black text-emerald-500">{localMetrics.ttfb}ms</div>
+                                    <div className="text-2xl font-black text-app-success">{localMetrics.ttfb}ms</div>
                                 </div>
                                 <div className="flex items-center justify-between p-4 bg-app-surface rounded-2xl border border-app-border">
                                     <div>
                                         <div className="text-[10px] font-black text-app-muted-foreground uppercase">FCP</div>
                                         <div className="text-sm font-medium text-app-foreground italic">First Contentful Paint</div>
                                     </div>
-                                    <div className="text-2xl font-black text-blue-500">{localMetrics.fcp}ms</div>
+                                    <div className="text-2xl font-black text-app-info">{localMetrics.fcp}ms</div>
                                 </div>
-                                <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/20 text-[11px] text-blue-500 font-medium leading-relaxed">
+                                <div className="p-4 bg-app-info/5 rounded-2xl border border-app-info/20 text-[11px] text-app-info font-medium leading-relaxed">
                                     Metrics captured directly from your browser via PerformanceObserver API.
                                 </div>
                             </CardContent>
@@ -315,7 +315,7 @@ export default function HealthPage() {
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-amber-500/10 text-amber-500 rounded-xl">
+                                        <div className="p-2.5 bg-app-warning/10 text-app-warning rounded-xl">
                                             <MousePointer2 size={20} />
                                         </div>
                                         <div>
@@ -325,7 +325,7 @@ export default function HealthPage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-2xl font-black text-app-foreground tabular-nums">{perf?.avg_ms}ms</div>
-                                        <div className="text-[10px] font-black text-amber-500 uppercase">Global Avg</div>
+                                        <div className="text-[10px] font-black text-app-warning uppercase">Global Avg</div>
                                     </div>
                                 </div>
                             </CardHeader>
@@ -333,7 +333,7 @@ export default function HealthPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between px-2">
                                         <span className="text-xs font-bold text-app-foreground">Performance Health</span>
-                                        <Badge className={perf?.slow_percent && perf.slow_percent < 5 ? 'bg-emerald-500' : 'bg-amber-500'}>
+                                        <Badge className={perf?.slow_percent && perf.slow_percent < 5 ? 'bg-app-success' : 'bg-app-warning'}>
                                             {100 - (perf?.slow_percent || 0)}% Smooth
                                         </Badge>
                                     </div>
@@ -342,10 +342,10 @@ export default function HealthPage() {
                                         {perf?.recent.map((s, i) => (
                                             <div key={i} className="flex items-center justify-between p-3 bg-app-surface/50 rounded-xl border border-app-border/40 group hover:border-app-primary/30 transition-all">
                                                 <div className="flex items-center gap-3 truncate">
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${s.durationMs > 800 ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 'bg-emerald-500'}`} />
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${s.durationMs > 800 ? 'bg-app-error shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 'bg-app-success'}`} />
                                                     <span className="text-[11px] font-mono text-app-muted-foreground truncate">{s.label}</span>
                                                 </div>
-                                                <span className={`text-[11px] font-black tabular-nums ${s.durationMs > 800 ? 'text-rose-500' : 'text-app-foreground'}`}>{s.durationMs}ms</span>
+                                                <span className={`text-[11px] font-black tabular-nums ${s.durationMs > 800 ? 'text-app-error' : 'text-app-foreground'}`}>{s.durationMs}ms</span>
                                             </div>
                                         ))}
                                     </div>
@@ -358,7 +358,7 @@ export default function HealthPage() {
                     <Card className="bg-app-surface/40 backdrop-blur-md border-app-border rounded-[2.5rem] shadow-2xl border-l-4 border-l-emerald-500">
                         <CardContent className="py-6 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
+                                <div className="p-3 rounded-2xl bg-app-success/10 text-app-success">
                                     <Shield size={24} />
                                 </div>
                                 <div>
@@ -369,11 +369,11 @@ export default function HealthPage() {
                             <div className="hidden md:flex gap-4">
                                 <div className="text-center">
                                     <div className="text-sm font-black text-app-foreground">TLS 1.3</div>
-                                    <div className="text-[9px] font-black text-emerald-500 uppercase">Protocol</div>
+                                    <div className="text-[9px] font-black text-app-success uppercase">Protocol</div>
                                 </div>
                                 <div className="text-center border-l border-app-border pl-4">
                                     <div className="text-sm font-black text-app-foreground">Enabled</div>
-                                    <div className="text-[9px] font-black text-emerald-500 uppercase">WAF</div>
+                                    <div className="text-[9px] font-black text-app-success uppercase">WAF</div>
                                 </div>
                             </div>
                         </CardContent>

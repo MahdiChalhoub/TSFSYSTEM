@@ -108,7 +108,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                     </a>
                     {source === 'legacy' && order.status === 'DRAFT' && (
                         <form action={authorizePurchaseOrder.bind(null, id)}>
-                            <button className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2">
+                            <button className="bg-app-info text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-200 hover:bg-app-info transition-all flex items-center gap-2">
                                 <CheckCircle2 size={20} />
                                 <span>Confirm Order</span>
                             </button>
@@ -198,7 +198,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                         <th className="p-6 text-right">Total</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-app-border">
                                     {order.lines?.map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">

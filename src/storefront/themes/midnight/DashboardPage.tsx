@@ -67,7 +67,7 @@ export default function MidnightDashboardPage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center space-y-8">
-                    <div className="w-24 h-24 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-rose-500 shadow-2xl shadow-rose-500/10 rotate-12">
+                    <div className="w-24 h-24 bg-app-error/10 border border-app-error/20 rounded-[2rem] flex items-center justify-center mx-auto text-app-error shadow-2xl shadow-rose-500/10 rotate-12">
                         <Shield size={48} />
                     </div>
                     <div className="space-y-4">
@@ -78,7 +78,7 @@ export default function MidnightDashboardPage() {
                         </p>
                     </div>
                     <Link href={path('/login')}
-                        className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-105 uppercase tracking-widest text-xs">
+                        className="inline-flex items-center gap-3 px-10 py-4 bg-app-success text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-105 uppercase tracking-widest text-xs">
                         Authorize Now <ExternalLink size={16} />
                     </Link>
                 </div>
@@ -88,17 +88,17 @@ export default function MidnightDashboardPage() {
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
             {/* Ambient Background */}
-            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-            <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-success/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-app-info/5 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="max-w-6xl mx-auto relative z-10 space-y-10">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div className="space-y-2">
-                        <div className="flex items-center gap-3 text-emerald-500">
+                        <div className="flex items-center gap-3 text-app-success">
                             <TrendingUp size={20} />
                             <span className="text-[10px] font-black uppercase tracking-[0.4em]">Personal Dashboard</span>
                         </div>
-                        <h1 className="text-5xl font-black text-white italic tracking-tighter">Welcome, <span className="text-emerald-500">{user?.name}</span></h1>
+                        <h1 className="text-5xl font-black text-white italic tracking-tighter">Welcome, <span className="text-app-success">{user?.name}</span></h1>
                     </div>
                     <div className="flex items-center gap-3">
                         {dashboard?.loyalty_tier && (
@@ -188,7 +188,7 @@ export default function MidnightDashboardPage() {
                 </div>
                 {/* Identity Tag */}
                 {dashboard?.barcode && (
-                    <div className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-emerald-500/30 transition-all duration-500">
+                    <div className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-app-success/30 transition-all duration-500">
                         <div className="flex items-center gap-6">
                             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                                 <QrCode size={32} />
@@ -198,7 +198,7 @@ export default function MidnightDashboardPage() {
                                 <h2 className="text-2xl font-mono font-black text-white tracking-widest">{dashboard.barcode}</h2>
                             </div>
                         </div>
-                        <div className="px-6 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black text-emerald-500 uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                        <div className="px-6 py-2 bg-app-success/10 border border-app-success/20 rounded-full text-[10px] font-black text-app-success uppercase tracking-widest group-hover:bg-app-success group-hover:text-white transition-all">
                             Active Session
                         </div>
                     </div>
@@ -209,9 +209,9 @@ export default function MidnightDashboardPage() {
 }
 function HudItem({ label, value, icon, meta, color = 'blue' }: any) {
     const colors: any = {
-        blue: 'hover:border-blue-500/30',
-        emerald: 'hover:border-emerald-500/30',
-        amber: 'hover:border-amber-500/30',
+        blue: 'hover:border-app-info/30',
+        emerald: 'hover:border-app-success/30',
+        amber: 'hover:border-app-warning/30',
         purple: 'hover:border-purple-500/30'
     }
     return (
@@ -229,10 +229,10 @@ function HudItem({ label, value, icon, meta, color = 'blue' }: any) {
 }
 function OperationCard({ title, description, path, icon, color }: any) {
     const colors: any = {
-        blue: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
-        rose: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-        amber: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-        cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
+        blue: 'text-blue-400 bg-app-info/10 border-app-info/30',
+        rose: 'text-rose-400 bg-app-error/10 border-app-error/30',
+        amber: 'text-amber-400 bg-app-warning/10 border-app-warning/30',
+        cyan: 'text-cyan-400 bg-app-info/10 border-app-info/30',
         purple: 'text-purple-400 bg-purple-500/10 border-purple-500/30',
         slate: 'text-app-muted-foreground bg-slate-500/10 border-slate-500/30',
     }
@@ -245,7 +245,7 @@ function OperationCard({ title, description, path, icon, color }: any) {
                 <h3 className="text-lg font-black text-white italic tracking-tight">{title}</h3>
                 <p className="text-app-muted-foreground text-xs mt-1">{description}</p>
             </div>
-            <ChevronRight size={20} className="text-app-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+            <ChevronRight size={20} className="text-app-muted-foreground group-hover:text-app-success group-hover:translate-x-1 transition-all" />
         </Link>
     )
 }

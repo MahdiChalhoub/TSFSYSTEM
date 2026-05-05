@@ -12,13 +12,13 @@ interface Order {
 }
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     CART: { label: 'Staging', icon: Package, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
-    PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    PROCESSING: { label: 'Allocating', icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-app-info/10' },
+    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
+    PROCESSING: { label: 'Allocating', icon: Package, color: 'text-amber-400', bg: 'bg-app-warning/10' },
     SHIPPED: { label: 'In Transit', icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    CANCELLED: { label: 'Voided', icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    RETURNED: { label: 'Reversed', icon: RotateCcw, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
+    CANCELLED: { label: 'Voided', icon: XCircle, color: 'text-rose-400', bg: 'bg-app-error/10' },
+    RETURNED: { label: 'Reversed', icon: RotateCcw, color: 'text-amber-400', bg: 'bg-app-warning/10' },
 }
 export default function MidnightOrdersPage() {
     const { path } = useStorefrontPath()
@@ -46,15 +46,15 @@ export default function MidnightOrdersPage() {
     }, [isAuthenticated])
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-            <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-info/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-app-success/5 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="max-w-4xl mx-auto relative z-10 space-y-12">
                 <div className="space-y-4">
                     <Link href={path('/account')}
                         className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard Ledger
                     </Link>
-                    <h1 className="text-5xl font-black text-white italic tracking-tighter">Order <span className="text-emerald-500">History</span></h1>
+                    <h1 className="text-5xl font-black text-white italic tracking-tighter">Order <span className="text-app-success">History</span></h1>
                     <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">Tracking your architectural commerce stream</p>
                 </div>
                 {loading ? (
@@ -71,7 +71,7 @@ export default function MidnightOrdersPage() {
                             <p className="text-app-muted-foreground text-sm">Your commerce history is currently empty. Initialize a new stream.</p>
                         </div>
                         <Link href={path('/')}
-                            className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 shadow-xl shadow-emerald-900/40 transition-all">
+                            className="inline-flex items-center gap-3 px-10 py-4 bg-app-success text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-success shadow-xl shadow-emerald-900/40 transition-all">
                             Initialize Storefront <ChevronRight size={16} />
                         </Link>
                     </div>
@@ -82,7 +82,7 @@ export default function MidnightOrdersPage() {
                             const Icon = st.icon
                             return (
                                 <Link key={order.id} href={path(`/account/orders/${order.id}`)}
-                                    className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex items-center gap-8 hover:border-emerald-500/30 transition-all cursor-pointer group hover:bg-slate-900/60 shadow-2xl shadow-black/20">
+                                    className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex items-center gap-8 hover:border-app-success/30 transition-all cursor-pointer group hover:bg-slate-900/60 shadow-2xl shadow-black/20">
                                     <div className={`w-16 h-16 ${st.bg} rounded-2xl flex items-center justify-center ${st.color} group-hover:scale-110 transition-transform`}>
                                         <Icon size={28} />
                                     </div>
@@ -107,7 +107,7 @@ export default function MidnightOrdersPage() {
                                             <div className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">Awaiting Delivery</div>
                                         )}
                                     </div>
-                                    <ChevronRight size={20} className="text-app-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                                    <ChevronRight size={20} className="text-app-foreground group-hover:text-app-success group-hover:translate-x-1 transition-all" />
                                 </Link>
                             )
                         })}

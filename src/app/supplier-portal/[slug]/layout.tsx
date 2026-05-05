@@ -139,7 +139,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
                         </div>
                     </div>
                     <button onClick={handleLogout}
-                        className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-surface/5 border border-white/10 rounded-xl text-app-error text-sm font-medium hover:bg-red-500/10 transition-all">
+                        className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-surface/5 border border-white/10 rounded-xl text-app-error text-sm font-medium hover:bg-app-error/10 transition-all">
                         <LogOut size={14} /> Sign Out
                     </button>
                 </div>

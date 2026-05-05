@@ -240,7 +240,7 @@ export default function LabelsQueueTab({ initialProducts, onSessionCreated }: Pr
                                 <span className="w-8 text-center text-[12px] font-black text-app-foreground">{q.quantity}</span>
                                 <button onClick={() => updateQuantity(q.product.id, 1)} className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-app-background"><Plus size={12} style={{ color: v('--app-primary') }} /></button>
                             </div>
-                            <button onClick={() => removeFromQueue(q.product.id)} className="p-1 rounded-lg hover:bg-rose-500/10 shrink-0"><Trash2 size={12} className="text-app-error" /></button>
+                            <button onClick={() => removeFromQueue(q.product.id)} className="p-1 rounded-lg hover:bg-app-error/10 shrink-0"><Trash2 size={12} className="text-app-error" /></button>
                         </div>
                     ))}
                 </div>

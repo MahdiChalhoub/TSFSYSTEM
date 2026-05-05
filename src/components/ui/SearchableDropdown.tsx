@@ -55,7 +55,7 @@ export function SearchableDropdown({ value, onChange, options, placeholder, labe
           onClick={() => { setOpen(!open); setQ('') }}
           className={`flex-1 text-left text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all truncate ${rawValue
             ? isNot
-              ? 'border-red-400/60 text-red-400 bg-red-500/5'
+              ? 'border-app-error/60 text-red-400 bg-app-error/5'
               : 'border-app-primary/40 text-app-foreground bg-app-primary/5'
             : 'border-app-border/50 text-app-muted-foreground bg-app-surface/50'
             }`}
@@ -65,7 +65,7 @@ export function SearchableDropdown({ value, onChange, options, placeholder, labe
         {rawValue && (
           <button type="button" onClick={toggleNot} title={isNot ? 'Switch to Include' : 'Switch to Exclude'}
             className={`w-7 flex-shrink-0 flex items-center justify-center rounded-lg border text-[10px] font-black transition-all ${isNot
-              ? 'border-red-400/60 text-red-400 bg-red-500/10 hover:bg-red-500/20'
+              ? 'border-app-error/60 text-red-400 bg-app-error/10 hover:bg-app-error/20'
               : 'border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'
               }`}>
             {isNot ? '≠' : '='}

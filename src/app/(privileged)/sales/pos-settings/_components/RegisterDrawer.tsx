@@ -281,7 +281,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                             return (
                                                 <div key={gm.id}
                                                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${isActive
-                                                        ? 'border-emerald-500/20' : 'border-app-border/30 hover:bg-app-surface/50'}`}
+                                                        ? 'border-app-success/20' : 'border-app-border/30 hover:bg-app-surface/50'}`}
                                                     style={isActive ? { background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)' } : {}}>
                                                     {/* Toggle */}
                                                     <button
@@ -297,7 +297,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                                 }])
                                                             }
                                                         }}
-                                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${isActive ? 'bg-emerald-500 border-emerald-400' : 'border-app-border hover:border-emerald-400/50'}`}>
+                                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${isActive ? 'bg-app-success border-app-success' : 'border-app-border hover:border-app-success/50'}`}>
                                                         {isActive && <Check size={10} className="text-white" />}
                                                     </button>
                                                     {/* Icon */}
@@ -343,9 +343,9 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                         const isCash = a.id === form.cashAccountId; const on = isCash || form.allowedAccountIds.includes(a.id)
                                         return (
                                             <button key={a.id} onClick={() => { if (isCash) return; set('allowedAccountIds', toggleId(form.allowedAccountIds, a.id)) }}
-                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-muted-foreground hover:bg-app-surface'}`}
+                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-app-success/25 text-emerald-400 cursor-default' : on ? 'border-app-success/15 text-emerald-400' : 'border-app-border/30 text-app-muted-foreground hover:bg-app-surface'}`}
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
-                                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-emerald-500 border-emerald-400' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
+                                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-app-success border-app-success' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
                                                 {isCash && <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
                                                 <span className="text-[9px] opacity-40">{a.type}</span>
@@ -369,11 +369,11 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                         const name = `${u.first_name} ${u.last_name}`.trim() || u.username
                                         return (
                                             <div key={u.id}
-                                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all text-[11px] ${on ? 'border-blue-500/20' : 'border-app-border/30 hover:bg-app-surface/30'}`}
+                                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all text-[11px] ${on ? 'border-app-info/20' : 'border-app-border/30 hover:bg-app-surface/30'}`}
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-info) 5%, transparent)' } : {}}>
                                                 {/* Toggle authorize */}
                                                 <button onClick={() => set('authorizedUserIds', toggleId(form.authorizedUserIds, u.id))}
-                                                    className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${on ? 'bg-blue-500 border-blue-400' : 'border-app-border hover:border-blue-400/50'}`}>
+                                                    className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${on ? 'bg-app-info border-app-info' : 'border-app-border hover:border-app-info/50'}`}>
                                                     {on && <Check size={10} className="text-white" />}
                                                 </button>
                                                 {/* Avatar */}
@@ -449,7 +449,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                     {isSet && <button onClick={() => { const r = { ...form.rulesOverride }; delete r[rule.key]; set('rulesOverride', r) }}
                                                         className="text-[8px] text-app-muted-foreground hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
                                                     <button onClick={() => set('rulesOverride', { ...form.rulesOverride, [rule.key]: !val })}
-                                                        className={`w-9 h-5 rounded-full relative transition-all ${isSet ? (val ? 'bg-amber-500' : 'bg-app-surface border border-app-border/50') : 'bg-app-surface border border-app-border/50 opacity-30'}`}>
+                                                        className={`w-9 h-5 rounded-full relative transition-all ${isSet ? (val ? 'bg-app-warning' : 'bg-app-surface border border-app-border/50') : 'bg-app-surface border border-app-border/50 opacity-30'}`}>
                                                         <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${val && isSet ? 'left-[18px]' : 'left-[3px]'}`} />
                                                     </button>
                                                 </div>

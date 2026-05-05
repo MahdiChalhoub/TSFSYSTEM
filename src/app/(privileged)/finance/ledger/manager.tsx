@@ -374,7 +374,7 @@ export default function LedgerManager({ initialEntries, lookups = EMPTY_LOOKUPS 
                 {selectedIds.size > 0 && (
                   <button onClick={() => setShowBulkDelete(true)}
                     disabled={isPending}
-                    className="flex items-center gap-1.5 text-tp-sm font-bold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50">
+                    className="flex items-center gap-1.5 text-tp-sm font-bold text-white bg-app-error hover:bg-app-error px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50">
                     <Trash2 size={13} />
                     <span>Delete {selectedIds.size}</span>
                   </button>

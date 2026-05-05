@@ -163,6 +163,15 @@ DATABASES = {
     }
 }
 
+# ── Cache Configuration (Redis) ─────────────────────────────────────────
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('CACHE_REDIS_URL', 'redis://redis:6379/2'),
+        'TIMEOUT': 300,  # 5 min default TTL
+        'KEY_PREFIX': 'tsf',
+    },
+}
 # SaaS Integration Settings
 X_TENANT_HEADER = 'HTTP_X_TENANT_ID'
 
@@ -239,6 +248,10 @@ SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
+# ── Session Backend (Redis for scale) ─────────────────────────────────
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -275,6 +288,31 @@ CELERY_ENABLE_UTC = True
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 300       # 5 min hard limit
 CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 min soft limit
+
+# ── Celery Queue Routing (Priority-based) ─────────────────────────────
+# Separate high-priority (sales, stock) from background (audit, email)
+# so POS checkout never waits behind a bulk report generation.
+CELERY_TASK_QUEUES = {
+    'default': {'exchange': 'default', 'routing_key': 'default'},
+    'critical': {'exchange': 'critical', 'routing_key': 'critical'},
+    'bulk': {'exchange': 'bulk', 'routing_key': 'bulk'},
+}
+
+CELERY_TASK_ROUTES = {
+    # Critical — real-time business operations
+    'erp.tasks.check_overdue_invoices': {'queue': 'critical'},
+    'erp.tasks.check_low_stock': {'queue': 'critical'},
+    'apps.workspace.tasks.check_stale_orders': {'queue': 'critical'},
+    # Bulk — heavy background work
+    'erp.tasks.warm_analytics_cache': {'queue': 'bulk'},
+    'erp.tasks.cleanup_old_audit_logs': {'queue': 'bulk'},
+    'erp.tasks.generate_daily_backup': {'queue': 'bulk'},
+    'erp.tasks.send_daily_digest': {'queue': 'bulk'},
+    'erp.tasks.send_ai_assistant_digest': {'queue': 'bulk'},
+    'apps.finance.tasks.run_close_chain_canary': {'queue': 'bulk'},
+}
+
+CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 # ── Celery Beat Schedule ──────────────────────────────────────
 from celery.schedules import crontab

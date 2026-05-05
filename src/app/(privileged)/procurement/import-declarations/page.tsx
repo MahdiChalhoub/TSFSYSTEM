@@ -65,7 +65,7 @@ function DeclRow({ item, onEdit, onDelete }: { item: Decl; onEdit: () => void; o
           <Edit2 size={12} />
         </button>
         <button onClick={e => { e.stopPropagation(); onDelete() }}
-          className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-red-500 transition-colors">
+          className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors">
           <Trash2 size={12} />
         </button>
       </div>

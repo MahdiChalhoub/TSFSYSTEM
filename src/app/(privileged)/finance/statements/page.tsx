@@ -272,7 +272,7 @@ export default function StatementsPage() {
                                     <TableRow key={c.id} className="hover:bg-app-surface/50">
                                         <TableCell className="font-medium">{c.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={c.type === 'CUSTOMER' ? 'text-app-info' : 'text-orange-600'}>
+                                            <Badge variant="outline" className={c.type === 'CUSTOMER' ? 'text-app-info' : 'text-app-warning'}>
                                                 {c.type}
                                             </Badge>
                                         </TableCell>

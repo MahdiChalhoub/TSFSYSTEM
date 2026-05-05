@@ -54,7 +54,7 @@ export default function MidnightWishlistPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-rose-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-error/5 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
@@ -77,7 +77,7 @@ export default function MidnightWishlistPage() {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-app-error border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : products.length === 0 ? (
                     <div className="py-24 text-center space-y-8 bg-slate-900/20 border border-white/5 rounded-[3.5rem]">
@@ -86,14 +86,14 @@ export default function MidnightWishlistPage() {
                         </div>
                         <h2 className="text-2xl font-black text-white italic">Vault is Empty</h2>
                         <p className="text-app-muted-foreground text-sm">Browse products and tap the heart icon to save them here.</p>
-                        <Link href={path('/')} className="inline-flex items-center gap-3 px-10 py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500 transition-all">
+                        <Link href={path('/')} className="inline-flex items-center gap-3 px-10 py-4 bg-app-error text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-error transition-all">
                             Explore Products <ChevronRight size={16} />
                         </Link>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {products.map(product => (
-                            <div key={product.id} className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-rose-500/20 transition-all">
+                            <div key={product.id} className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-app-error/20 transition-all">
                                 <div className="aspect-[4/5] bg-slate-950 relative overflow-hidden">
                                     {product.image_url ? (
                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
@@ -102,11 +102,11 @@ export default function MidnightWishlistPage() {
                                     )}
                                     <div className="absolute top-4 right-4 flex gap-2">
                                         <button onClick={() => toggleWishlist(product.id)}
-                                            className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
+                                            className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center text-rose-400 hover:bg-app-error hover:text-white transition-all">
                                             <Trash2 size={18} />
                                         </button>
                                         <Link href={path(`/product/${product.id}`)}
-                                            className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-emerald-500 transition-all">
+                                            className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-app-success transition-all">
                                             <ExternalLink size={18} />
                                         </Link>
                                     </div>
@@ -126,7 +126,7 @@ export default function MidnightWishlistPage() {
                                                 unit_price: product.selling_price_ttc, quantity: 1,
                                                 image_url: product.image_url, tax_rate: product.tax_rate || 0,
                                             })}
-                                            className="px-6 py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2">
+                                            className="px-6 py-3 bg-app-success text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-app-success transition-all flex items-center gap-2">
                                             <ShoppingCart size={14} /> Add
                                         </button>
                                     </div>

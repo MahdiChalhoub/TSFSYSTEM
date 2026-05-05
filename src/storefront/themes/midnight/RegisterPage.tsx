@@ -52,17 +52,17 @@ export default function MidnightRegisterPage() {
     if (success) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
-                <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none" />
+                <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-success/5 blur-[150px] rounded-full pointer-events-none" />
                 <div className="max-w-md w-full text-center space-y-10 relative z-10">
-                    <div className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-emerald-400 shadow-2xl shadow-emerald-500/20">
+                    <div className="w-24 h-24 bg-app-success/10 border border-app-success/20 rounded-[2rem] flex items-center justify-center mx-auto text-emerald-400 shadow-2xl shadow-emerald-500/20">
                         <CheckCircle2 size={48} />
                     </div>
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-black text-white italic tracking-tighter">Identity <span className="text-emerald-500">Created</span></h1>
+                        <h1 className="text-4xl font-black text-white italic tracking-tighter">Identity <span className="text-app-success">Created</span></h1>
                         <p className="text-app-muted-foreground text-sm leading-relaxed">Your account has been provisioned. Proceed to authentication.</p>
                     </div>
                     <Link href={path('/login')}
-                        className="inline-flex items-center gap-3 px-10 py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-500 shadow-xl shadow-emerald-900/30 transition-all">
+                        className="inline-flex items-center gap-3 px-10 py-5 bg-app-success text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-app-success shadow-xl shadow-emerald-900/30 transition-all">
                         Authorize Session
                     </Link>
                 </div>
@@ -73,7 +73,7 @@ export default function MidnightRegisterPage() {
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
             <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500/5 blur-[150px] rounded-full pointer-events-none" />
-            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none" />
+            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-success/5 blur-[150px] rounded-full pointer-events-none" />
 
             <div className="max-w-md w-full relative z-10">
                 <div className="text-center mb-12 space-y-4">
@@ -88,7 +88,7 @@ export default function MidnightRegisterPage() {
                     <div className="absolute top-0 right-0 p-6 text-purple-500/5"><Shield size={120} /></div>
 
                     {error && (
-                        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3 relative z-10">
+                        <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3 relative z-10">
                             <AlertCircle size={16} /> {error}
                         </div>
                     )}

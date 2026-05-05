@@ -83,20 +83,20 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                 >
                     <div className="flex items-center gap-2">
                         {isOfficial ? (
-                            <Eye size={16} className="text-emerald-600" />
+                            <Eye size={16} className="text-app-success" />
                         ) : (
-                            <Layers size={16} className="text-sky-600" />
+                            <Layers size={16} className="text-app-info" />
                         )}
-                        <h3 className="text-sm font-bold text-stone-800">{label}</h3>
+                        <h3 className="text-sm font-bold text-app-foreground">{label}</h3>
                     </div>
-                    <button onClick={onCancel} className="text-stone-400 hover:text-stone-600 p-1">
+                    <button onClick={onCancel} className="text-app-muted-foreground hover:text-app-muted-foreground p-1">
                         <X size={14} />
                     </button>
                 </div>
 
                 {/* Body */}
                 <div className="px-6 py-5 space-y-4">
-                    <p className="text-sm text-stone-600">
+                    <p className="text-sm text-app-muted-foreground">
                         {isOfficial
                             ? 'Enter your Viewer Password to access Official (declared) data only.'
                             : 'Enter your Full Access Password to access both Official and Internal scopes.'
@@ -111,21 +111,21 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                         placeholder="Enter password"
                         autoFocus
                         className="w-full px-4 py-3 text-center text-lg tracking-[0.3em] font-mono
-                            border-2 border-stone-200 rounded-lg
-                            focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                            border-2 border-app-border rounded-lg
+                            focus:outline-none focus:border-app-info focus:ring-2 focus:ring-indigo-200
                             placeholder:tracking-normal placeholder:text-sm placeholder:font-sans"
                     />
 
                     {/* Error */}
                     {error && (
-                        <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 px-3 py-2 rounded-lg">
+                        <div className="flex items-center gap-2 text-app-error text-xs bg-app-error-soft px-3 py-2 rounded-lg">
                             <ShieldAlert size={14} />
                             {error}
                         </div>
                     )}
 
                     {/* Info */}
-                    <div className="text-[11px] text-stone-400 bg-stone-50 px-3 py-2 rounded-lg">
+                    <div className="text-[11px] text-app-muted-foreground bg-stone-50 px-3 py-2 rounded-lg">
                         {isOfficial
                             ? '🔒 Official mode: You will only see declared/posted data. Internal data will be hidden.'
                             : '🔓 Full Access mode: You can toggle between Official and Internal views.'
@@ -136,7 +136,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                     <div className="flex gap-2">
                         <button
                             onClick={onCancel}
-                            className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-600 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors"
+                            className="flex-1 px-4 py-2.5 text-sm font-medium text-app-muted-foreground bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors"
                         >
                             Cancel
                         </button>

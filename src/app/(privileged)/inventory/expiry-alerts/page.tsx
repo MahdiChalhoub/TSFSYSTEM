@@ -196,7 +196,7 @@ export default function ExpiryAlertsPage() {
 
                 {/* Expired */}
                 <Card
-                    className={`cursor-pointer transition-all border-l-4 border-l-red-500 ${activeFilter === 'EXPIRED' ? 'ring-2 ring-red-500' : 'hover:shadow-md'}`}
+                    className={`cursor-pointer transition-all border-l-4 border-l-red-500 ${activeFilter === 'EXPIRED' ? 'ring-2 ring-app-error' : 'hover:shadow-md'}`}
                     onClick={() => handleFilter('EXPIRED')}
                 >
                     <CardContent className="py-4 text-center">
@@ -212,9 +212,9 @@ export default function ExpiryAlertsPage() {
                     onClick={() => handleFilter('CRITICAL')}
                 >
                     <CardContent className="py-4 text-center">
-                        <AlertTriangle size={24} className="mx-auto mb-2 text-orange-500" />
+                        <AlertTriangle size={24} className="mx-auto mb-2 text-app-warning" />
                         <p className="text-3xl font-bold text-app-warning">{stats.critical}</p>
-                        <p className="text-xs text-orange-500 uppercase font-medium">Critical</p>
+                        <p className="text-xs text-app-warning uppercase font-medium">Critical</p>
                     </CardContent>
                 </Card>
 

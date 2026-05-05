@@ -25,7 +25,7 @@ const EVENT_CONFIG: Record<string, {
  },
  GLOBAL_DISCOUNT: {
  label: 'Global Discount',
- icon: <AlertOctagon size={15} className="text-orange-500" />,
+ icon: <AlertOctagon size={15} className="text-app-warning" />,
  badge: 'bg-app-warning-bg text-app-warning border-app-warning',
  row: 'border-l-2 border-l-orange-400',
  },

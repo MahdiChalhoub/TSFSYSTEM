@@ -204,7 +204,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
                                         onClick={() => updateLevel(idx, 'priceMode', 'FIXED')}
                                         className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[9px] font-bold transition-all
                                             ${lvl.priceMode === 'FIXED'
-                                                ? 'bg-amber-500/10 text-app-warning border border-app-warning'
+                                                ? 'bg-app-warning/10 text-app-warning border border-app-warning'
                                                 : 'bg-transparent text-app-muted-foreground hover:text-app-foreground border border-transparent'
                                             }`}
                                     >

@@ -211,7 +211,7 @@ export default function ContactModal({
                         <button
                             type="submit"
                             disabled={isPending}
-                            className={`flex-[2] text-white px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-app-info shadow-blue-200 hover:bg-blue-700' : 'bg-app-warning shadow-amber-200 hover:bg-app-warning'} hover:-translate-y-1 active:translate-y-0`}
+                            className={`flex-[2] text-white px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-app-info shadow-blue-200 hover:bg-app-info' : 'bg-app-warning shadow-amber-200 hover:bg-app-warning'} hover:-translate-y-1 active:translate-y-0`}
                         >
                             {isPending ? 'Establishing Sub-Ledger...' : `Establish ${type}`}
                         </button>

@@ -302,7 +302,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div className="h-4 bg-app-surface-2 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all ${utilizationRate > 100 ? 'bg-app-error' : utilizationRate > 80 ? 'bg-orange-500' : 'bg-app-success'}`}
+                    className={`h-full transition-all ${utilizationRate > 100 ? 'bg-app-error' : utilizationRate > 80 ? 'bg-app-warning' : 'bg-app-success'}`}
                     style={{ width: `${Math.min(utilizationRate, 100)}%` }}
                   />
                 </div>
@@ -382,7 +382,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
                   <Badge className="bg-app-error/10 text-app-error">
                     {alerts?.critical_count || 0} Critical
                   </Badge>
-                  <Badge className="bg-orange-100 text-orange-700">
+                  <Badge className="bg-app-warning-soft text-app-warning">
                     {alerts?.warning_count || 0} Warning
                   </Badge>
                 </div>
@@ -395,12 +395,12 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
                   {alerts.alerts.map((alert: any, idx: number) => (
                     <div
                       key={idx}
-                      className={`flex items-center justify-between p-4 rounded-xl border-2 ${alert.severity === 'CRITICAL' ? 'bg-app-error/5 border-app-error/20' : 'bg-orange-50 border-orange-200'}`}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 ${alert.severity === 'CRITICAL' ? 'bg-app-error/5 border-app-error/20' : 'bg-app-warning-soft border-app-warning'}`}
                     >
                       <div className="flex items-center gap-3">
                         <AlertTriangle
                           size={20}
-                          className={alert.severity === 'CRITICAL' ? 'text-app-error' : 'text-orange-600'}
+                          className={alert.severity === 'CRITICAL' ? 'text-app-error' : 'text-app-warning'}
                         />
                         <div>
                           <p className="font-bold text-sm">{alert.account_name}</p>
@@ -410,7 +410,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge className={alert.severity === 'CRITICAL' ? 'bg-app-error text-white' : 'bg-orange-600 text-white'}>
+                        <Badge className={alert.severity === 'CRITICAL' ? 'bg-app-error text-white' : 'bg-app-warning text-white'}>
                           +{parseFloat(alert.over_budget_percentage).toFixed(1)}% Over
                         </Badge>
                         <p className="text-xs text-app-muted-foreground mt-1">

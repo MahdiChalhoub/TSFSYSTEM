@@ -51,8 +51,8 @@ function ModuleIcon({ name, size = 24, className = '' }: { name: string; size?: 
    Plan badge
 ───────────────────────────────────────────── */
 const PLAN_STYLES: Record<string, { label: string; cls: string }> = {
-    starter: { label: 'Starter', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-    business: { label: 'Business', cls: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+    starter: { label: 'Starter', cls: 'bg-app-success/15 text-emerald-400 border-app-success/30' },
+    business: { label: 'Business', cls: 'bg-app-info/15 text-blue-400 border-app-info/30' },
     enterprise: { label: 'Enterprise', cls: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
 }
 
@@ -111,7 +111,7 @@ function ModuleCard({
             {/* State ribbon */}
             {isEnabled && !mod.is_core && (
                 <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest
-          px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+          px-2 py-0.5 rounded-full bg-app-success/15 text-emerald-400 border border-app-success/30">
                     ✓ Installed
                 </span>
             )}
@@ -125,7 +125,7 @@ function ModuleCard({
             {/* Icon */}
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-colors
         ${isEnabled
-                    ? 'bg-emerald-500/15 border border-emerald-500/30'
+                    ? 'bg-app-success/15 border border-app-success/30'
                     : isLocked
                         ? 'bg-app-muted/10 border border-app-border/30'
                         : 'bg-app-primary/10 border border-app-primary/20'
@@ -175,7 +175,7 @@ function ModuleCard({
                         : isLocked
                             ? 'bg-app-muted/10 text-app-muted-foreground cursor-not-allowed border border-app-border/20'
                             : isEnabled
-                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
+                                ? 'bg-app-error/10 text-rose-400 border border-app-error/20 hover:bg-app-error/20'
                                 : 'bg-app-primary/15 text-app-primary border border-app-primary/30 hover:bg-app-primary/25'
                     } disabled:opacity-50`}
             >
@@ -241,7 +241,7 @@ function DetailPanel({
                     <div className="flex items-center gap-2">
                         <PlanBadge plan={mod.plan_required} />
                         {isEnabled && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-app-success/15 text-emerald-400 border border-app-success/30">
                                 ✓ Installed
                             </span>
                         )}
@@ -313,7 +313,7 @@ function DetailPanel({
                                 onClick={() => onAction(mod.code, 'disable')}
                                 disabled={loading}
                                 className="w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2
-                  bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+                  bg-app-error/10 text-rose-400 border border-app-error/20 hover:bg-app-error/20 transition-all"
                             >
                                 {loading ? <RefreshCw size={16} className="animate-spin" /> : 'Disable Module'}
                             </button>
@@ -424,7 +424,7 @@ export default function MarketplacePage() {
 
                 {/* KPI strip */}
                 <div className="flex items-center gap-3">
-                    <div className="rounded-2xl px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <div className="rounded-2xl px-4 py-2 bg-app-success/10 border border-app-success/20 text-center">
                         <p className="text-xl font-black text-emerald-400">{enabledCount}</p>
                         <p className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest">Installed</p>
                     </div>
@@ -479,7 +479,7 @@ export default function MarketplacePage() {
                 </div>
             ) : error ? (
                 <div className="text-center py-20">
-                    <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-app-error/10 border border-app-error/20 flex items-center justify-center mx-auto mb-4">
                         <Package size={28} className="text-rose-400" />
                     </div>
                     <p className="text-rose-400 font-bold">{error}</p>
@@ -520,8 +520,8 @@ export default function MarketplacePage() {
                 <div className={`fixed bottom-6 right-6 z-[100] px-5 py-3 rounded-2xl font-bold text-sm shadow-xl
           animate-in slide-in-from-bottom duration-300 flex items-center gap-2
           ${toast.type === 'success'
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        ? 'bg-app-success/20 text-emerald-300 border border-app-success/30'
+                        : 'bg-app-error/20 text-rose-300 border border-app-error/30'
                     }`}>
                     {toast.type === 'success' ? <Check size={16} /> : <X size={16} />}
                     {toast.msg}

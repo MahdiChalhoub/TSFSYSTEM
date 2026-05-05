@@ -145,6 +145,228 @@ const RULES = [
         replace: 'bg-app-primary',
         label: 'gradient: bg-app-gradient-accent → bg-app-primary',
     },
+
+    // ────────────────────────────────────────────────────────────────
+    // 4) PALETTE → APP-SEMANTIC mappings.
+    //
+    // Tailwind utilities like `bg-app-info`, `text-app-success`,
+    // `bg-app-warning-soft`, etc. are defined in src/app/globals.css.
+    // We can safely rename mid-range palette colors to the semantic
+    // equivalent — the visual intent is the same and the theme engine
+    // wires the actual color through CSS variables.
+    //
+    // RULE OF THUMB:
+    //  - text-{color}-500/600/700/800 are mid/dark text → semantic text-
+    //  - text-gray/slate/zinc/neutral-500/600/700 = muted body text
+    //  - text-gray/slate/zinc/neutral-900/800 = primary foreground
+    //  - border-{color}-200/300/400 = light borders → semantic borders
+    //  - border-gray/slate/zinc-200/300 = neutral borders → border-app-border
+    //
+    // NOT touched (need human judgement):
+    //  - bg-{color}-* (opacity / intensity matters for readability)
+    //  - text-{color}-50/100 (almost-white text, rare and intentional)
+    //  - 950 shade (too dark, may be intentional contrast)
+    // ────────────────────────────────────────────────────────────────
+
+    // ── Semantic text colors ──
+    {
+        pattern: /\btext-(?:blue|sky|cyan|indigo)-(?:500|600|700|800)\b/g,
+        replace: 'text-app-info',
+        label: 'palette text → text-app-info',
+    },
+    {
+        pattern: /\btext-(?:green|emerald|teal|lime)-(?:500|600|700|800)\b/g,
+        replace: 'text-app-success',
+        label: 'palette text → text-app-success',
+    },
+    {
+        pattern: /\btext-(?:red|rose|pink|fuchsia)-(?:500|600|700|800)\b/g,
+        replace: 'text-app-error',
+        label: 'palette text → text-app-error',
+    },
+    {
+        pattern: /\btext-(?:amber|yellow|orange)-(?:500|600|700|800)\b/g,
+        replace: 'text-app-warning',
+        label: 'palette text → text-app-warning',
+    },
+    // ── Neutral text ──
+    {
+        pattern: /\btext-(?:gray|slate|zinc|neutral|stone)-(?:400|500|600|700)\b/g,
+        replace: 'text-app-muted-foreground',
+        label: 'palette text → text-app-muted-foreground',
+    },
+    {
+        pattern: /\btext-(?:gray|slate|zinc|neutral|stone)-(?:800|900)\b/g,
+        replace: 'text-app-foreground',
+        label: 'palette text → text-app-foreground',
+    },
+
+    // ── Semantic borders ──
+    {
+        pattern: /\bborder-(?:blue|sky|cyan|indigo)-(?:200|300|400|500)\b/g,
+        replace: 'border-app-info',
+        label: 'palette border → border-app-info',
+    },
+    {
+        pattern: /\bborder-(?:green|emerald|teal|lime)-(?:200|300|400|500)\b/g,
+        replace: 'border-app-success',
+        label: 'palette border → border-app-success',
+    },
+    {
+        pattern: /\bborder-(?:red|rose|pink|fuchsia)-(?:200|300|400|500)\b/g,
+        replace: 'border-app-error',
+        label: 'palette border → border-app-error',
+    },
+    {
+        pattern: /\bborder-(?:amber|yellow|orange)-(?:200|300|400|500)\b/g,
+        replace: 'border-app-warning',
+        label: 'palette border → border-app-warning',
+    },
+    {
+        pattern: /\bborder-(?:gray|slate|zinc|neutral|stone)-(?:100|200|300|400)\b/g,
+        replace: 'border-app-border',
+        label: 'palette border → border-app-border',
+    },
+
+    // ── Soft tint backgrounds (only the well-defined small shades) ──
+    // Mapping the lightest tints (50, 100) — these are universally
+    // status badge backgrounds and the "-soft" variants in globals.css
+    // are designed exactly for this.
+    {
+        pattern: /\bbg-(?:blue|sky|cyan|indigo)-(?:50|100)\b/g,
+        replace: 'bg-app-info-soft',
+        label: 'palette bg tint → bg-app-info-soft',
+    },
+    {
+        pattern: /\bbg-(?:green|emerald|teal|lime)-(?:50|100)\b/g,
+        replace: 'bg-app-success-soft',
+        label: 'palette bg tint → bg-app-success-soft',
+    },
+    {
+        pattern: /\bbg-(?:red|rose|pink|fuchsia)-(?:50|100)\b/g,
+        replace: 'bg-app-error-soft',
+        label: 'palette bg tint → bg-app-error-soft',
+    },
+    {
+        pattern: /\bbg-(?:amber|yellow|orange)-(?:50|100)\b/g,
+        replace: 'bg-app-warning-soft',
+        label: 'palette bg tint → bg-app-warning-soft',
+    },
+
+    // ────────────────────────────────────────────────────────────────
+    // 5) WAVE 3: extra shades + extra utilities.
+    // The first wave only covered text-/border-/bg- 500/600/700/200/300/400.
+    // Wave 3 picks up the long tail:
+    //   - shades 100/200/300/400 for text (light text on dark bgs)
+    //   - solid bg-{color}-500/600/700 → bg-app-{semantic}
+    //   - bg-{color}-500/N opacity modifier preserved → bg-app-{semantic}/N
+    //   - divide-{color}-* → divide-app-* (mostly grays for table dividers)
+    //   - ring-{color}-* → ring-app-{semantic}
+    // ────────────────────────────────────────────────────────────────
+
+    // ── Solid semantic backgrounds (no opacity) ──
+    {
+        pattern: /\bbg-(?:blue|sky|cyan|indigo)-(?:500|600|700)\b(?!\/)/g,
+        replace: 'bg-app-info',
+        label: 'palette bg solid → bg-app-info',
+    },
+    {
+        pattern: /\bbg-(?:green|emerald|teal|lime)-(?:500|600|700)\b(?!\/)/g,
+        replace: 'bg-app-success',
+        label: 'palette bg solid → bg-app-success',
+    },
+    {
+        pattern: /\bbg-(?:red|rose|pink|fuchsia)-(?:500|600|700)\b(?!\/)/g,
+        replace: 'bg-app-error',
+        label: 'palette bg solid → bg-app-error',
+    },
+    {
+        pattern: /\bbg-(?:amber|yellow|orange)-(?:500|600|700)\b(?!\/)/g,
+        replace: 'bg-app-warning',
+        label: 'palette bg solid → bg-app-warning',
+    },
+
+    // ── bg with opacity modifier — preserve the /N suffix ──
+    // `bg-emerald-500/10` → `bg-app-success/10` works because Tailwind's
+    // arbitrary-opacity syntax applies to any `bg-app-*` utility built
+    // from a CSS variable with proper alpha-channel definition.
+    {
+        pattern: /\bbg-(?:blue|sky|cyan|indigo)-(?:500|600|700)(\/\d+)\b/g,
+        replace: 'bg-app-info$1',
+        label: 'palette bg w/opacity → bg-app-info/N',
+    },
+    {
+        pattern: /\bbg-(?:green|emerald|teal|lime)-(?:500|600|700)(\/\d+)\b/g,
+        replace: 'bg-app-success$1',
+        label: 'palette bg w/opacity → bg-app-success/N',
+    },
+    {
+        pattern: /\bbg-(?:red|rose|pink|fuchsia)-(?:500|600|700)(\/\d+)\b/g,
+        replace: 'bg-app-error$1',
+        label: 'palette bg w/opacity → bg-app-error/N',
+    },
+    {
+        pattern: /\bbg-(?:amber|yellow|orange)-(?:500|600|700)(\/\d+)\b/g,
+        replace: 'bg-app-warning$1',
+        label: 'palette bg w/opacity → bg-app-warning/N',
+    },
+
+    // ── Divide colors (table row separators) ──
+    // Grays/slates → border token (no separate divide token in this design system).
+    {
+        pattern: /\bdivide-(?:gray|slate|zinc|neutral|stone)-(?:50|100|200|300)\b/g,
+        replace: 'divide-app-border',
+        label: 'palette divide → divide-app-border',
+    },
+    // Semantic divides (rare but exist for status row groups).
+    {
+        pattern: /\bdivide-(?:blue|sky|cyan|indigo)-(?:200|300|400)\b/g,
+        replace: 'divide-app-info',
+        label: 'palette divide → divide-app-info',
+    },
+    {
+        pattern: /\bdivide-(?:green|emerald|teal|lime)-(?:200|300|400)\b/g,
+        replace: 'divide-app-success',
+        label: 'palette divide → divide-app-success',
+    },
+    {
+        pattern: /\bdivide-(?:red|rose|pink|fuchsia)-(?:200|300|400)\b/g,
+        replace: 'divide-app-error',
+        label: 'palette divide → divide-app-error',
+    },
+
+    // ── Ring colors (focus outlines) ──
+    {
+        pattern: /\bring-(?:blue|sky|cyan|indigo)-(?:300|400|500|600)\b/g,
+        replace: 'ring-app-info',
+        label: 'palette ring → ring-app-info',
+    },
+    {
+        pattern: /\bring-(?:red|rose|pink|fuchsia)-(?:300|400|500|600)\b/g,
+        replace: 'ring-app-error',
+        label: 'palette ring → ring-app-error',
+    },
+    {
+        pattern: /\bring-(?:gray|slate|zinc|neutral|stone)-(?:200|300|400)\b/g,
+        replace: 'ring-app-border',
+        label: 'palette ring → ring-app-border',
+    },
+
+    // ── Text shades 300/400 (slightly muted body text) ──
+    // Skip 50/100/200 — those are nearly-white text on dark surfaces,
+    // intentionally chosen for legibility. Don't auto-swap.
+    {
+        pattern: /\btext-(?:gray|slate|zinc|neutral|stone)-(?:300|400)\b/g,
+        replace: 'text-app-muted-foreground',
+        label: 'palette text-300/400 → text-app-muted-foreground',
+    },
+
+    // ── Border shades 100 ──
+    {
+        pattern: /\bborder-(?:gray|slate|zinc|neutral|stone)-(?:50|100)\b/g,
+        replace: 'border-app-border',
+        label: 'palette border-50/100 → border-app-border',
+    },
 ]
 
 const IGNORE_PATH_FRAGMENTS = [
@@ -182,14 +404,54 @@ for await (const file of walk(srcDir)) {
     let text = await fs.readFile(file, 'utf8')
     let changedThisFile = false
 
-    for (const rule of RULES) {
-        // Match-count first so we know what changed (replace() doesn't
-        // tell us how many it replaced).
-        const matches = text.match(rule.pattern)
-        if (matches) {
-            counts.set(rule.label, (counts.get(rule.label) || 0) + matches.length)
-            text = text.replace(rule.pattern, rule.replace)
-            changedThisFile = true
+    // Skip lines that are clearly documentation listing forbidden tokens
+    // by name. Without this the codemod inverts every "do not use X"
+    // comment into "do not use ${canonical name of X}", which is
+    // confusing and wrong. Two opt-out signals:
+    //   - line contains `codemod-skip` directive
+    //   - line is a JSDoc/comment that names a forbidden token in
+    //     prose ("no `bg-purple-500`", "do not use text-gray-900", etc.)
+    const protectedLines = new Set()
+    text.split('\n').forEach((line, idx) => {
+        if (line.includes('codemod-skip')) {
+            protectedLines.add(idx)
+            return
+        }
+        // JSDoc/comment line that mentions a forbidden token by name —
+        // detect by leading `*` or `//` plus presence of "no ", "don't",
+        // "forbidden", "avoid", etc. near a Tailwind-shaped token.
+        const trimmed = line.trim()
+        const isComment = trimmed.startsWith('*') || trimmed.startsWith('//')
+        if (isComment && /\b(no |don'?t|never|forbidden|avoid|legacy|old\s+style)\b.*\b(text-|bg-|border-|theme-|--app-)/i.test(line)) {
+            protectedLines.add(idx)
+        }
+    })
+
+    if (protectedLines.size > 0) {
+        // Per-line apply so we can skip protected lines. Slower but
+        // correct on the few files that have annotated docstrings.
+        const lines = text.split('\n')
+        for (let i = 0; i < lines.length; i++) {
+            if (protectedLines.has(i)) continue
+            for (const rule of RULES) {
+                const matches = lines[i].match(rule.pattern)
+                if (matches) {
+                    counts.set(rule.label, (counts.get(rule.label) || 0) + matches.length)
+                    lines[i] = lines[i].replace(rule.pattern, rule.replace)
+                    changedThisFile = true
+                }
+            }
+        }
+        if (changedThisFile) text = lines.join('\n')
+    } else {
+        // Fast path — full-file replace when no comments need protection.
+        for (const rule of RULES) {
+            const matches = text.match(rule.pattern)
+            if (matches) {
+                counts.set(rule.label, (counts.get(rule.label) || 0) + matches.length)
+                text = text.replace(rule.pattern, rule.replace)
+                changedThisFile = true
+            }
         }
     }
 

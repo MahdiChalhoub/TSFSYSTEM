@@ -111,7 +111,7 @@ export default function SupplierPortalPage() {
                 {/* Form */}
                 <div className="p-10 bg-slate-900/50 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
+                        <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
                             <AlertCircle size={18} className="shrink-0" /> {error}
                         </div>
                     )}
@@ -123,7 +123,7 @@ export default function SupplierPortalPage() {
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-faint"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-app-info/5 placeholder:text-app-faint"
                         />
                         <input
                             type="password"
@@ -131,7 +131,7 @@ export default function SupplierPortalPage() {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
-                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-faint"
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-app-accent transition-all focus:ring-4 focus:ring-app-info/5 placeholder:text-app-faint"
                         />
                         <button type="submit" disabled={loading}
                             className="w-full bg-app-accent hover:bg-app-accent text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
@@ -211,7 +211,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                             <p className="text-app-muted-foreground text-[11px]">{session.user.email}</p>
                         </div>
                         <button onClick={onLogout}
-                            className="w-12 h-12 bg-app-surface/5 border border-white/10 rounded-xl flex items-center justify-center text-app-error hover:bg-red-500/10 transition-all">
+                            className="w-12 h-12 bg-app-surface/5 border border-white/10 rounded-xl flex items-center justify-center text-app-error hover:bg-app-error/10 transition-all">
                             <LogOut size={18} />
                         </button>
                     </div>

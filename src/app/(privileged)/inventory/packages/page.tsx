@@ -1,5 +1,6 @@
 import { erpFetch } from '@/lib/erp-api'
-import PackagesClient from './PackagesClient'
+import { PackagesGateway } from './PackagesGateway'
+import { getUser } from '@/app/actions/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,13 +24,14 @@ export default async function PackagesPage() {
     // Fetching *all* attributes (root + child) lets the Links tab render
     // the Value picker as a dropdown of the chosen attribute's children,
     // instead of a free-text input.
-    const [templates, units, categories, brands, attributesRoot, attributesAll] = await Promise.all([
+    const [templates, units, categories, brands, attributesRoot, attributesAll, currentUser] = await Promise.all([
         safeLoad('unit-packages/'),
         safeLoad('units/'),
         safeLoad('categories/'),
         safeLoad('brands/'),
         safeLoad('product-attributes/?parent=null'),
         safeLoad('product-attributes/'),
+        getUser(),
     ])
 
     const loadErrors: Record<string, string> = {}
@@ -52,7 +54,7 @@ export default async function PackagesPage() {
     }
 
     return (
-        <PackagesClient
+        <PackagesGateway
             initialTemplates={templates.ok ? templates.data : []}
             units={units.ok ? units.data : []}
             categories={categories.ok ? categories.data : []}
@@ -60,6 +62,7 @@ export default async function PackagesPage() {
             attributes={attributesRoot.ok ? attributesRoot.data : []}
             attributeValuesByParent={attributeValuesByParent}
             loadErrors={loadErrors}
+            currentUser={currentUser}
         />
     )
 }

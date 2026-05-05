@@ -240,9 +240,9 @@ export default function AttributesClientPage() {
                                                             ? <span className="text-[9px] font-bold uppercase tracking-wider bg-app-success/10 text-app-success px-1.5 py-0.5 rounded">📦 Variant</span>
                                                             : <span className="text-[9px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-500 px-1.5 py-0.5 rounded">🏷️ Tag</span>
                                                         }
-                                                        {group.show_in_name && <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-app-warning px-1.5 py-0.5 rounded" title={`Position: ${group.name_position}`}>📝 In Name{group.short_label ? ` (${group.short_label})` : ''}</span>}
-                                                        {group.is_required && <span className="text-[9px] font-bold uppercase tracking-wider bg-red-500/10 text-app-error px-1.5 py-0.5 rounded">⭐ Required</span>}
-                                                        {group.requires_barcode && <span className="text-[9px] font-bold uppercase tracking-wider bg-orange-500/10 text-app-warning px-1.5 py-0.5 rounded">🔖 Barcode</span>}
+                                                        {group.show_in_name && <span className="text-[9px] font-bold uppercase tracking-wider bg-app-warning/10 text-app-warning px-1.5 py-0.5 rounded" title={`Position: ${group.name_position}`}>📝 In Name{group.short_label ? ` (${group.short_label})` : ''}</span>}
+                                                        {group.is_required && <span className="text-[9px] font-bold uppercase tracking-wider bg-app-error/10 text-app-error px-1.5 py-0.5 rounded">⭐ Required</span>}
+                                                        {group.requires_barcode && <span className="text-[9px] font-bold uppercase tracking-wider bg-app-warning/10 text-app-warning px-1.5 py-0.5 rounded">🔖 Barcode</span>}
                                                         {!group.show_by_default && <span className="text-[9px] font-bold uppercase tracking-wider bg-app-muted-foreground/10 text-app-muted-foreground px-1.5 py-0.5 rounded">Hidden by default</span>}
                                                         {group.linked_categories?.length > 0 && <span className="text-[9px] font-bold text-app-muted-foreground">{group.linked_categories.length} categories</span>}
                                                         {group.linked_brands?.length > 0 && <span className="text-[9px] font-bold text-purple-500">{group.linked_brands.length} brands</span>}
@@ -253,7 +253,7 @@ export default function AttributesClientPage() {
                                                     <button onClick={e => { e.stopPropagation(); setLinkingCategoryFor(group.id) }} className="p-1.5 hover:bg-app-border/50 rounded-lg" title="Link categories"><Link2 size={12} /></button>
                                                     <button onClick={e => { e.stopPropagation(); setAddingValueTo(group.id); toggleExpand(group.id) }} className="p-1.5 hover:bg-app-border/50 rounded-lg"><Plus size={12} /></button>
                                                     <button onClick={e => { e.stopPropagation(); setEditingItem({ id: group.id, parentId: null }) }} className="p-1.5 hover:bg-app-border/50 rounded-lg"><Pencil size={12} /></button>
-                                                    <button onClick={e => { e.stopPropagation(); handleDeleteGroup(group.id) }} className="p-1.5 hover:bg-red-500/10 rounded-lg text-app-error"><Trash2 size={12} /></button>
+                                                    <button onClick={e => { e.stopPropagation(); handleDeleteGroup(group.id) }} className="p-1.5 hover:bg-app-error/10 rounded-lg text-app-error"><Trash2 size={12} /></button>
                                                 </div>
                                             </div>
                                             {expanded.has(group.id) && (
@@ -264,7 +264,7 @@ export default function AttributesClientPage() {
                                                             <div className="flex-1 font-medium text-[13px]">{child.name}</div>
                                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                                                                 <button onClick={() => setEditingItem({ id: child.id, parentId: group.id })} className="p-1.5 hover:bg-app-border/50 rounded-lg"><Pencil size={12} /></button>
-                                                                <button onClick={() => handleDeleteValue(child.id)} className="p-1.5 hover:bg-red-500/10 rounded-lg text-app-error"><Trash2 size={12} /></button>
+                                                                <button onClick={() => handleDeleteValue(child.id)} className="p-1.5 hover:bg-app-error/10 rounded-lg text-app-error"><Trash2 size={12} /></button>
                                                             </div>
                                                         </div>
                                                     ))}

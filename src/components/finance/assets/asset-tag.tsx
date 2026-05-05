@@ -32,8 +32,8 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  {/* Left: Metadata */}
  <div className="flex-1 flex flex-col justify-between pr-3 border-r-2 border-dashed border-app-border">
  <div className="flex items-center gap-1.5 mb-1">
- <div className="p-1 bg-indigo-50 rounded-lg">
- <ShieldCheck size={14} className="text-indigo-600" />
+ <div className="p-1 bg-app-info-soft rounded-lg">
+ <ShieldCheck size={14} className="text-app-info" />
  </div>
  <span className="text-[10px] font-black text-app-foreground uppercase tracking-tighter truncate">
  {asset.category || 'ASSET'} ID: {asset.id}
@@ -51,7 +51,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
 
  <div className="flex items-end justify-between mt-1">
  <div className="flex items-center gap-1">
- <Package size={10} className="text-stone-300" />
+ <Package size={10} className="text-app-muted-foreground" />
  <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest">TSFSYSTEM</span>
  </div>
  </div>

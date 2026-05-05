@@ -18,24 +18,28 @@ interface ProductColumnsProps {
   product: Product
   vc: Record<string, boolean>
   columnOrder: string[]
-  marginPct: string
+  /** Deprecated — margin is now computed inside `renderCell`'s `case 'margin'`
+   *  on demand, so callers no longer need to pre-compute it. Kept on the
+   *  prop type so existing callers (ProductRow) still type-check during the
+   *  transition. Remove after a sweep of `<ProductColumns marginPct=…>`. */
+  marginPct?: string
 }
 
-/** Render a single column cell by key */
-function renderCell(key: string, product: Product, marginPct: string): React.ReactNode {
-  const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
-  const sc = STATUS_CONFIG[product.status] || STATUS_CONFIG.ACTIVE
-  const qty = product.on_hand_qty ?? 0
-  const isLow = qty > 0 && qty < (product.min_stock_level || 5)
-
+/** Render a single column cell by key.
+ *  Cell-local computations (type/status config lookup, stock tier flag) only
+ *  fire when the matching `case` actually needs them, so cells that don't use
+ *  those values pay zero cost. */
+function renderCell(key: string, product: Product): React.ReactNode {
   switch (key) {
-    case 'type':
+    case 'type': {
+      const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
       return (
         <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
           style={{ color: tc.color, background: `color-mix(in srgb, ${tc.color} 10%, transparent)` }}>
           {tc.label}
         </span>
       )
+    }
     case 'category': return <span className="text-[11px] text-app-foreground truncate">{product.category_name || '—'}</span>
     case 'brand': return <span className="text-[11px] text-app-muted-foreground truncate">{product.brand_name || '—'}</span>
     case 'barcode': return <span className="text-[10px] font-mono text-app-muted-foreground truncate">{product.barcode || '—'}</span>
@@ -50,14 +54,22 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
     case 'price': return <span className="text-[12px] font-mono font-bold tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{fmt(product.selling_price_ttc)}</span>
     case 'sellingHt': return <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{fmt(product.selling_price_ht)}</span>
     case 'tva': return <span className="text-[10px] font-mono text-app-muted-foreground">{product.tva_rate ? `${product.tva_rate}%` : '—'}</span>
-    case 'margin': return <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--app-warning, #f59e0b)' }}>{marginPct !== '—' ? `${marginPct}%` : '—'}</span>
-    case 'stock':
+    case 'margin': {
+      const sellHt = parseFloat(product.selling_price_ht) || 0
+      const costP = parseFloat(product.cost_price) || 0
+      const marginPct = sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—'
+      return <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--app-warning, #f59e0b)' }}>{marginPct !== '—' ? `${marginPct}%` : '—'}</span>
+    }
+    case 'stock': {
+      const qty = product.on_hand_qty ?? 0
+      const isLow = qty > 0 && qty < (product.min_stock_level || 5)
       return (
         <span className="text-[12px] font-bold tabular-nums"
           style={{ color: qty <= 0 ? 'var(--app-error, #ef4444)' : isLow ? 'var(--app-warning, #f59e0b)' : 'var(--app-foreground)' }}>
           {fmt(qty)}
         </span>
       )
+    }
     case 'available': return <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--app-success, #22c55e)' }}>{fmt(product.available_qty)}</span>
     case 'reserved': return <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--app-warning, #f59e0b)' }}>{fmt(product.reserved_qty)}</span>
     case 'incoming': return <span className="text-[11px] font-mono tabular-nums text-app-foreground">{fmt(product.incoming_transfer_qty)}</span>
@@ -66,14 +78,18 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
     case 'maxStock': return <span className="text-[10px] font-mono text-app-muted-foreground">{product.max_stock_level ?? '—'}</span>
     case 'reorderPoint': return <span className="text-[10px] font-mono text-app-muted-foreground">{product.reorder_point ?? '—'}</span>
     case 'reorderQty': return <span className="text-[10px] font-mono text-app-muted-foreground">{product.reorder_quantity ?? '—'}</span>
-    case 'status':
+    case 'status': {
+      const sc = STATUS_CONFIG[product.status] || STATUS_CONFIG.ACTIVE
       return (
         <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded"
           style={{ color: sc.color, background: `color-mix(in srgb, ${sc.color} 10%, transparent)` }}>
           {sc.label}
         </span>
       )
+    }
     case 'procurement': {
+      const qty = product.on_hand_qty ?? 0
+      const isLow = qty > 0 && qty < (product.min_stock_level || 5)
       const ps = PIPELINE_STATUS_CONFIG[product.pipeline_status as string] || PIPELINE_STATUS_CONFIG.NONE
       const tier = qty <= 0 ? 'OUT' : isLow ? 'LOW' : null
       const tierLabel = tier === 'OUT' ? 'Out of Stock' : tier === 'LOW' ? 'Low Stock' : null
@@ -125,15 +141,15 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
   }
 }
 
-/** Public API: render a product column cell (auto-calculates margin) */
+/** Public API: render a product column cell.
+ *  Cell-local computations (margin, status config, stock tier) live inside
+ *  the matching `case` so they only fire for the cell that needs them —
+ *  cells that don't need them pay zero cost. */
 export function renderProductCell(key: string, product: Product): React.ReactNode {
-  const sellHt = parseFloat(product.selling_price_ht) || 0
-  const costP = parseFloat(product.cost_price) || 0
-  const marginPct = sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—'
-  return renderCell(key, product, marginPct)
+  return renderCell(key, product)
 }
 
-export const ProductColumns = React.memo(function ProductColumns({ product, vc, columnOrder, marginPct }: ProductColumnsProps) {
+export const ProductColumns = React.memo(function ProductColumns({ product, vc, columnOrder }: ProductColumnsProps) {
   // Derive ordered column defs from columnOrder
   const orderedCols = useMemo(() => {
     const colMap = new Map(ALL_COLUMNS.map(c => [c.key, c]))
@@ -158,7 +174,7 @@ export const ProductColumns = React.memo(function ProductColumns({ product, vc, 
         const align = RIGHT_ALIGNED_COLS.has(col.key) ? ' text-right' : CENTER_ALIGNED_COLS.has(col.key) ? ' text-center' : ''
         return (
           <div key={col.key} className={`${w} flex-shrink-0${align}${GROW_COLS.has(col.key) ? ' col-grow' : ''}`}>
-            {renderCell(col.key, product, marginPct)}
+            {renderCell(col.key, product)}
           </div>
         )
       })}

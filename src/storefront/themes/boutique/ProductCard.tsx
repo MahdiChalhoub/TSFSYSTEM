@@ -52,14 +52,14 @@ export default function BoutiqueProductCard({ product }: ProductCardProps) {
                         {showPrice && !isQuoteMode && (
                             <button onClick={handleAddToCart}
                                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg ${inCart
-                                        ? 'bg-green-500 text-white'
+                                        ? 'bg-app-success text-white'
                                         : 'bg-white text-violet-700 hover:bg-violet-600 hover:text-white'
                                     }`}>
                                 {inCart ? '✓ In Cart' : 'Add to Cart'}
                             </button>
                         )}
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
-                            className="p-2.5 rounded-xl bg-white/90 text-gray-600 hover:text-violet-600 transition shadow-lg">
+                            className="p-2.5 rounded-xl bg-white/90 text-app-muted-foreground hover:text-violet-600 transition shadow-lg">
                             <Eye size={16} />
                         </button>
                     </div>
@@ -68,8 +68,8 @@ export default function BoutiqueProductCard({ product }: ProductCardProps) {
                 {/* Wishlist */}
                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.id) }}
                     className={`absolute top-3 right-3 p-2 rounded-full transition-all ${inWishlist
-                            ? 'bg-pink-500 text-white shadow-lg shadow-pink-200'
-                            : 'bg-white/80 text-gray-400 hover:text-pink-500 hover:bg-white shadow'
+                            ? 'bg-app-error text-white shadow-lg shadow-pink-200'
+                            : 'bg-white/80 text-app-muted-foreground hover:text-app-error hover:bg-white shadow'
                         }`}>
                     <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
                 </button>
@@ -89,7 +89,7 @@ export default function BoutiqueProductCard({ product }: ProductCardProps) {
                     {product.name}
                 </h3>
                 {product.sku && (
-                    <p className="text-[10px] text-gray-400 mt-0.5 font-mono uppercase">{product.sku}</p>
+                    <p className="text-[10px] text-app-muted-foreground mt-0.5 font-mono uppercase">{product.sku}</p>
                 )}
                 <div className="mt-3 flex items-center justify-between">
                     {showPrice ? (
@@ -102,7 +102,7 @@ export default function BoutiqueProductCard({ product }: ProductCardProps) {
                         </span>
                     )}
                     {product.stock_quantity !== undefined && product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                        <span className="text-[10px] text-orange-500 font-bold uppercase">
+                        <span className="text-[10px] text-app-warning font-bold uppercase">
                             Only {product.stock_quantity} left
                         </span>
                     )}

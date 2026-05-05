@@ -162,7 +162,7 @@ export default function SupplierProfilePage() {
                     </h2>
 
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-error/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {error}
                         </div>
                     )}
@@ -210,7 +210,7 @@ export default function SupplierProfilePage() {
                     </h2>
 
                     {pwError && (
-                        <div className="p-3 bg-red-500/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
+                        <div className="p-3 bg-app-error/10 border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
                             <AlertCircle size={16} /> {pwError}
                         </div>
                     )}

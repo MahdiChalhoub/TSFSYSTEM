@@ -14,7 +14,7 @@ export default async function GlobalInventoryPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-indigo-600 rounded-lg text-white">
+                        <div className="p-2 bg-app-info rounded-lg text-white">
                             <Globe size={16} />
                         </div>
                         <span className="text-[10px] font-black text-app-info uppercase tracking-[0.3em]">Corporate Intelligence</span>
@@ -31,7 +31,7 @@ export default async function GlobalInventoryPage() {
                     <button className="px-8 py-4 bg-app-surface border border-app-border rounded-[28px] font-black uppercase text-[10px] tracking-widest text-app-muted-foreground hover:text-app-info hover:border-indigo-100 transition-all shadow-xl shadow-gray-200/50">
                         Export Master Sheet
                     </button>
-                    <button className="px-8 py-4 bg-indigo-600 text-white rounded-[28px] font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center gap-2">
+                    <button className="px-8 py-4 bg-app-info text-white rounded-[28px] font-black uppercase text-[10px] tracking-widest hover:bg-app-info transition-all shadow-xl shadow-indigo-200 flex items-center gap-2">
                         <Layers size={14} />
                         Stock Reconciliation
                     </button>

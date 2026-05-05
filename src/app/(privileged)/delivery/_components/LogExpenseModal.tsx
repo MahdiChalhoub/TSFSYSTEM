@@ -50,7 +50,7 @@ export default function LogExpenseModal({ driverId, driverName, onClose, onSaved
         setSaving(false);
     };
 
-    const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-2 focus:ring-blue-500/50 transition-all";
+    const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-2 focus:ring-app-info/50 transition-all";
 
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -78,7 +78,7 @@ export default function LogExpenseModal({ driverId, driverName, onClose, onSaved
                                 className={clsx(
                                     "flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all",
                                     form.expense_type === type
-                                        ? "bg-blue-500/20 border-app-info text-app-info shadow-lg shadow-blue-500/10"
+                                        ? "bg-app-info/20 border-app-info text-app-info shadow-lg shadow-blue-500/10"
                                         : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:border-white/10"
                                 )}
                             >

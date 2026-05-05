@@ -111,7 +111,7 @@ export default function NotificationPreferencesPage() {
                     </div>
                 </div>
 
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-app-border">
                     {Object.entries(prefs).map(([ntype, data]: [string, any]) => {
                         const typeIcon = TYPE_ICONS[ntype] || { icon: Bell, color: 'text-app-muted-foreground' }
                         const TypeIcon = typeIcon.icon
@@ -166,7 +166,7 @@ export default function NotificationPreferencesPage() {
                         <RefreshCw size={16} />
                     </button>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-app-border">
                     {log.length === 0 ? (
                         <div className="p-12 text-center text-app-muted-foreground italic text-sm">
                             No delivery history yet.

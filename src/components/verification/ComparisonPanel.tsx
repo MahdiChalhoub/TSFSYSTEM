@@ -116,7 +116,7 @@ export function ComparisonPanel({
             {title}
           </CardTitle>
           {totalDiscrepancies > 0 && (
-            <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+            <Badge className="bg-app-warning-soft text-app-warning border-app-warning">
               {totalDiscrepancies} {totalDiscrepancies === 1 ? 'Discrepancy' : 'Discrepancies'}
             </Badge>
           )}
@@ -153,7 +153,7 @@ export function ComparisonPanel({
               <div
                 key={field.key}
                 className={`grid ${receiptData ? 'grid-cols-3' : 'grid-cols-2'} gap-4 py-3 border-b border-app-border/10 ${
-                  discrepancy ? 'bg-amber-50/30 border-amber-200' : ''
+                  discrepancy ? 'bg-app-warning-soft/30 border-app-warning' : ''
                 }`}
               >
                 {/* System Value */}
@@ -181,7 +181,7 @@ export function ComparisonPanel({
                     <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wide opacity-0">
                       {field.label}
                     </p>
-                    <p className="text-sm font-semibold text-blue-600">
+                    <p className="text-sm font-semibold text-app-info">
                       {formatValue(receiptData.fields[idx].systemValue, field.type)}
                     </p>
                   </div>
@@ -193,14 +193,14 @@ export function ComparisonPanel({
                     {field.label}
                   </p>
                   <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${discrepancy ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <p className={`text-sm font-bold ${discrepancy ? 'text-app-warning' : 'text-app-success'}`}>
                       {formatValue(physValue, field.type)}
                     </p>
-                    {discrepancy && <AlertCircle size={14} className="text-amber-500" />}
-                    {!discrepancy && physValue && <CheckCircle2 size={14} className="text-emerald-500" />}
+                    {discrepancy && <AlertCircle size={14} className="text-app-warning" />}
+                    {!discrepancy && physValue && <CheckCircle2 size={14} className="text-app-success" />}
                   </div>
                   {discrepancy && field.type === 'currency' && (
-                    <p className="text-xs text-amber-600 font-semibold">
+                    <p className="text-xs text-app-warning font-semibold">
                       Diff: {fmt(Math.abs(parseFloat(physValue) - parseFloat(sysValue)))}
                     </p>
                   )}
@@ -225,7 +225,7 @@ export function ComparisonPanel({
               {onVerify && (
                 <Button
                   onClick={onVerify}
-                  className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  className="flex-1 h-11 bg-app-success hover:bg-app-success text-white gap-2"
                   disabled={totalDiscrepancies > 0}
                 >
                   <CheckCircle2 size={16} />
@@ -236,7 +236,7 @@ export function ComparisonPanel({
                 <Button
                   onClick={onReject}
                   variant="outline"
-                  className="h-11 px-4 border-rose-200 text-rose-600 hover:bg-rose-50"
+                  className="h-11 px-4 border-app-error text-app-error hover:bg-app-error-soft"
                 >
                   <X size={16} />
                 </Button>
@@ -264,14 +264,14 @@ export function ComparisonPanel({
 
         {/* Summary */}
         {totalDiscrepancies > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="bg-app-warning-soft border border-app-warning rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+              <AlertCircle size={20} className="text-app-warning shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-amber-900 mb-1">
                   {totalDiscrepancies} {totalDiscrepancies === 1 ? 'Field' : 'Fields'} Don't Match
                 </p>
-                <p className="text-xs text-amber-700">
+                <p className="text-xs text-app-warning">
                   Review the highlighted fields. Edit system data to match physical document, or reject if incorrect.
                 </p>
               </div>
@@ -280,14 +280,14 @@ export function ComparisonPanel({
         )}
 
         {totalDiscrepancies === 0 && physicalData && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <div className="bg-app-success-soft border border-app-success rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <CheckCircle2 size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+              <CheckCircle2 size={20} className="text-app-success shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-emerald-900 mb-1">
                   All Fields Match ✓
                 </p>
-                <p className="text-xs text-emerald-700">
+                <p className="text-xs text-app-success">
                   System data matches the physical document. Ready to verify and approve.
                 </p>
               </div>

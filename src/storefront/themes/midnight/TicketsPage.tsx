@@ -12,10 +12,10 @@ interface Ticket {
     subject: string; description: string; satisfaction_rating: number | null; created_at: string
 }
 const STATUS_COLORS: Record<string, string> = {
-    OPEN: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    IN_PROGRESS: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    OPEN: 'text-blue-400 bg-app-info/10 border-app-info/20',
+    IN_PROGRESS: 'text-amber-400 bg-app-warning/10 border-app-warning/20',
     WAITING_CLIENT: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-    RESOLVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    RESOLVED: 'text-emerald-400 bg-app-success/10 border-app-success/20',
     CLOSED: 'text-app-muted-foreground bg-slate-500/10 border-slate-500/20',
 }
 const TICKET_TYPES = [
@@ -74,7 +74,7 @@ export default function MidnightTicketsPage() {
                 <div className="text-center space-y-8">
                     <div className="w-24 h-24 bg-purple-500/10 border border-purple-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-purple-400 rotate-12"><Shield size={48} /></div>
                     <h1 className="text-3xl font-black text-white italic">Session Required</h1>
-                    <Link href={path('/login')} className="inline-block px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
+                    <Link href={path('/login')} className="inline-block px-10 py-4 bg-app-success text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
                 </div>
             </div>
         )
@@ -102,7 +102,7 @@ export default function MidnightTicketsPage() {
                             <h2 className="text-xl font-black text-white italic flex items-center gap-3"><MessageSquare size={22} className="text-purple-400" /> Initialize Thread</h2>
                             <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all"><X size={20} /></button>
                         </div>
-                        {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+                        {error && <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
                         <form onSubmit={handleCreate} className="space-y-5 relative z-10">
                             <select value={type} onChange={e => setType(e.target.value)}
                                 className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-purple-500 transition-all font-medium">

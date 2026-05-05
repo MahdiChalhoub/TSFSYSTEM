@@ -52,8 +52,8 @@ const PAYMENT_MODES = [
  label: 'Client Credit',
  desc: 'Added to client account. Requires credit authority.',
  gradient: 'bg-gradient-to-br from-indigo-500 to-violet-700',
- ring: 'ring-indigo-500/30 border-indigo-500/50',
- badge: 'bg-indigo-500/10 text-indigo-400',
+ ring: 'ring-app-info/30 border-app-info/50',
+ badge: 'bg-app-info/10 text-indigo-400',
  },
 ];
 
@@ -258,7 +258,7 @@ export function POSDeliveryModal({
 
  <div className="flex items-center justify-between relative z-10">
  <div className="flex items-center gap-5">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-app-primary/20 border border-emerald-400/20">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-app-primary/20 border border-app-success/20">
  <Truck size={24} className="text-app-foreground fill-white/20" />
  </div>
  <div>
@@ -415,7 +415,7 @@ export function POSDeliveryModal({
  <div className="flex-1 text-left">
  <p className={clsx("text-base font-black uppercase tracking-tight italic", active ? "text-app-foreground" : "text-app-muted-foreground")}>{m.label}</p>
  <p className="text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest mt-1">{m.desc}</p>
- {blocked && <p className="text-[9px] text-rose-500 font-black mt-2 uppercase tracking-[0.2em] animate-pulse">Insufficient Credit Authority</p>}
+ {blocked && <p className="text-[9px] text-app-error font-black mt-2 uppercase tracking-[0.2em] animate-pulse">Insufficient Credit Authority</p>}
  </div>
  {active && (
  <div className="w-8 h-8 rounded-full bg-app-primary flex items-center justify-center text-app-foreground border-2 border-slate-900">
@@ -496,7 +496,7 @@ export function POSDeliveryModal({
  <span className={clsx("text-[10px] font-black px-4 py-1.5 rounded-full border shadow-xl uppercase tracking-widest",
  form.payment_mode === 'IMMEDIATE' ? "bg-app-primary/10 text-app-primary border-app-primary/20" :
  form.payment_mode === 'HOLD' ? "bg-app-warning-bg text-app-warning border-app-warning/20" :
- "bg-indigo-500/10 text-indigo-400 border-indigo-500/20")}>
+ "bg-app-info/10 text-indigo-400 border-app-info/20")}>
  {form.payment_mode === 'IMMEDIATE' ? 'Pay at delivery' :
  form.payment_mode === 'HOLD' ? 'Hold session' : 'Credit Terminal'}
  </span>
@@ -553,7 +553,7 @@ export function POSDeliveryModal({
  </button>
  ) : (
  <button onClick={handleSubmit} disabled={submitting}
- className="flex items-center gap-5 px-10 py-5 bg-emerald-gradient text-app-foreground rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-app-primary/20 border border-emerald-400/30">
+ className="flex items-center gap-5 px-10 py-5 bg-emerald-gradient text-app-foreground rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-app-primary/20 border border-app-success/30">
  {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={4} />}
  Confirm Delivery
  </button>

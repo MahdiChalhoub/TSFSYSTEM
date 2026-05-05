@@ -28,7 +28,7 @@ const SEVERITY_MAP: Record<string, { label: string; color: string; bg: string; i
     INFO: { label: 'Info', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Bell },
     WARNING: { label: 'Warning', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: AlertTriangle },
     CRITICAL: { label: 'Critical', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: ShieldAlert },
-    EMERGENCY: { label: 'Emergency', color: 'text-app-error', bg: 'bg-app-error-bg border-red-400', icon: XCircle },
+    EMERGENCY: { label: 'Emergency', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 };
 
 const ALERT_TYPE_MAP: Record<string, { label: string; icon: any }> = {
@@ -84,7 +84,7 @@ export default async function StockAlertsPage() {
                     }}>
                         <button
                             type="submit"
-                            className="bg-red-600 text-white px-6 py-3.5 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all flex items-center gap-2"
+                            className="bg-app-error text-white px-6 py-3.5 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-app-error transition-all flex items-center gap-2"
                         >
                             <RefreshCw size={18} />
                             <span>Scan All Stock</span>
@@ -122,7 +122,7 @@ export default async function StockAlertsPage() {
                 <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
                     <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Alert Feed</h2>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-app-border">
                     {(!alerts || alerts.length === 0) ? (
                         <div className="p-20 text-center text-app-muted-foreground font-medium italic">
                             <CheckCircle2 size={48} className="mx-auto mb-4 text-emerald-300" />

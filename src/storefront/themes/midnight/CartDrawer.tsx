@@ -32,7 +32,7 @@ export default function MidnightCartDrawer() {
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <ShoppingBag className="text-emerald-500" size={24} />
+                        <ShoppingBag className="text-app-success" size={24} />
                         <div>
                             <h2 className="text-xl font-black text-white tracking-tight">Your Cart</h2>
                             <p className="text-[10px] text-app-muted-foreground uppercase font-black tracking-widest">
@@ -133,7 +133,7 @@ export default function MidnightCartDrawer() {
                                     setCartOpen(false)
                                     router.push(path('/checkout'))
                                 }}
-                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-2 group"
+                                className="w-full py-4 bg-app-success hover:bg-app-success text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-2 group"
                             >
                                 Checkout Now
                                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

@@ -110,7 +110,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
                             </div>
                             <div className="flex items-center gap-1">
                                 <button onClick={() => handleRetry(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-primary/10" style={{ color: v('--app-primary') }}><RotateCcw size={11} /> Retry</button>
-                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-app-error"><Trash2 size={11} /> Discard</button>
+                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-error/10 text-app-error"><Trash2 size={11} /> Discard</button>
                             </div>
                         </div>
                     ))}
@@ -126,14 +126,14 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
                     {stuckSessions.length === 0 ? (
                         <div className="py-8 text-center"><Activity size={24} className="mx-auto text-app-muted-foreground opacity-20" /><p className="text-[10px] text-app-muted-foreground mt-2">No stuck sessions</p></div>
                     ) : stuckSessions.map(s => (
-                        <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-yellow-500/30" style={soft('--app-warning', 5)}>
+                        <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-app-warning/30" style={soft('--app-warning', 5)}>
                             <div>
                                 <span className="text-[11px] font-mono font-bold text-app-foreground">{s.session_code}</span>
                                 <p className="text-[9px] text-app-warning">PRINTING for &gt; 30 min</p>
                             </div>
                             <div className="flex items-center gap-1">
                                 <button onClick={() => handleRetry(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-warning/10" style={{ color: v('--app-warning') }}><RefreshCw size={11} /> Requeue</button>
-                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-rose-500/10 text-app-error"><XCircle size={11} /> Force Cancel</button>
+                                <button onClick={() => handleForceCancel(s.id)} disabled={isPending} className="flex items-center gap-1 px-2 h-7 rounded-lg text-[9px] font-bold hover:bg-app-error/10 text-app-error"><XCircle size={11} /> Force Cancel</button>
                             </div>
                         </div>
                     ))}

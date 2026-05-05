@@ -32,10 +32,10 @@ type AgingData = {
 }
 
 const BUCKET_CONFIG = [
-    { key: 'current', label: 'Current (0-30)', color: 'bg-emerald-500', badgeClass: 'bg-app-success-bg text-app-success', icon: Clock },
-    { key: '31_60', label: '31-60 Days', color: 'bg-amber-500', badgeClass: 'bg-app-warning-bg text-app-warning', icon: CalendarClock },
-    { key: '61_90', label: '61-90 Days', color: 'bg-orange-500', badgeClass: 'bg-orange-100 text-orange-700', icon: AlertTriangle },
-    { key: 'over_90', label: '90+ Days', color: 'bg-red-500', badgeClass: 'bg-app-error-bg text-app-error', icon: AlertTriangle },
+    { key: 'current', label: 'Current (0-30)', color: 'bg-app-success', badgeClass: 'bg-app-success-bg text-app-success', icon: Clock },
+    { key: '31_60', label: '31-60 Days', color: 'bg-app-warning', badgeClass: 'bg-app-warning-bg text-app-warning', icon: CalendarClock },
+    { key: '61_90', label: '61-90 Days', color: 'bg-app-warning', badgeClass: 'bg-app-warning-soft text-app-warning', icon: AlertTriangle },
+    { key: 'over_90', label: '90+ Days', color: 'bg-app-error', badgeClass: 'bg-app-error-bg text-app-error', icon: AlertTriangle },
 ]
 
 function formatCurrency(n: number) {
@@ -106,7 +106,7 @@ export default function AgingReportPage() {
                     <button
                         onClick={() => { setTab('receivables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'receivables'
-                                ? 'bg-emerald-600 text-white'
+                                ? 'bg-app-success text-white'
                                 : 'bg-app-surface text-app-muted-foreground hover:bg-app-surface'
                             }`}
                     >
@@ -116,7 +116,7 @@ export default function AgingReportPage() {
                     <button
                         onClick={() => { setTab('payables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'payables'
-                                ? 'bg-rose-600 text-white'
+                                ? 'bg-app-error text-white'
                                 : 'bg-app-surface text-app-muted-foreground hover:bg-app-surface'
                             }`}
                     >
@@ -158,7 +158,7 @@ export default function AgingReportPage() {
                         <Card
                             key={key}
                             onClick={() => setActiveBucket(isActive ? null : key)}
-                            className={`cursor-pointer transition-all hover:shadow-md ${isActive ? 'ring-2 ring-offset-1 ring-blue-500 shadow-md' : ''
+                            className={`cursor-pointer transition-all hover:shadow-md ${isActive ? 'ring-2 ring-offset-1 ring-app-info shadow-md' : ''
                                 }`}
                         >
                             <CardContent className="py-4">

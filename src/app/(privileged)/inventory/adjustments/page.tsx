@@ -33,7 +33,7 @@ export default async function AdjustmentPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-rose-500 rounded-lg text-white">
+                        <div className="p-2 bg-app-error rounded-lg text-white">
                             <Sliders size={16} />
                         </div>
                         <span className="text-[10px] font-black text-app-error uppercase tracking-[0.3em]">Stock Operations</span>

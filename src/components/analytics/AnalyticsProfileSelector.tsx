@@ -187,7 +187,7 @@ export default function AnalyticsProfileSelector({ pageContext, onProfileChange,
                                     className="p-1 text-app-muted-foreground hover:text-app-primary" title="View settings"><Eye size={10} /></button>
                                 {onDuplicateProfile && (
                                     <button type="button" onClick={e => { e.stopPropagation(); onDuplicateProfile(p); setOpen(false); }}
-                                        className="p-1 text-app-muted-foreground hover:text-emerald-500" title="Duplicate"><Copy size={10} /></button>
+                                        className="p-1 text-app-muted-foreground hover:text-app-success" title="Duplicate"><Copy size={10} /></button>
                                 )}
                             </div>
                         );
@@ -214,10 +214,10 @@ export default function AnalyticsProfileSelector({ pageContext, onProfileChange,
                                             className="p-1 text-app-muted-foreground hover:text-app-primary" title="Edit"><Edit3 size={10} /></button>
                                         {onDuplicateProfile && (
                                             <button type="button" onClick={e => { e.stopPropagation(); onDuplicateProfile(p); setOpen(false); }}
-                                                className="p-1 text-app-muted-foreground hover:text-emerald-500" title="Duplicate"><Copy size={10} /></button>
+                                                className="p-1 text-app-muted-foreground hover:text-app-success" title="Duplicate"><Copy size={10} /></button>
                                         )}
                                         <button type="button" onClick={e => { e.stopPropagation(); handleDelete(p.id); }}
-                                            className="p-1 text-app-muted-foreground hover:text-rose-500" title="Delete"><Trash2 size={10} /></button>
+                                            className="p-1 text-app-muted-foreground hover:text-app-error" title="Delete"><Trash2 size={10} /></button>
                                     </div>
                                 );
                             })}
@@ -366,11 +366,11 @@ function ProfileModal({ mode, pageContext, profile, onClose, onSaved, onDuplicat
                 <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {isReadOnly ? <Eye size={14} className="text-app-primary" /> :
-                         isCreate ? <Plus size={14} className="text-emerald-500" /> :
+                         isCreate ? <Plus size={14} className="text-app-success" /> :
                          <Edit3 size={14} className="text-app-primary" />}
                         <h3 className="font-black text-[13px] text-app-foreground">{title}</h3>
                         {profile?.is_system && (
-                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-black uppercase">System</span>
+                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-app-warning/10 text-app-warning font-black uppercase">System</span>
                         )}
                     </div>
                     <button type="button" onClick={onClose} className="p-1 text-app-muted-foreground hover:text-app-foreground">
@@ -486,7 +486,7 @@ function ProfileModal({ mode, pageContext, profile, onClose, onSaved, onDuplicat
                                             )}
                                             {hasOverride && (
                                                 <button type="button" onClick={() => clearOverride(field.key)}
-                                                    className="p-0.5 text-app-muted-foreground hover:text-rose-500" title="Reset to global">
+                                                    className="p-0.5 text-app-muted-foreground hover:text-app-error" title="Reset to global">
                                                     <RotateCcw size={9} />
                                                 </button>
                                             )}

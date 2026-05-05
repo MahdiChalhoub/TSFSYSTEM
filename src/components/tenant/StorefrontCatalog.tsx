@@ -64,9 +64,9 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
     if (!products || products.length === 0) {
         return (
             <div className="p-12 text-center bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
-                <ShoppingBag className="mx-auto text-slate-700 mb-4" size={48} />
+                <ShoppingBag className="mx-auto text-app-muted-foreground mb-4" size={48} />
                 <h3 className="text-xl font-bold text-white">Catalog Coming Soon</h3>
-                <p className="text-slate-500 mt-2">We are currently updating our inventory. Please check back later.</p>
+                <p className="text-app-muted-foreground mt-2">We are currently updating our inventory. Please check back later.</p>
             </div>
         );
     }
@@ -78,24 +78,24 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                 <div className="flex items-center justify-between px-1">
                     <h2 className="text-3xl font-black text-white tracking-tighter">Featured Collection</h2>
                     <div className="flex gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
+                        <div className="w-2 h-2 rounded-full bg-app-success animate-pulse" />
+                        <span className="text-[10px] font-black text-app-success uppercase tracking-widest">Live Inventory</span>
                     </div>
                 </div>
 
                 {/* Search Bar */}
                 <div className="relative">
-                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search products..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700"
+                        className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-app-success/30 transition-all placeholder:text-app-muted-foreground"
                     />
                     {search && (
                         <button onClick={() => setSearch('')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white">
                             <X size={16} />
                         </button>
                     )}
@@ -108,8 +108,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                             onClick={() => setSelectedCategory(null)}
                             className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
                                 ${!selectedCategory
-                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                    : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                                    ? 'bg-app-success/20 text-emerald-400 border-app-success/30'
+                                    : 'bg-white/5 text-app-muted-foreground border-white/10 hover:border-white/20'
                                 }`}>
                             All ({products.length})
                         </button>
@@ -119,8 +119,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                 onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
                                     ${selectedCategory === cat
-                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                                        ? 'bg-app-success/20 text-emerald-400 border-app-success/30'
+                                        : 'bg-white/5 text-app-muted-foreground border-white/10 hover:border-white/20'
                                     }`}>
                                 {cat}
                             </button>
@@ -131,7 +131,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
 
             {/* Results Count */}
             {(search || selectedCategory) && (
-                <p className="text-xs text-slate-500 px-1">
+                <p className="text-xs text-app-muted-foreground px-1">
                     Showing {filtered.length} of {products.length} products
                     {search && <> matching &quot;<span className="text-white">{search}</span>&quot;</>}
                     {selectedCategory && <> in <span className="text-emerald-400">{selectedCategory}</span></>}
@@ -141,9 +141,9 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
             {/* Product Grid */}
             {filtered.length === 0 ? (
                 <div className="py-16 text-center space-y-3">
-                    <Search size={36} className="mx-auto text-slate-600" />
+                    <Search size={36} className="mx-auto text-app-muted-foreground" />
                     <p className="text-white font-bold">No products found</p>
-                    <p className="text-slate-500 text-sm">Try adjusting your search or filter</p>
+                    <p className="text-app-muted-foreground text-sm">Try adjusting your search or filter</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -151,7 +151,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                         <Link
                             key={p.id}
                             href={`/tenant/${slug}/product/${p.id}`}
-                            className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
+                            className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-app-success/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
                             style={{ animationDelay: `${idx * 100}ms` }}
                         >
                             <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">
@@ -163,7 +163,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                                        <ShoppingBag size={40} className="text-slate-800" />
+                                        <ShoppingBag size={40} className="text-app-foreground" />
                                     </div>
                                 )}
                                 <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
@@ -174,12 +174,12 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(p.id); }}
                                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg backdrop-blur-md border
                                             ${isInWishlist(p.id)
-                                                ? 'bg-rose-500/80 text-white border-rose-500/50'
+                                                ? 'bg-app-error/80 text-white border-app-error/50'
                                                 : 'bg-black/40 text-white/70 hover:text-rose-400 border-white/10'
                                             }`}>
                                         <Heart size={18} fill={isInWishlist(p.id) ? 'currentColor' : 'none'} />
                                     </button>
-                                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
+                                    <div className="w-10 h-10 bg-app-success rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
                                         <ArrowRight size={20} />
                                     </div>
                                 </div>
@@ -189,18 +189,18 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-start">
                                         <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
-                                        <div className="flex items-center gap-1 text-emerald-500">
+                                        <div className="flex items-center gap-1 text-app-success">
                                             <Star size={12} fill="currentColor" />
                                             <span className="text-[10px] font-black">4.9</span>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-slate-500 font-mono tracking-widest">{p.sku}</p>
+                                    <p className="text-[10px] text-app-muted-foreground font-mono tracking-widest">{p.sku}</p>
                                 </div>
 
                                 <div className="flex items-center justify-between pt-2">
                                     {showPrice ? (
                                         <div className="text-2xl font-black text-white">
-                                            <span className="text-emerald-500 mr-1">$</span>
+                                            <span className="text-app-success mr-1">$</span>
                                             {p.selling_price_ttc}
                                         </div>
                                     ) : (
@@ -211,7 +211,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
 
                                     {/* Quick Action */}
                                     {storeMode === 'CATALOG_QUOTE' ? (
-                                        <span className="px-6 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                        <span className="px-6 py-2 bg-app-success/10 text-teal-400 border border-app-success/20 rounded-xl text-[10px] font-black uppercase tracking-widest">
                                             Get Quote
                                         </span>
                                     ) : (
@@ -219,8 +219,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                             onClick={(e) => handleQuickAdd(p, e)}
                                             className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
                                                 ${addedIds.has(p.id)
-                                                    ? 'bg-emerald-500 text-white border border-emerald-500'
-                                                    : 'bg-white/5 hover:bg-emerald-500 text-white border border-white/10 hover:border-emerald-500'
+                                                    ? 'bg-app-success text-white border border-app-success'
+                                                    : 'bg-white/5 hover:bg-app-success text-white border border-white/10 hover:border-app-success'
                                                 }`}>
                                             <ShoppingCart size={12} />
                                             {addedIds.has(p.id) ? 'Added!' : 'Add'}

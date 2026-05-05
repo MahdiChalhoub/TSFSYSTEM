@@ -358,13 +358,13 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
                 const field = getField(c.field)
                 return (
                   <span key={c.id}>
-                    {i > 0 && <span className="text-blue-500 font-bold"> {group.logic} </span>}
+                    {i > 0 && <span className="text-app-info font-bold"> {group.logic} </span>}
                     <span className="text-purple-500">{field.label}</span>
                     {' '}
-                    <span className="text-gray-500">{getOperatorLabel(c.operator)}</span>
+                    <span className="text-app-muted-foreground">{getOperatorLabel(c.operator)}</span>
                     {' '}
                     {!['isNull', 'isNotNull', 'isEmpty', 'isNotEmpty'].includes(c.operator) && (
-                      <span className="text-green-500">
+                      <span className="text-app-success">
                         {c.operator === 'between'
                           ? `${c.value} and ${c.value2}`
                           : Array.isArray(c.value)

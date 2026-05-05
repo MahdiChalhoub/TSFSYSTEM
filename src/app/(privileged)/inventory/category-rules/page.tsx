@@ -138,11 +138,11 @@ export default function CategoryRulesPage() {
                                     {rule.requires_barcode && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-info-bg text-app-info"><Barcode size={9} />Barcode req.</span>}
                                     {rule.requires_brand && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700"><Tag size={9} />Brand req.</span>}
                                     {rule.requires_packaging && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-warning-bg text-app-warning"><Package size={9} />Pkg req.</span>}
-                                    {rule.requires_photo && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-pink-100 text-pink-700"><Image size={9} />Photo req.</span>}
-                                    {rule.requires_supplier && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-700"><Users size={9} />Supplier req.</span>}
+                                    {rule.requires_photo && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-error-soft text-app-error"><Image size={9} />Photo req.</span>}
+                                    {rule.requires_supplier && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-success-soft text-app-success"><Users size={9} />Supplier req.</span>}
                                     {rule.auto_create_packaging && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-success-bg text-app-success"><Check size={9} />Auto-pkg</span>}
                                     {rule.default_product_type && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-surface-2 text-app-foreground">Default: {rule.default_product_type}</span>}
-                                    {rule.barcode_mode_override && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-100 text-cyan-700"><Barcode size={9} />{rule.barcode_mode_override}</span>}
+                                    {rule.barcode_mode_override && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-app-info-soft text-app-info"><Barcode size={9} />{rule.barcode_mode_override}</span>}
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">

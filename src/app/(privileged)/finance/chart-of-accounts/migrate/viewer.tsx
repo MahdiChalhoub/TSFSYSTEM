@@ -94,7 +94,7 @@ export default function CoaMigrationTool({
             <div className="space-y-8 max-w-4xl mx-auto">
                 <div className="bg-app-bg rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="bg-amber-500/20 p-3 rounded-2xl">
+                        <div className="bg-app-warning/20 p-3 rounded-2xl">
                             <Layers className="text-amber-400" size={32} />
                         </div>
                         <div>
@@ -110,7 +110,7 @@ export default function CoaMigrationTool({
                             key={key}
                             onClick={() => handleSelectTemplate(key)}
                             className={`p-6 rounded-3xl border-2 transition-all text-left flex items-start gap-4 ${selectedTemplate === key
-                                ? 'border-amber-500 bg-app-warning-bg shadow-lg'
+                                ? 'border-app-warning bg-app-warning-bg shadow-lg'
                                 : 'border-app-border bg-app-surface hover:border-app-border'
                                 }`}
                         >
@@ -169,7 +169,7 @@ export default function CoaMigrationTool({
                             <th className="p-5 text-left w-1/2">New Layout (Destination)</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-50">
+                    <tbody className="divide-y divide-app-border">
                         {accountsWithBalance.map(acc => (
                             <tr key={acc.id} className="hover:bg-app-surface/50 transition-colors">
                                 <td className="p-5">
@@ -189,7 +189,7 @@ export default function CoaMigrationTool({
                                 </td>
                                 <td className="p-5">
                                     <select
-                                        className="w-full p-3.5 rounded-2xl border border-app-border text-sm font-medium focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all shadow-sm bg-app-surface/30"
+                                        className="w-full p-3.5 rounded-2xl border border-app-border text-sm font-medium focus:ring-4 focus:ring-amber-500/10 focus:border-app-warning outline-none transition-all shadow-sm bg-app-surface/30"
                                         value={mappings[acc.id] || ''}
                                         onChange={(e) => handleMap(acc.id, parseInt(e.target.value))}
                                     >

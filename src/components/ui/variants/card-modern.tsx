@@ -21,7 +21,7 @@ export const CardModern = React.forwardRef<HTMLDivElement, CardModernProps>(
       className={cn(
         // Base card style (matches your theme)
         "rounded-[var(--layout-card-radius)]",
-        "border border-gray-200 dark:border-gray-800",
+        "border border-app-border dark:border-gray-800",
         "bg-white dark:bg-card",
         "text-card-foreground",
         "shadow-sm",

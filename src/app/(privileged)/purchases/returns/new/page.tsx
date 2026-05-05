@@ -195,7 +195,7 @@ function CreatePurchaseReturnForm() {
                             </div>
 
                             <Button
-                                className="w-full h-16 rounded-2xl bg-app-info hover:bg-blue-700 text-white font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
+                                className="w-full h-16 rounded-2xl bg-app-info hover:bg-app-info text-white font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
                                 onClick={handleSubmit}
                                 disabled={submitting || calculateTotals() === 0}
                             >

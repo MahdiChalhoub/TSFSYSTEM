@@ -133,16 +133,16 @@ export default function LandingPage() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {(isLogin || isSignup) && (
                     <div className="space-y-3">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 flex items-center gap-2">
+                        <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-muted-foreground flex items-center gap-2">
                             Workspace ID
                         </Label>
                         <Input
                             placeholder="e.g. acme"
-                            className={`bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-lg transition-all focus:ring-2 ${isLogin ? 'text-emerald-400 focus:ring-emerald-500/20' : 'text-cyan-400 focus:ring-cyan-500/20'}`}
+                            className={`bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-lg transition-all focus:ring-2 ${isLogin ? 'text-emerald-400 focus:ring-emerald-500/20' : 'text-cyan-400 focus:ring-app-info/20'}`}
                             value={formData.workspace}
                             onChange={e => setFormData({ ...formData, workspace: e.target.value.toLowerCase().trim() })}
                         />
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Connect to your organization's secure instance.</p>
+                        <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-widest">Connect to your organization's secure instance.</p>
                     </div>
                 )}
 
@@ -150,7 +150,7 @@ export default function LandingPage() {
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Business Title</Label>
+                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-muted-foreground">Business Title</Label>
                                 <Input
                                     placeholder="Acme Industries"
                                     className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl text-white font-bold"
@@ -159,7 +159,7 @@ export default function LandingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Workspace Slug</Label>
+                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-muted-foreground">Workspace Slug</Label>
                                 <Input
                                     placeholder="acme"
                                     className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-amber-400 text-lg"
@@ -172,14 +172,14 @@ export default function LandingPage() {
                 )}
 
                 {error && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-300">
+                    <div className="p-4 bg-app-error/10 border border-app-error/20 rounded-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
                             <AlertCircle size={14} />
                             {error}
                         </div>
                         {suggestions.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Suggested Available IDs:</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase tracking-widest font-black">Suggested Available IDs:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {suggestions.map(s => (
                                         <button
@@ -198,9 +198,9 @@ export default function LandingPage() {
                 )}
 
                 <Button
-                    className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20' :
-                        isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' :
-                            'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20'
+                    className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-app-success hover:bg-app-success text-white shadow-emerald-900/20' :
+                        isSignup ? 'bg-app-info hover:bg-app-info text-white shadow-cyan-900/20' :
+                            'bg-app-warning hover:bg-app-warning text-white shadow-amber-900/20'
                         }`}
                     disabled={loading}
                 >
@@ -223,20 +223,20 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-success/5 blur-[160px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info/5 blur-[160px] rounded-full" />
 
 
             {/* Header Content */}
             <div className="text-center mb-16 space-y-4 relative z-10 transition-all duration-1000">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-6 backdrop-blur-xl">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-app-success/5 border border-app-success/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-6 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
                     Enterprise Business Platform
                 </div>
                 <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
                     {PLATFORM_CONFIG.name.split(' ')[0]} <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">{PLATFORM_CONFIG.name.split(' ').slice(1).join(' ')}</span>
                 </h1>
-                <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">
+                <p className="text-app-muted-foreground max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">
                     Unifying distributed business intelligence into a single, high-fidelity command interface.
                 </p>
             </div>
@@ -249,27 +249,27 @@ export default function LandingPage() {
                 <div className="grid grid-cols-3 border-b border-white/5 bg-black/20">
                     <button
                         onClick={() => setMode('login')}
-                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'login' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'login' ? 'text-emerald-400' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
                     >
                         <LogIn size={24} />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sign In</span>
-                        {mode === 'login' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-emerald-500 rounded-t-full" />}
+                        {mode === 'login' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-app-success rounded-t-full" />}
                     </button>
                     <button
                         onClick={() => setMode('signup')}
-                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'signup' ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'signup' ? 'text-cyan-400' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
                     >
                         <UserPlus size={24} />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Join</span>
-                        {mode === 'signup' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-cyan-500 rounded-t-full" />}
+                        {mode === 'signup' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-app-info rounded-t-full" />}
                     </button>
                     <button
                         onClick={() => setMode('register')}
-                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-amber-400' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
                     >
                         <Building2 size={24} />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Register</span>
-                        {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-amber-500 rounded-t-full" />}
+                        {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-app-warning rounded-t-full" />}
                     </button>
                 </div>
 
@@ -284,15 +284,15 @@ export default function LandingPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="space-y-1">
                             <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Zap size={16} className="text-emerald-400" /> 2.4s</div>
-                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Response Time</div>
+                            <div className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-bold">Response Time</div>
                         </div>
                         <div className="space-y-1">
                             <div className="text-white font-black text-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} className="text-cyan-400" /> AES</div>
-                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Encryption</div>
+                            <div className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-bold">Encryption</div>
                         </div>
                         <div className="space-y-1">
                             <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-amber-400" /> INF</div>
-                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Provisioning</div>
+                            <div className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-bold">Provisioning</div>
                         </div>
                     </div>
                 </div>
@@ -302,7 +302,7 @@ export default function LandingPage() {
             <PricingSection />
 
             {/* Bottom Credits */}
-            <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
+            <div className="mt-16 text-[11px] font-black text-app-muted-foreground uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
                 <div className="h-[1px] w-12 bg-slate-800" />
                 Secured by {PLATFORM_CONFIG.federation_name}
                 <div className="h-[1px] w-12 bg-slate-800" />

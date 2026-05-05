@@ -142,7 +142,7 @@ export default function ApprovalsPage() {
             <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-sm overflow-hidden rounded-3xl ring-1 ring-white/10">
                 <CardHeader className="bg-gradient-to-b from-muted/50 to-transparent pb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <ShieldAlert className="h-5 w-5 text-yellow-500" />
+                        <ShieldAlert className="h-5 w-5 text-app-warning" />
                         <CardTitle className="text-xl">Authentication Queue</CardTitle>
                     </div>
                     <CardDescription className="text-foreground/60 leading-relaxed">
@@ -190,7 +190,7 @@ export default function ApprovalsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="secondary" className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-500 border-blue-500/20 font-bold uppercase text-[10px] tracking-wider">
+                                                <Badge variant="secondary" className="px-3 py-1 rounded-lg bg-app-info/10 text-app-info border-app-info/20 font-bold uppercase text-[10px] tracking-wider">
                                                     {u.role}
                                                 </Badge>
                                             </TableCell>
@@ -205,12 +205,12 @@ export default function ApprovalsPage() {
                                             <TableCell className="text-center">
                                                 <div className="flex justify-center">
                                                     {u.status === 'PENDING' ? (
-                                                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                                                        <Badge className="bg-app-warning/10 text-app-warning border-app-warning/20 px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
                                                             <Clock className="h-3 w-3" />
                                                             <span className="text-[10px] font-bold tracking-tight">WAITING AUTH</span>
                                                         </Badge>
                                                     ) : (
-                                                        <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold">
+                                                        <Badge className="bg-app-info/10 text-app-info border-app-info/20 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold">
                                                             <RefreshCw className="h-3 w-3" />
                                                             <span className="text-[10px] font-bold">RE-EVALUATING</span>
                                                         </Badge>
@@ -221,7 +221,7 @@ export default function ApprovalsPage() {
                                                 <div className="inline-flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border border-muted-foreground/10 shadow-inner">
                                                     <Button
                                                         size="sm"
-                                                        className="h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border-none"
+                                                        className="h-10 px-4 bg-app-success hover:bg-app-success text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border-none"
                                                         onClick={() => handleApprove(u.id)}
                                                         disabled={processing === u.id}
                                                     >
@@ -239,7 +239,7 @@ export default function ApprovalsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="h-10 px-4 bg-muted text-muted-foreground hover:bg-red-500 hover:text-white rounded-xl transition-all border-none"
+                                                        className="h-10 px-4 bg-muted text-muted-foreground hover:bg-app-error hover:text-white rounded-xl transition-all border-none"
                                                         onClick={() => handleReject(u.id)}
                                                         disabled={processing === u.id}
                                                     >

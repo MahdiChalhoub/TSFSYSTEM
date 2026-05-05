@@ -392,7 +392,7 @@ export default function OrderHistoryPageWide() {
           <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-muted-foreground hover:text-app-info hover:bg-app-bg transition-all">
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </Button>
-          <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+          <Button asChild className="h-12 px-6 rounded-2xl bg-app-info hover:bg-app-info text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
             <Link href="/sales">
               <ArrowUpRight size={18} /> Terminal
             </Link>
@@ -480,7 +480,7 @@ export default function OrderHistoryPageWide() {
                     placeholder="Rechercher par n° facture, client..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-indigo-500/30 transition-all focus:bg-app-surface focus:shadow-sm"
+                    className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-app-info/30 transition-all focus:bg-app-surface focus:shadow-sm"
                   />
                 </div>
                 <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-muted-foreground gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">

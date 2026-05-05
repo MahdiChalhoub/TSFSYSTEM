@@ -9,6 +9,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 import multiprocessing
+import os
 
 # ── Server Socket ─────────────────────────────────────────────────────────────
 bind = "0.0.0.0:8000"
@@ -16,10 +17,10 @@ backlog = 2048
 
 # ── Worker Configuration ──────────────────────────────────────────────────────
 # Workers = (2 * CPU cores) + 1 is the recommended formula.
-# We cap at 4 to balance memory usage on a small VPS.
-workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
+# Override via GUNICORN_WORKERS env var when scaling up infrastructure.
+workers = int(os.getenv('GUNICORN_WORKERS', multiprocessing.cpu_count() * 2 + 1))
 worker_class = "gthread"
-threads = 2
+threads = int(os.getenv('GUNICORN_THREADS', 4))
 
 # ── Graceful Restart Settings ─────────────────────────────────────────────────
 # graceful_timeout: Seconds to wait for workers to finish requests before
@@ -32,8 +33,8 @@ timeout = 60
 
 # max_requests: Automatically restart workers after N requests to prevent
 # memory leaks from accumulating over time.
-max_requests = 1000
-max_requests_jitter = 50  # Stagger restarts to avoid thundering herd
+max_requests = int(os.getenv('GUNICORN_MAX_REQUESTS', 5000))
+max_requests_jitter = 200  # Stagger restarts to avoid thundering herd
 
 # ── Pre-load Application ─────────────────────────────────────────────────────
 # Load the Django app BEFORE forking workers.

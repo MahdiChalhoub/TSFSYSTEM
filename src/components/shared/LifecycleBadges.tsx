@@ -36,12 +36,12 @@ export function LifecycleBadges({
     OPEN: {
       label: 'Open',
       icon: AlertCircle,
-      className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      className: 'bg-app-info-soft text-app-info dark:bg-blue-900/30 dark:text-blue-300'
     },
     LOCKED: {
       label: 'Locked',
       icon: Lock,
-      className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+      className: 'bg-app-warning-soft text-app-warning dark:bg-orange-900/30 dark:text-orange-300'
     },
     VERIFIED: {
       label: 'Verified',
@@ -51,7 +51,7 @@ export function LifecycleBadges({
     CONFIRMED: {
       label: 'Confirmed',
       icon: CheckCircle,
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      className: 'bg-app-success-soft text-app-success dark:bg-green-900/30 dark:text-green-300'
     }
   };
 
@@ -78,15 +78,15 @@ export function LifecycleBadges({
         <Badge
           className={`flex items-center gap-1.5 ${
             isFullyVerified
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+              ? 'bg-app-success-soft text-app-success dark:bg-green-900/30 dark:text-green-300'
+              : 'bg-gray-100 text-app-foreground dark:bg-gray-800 dark:text-app-muted-foreground'
           }`}
         >
           <ShieldCheck className="h-3.5 w-3.5" />
           <span>{verificationProgress}</span>
         </Badge>
       ) : (
-        <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <Badge className="bg-gray-100 text-app-muted-foreground dark:bg-gray-800 dark:text-app-muted-foreground">
           No Approval Required
         </Badge>
       )}
@@ -103,10 +103,10 @@ export function LifecycleBadgeCompact({
   requiredLevels
 }: LifecycleBadgesProps) {
   const statusColors = {
-    OPEN: 'bg-blue-500',
-    LOCKED: 'bg-orange-500',
+    OPEN: 'bg-app-info',
+    LOCKED: 'bg-app-warning',
     VERIFIED: 'bg-purple-500',
-    CONFIRMED: 'bg-green-500'
+    CONFIRMED: 'bg-app-success'
   };
 
   return (

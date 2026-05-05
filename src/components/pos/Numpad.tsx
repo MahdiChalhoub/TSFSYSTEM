@@ -68,7 +68,7 @@ export function Numpad({
  };
 
  const modeColors: Record<NumpadMode, string> = {
- qty: 'bg-indigo-600 text-app-foreground',
+ qty: 'bg-app-info text-app-foreground',
  disc: 'bg-app-warning text-app-foreground',
  price: 'bg-app-primary text-app-foreground',
  };
@@ -112,7 +112,7 @@ export function Numpad({
  ))}
  <button
  onClick={handleBackspace}
- className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-muted-foreground hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-muted-foreground hover:bg-app-error-soft hover:text-app-error active:scale-95 transition-all shadow-sm flex items-center justify-center"
  >
  <Delete size={18} />
  </button>

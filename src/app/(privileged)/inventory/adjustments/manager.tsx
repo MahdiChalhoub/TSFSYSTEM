@@ -102,7 +102,7 @@ export default function StockAdjustmentManager({
                                 className={clsx(
                                     "px-4 py-3 rounded-xl border flex-shrink-0 transition-all",
                                     selectedWarehouseId === w.id
-                                        ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
+                                        ? "bg-app-info border-indigo-600 text-white shadow-lg shadow-indigo-200"
                                         : "bg-app-surface border-app-border text-app-muted-foreground hover:bg-app-surface-2"
                                 )}
                             >
@@ -145,7 +145,7 @@ export default function StockAdjustmentManager({
                                         "w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group",
                                         selectedProduct?.id === product.id
                                             ? "bg-app-info-bg border-app-info ring-2 ring-indigo-100"
-                                            : "bg-app-surface border-gray-50 hover:border-app-border hover:bg-app-surface/50"
+                                            : "bg-app-surface border-app-border hover:border-app-border hover:bg-app-surface/50"
                                     )}
                                 >
                                     <div className="flex items-center gap-4">
@@ -221,7 +221,7 @@ export default function StockAdjustmentManager({
                                                 className={clsx(
                                                     "flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wide transition-all",
                                                     isSelected
-                                                        ? (isAddition ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-rose-500 text-white shadow-lg shadow-rose-200")
+                                                        ? (isAddition ? "bg-app-success text-white shadow-lg shadow-emerald-200" : "bg-app-error text-white shadow-lg shadow-rose-200")
                                                         : "text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-surface"
                                                 )}
                                             >
@@ -293,8 +293,8 @@ export default function StockAdjustmentManager({
                                     : isPending
                                         ? "bg-indigo-400 cursor-wait"
                                         : quantity > 0
-                                            ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200"
-                                            : "bg-rose-500 hover:bg-rose-600 shadow-rose-200"
+                                            ? "bg-app-success hover:bg-app-success shadow-emerald-200"
+                                            : "bg-app-error hover:bg-app-error shadow-rose-200"
                             )}
                         >
                             {isPending ? (

@@ -220,7 +220,10 @@ def send_ai_assistant_digest():
     sent_count = 0
     org_count  = 0
 
-    for cfg in AIScopeSuggesterConfig.objects.filter(enabled=True).select_related('organization', 'provider'):
+    # NOTE: only select_related the organization — the provider is fetched
+    # by enrich_suggestions inside the loop via its own _resolve_provider
+    # call, so JOINing it here is dead and just makes the queryset wider.
+    for cfg in AIScopeSuggesterConfig.objects.filter(enabled=True).select_related('organization'):
         org = cfg.organization
         org_count += 1
 

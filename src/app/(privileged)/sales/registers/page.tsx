@@ -160,7 +160,7 @@ export default function RegistersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    reg.is_active ? 'bg-green-500/15 text-green-400' : 'bg-app-foreground/10 text-app-foreground/30'
+                    reg.is_active ? 'bg-app-success/15 text-green-400' : 'bg-app-foreground/10 text-app-foreground/30'
                   }`}>
                     {reg.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -199,8 +199,8 @@ export default function RegistersPage() {
                   onClick={() => handleToggleActive(reg)}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     reg.is_active
-                      ? 'bg-rose-500/10 hover:bg-rose-500/20 text-app-error'
-                      : 'bg-green-500/10 hover:bg-green-500/20 text-green-400'
+                      ? 'bg-app-error/10 hover:bg-app-error/20 text-app-error'
+                      : 'bg-app-success/10 hover:bg-app-success/20 text-green-400'
                   }`}
                 >
                   {reg.is_active ? <><PowerOff size={13} /> Deactivate</> : <><Power size={13} /> Activate</>}

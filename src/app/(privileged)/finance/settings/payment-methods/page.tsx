@@ -183,7 +183,7 @@ export default function PaymentMethodsPage() {
                                     </button>
                                     {!m.is_system && (
                                         <button onClick={() => handleDelete(m)}
-                                            className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Delete">
+                                            className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors" title="Delete">
                                             <Trash2 size={12} className="text-app-error" />
                                         </button>
                                     )}

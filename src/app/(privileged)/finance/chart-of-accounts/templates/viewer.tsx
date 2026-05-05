@@ -101,7 +101,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                 <span>-</span>
                                 <span className="p-1 bg-amber-800 rounded">Expenses</span>
                                 <span>=</span>
-                                <span className="p-1 bg-amber-800/50 border border-amber-400 rounded text-amber-200 italic font-bold">Net Profit</span>
+                                <span className="p-1 bg-amber-800/50 border border-app-warning rounded text-amber-200 italic font-bold">Net Profit</span>
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             onClick={() => toggleTemplate(key)}
                             className={`flex-shrink-0 px-6 py-3 rounded-2xl border transition-all flex items-center gap-3 ${selectedTemplates.includes(key)
                                 ? 'bg-app-bg border-stone-900 text-white shadow-xl shadow-stone-200'
-                                : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-stone-400'
+                                : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
                                 }`}
                         >
                             {selectedTemplates.includes(key) ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Library size={16} />}
@@ -150,7 +150,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                     <button
                                         disabled={isPending}
                                         onClick={() => handleImport(key)}
-                                        className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm"
+                                        className="bg-app-success text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-app-success transition-all flex items-center gap-2 shadow-sm"
                                     >
                                         <Zap size={14} /> Import
                                     </button>

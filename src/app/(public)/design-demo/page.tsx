@@ -79,7 +79,7 @@ export default function PublicDesignDemoPage() {
             </Card>
 
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-full text-sm">
+              <div className="inline-flex items-center gap-2 bg-app-success/20 text-green-300 px-4 py-2 rounded-full text-sm">
                 ✅ Currently Using
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function PublicDesignDemoPage() {
 
           {/* GLASS VARIANT */}
           <div className="space-y-4">
-            <div className="text-center bg-pink-500/20 rounded-lg p-4 backdrop-blur-sm border border-pink-400/50">
+            <div className="text-center bg-app-error/20 rounded-lg p-4 backdrop-blur-sm border border-app-error/50">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <h2 className="text-2xl font-bold text-white">
                   3. Glass
@@ -187,7 +187,7 @@ export default function PublicDesignDemoPage() {
             </Card>
 
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 bg-pink-500/30 text-pink-200 px-4 py-2 rounded-full text-sm border border-pink-400">
+              <div className="inline-flex items-center gap-2 bg-app-error/30 text-pink-200 px-4 py-2 rounded-full text-sm border border-app-error">
                 💎 PREMIUM
               </div>
             </div>
@@ -282,7 +282,7 @@ export default function PublicDesignDemoPage() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Revenue</p>
                   <p className="text-3xl font-bold">$45,231</p>
-                  <p className="text-xs text-green-600 mt-1">+12.5% vs last month</p>
+                  <p className="text-xs text-app-success mt-1">+12.5% vs last month</p>
                 </div>
               </CardContent>
             </Card>
@@ -292,7 +292,7 @@ export default function PublicDesignDemoPage() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Users</p>
                   <p className="text-3xl font-bold text-[#9b87f5]">2,543</p>
-                  <p className="text-xs text-green-600 mt-1">+8.3% vs last week</p>
+                  <p className="text-xs text-app-success mt-1">+8.3% vs last week</p>
                 </div>
               </CardContent>
             </Card>

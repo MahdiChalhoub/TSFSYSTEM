@@ -50,16 +50,16 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: ${PG_MEMORY_LIMIT:-2G}
         reservations:
-          memory: 128M
+          memory: ${PG_MEMORY_RESERVE:-512M}
 
   # ─── Redis ───────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: tsf_redis
     restart: unless-stopped
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    command: redis-server --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru --appendonly yes
     volumes:
       - redisdata:/data
     # NOT exposed to host — only reachable inside tsf_network.
@@ -74,9 +74,35 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
         reservations:
-          memory: 64M
+          memory: ${REDIS_MEMORY_RESERVE:-128M}
+
+  # ─── PgBouncer (Connection Pooler) ──────────────────────────────────────────
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.0
+    container_name: tsf_pgbouncer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-tsfdb}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=500
+      - DEFAULT_POOL_SIZE=50
+      - MIN_POOL_SIZE=10
+      - RESERVE_POOL_SIZE=10
+      - SERVER_RESET_QUERY=DISCARD ALL
+      - AUTH_TYPE=scram-sha-256
+    networks:
+      - tsf_network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
 
   # ─── Django Backend ───────────────────────────────────────────────────────────
   backend:
@@ -97,7 +123,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-tsfdb}
-      - DB_HOST=postgres
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=5432
       - DB_NAME=${DB_NAME:-tsfdb}
       - DB_USER=${DB_USER:-postgres}
@@ -119,9 +145,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: ${BACKEND_MEMORY_LIMIT:-2G}
         reservations:
-          memory: 256M
+          memory: ${BACKEND_MEMORY_RESERVE:-512M}
 
   # ─── Celery Worker ────────────────────────────────────────────────────────────
   celery_worker:
@@ -130,7 +156,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: tsf_celery
     restart: unless-stopped
-    command: celery -A core worker -l info --concurrency=2
+    command: celery -A core worker -l info --concurrency=${CELERY_CONCURRENCY:-4} -Q default,critical,bulk
     depends_on:
       postgres:
         condition: service_healthy
@@ -141,7 +167,7 @@ services:
       - mediafiles:/app/media
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-tsfdb}
-      - DB_HOST=postgres
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=5432
       - DB_NAME=${DB_NAME:-tsfdb}
       - DB_USER=${DB_USER:-postgres}
@@ -155,9 +181,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: ${CELERY_MEMORY_LIMIT:-1G}
         reservations:
-          memory: 128M
+          memory: ${CELERY_MEMORY_RESERVE:-256M}
 
   # ─── Celery Beat (Scheduler) ─────────────────────────────────────────────────
   celery_beat:

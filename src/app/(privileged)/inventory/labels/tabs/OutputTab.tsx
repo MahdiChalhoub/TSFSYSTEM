@@ -132,7 +132,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => handleTest(p.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-app-primary/10" title="Test"><Zap size={12} style={{ color: v('--app-primary') }} /></button>
                                         <button onClick={() => editPrinter(p)} className="p-1.5 rounded-lg hover:bg-app-primary/10" title="Edit"><Pencil size={12} style={{ color: v('--app-primary') }} /></button>
-                                        <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg hover:bg-rose-500/10" title="Delete"><Trash2 size={12} className="text-app-error" /></button>
+                                        <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg hover:bg-app-error/10" title="Delete"><Trash2 size={12} className="text-app-error" /></button>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 mt-1.5 text-[10px] text-app-muted-foreground">

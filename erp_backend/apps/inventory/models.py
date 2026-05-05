@@ -211,6 +211,13 @@ class Product(TenantModel):
                 condition=Q(barcode__isnull=False),
             ),
         ]
+        indexes = [
+            models.Index(fields=['organization', 'category']),
+            models.Index(fields=['organization', 'is_active']),
+            models.Index(fields=['organization', 'name']),
+            models.Index(fields=['organization', 'brand']),
+            models.Index(fields=['organization', 'created_at']),
+        ]
 
     def __str__(self):
         return f"{self.sku} - {self.name}"
@@ -285,6 +292,10 @@ class Inventory(TenantModel):
     class Meta:
         db_table = 'inventory'
         unique_together = ('warehouse', 'product', 'organization')
+        indexes = [
+            models.Index(fields=['organization', 'product']),
+            models.Index(fields=['organization', 'warehouse', 'product']),
+        ]
 
 
 class InventoryMovement(TenantModel):
@@ -307,6 +318,11 @@ class InventoryMovement(TenantModel):
 
     class Meta:
         db_table = 'inventorymovement'
+        indexes = [
+            models.Index(fields=['organization', 'product', 'created_at']),
+            models.Index(fields=['organization', 'warehouse', 'created_at']),
+            models.Index(fields=['organization', 'type', 'created_at']),
+        ]
 
 
 # =============================================================================

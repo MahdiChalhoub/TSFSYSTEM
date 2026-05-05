@@ -58,7 +58,7 @@ function CheckoutForm({ onSuccess, onError }: { onSuccess: (id: string) => void,
             </div>
 
             {errorMessage && (
-                <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm animate-shake">
+                <div className="flex items-center gap-2 p-4 bg-app-error/10 border border-app-error/20 rounded-xl text-red-400 text-sm animate-shake">
                     <AlertCircle size={16} />
                     {errorMessage}
                 </div>
@@ -66,7 +66,7 @@ function CheckoutForm({ onSuccess, onError }: { onSuccess: (id: string) => void,
 
             <button
                 disabled={!stripe || loading}
-                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-app-success text-white rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-app-success transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50 flex items-center justify-center gap-2"
             >
                 {loading ? (
                     <><Loader2 size={18} className="animate-spin" /> Processing Securely...</>

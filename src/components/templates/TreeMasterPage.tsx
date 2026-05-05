@@ -127,8 +127,9 @@ interface TreeMasterPageProps {
     modals?: ReactNode
     aboveTree?: ReactNode
     /** Slot for a floating bulk-action bar rendered when items are selected.
-     *  Receives the count and a clearSelection callback. */
-    bulkActions?: (props: { count: number; clearSelection: () => void }) => ReactNode
+     *  Receives the selected ids (so custom verbs can target them), the
+     *  current count, and a clearSelection callback. */
+    bulkActions?: (props: { count: number; ids: number[]; clearSelection: () => void }) => ReactNode
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -721,7 +722,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
             {/* ═══════════════ BULK ACTION BAR ═══════════════ */}
             {config.selectable && selectedIds.size > 0 && (
                 bulkActions
-                    ? bulkActions({ count: selectedIds.size, clearSelection })
+                    ? bulkActions({ count: selectedIds.size, ids: Array.from(selectedIds), clearSelection })
                     : (config.onBulkDelete || config.onBulkMove || config.bulkMove) && (
                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl animate-in slide-in-from-bottom-4 duration-200"
                             style={{

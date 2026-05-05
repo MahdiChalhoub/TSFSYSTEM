@@ -95,10 +95,10 @@ export function CommandPalette() {
 
             {/* Palette */}
             <div className="fixed top-[15%] left-1/2 -translate-x-1/2 w-full max-w-xl z-50 animate-in fade-in slide-in-from-top-4 duration-200">
-                <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-2xl border border-app-border overflow-hidden">
                     {/* Search Input */}
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-                        <Search size={20} className="text-gray-400 shrink-0" />
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-app-border">
+                        <Search size={20} className="text-app-muted-foreground shrink-0" />
                         <input
                             ref={inputRef}
                             type="text"
@@ -106,9 +106,9 @@ export function CommandPalette() {
                             onChange={e => { setQuery(e.target.value); setSelectedIndex(0) }}
                             onKeyDown={handleKeyDown}
                             placeholder="Search pages, settings, reports..."
-                            className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400"
+                            className="flex-1 text-sm outline-none bg-transparent placeholder:text-app-muted-foreground"
                         />
-                        <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-bold text-gray-400 bg-gray-100 rounded-lg border border-gray-200">
+                        <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-bold text-app-muted-foreground bg-gray-100 rounded-lg border border-app-border">
                             ESC
                         </kbd>
                     </div>
@@ -116,7 +116,7 @@ export function CommandPalette() {
                     {/* Results */}
                     <div className="max-h-[340px] overflow-y-auto p-2">
                         {filtered.length === 0 ? (
-                            <div className="py-8 text-center text-sm text-gray-400">
+                            <div className="py-8 text-center text-sm text-app-muted-foreground">
                                 No pages found for &quot;{query}&quot;
                             </div>
                         ) : (
@@ -126,24 +126,24 @@ export function CommandPalette() {
                                     onClick={() => navigate(item.path)}
                                     onMouseEnter={() => setSelectedIndex(i)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${i === selectedIndex
-                                            ? 'bg-emerald-50 text-emerald-800'
-                                            : 'text-gray-700 hover:bg-gray-50'
+                                            ? 'bg-app-success-soft text-app-success'
+                                            : 'text-app-muted-foreground hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-semibold truncate">{item.title}</div>
-                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">
+                                        <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider truncate">
                                             {item.section} → {item.path}
                                         </div>
                                     </div>
-                                    {i === selectedIndex && <ArrowRight size={14} className="text-emerald-500 shrink-0" />}
+                                    {i === selectedIndex && <ArrowRight size={14} className="text-app-success shrink-0" />}
                                 </button>
                             ))
                         )}
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center gap-4 px-5 py-3 bg-gray-50 border-t border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-4 px-5 py-3 bg-gray-50 border-t border-app-border text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-white rounded border text-[9px]">↑↓</kbd> Navigate</span>
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-white rounded border text-[9px]">↵</kbd> Open</span>
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-white rounded border text-[9px]">Esc</kbd> Close</span>
@@ -162,7 +162,7 @@ export function CommandPaletteTrigger() {
     }
 
     return (
-        <button onClick={handleClick} className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl text-gray-400">
+        <button onClick={handleClick} className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl text-app-muted-foreground">
             <Search size={22} />
         </button>
     )

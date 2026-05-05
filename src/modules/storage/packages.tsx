@@ -53,18 +53,18 @@ interface ActiveUpload {
 
 // ─── Constants ───────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{ size?: number; className?: string }>; label: string }> = {
-    uploading: { color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: Loader2, label: 'Uploading' },
-    ready: { color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: CheckCircle2, label: 'Ready' },
-    scheduled: { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Clock, label: 'Scheduled' },
+    uploading: { color: 'bg-app-info/20 text-blue-400 border-app-info/30', icon: Loader2, label: 'Uploading' },
+    ready: { color: 'bg-app-success/20 text-emerald-400 border-app-success/30', icon: CheckCircle2, label: 'Ready' },
+    scheduled: { color: 'bg-app-warning/20 text-amber-400 border-app-warning/30', icon: Clock, label: 'Scheduled' },
     applying: { color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: Zap, label: 'Applying' },
-    applied: { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle2, label: 'Applied' },
-    failed: { color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle, label: 'Failed' },
+    applied: { color: 'bg-app-success/20 text-green-400 border-app-success/30', icon: CheckCircle2, label: 'Applied' },
+    failed: { color: 'bg-app-error/20 text-red-400 border-app-error/30', icon: XCircle, label: 'Failed' },
     rolled_back: { color: 'bg-gray-500/20 text-app-muted-foreground border-gray-500/30', icon: RotateCcw, label: 'Rolled Back' },
 };
 
 const TYPE_CONFIG: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>; color: string; label: string }> = {
-    kernel: { icon: Server, color: 'text-red-400 bg-red-500/10', label: 'Kernel' },
-    frontend: { icon: Globe, color: 'text-blue-400 bg-blue-500/10', label: 'Frontend' },
+    kernel: { icon: Server, color: 'text-red-400 bg-app-error/10', label: 'Kernel' },
+    frontend: { icon: Globe, color: 'text-blue-400 bg-app-info/10', label: 'Frontend' },
     module: { icon: Box, color: 'text-purple-400 bg-purple-500/10', label: 'Module' },
 };
 
@@ -262,7 +262,7 @@ export default function PackageManagerPage() {
         <div className="max-w-7xl mx-auto space-y-6">
             {/* Toast Notification */}
             {toast && (
-                <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border backdrop-blur-xl animate-in slide-in-from-right-5 ${toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border backdrop-blur-xl animate-in slide-in-from-right-5 ${toast.type === 'success' ? 'bg-app-success/10 border-app-success/30 text-emerald-400' : 'bg-app-error/10 border-app-error/30 text-red-400'}`}>
                     {toast.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                     <span className="text-sm font-medium">{toast.message}</span>
                     <button onClick={() => setToast(null)} className="ml-2 text-app-muted-foreground hover:text-white"><X size={14} /></button>
@@ -287,7 +287,7 @@ export default function PackageManagerPage() {
                     </button>
                     <input ref={uploadInputRef} type="file" accept=".zip" className="hidden" onChange={handleUpload} />
                     <button onClick={fetchData}
-                        className="p-2.5 rounded-xl bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-700 transition-all">
+                        className="p-2.5 rounded-xl bg-gray-800 text-app-muted-foreground hover:text-white hover:bg-gray-700 border border-gray-700 transition-all">
                         <RefreshCcw size={16} />
                     </button>
                 </div>
@@ -300,7 +300,7 @@ export default function PackageManagerPage() {
                     <StatsCard label="Kernel" value={stats.by_type.kernel} icon={Server} color={TYPE_CONFIG.kernel.color} />
                     <StatsCard label="Frontend" value={stats.by_type.frontend} icon={Globe} color={TYPE_CONFIG.frontend.color} />
                     <StatsCard label="Modules" value={stats.by_type.module} icon={Box} color={TYPE_CONFIG.module.color} />
-                    <StatsCard label="Applied" value={stats.by_status.applied} icon={CheckCircle2} color="text-green-400 bg-green-500/10" />
+                    <StatsCard label="Applied" value={stats.by_status.applied} icon={CheckCircle2} color="text-green-400 bg-app-success/10" />
                 </div>
             )}
 
@@ -326,7 +326,7 @@ export default function PackageManagerPage() {
 
             {/* Active Interrupted Package Uploads */}
             {activeUploads.length > 0 && (
-                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
+                <div className="bg-app-warning/5 border border-app-warning/20 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <AlertTriangle size={16} className="text-amber-400" />
                         <span className="text-sm font-medium text-amber-400">Interrupted Package Uploads — Action Required</span>
@@ -338,7 +338,7 @@ export default function PackageManagerPage() {
                                 <tc.icon size={16} className={tc.color.split(' ').find(c => c.startsWith('text-')) || 'text-app-muted-foreground'} />
                                 <span className="text-sm text-gray-200 flex-1 truncate">{u.filename}</span>
                                 <div className="w-32 bg-gray-800 rounded-full h-1.5">
-                                    <div className="bg-amber-500 h-full rounded-full" style={{ width: `${u.progress}%` }} />
+                                    <div className="bg-app-warning h-full rounded-full" style={{ width: `${u.progress}%` }} />
                                 </div>
                                 <span className="text-xs text-amber-400 font-mono w-10 text-right">{u.progress}%</span>
                                 <span className="text-xs text-app-muted-foreground">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
@@ -351,14 +351,14 @@ export default function PackageManagerPage() {
             {/* Filters */}
             <div className="flex items-center gap-3">
                 <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-                    className="px-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-gray-300 text-sm outline-none focus:border-purple-500/50 transition-all appearance-none cursor-pointer pr-8">
+                    className="px-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-app-muted-foreground text-sm outline-none focus:border-purple-500/50 transition-all appearance-none cursor-pointer pr-8">
                     <option value="">All Types</option>
                     <option value="kernel">Kernel</option>
                     <option value="frontend">Frontend</option>
                     <option value="module">Module</option>
                 </select>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                    className="px-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-gray-300 text-sm outline-none focus:border-purple-500/50 transition-all appearance-none cursor-pointer pr-8">
+                    className="px-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-app-muted-foreground text-sm outline-none focus:border-purple-500/50 transition-all appearance-none cursor-pointer pr-8">
                     <option value="">All Statuses</option>
                     <option value="ready">Ready</option>
                     <option value="applied">Applied</option>
@@ -412,7 +412,7 @@ export default function PackageManagerPage() {
                                                 <span className="text-xs text-blue-400">{pkg.upload_progress}%</span>
                                             </div>
                                             <div className="w-full bg-gray-800 rounded-full h-1.5">
-                                                <div className="bg-blue-500 h-full rounded-full transition-all" style={{ width: `${pkg.upload_progress}%` }} />
+                                                <div className="bg-app-info h-full rounded-full transition-all" style={{ width: `${pkg.upload_progress}%` }} />
                                             </div>
                                         </div>
                                     )}
@@ -433,14 +433,14 @@ export default function PackageManagerPage() {
                                     <div className="flex items-center gap-1 shrink-0">
                                         {pkg.status === 'ready' && (
                                             <button onClick={e => { e.stopPropagation(); handleApply(pkg); }} disabled={isLoading}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 text-xs font-medium transition-all disabled:opacity-50"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-app-success/20 text-emerald-400 hover:bg-app-success/30 border border-app-success/30 text-xs font-medium transition-all disabled:opacity-50"
                                                 title="Apply Now">
                                                 {isLoading ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />} Apply
                                             </button>
                                         )}
                                         {pkg.status === 'applied' && pkg.backup_path && (
                                             <button onClick={e => { e.stopPropagation(); handleRollback(pkg); }} disabled={isLoading}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 border border-amber-500/30 text-xs font-medium transition-all disabled:opacity-50"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-app-warning/20 text-amber-400 hover:bg-app-warning/30 border border-app-warning/30 text-xs font-medium transition-all disabled:opacity-50"
                                                 title="Rollback">
                                                 {isLoading ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />} Rollback
                                             </button>
@@ -469,12 +469,12 @@ export default function PackageManagerPage() {
                                         {pkg.changelog && (
                                             <div className="mt-4 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
                                                 <p className="text-xs text-app-muted-foreground mb-1">Changelog</p>
-                                                <p className="text-sm text-gray-300">{pkg.changelog}</p>
+                                                <p className="text-sm text-app-muted-foreground">{pkg.changelog}</p>
                                             </div>
                                         )}
                                         {pkg.error_message && (
-                                            <div className="mt-4 p-3 bg-red-500/5 rounded-xl border border-red-500/20">
-                                                <p className="text-xs text-red-500 mb-1">Error</p>
+                                            <div className="mt-4 p-3 bg-app-error/5 rounded-xl border border-app-error/20">
+                                                <p className="text-xs text-app-error mb-1">Error</p>
                                                 <p className="text-sm text-red-400">{pkg.error_message}</p>
                                             </div>
                                         )}

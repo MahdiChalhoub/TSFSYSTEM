@@ -12,7 +12,7 @@ export function useFieldValidation(rules: Record<string, ValidationRule>) {
 
     const getStatusColor = useCallback((status: FieldStatus | null): string | null => {
         if (!status) return null;
-        return { ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-red-500' }[status];
+        return { ok: 'bg-app-success', warn: 'bg-app-warning', error: 'bg-app-error' }[status];
     }, []);
 
     const getStatusLabel = useCallback((status: FieldStatus | null): string | null => {

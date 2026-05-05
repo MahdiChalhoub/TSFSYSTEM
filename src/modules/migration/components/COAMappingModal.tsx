@@ -108,7 +108,7 @@ export function COAMappingModal({
                     <div className="flex items-center justify-between">
                         <div>
                             <DialogTitle className="flex items-center gap-2 text-xl font-black text-app-foreground">
-                                <Banknote className="w-6 h-6 text-emerald-600" />
+                                <Banknote className="w-6 h-6 text-app-success" />
                                 FINANCIAL ACCOUNT MAPPING
                             </DialogTitle>
                             <DialogDescription className="text-app-muted-foreground font-medium mt-1">
@@ -119,7 +119,7 @@ export function COAMappingModal({
                             variant="outline"
                             size="sm"
                             onClick={handleAutoMap}
-                            className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold gap-2"
+                            className="border-app-success bg-app-success-soft text-app-success hover:bg-app-success-soft font-bold gap-2"
                         >
                             <DatabaseZap className="w-4 h-4" />
                             Auto-Map by Name
@@ -138,7 +138,7 @@ export function COAMappingModal({
                                 <>
                                     {/*  Unmapped Accounts List  */}
                                     <div className="space-y-3">
-                                        <div className="grid grid-cols-[1fr,1.5fr] gap-4 font-bold text-[10px] uppercase tracking-wider text-amber-600 mb-2 px-4">
+                                        <div className="grid grid-cols-[1fr,1.5fr] gap-4 font-bold text-[10px] uppercase tracking-wider text-app-warning mb-2 px-4">
                                             <div>Action Required ({unmapped.length})</div>
                                             <div>TSF Chart of Account (Target)</div>
                                         </div>
@@ -148,13 +148,13 @@ export function COAMappingModal({
                                             </div>
                                         ) : (
                                             unmapped.map((acc: any) => (
-                                                <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-amber-50/30 p-4 rounded-xl border border-amber-200/50 hover:border-amber-400 hover:shadow-md transition-all group">
+                                                <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-app-warning-soft/30 p-4 rounded-xl border border-app-warning/50 hover:border-app-warning hover:shadow-md transition-all group">
                                                     <div className="pl-1">
-                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-amber-800 transition-colors uppercase tracking-tight">{acc.name}</p>
+                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-app-warning transition-colors uppercase tracking-tight">{acc.name}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             {acc.source_name ? (
                                                                 <>
-                                                                    <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-surface border-amber-200 text-amber-600 flex items-center gap-1">
+                                                                    <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-surface border-app-warning text-app-warning flex items-center gap-1">
                                                                         IMPORTED
                                                                     </Badge>
                                                                     <p className="text-[10px] text-app-muted-foreground font-mono truncate max-w-[150px]">{acc.source_name}</p>
@@ -171,14 +171,14 @@ export function COAMappingModal({
                                                             value={localMappings[acc.id]?.toString()}
                                                             onValueChange={(val) => handleSelect(acc.id, val)}
                                                         >
-                                                            <SelectTrigger className="bg-app-surface border-amber-300 text-[11px] h-10 hover:border-amber-400 transition-all font-semibold shadow-sm text-app-muted-foreground">
+                                                            <SelectTrigger className="bg-app-surface border-app-warning text-[11px] h-10 hover:border-app-warning transition-all font-semibold shadow-sm text-app-muted-foreground">
                                                                 <SelectValue placeholder="Associate Target COA..." />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-app-surface border-app-border text-app-foreground max-h-[300px]">
                                                                 {data?.coa_options?.map((coa: any) => (
-                                                                    <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-emerald-50 focus:text-emerald-700">
+                                                                    <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-app-success-soft focus:text-app-success">
                                                                         <div className="flex items-center gap-2">
-                                                                            <span className="font-mono text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
+                                                                            <span className="font-mono text-app-success font-bold bg-app-success-soft px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
                                                                             <span className="font-bold text-app-muted-foreground">{coa.name}</span>
                                                                             <span className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
                                                                         </div>
@@ -195,14 +195,14 @@ export function COAMappingModal({
                                     {/*  Mapped Accounts List  */}
                                     {mapped.length > 0 && (
                                         <div className="space-y-3 pt-6 border-t border-app-border">
-                                            <div className="grid grid-cols-[1fr,1.5fr] gap-4 font-bold text-[10px] uppercase tracking-wider text-emerald-600 mb-2 px-4">
+                                            <div className="grid grid-cols-[1fr,1.5fr] gap-4 font-bold text-[10px] uppercase tracking-wider text-app-success mb-2 px-4">
                                                 <div>Mapped Accounts ({mapped.length})</div>
                                                 <div>TSF Chart of Account (Target)</div>
                                             </div>
                                             {mapped.map((acc: any) => (
-                                                <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-app-surface p-4 rounded-xl border border-app-border hover:border-emerald-300 hover:shadow-md transition-all group">
+                                                <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-app-surface p-4 rounded-xl border border-app-border hover:border-app-success hover:shadow-md transition-all group">
                                                     <div className="pl-1">
-                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-emerald-700 transition-colors uppercase tracking-tight">{acc.name}</p>
+                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-app-success transition-colors uppercase tracking-tight">{acc.name}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             {acc.source_name ? (
                                                                 <>
@@ -223,14 +223,14 @@ export function COAMappingModal({
                                                             value={localMappings[acc.id]?.toString()}
                                                             onValueChange={(val) => handleSelect(acc.id, val)}
                                                         >
-                                                            <SelectTrigger className="bg-emerald-50/50 border-emerald-200 text-[11px] h-10 hover:border-emerald-400 transition-all font-semibold shadow-sm text-emerald-900">
+                                                            <SelectTrigger className="bg-app-success-soft/50 border-app-success text-[11px] h-10 hover:border-app-success transition-all font-semibold shadow-sm text-emerald-900">
                                                                 <SelectValue placeholder="Associate Target COA..." />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-app-surface border-app-border text-app-foreground max-h-[300px]">
                                                                 {data?.coa_options?.map((coa: any) => (
-                                                                    <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-emerald-50 focus:text-emerald-700">
+                                                                    <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-app-success-soft focus:text-app-success">
                                                                         <div className="flex items-center gap-2">
-                                                                            <span className="font-mono text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
+                                                                            <span className="font-mono text-app-success font-bold bg-app-success-soft px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
                                                                             <span className="font-bold text-app-muted-foreground">{coa.name}</span>
                                                                             <span className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
                                                                         </div>
@@ -252,7 +252,7 @@ export function COAMappingModal({
                 <div className="p-6 border-t border-app-border bg-app-bg flex justify-end gap-3 rounded-b-lg">
                     <Button variant="ghost" className="text-app-muted-foreground font-bold hover:bg-app-border" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
                     <Button
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-10 shadow-lg shadow-emerald-600/20 rounded-xl"
+                        className="bg-app-success hover:bg-app-success text-white font-black px-10 shadow-lg shadow-emerald-600/20 rounded-xl"
                         onClick={handleSave}
                         disabled={loading}
                     >

@@ -128,8 +128,8 @@ export function JurisdictionPreview({
                                     {destinationRegion && <span className="text-[10px]">-{destinationRegion}</span>}
                                 </span>
                             </div>
-                            {isDomestic && <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[9px] font-bold uppercase">Domestic</span>}
-                            {isExport && <span className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 text-[9px] font-bold uppercase">Export</span>}
+                            {isDomestic && <span className="px-1.5 py-0.5 rounded bg-app-success/15 text-emerald-400 text-[9px] font-bold uppercase">Domestic</span>}
+                            {isExport && <span className="px-1.5 py-0.5 rounded bg-app-info/15 text-blue-400 text-[9px] font-bold uppercase">Export</span>}
                         </div>
 
                         {/* Resolution details */}

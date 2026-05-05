@@ -69,8 +69,8 @@ function DropZone({ file, onFile }: { file: File | null; onFile: (f: File) => vo
             onClick={() => ref.current?.click()}
             className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
                 dragging ? 'border-stone-600 bg-app-surface scale-[1.01]' :
-                file ? 'border-emerald-400 bg-app-success-bg' :
-                'border-app-border hover:border-stone-400 hover:bg-app-surface'
+                file ? 'border-app-success bg-app-success-bg' :
+                'border-app-border hover:border-app-border hover:bg-app-surface'
             }`}
         >
             <input ref={ref} type="file" accept=".csv,text/csv" className="hidden"
@@ -494,7 +494,7 @@ function OpeningBalanceImport() {
                         <div>
                             <label className="block text-sm font-semibold text-app-foreground mb-1.5">Opening Balance Date</label>
                             <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-app-border" />
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-app-foreground mb-1.5">Import as</label>
@@ -729,7 +729,7 @@ export default function LedgerImportPage() {
                     return (
                         <button key={t.id} onClick={() => setTab(t.id)}
                             className={`flex-1 flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-                                active ? 'border-stone-900 bg-app-surface' : 'border-app-border hover:border-stone-400'
+                                active ? 'border-stone-900 bg-app-surface' : 'border-app-border hover:border-app-border'
                             }`}
                         >
                             <div className={`mt-0.5 p-1.5 rounded-lg ${active ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground'}`}>

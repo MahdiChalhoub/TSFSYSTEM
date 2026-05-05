@@ -75,7 +75,7 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                             <Sparkles className="absolute -right-2 -top-2 w-24 h-24 text-white/10 rotate-12 group-hover:scale-110 transition-transform" />
                             <h4 className="text-xl font-black leading-tight mb-2">Prime Clearance</h4>
                             <p className="text-sm text-indigo-100 mb-4 font-medium">Get exclusive access to warehouse liquidations.</p>
-                            <button className="w-full py-2.5 bg-app-surface text-indigo-700 rounded-xl text-xs font-black shadow-lg shadow-indigo-950/20 active:scale-95 transition-all">
+                            <button className="w-full py-2.5 bg-app-surface text-app-info rounded-xl text-xs font-black shadow-lg shadow-indigo-950/20 active:scale-95 transition-all">
                                 VIEW DEALS
                             </button>
                         </div>
@@ -91,20 +91,20 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                     placeholder="Search Amazon, AliExpress or Shopify style catalog..."
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
-                                    className="w-full bg-app-bg border border-app-border rounded-xl py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all placeholder:text-app-muted-foreground"
+                                    className="w-full bg-app-bg border border-app-border rounded-xl py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-app-warning transition-all placeholder:text-app-muted-foreground"
                                 />
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="flex bg-app-surface-2 p-1 rounded-xl">
                                     <button
                                         onClick={() => setLayout('grid')}
-                                        className={`p-2 rounded-lg transition-all ${layout === 'grid' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
+                                        className={`p-2 rounded-lg transition-all ${layout === 'grid' ? 'bg-app-surface text-app-info shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
                                     >
                                         <LayoutGrid size={18} />
                                     </button>
                                     <button
                                         onClick={() => setLayout('compact')}
-                                        className={`p-2 rounded-lg transition-all ${layout === 'compact' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
+                                        className={`p-2 rounded-lg transition-all ${layout === 'compact' ? 'bg-app-surface text-app-info shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
                                     >
                                         <List size={18} />
                                     </button>
@@ -124,7 +124,7 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                     {selectedCategory || 'Trending Now'}
                                 </h2>
                                 <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="w-2 h-2 rounded-full bg-app-success animate-pulse" />
                                     {filtered.length} Results in {orgName || 'Platform'}
                                 </p>
                             </div>
@@ -132,7 +132,7 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                         {/* Product Grid / Empty State */}
                         {filtered.length === 0 ? (
                             <div className="bg-app-surface rounded-3xl border border-app-border p-20 text-center space-y-4">
-                                <div className="w-20 h-20 bg-app-bg rounded-full flex items-center justify-center mx-auto text-slate-300">
+                                <div className="w-20 h-20 bg-app-bg rounded-full flex items-center justify-center mx-auto text-app-muted-foreground">
                                     <LayoutGrid size={40} />
                                 </div>
                                 <h3 className="text-xl font-bold text-app-foreground">No matches found</h3>
@@ -161,7 +161,7 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                 <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-yellow-400 text-app-foreground font-black text-sm">1</button>
                                 <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-app-bg text-app-muted-foreground font-bold text-sm">2</button>
                                 <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-app-bg text-app-muted-foreground font-bold text-sm">3</button>
-                                <div className="w-10 h-10 flex items-center justify-center text-slate-300">...</div>
+                                <div className="w-10 h-10 flex items-center justify-center text-app-muted-foreground">...</div>
                                 <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-app-bg text-app-muted-foreground font-bold text-sm">
                                     <ChevronRight size={18} />
                                 </button>

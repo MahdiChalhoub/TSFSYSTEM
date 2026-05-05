@@ -80,7 +80,7 @@ export function CartTotals({
                         )}
                         <button
                             onClick={onDiscountClick}
-                            className="px-2 py-0.5 bg-app-surface border border-app-border rounded text-[9px] hover:border-indigo-500 transition-all text-right min-w-[3rem]"
+                            className="px-2 py-0.5 bg-app-surface border border-app-border rounded text-[9px] hover:border-app-info transition-all text-right min-w-[3rem]"
                         >
                             {discountType === 'fixed' ? currency : ''}{discount.toFixed(2)}{discountType === 'percentage' ? '%' : ''}
                         </button>
@@ -88,7 +88,7 @@ export function CartTotals({
                 </div>
                 {loyaltyBalance > 0 && onSetPointsRedeemed && (
                     <div className="flex justify-between items-center pt-2">
-                        <span className="text-[9px] font-black tracking-widest text-indigo-500">Loyalty ({loyaltyBalance} pts)</span>
+                        <span className="text-[9px] font-black tracking-widest text-app-info">Loyalty ({loyaltyBalance} pts)</span>
                         <button
                             onClick={() => {
                                 const toggleTo = pointsRedeemed === loyaltyBalance ? 0 : loyaltyBalance;
@@ -96,7 +96,7 @@ export function CartTotals({
                             }}
                             className={clsx(
                                 "px-2 py-0.5 border rounded text-[9px] font-black transition-all",
-                                pointsRedeemed > 0 ? "bg-indigo-600 text-app-foreground border-indigo-600" : "bg-app-surface text-indigo-500 border-indigo-100 hover:border-indigo-300"
+                                pointsRedeemed > 0 ? "bg-app-info text-app-foreground border-indigo-600" : "bg-app-surface text-app-info border-indigo-100 hover:border-app-info"
                             )}
                         >
                             {pointsRedeemed > 0 ? `Redeeming ${pointsRedeemed}` : 'Redeem All'}
@@ -149,7 +149,7 @@ export function CartTotals({
                             const numericValue = e.target.value.replace(/\s+/g, '').replace(/,/g, '.');
                             if (/^\d*\.?\d*$/.test(numericValue)) onSetCashReceived(numericValue);
                         }}
-                        className="w-full pl-10 pr-3 py-3 bg-app-bg border border-app-border rounded-xl text-sm font-black text-app-foreground outline-none focus:bg-app-surface focus:border-indigo-500 transition-all tabular-nums text-right"
+                        className="w-full pl-10 pr-3 py-3 bg-app-bg border border-app-border rounded-xl text-sm font-black text-app-foreground outline-none focus:bg-app-surface focus:border-app-info transition-all tabular-nums text-right"
                     />
                 </div>
             </div>
@@ -168,7 +168,7 @@ export function CartTotals({
                         className={clsx(
                             "flex items-center gap-2 p-3 rounded-xl border transition-all",
                             paymentMethod === m.id
-                                ? 'bg-indigo-600 border-indigo-600 text-app-foreground shadow-lg'
+                                ? 'bg-app-info border-indigo-600 text-app-foreground shadow-lg'
                                 : 'bg-app-surface border-app-border text-app-muted-foreground hover:bg-app-bg'
                         )}
                     >
@@ -179,12 +179,12 @@ export function CartTotals({
             </div>
 
             {changeDue > 0 && onStoreChangeInWallet && (
-                <label className="flex items-center gap-2 cursor-pointer mt-2 text-[10px] font-black tracking-widest text-indigo-600 bg-indigo-50 p-2 rounded-xl hover:bg-indigo-100 transition-colors">
+                <label className="flex items-center gap-2 cursor-pointer mt-2 text-[10px] font-black tracking-widest text-app-info bg-app-info-soft p-2 rounded-xl hover:bg-app-info-soft transition-colors">
                     <input
                         type="checkbox"
                         checked={storeChangeInWallet}
                         onChange={(e) => onStoreChangeInWallet(e.target.checked)}
-                        className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3"
+                        className="rounded border-app-info text-app-info focus:ring-app-info w-3 h-3"
                     />
                     <Save size={14} className="opacity-70" />
                     Store {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })} in Wallet
@@ -196,7 +196,7 @@ export function CartTotals({
                 <button
                     onClick={onCharge}
                     disabled={isPending}
-                    className="w-full bg-indigo-600 text-app-foreground rounded-xl h-14 flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+                    className="w-full bg-app-info text-app-foreground rounded-xl h-14 flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-app-info active:scale-95 transition-all disabled:opacity-50"
                 >
                     {isPending ? (
                         <div className="flex items-center gap-3"><Loader2 size={16} className="animate-spin" /> Processing...</div>

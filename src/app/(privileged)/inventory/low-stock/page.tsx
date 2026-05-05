@@ -108,7 +108,7 @@ export default function LowStockPage() {
                     </CardContent>
                 </Card>
                 <Card
-                    className={`cursor-pointer transition-all border-l-4 border-l-red-500 ${activeFilter === 'OUT' ? 'ring-2 ring-red-500' : 'hover:shadow-md'}`}
+                    className={`cursor-pointer transition-all border-l-4 border-l-red-500 ${activeFilter === 'OUT' ? 'ring-2 ring-app-error' : 'hover:shadow-md'}`}
                     onClick={() => setActiveFilter(activeFilter === 'OUT' ? null : 'OUT')}
                 >
                     <CardContent className="py-4 text-center">
@@ -122,9 +122,9 @@ export default function LowStockPage() {
                     onClick={() => setActiveFilter(activeFilter === 'CRITICAL' ? null : 'CRITICAL')}
                 >
                     <CardContent className="py-4 text-center">
-                        <AlertTriangle size={24} className="mx-auto mb-2 text-orange-500" />
+                        <AlertTriangle size={24} className="mx-auto mb-2 text-app-warning" />
                         <p className="text-3xl font-bold text-app-warning">{stats.critical}</p>
-                        <p className="text-xs text-orange-500 uppercase font-medium">Critical</p>
+                        <p className="text-xs text-app-warning uppercase font-medium">Critical</p>
                     </CardContent>
                 </Card>
                 <Card
@@ -204,7 +204,7 @@ export default function LowStockPage() {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <div className="w-16 h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                         <div
-                                                            className={`h-full rounded-full ${p.severity === 'OUT' ? 'bg-red-500' : p.severity === 'CRITICAL' ? 'bg-orange-500' : 'bg-yellow-500'}`}
+                                                            className={`h-full rounded-full ${p.severity === 'OUT' ? 'bg-app-error' : p.severity === 'CRITICAL' ? 'bg-app-warning' : 'bg-app-warning'}`}
                                                             style={{ width: `${Math.min(stockPct, 100)}%` }}
                                                         />
                                                     </div>

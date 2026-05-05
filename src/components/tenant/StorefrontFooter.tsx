@@ -22,43 +22,43 @@ export function StorefrontFooter() {
                             {organization?.logo ? (
                                 <img src={organization.logo} alt={storeName} className="w-10 h-10 rounded-xl object-cover border border-white/10" />
                             ) : (
-                                <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
+                                <div className="w-10 h-10 bg-app-success/20 border border-app-success/30 rounded-xl flex items-center justify-center text-emerald-400">
                                     <Store size={20} />
                                 </div>
                             )}
                             <span className="text-xl font-black text-white">{storeName}</span>
                         </div>
-                        <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
+                        <p className="text-app-muted-foreground text-sm leading-relaxed max-w-sm">
                             {config?.storefront_tagline || `Welcome to ${storeName}. Your trusted digital storefront for quality products and services.`}
                         </p>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Shop</h4>
+                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Shop</h4>
                         <ul className="space-y-2.5">
                             <li>
                                 <Link href={`/tenant/${slug}`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Store size={14} /> Products
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/categories`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Grid3X3 size={14} /> Categories
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/search`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Search size={14} /> Search
                                 </Link>
                             </li>
                             {storeMode !== 'CATALOG_QUOTE' && (
                                 <li>
                                     <Link href={`/tenant/${slug}/cart`}
-                                        className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                        className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                         <ShoppingCart size={14} /> Cart
                                     </Link>
                                 </li>
@@ -66,7 +66,7 @@ export function StorefrontFooter() {
                             {storeMode === 'CATALOG_QUOTE' && (
                                 <li>
                                     <Link href={`/tenant/${slug}/quote`}
-                                        className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                        className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                         <FileQuestion size={14} /> Request Quote
                                     </Link>
                                 </li>
@@ -76,41 +76,41 @@ export function StorefrontFooter() {
 
                     {/* Account Links */}
                     <div>
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Account</h4>
+                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Account</h4>
                         <ul className="space-y-2.5">
                             <li>
                                 <Link href={`/tenant/${slug}/account`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <User size={14} /> Dashboard
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/orders`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Package size={14} /> Orders
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/wishlist`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Heart size={14} /> Wishlist
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/wallet`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Wallet size={14} /> Wallet
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/notifications`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <Bell size={14} /> Notifications
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/tickets`}
-                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    className="text-app-muted-foreground hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
                                     <LifeBuoy size={14} /> Support
                                 </Link>
                             </li>
@@ -120,10 +120,10 @@ export function StorefrontFooter() {
 
                 {/* Bottom Bar */}
                 <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-[10px] text-slate-700 font-bold uppercase tracking-widest">
+                    <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">
                         © {new Date().getFullYear()} {storeName} • Powered by {PLATFORM_CONFIG.name}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-700 font-medium">
+                    <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground font-medium">
                         <Shield size={12} /> Encrypted & Secured
                     </div>
                 </div>

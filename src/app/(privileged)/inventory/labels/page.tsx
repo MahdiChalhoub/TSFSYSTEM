@@ -141,7 +141,7 @@ export default function LabelPrintingPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-warning flex items-center justify-center">
                             <Tag size={20} className="text-white" />
                         </div>
                         Label Printing
@@ -159,7 +159,7 @@ export default function LabelPrintingPage() {
                 <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <Package size={24} className="text-orange-500" />
+                            <Package size={24} className="text-app-warning" />
                             <div>
                                 <p className="text-xs text-app-muted-foreground uppercase">Total Products</p>
                                 <p className="text-2xl font-bold">{products.length}</p>
@@ -224,7 +224,7 @@ export default function LabelPrintingPage() {
                             {selected.size === filtered.length ? 'Deselect All' : 'Select All'}
                         </button>
                         <button onClick={handlePrint}
-                            className="px-4 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 transition-all flex items-center gap-2 disabled:opacity-50"
+                            className="px-4 py-1.5 bg-app-warning text-white rounded-lg text-xs font-bold hover:bg-app-warning transition-all flex items-center gap-2 disabled:opacity-50"
                             disabled={selected.size === 0}
                         >
                             <Printer size={14} /> Print {selected.size > 0 ? `(${selected.size})` : ''}

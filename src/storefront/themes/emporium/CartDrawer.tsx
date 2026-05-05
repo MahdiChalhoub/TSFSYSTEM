@@ -69,13 +69,13 @@ export default function EmporiumCartDrawer() {
                         cart.map(item => {
                             const itemKey = `${item.product_id}-${item.variant_id || 'base'}`
                             return (
-                                <div key={itemKey} className="group flex gap-4 p-3 rounded-xl border border-app-border hover:border-yellow-200 hover:bg-yellow-50/30 transition-all">
+                                <div key={itemKey} className="group flex gap-4 p-3 rounded-xl border border-app-border hover:border-app-warning hover:bg-app-warning-soft/30 transition-all">
                                     <div className="w-20 h-20 bg-app-bg rounded-lg overflow-hidden shrink-0 border border-app-border p-1">
                                         {item.image_url ? (
                                             <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover rounded-md" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-app-surface-2 rounded-md">
-                                                <Package size={24} className="text-slate-300" />
+                                                <Package size={24} className="text-app-muted-foreground" />
                                             </div>
                                         )}
                                     </div>
@@ -107,7 +107,7 @@ export default function EmporiumCartDrawer() {
                                             </div>
                                             <button
                                                 onClick={() => removeFromCart(item.product_id, item.variant_id)}
-                                                className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
+                                                className="p-1.5 text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft rounded-md transition-all"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -131,7 +131,7 @@ export default function EmporiumCartDrawer() {
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[11px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md inline-block">Free Shipping Applied</p>
+                                <p className="text-[11px] font-bold text-app-success bg-app-success-soft px-2 py-1 rounded-md inline-block">Free Shipping Applied</p>
                             </div>
                         </div>
                         <div className="space-y-3">
@@ -148,7 +148,7 @@ export default function EmporiumCartDrawer() {
                             <Link
                                 href={`/tenant/${slug}/cart`}
                                 onClick={() => setCartOpen(false)}
-                                className="block w-full py-4 bg-app-surface border border-app-border hover:border-slate-400 text-app-muted-foreground hover:text-app-foreground rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all"
+                                className="block w-full py-4 bg-app-surface border border-app-border hover:border-app-border text-app-muted-foreground hover:text-app-foreground rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all"
                             >
                                 Edit Order
                             </Link>

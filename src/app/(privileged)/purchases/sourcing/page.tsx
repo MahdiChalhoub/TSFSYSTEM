@@ -79,7 +79,7 @@ export default async function SourcingDashboardPage() {
                                 <th className="p-8 text-right">Optimal Lead Time</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-app-border">
                             {data.map((item: Record<string, any>) => {
                                 const delta = item.max_price - item.min_price;
                                 const pct = item.max_price > 0 ? ((delta / item.max_price) * 100).toFixed(0) : 0;

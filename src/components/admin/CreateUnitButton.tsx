@@ -11,7 +11,7 @@ export function CreateUnitButton({ potentialParents = [] }: { potentialParents?:
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                className="bg-app-success text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
                 <Plus size={20} />
                 <span>Create Base Unit</span>

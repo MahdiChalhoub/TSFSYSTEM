@@ -203,7 +203,7 @@ export default function VerifyPage() {
                 </div>
                 <div className="flex gap-2">
                     {!isReadOnly && session?.status === 'WAITING_VERIFICATION' && (
-                        <Button onClick={handleVerifyAll} disabled={isPending} className="bg-green-600 hover:bg-green-700">
+                        <Button onClick={handleVerifyAll} disabled={isPending} className="bg-app-success hover:bg-app-success">
                             <ShieldCheck className="w-4 h-4 mr-2" /> Verify All
                         </Button>
                     )}

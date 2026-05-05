@@ -44,7 +44,7 @@ export default function EmployeeModal({
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-app-border flex justify-between items-center sticky top-0 bg-app-surface/80 backdrop-blur-md z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-600 shadow-lg shadow-indigo-100 text-white">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-app-info shadow-lg shadow-indigo-100 text-white">
                             <Users size={24} />
                         </div>
                         <div>
@@ -126,7 +126,7 @@ export default function EmployeeModal({
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="createLogin" className="sr-only peer" checked={createLogin} onChange={(e) => setCreateLogin(e.target.checked)} />
-                                <div className="w-14 h-7 bg-app-surface-2 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <div className="w-14 h-7 bg-app-surface-2 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-app-info"></div>
                             </label>
                         </div>
 
@@ -193,7 +193,7 @@ export default function EmployeeModal({
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="flex-[2] bg-indigo-600 text-white px-6 py-5 rounded-[24px] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+                            className="flex-[2] bg-app-info text-white px-6 py-5 rounded-[24px] font-black shadow-2xl shadow-indigo-100 hover:bg-app-info hover:-translate-y-1 active:translate-y-0 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50"
                         >
                             {isPending ? 'Propagating Identity...' : 'Complete Master Setup'}
                         </button>

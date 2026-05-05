@@ -388,7 +388,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  {siteRegisters.length === 0 ? (
  <div className="px-4 py-8 text-center text-app-muted-foreground text-sm">No registers at this site</div>
  ) : (
- <div className="divide-y divide-gray-50">
+ <div className="divide-y divide-app-border">
  {siteRegisters.map((reg: any) => (
  <div key={reg.id} className="px-4 py-3 flex items-center gap-4 hover:bg-app-surface-2/50 transition-colors">
  <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
@@ -646,7 +646,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  </div>
  <button onClick={() => handleSetOverridePin(user.id)}
  disabled={savingOverrideFor === user.id || !(overridePinInputs[user.id]?.length >= 4)}
- className="p-1 rounded-lg bg-app-error text-app-foreground hover:bg-rose-600 disabled:opacity-30 transition-all shrink-0">
+ className="p-1 rounded-lg bg-app-error text-app-foreground hover:bg-app-error disabled:opacity-30 transition-all shrink-0">
  {savingOverrideFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
  </button>
  </div>

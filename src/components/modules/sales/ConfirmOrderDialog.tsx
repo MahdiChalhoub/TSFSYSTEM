@@ -123,7 +123,7 @@ export function ConfirmOrderDialog({ open, onOpenChange, onConfirm, title = "Con
  <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
  Cancel
  </Button>
- <Button onClick={handleConfirm} disabled={submitting || loading} className="bg-app-primary hover:bg-emerald-700 text-app-foreground shadow-lg shadow-emerald-200">
+ <Button onClick={handleConfirm} disabled={submitting || loading} className="bg-app-primary hover:bg-app-success text-app-foreground shadow-lg shadow-emerald-200">
  {submitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
  {submitting ? 'Confirming...' : 'Confirm Order'}
  </Button>

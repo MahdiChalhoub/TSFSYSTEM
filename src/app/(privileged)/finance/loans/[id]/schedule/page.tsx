@@ -110,7 +110,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
         <Card className="rounded-2xl border-0 shadow-sm bg-app-info-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-app-info/10 flex items-center justify-center">
                 <DollarSign size={20} className="text-app-info" />
               </div>
               <div>
@@ -124,11 +124,11 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
         <Card className="rounded-2xl border-0 shadow-sm bg-app-warning-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-600/10 flex items-center justify-center">
-                <TrendingDown size={20} className="text-orange-700" />
+              <div className="w-10 h-10 rounded-xl bg-app-warning/10 flex items-center justify-center">
+                <TrendingDown size={20} className="text-app-warning" />
               </div>
               <div>
-                <p className="text-xs font-bold text-orange-700 uppercase tracking-widest">Total Interest</p>
+                <p className="text-xs font-bold text-app-warning uppercase tracking-widest">Total Interest</p>
                 <p className="text-xl font-black text-orange-900 mt-0.5">{fmt(totalInterest)}</p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
         <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-green-600/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-app-success/10 flex items-center justify-center">
                 <Clock size={20} className="text-app-success" />
               </div>
               <div>
@@ -301,7 +301,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <span className="font-mono text-sm text-orange-700">
+                        <span className="font-mono text-sm text-app-warning">
                           {fmt(installment.interest_amount)}
                         </span>
                       </td>
@@ -338,7 +338,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
                     </span>
                   </td>
                   <td className="py-4 px-4 text-right">
-                    <span className="font-mono text-lg font-black text-orange-700">
+                    <span className="font-mono text-lg font-black text-app-warning">
                       {fmt(totalInterest)}
                     </span>
                   </td>
@@ -361,7 +361,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
               <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-2">
                 Total Interest Cost
               </p>
-              <p className="text-3xl font-black text-orange-700">{fmt(totalInterest)}</p>
+              <p className="text-3xl font-black text-app-warning">{fmt(totalInterest)}</p>
               <p className="text-xs text-app-muted-foreground mt-1">
                 Over {loan.term_months} months
               </p>

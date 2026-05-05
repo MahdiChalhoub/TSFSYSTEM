@@ -248,7 +248,7 @@ export default function ConnectorBufferPage() {
                             <p className="text-sm mt-1">Requests are buffered when target modules are unavailable</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-app-border">
                             {buffers.map((buffer) => {
                                 const StatusIcon = statusIcons[buffer.status]
                                 return (

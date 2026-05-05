@@ -5,7 +5,7 @@
 
 import {
     Box, Sparkles, Layers, Search, Plus, Keyboard, MousePointerClick,
-    LayoutPanelLeft, ChevronRight, Tag, Barcode, DollarSign,
+    LayoutPanelLeft, Archive, Database, History,
 } from 'lucide-react'
 import { createElement } from 'react'
 import { registerTour } from '@/lib/tours/registry'
@@ -59,6 +59,24 @@ const tour: TourConfig = {
             title: 'Split Panel Mode',
             description: 'Flip to side-by-side view — tree on the left, detail panel permanently on the right. Handy when you\'re doing bulk edits across many packages in the same unit family.',
             icon: createElement(LayoutPanelLeft, { size: 16 }), color: 'var(--app-primary)',
+        },
+        {
+            target: '[data-tour="pkg-archive-toggle"]', placement: 'bottom',
+            title: 'Archive vs Delete',
+            description: 'Templates support a soft-delete: Archive hides them from the picker and the suggestion engine but preserves history. Toggle "Show archived" anytime to restore. Hard-delete (Trash) is staff-only.',
+            icon: createElement(Archive, { size: 16 }), color: 'var(--app-warning, #f59e0b)',
+        },
+        {
+            target: '[data-tour="data-menu-btn"]', placement: 'bottom',
+            title: 'Import / Export / Print',
+            description: 'Round-trip the catalog as CSV / Excel. Export carries `id` and `parent_id` so a re-import updates rows in place; the 2-pass importer wires the parent chain after every row exists, so order in the CSV doesn\'t matter.',
+            icon: createElement(Database, { size: 16 }), color: 'var(--app-success, #22c55e)',
+        },
+        {
+            target: null, isWelcome: true,
+            title: 'Detail panel: Audit tab',
+            description: 'Open any template and switch to the Audit tab to see who changed what (action chip · user · time-ago · per-field old → new diff). Same shape as the Units page — useful for compliance and "who broke this?" debugging.',
+            icon: createElement(History, { size: 16 }), color: 'var(--app-muted-foreground)',
         },
         {
             target: null, isWelcome: true,

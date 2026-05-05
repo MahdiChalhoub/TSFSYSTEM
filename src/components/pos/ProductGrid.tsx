@@ -219,9 +219,9 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
     if (loading && products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
-                <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                <p className="text-gray-500 font-medium">Loading products...</p>
-                <p className="text-sm text-gray-400 mt-1">This may take a moment for large catalogs</p>
+                <Loader2 className="w-12 h-12 text-app-info animate-spin mb-4" />
+                <p className="text-app-muted-foreground font-medium">Loading products...</p>
+                <p className="text-sm text-app-muted-foreground mt-1">This may take a moment for large catalogs</p>
             </div>
         );
     }
@@ -230,14 +230,14 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
     if (error && products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                    <AlertCircle className="w-8 h-8 text-red-500" />
+                <div className="w-16 h-16 bg-app-error-soft rounded-full flex items-center justify-center mb-4">
+                    <AlertCircle className="w-8 h-8 text-app-error" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Unable to Load Products</h3>
-                <p className="text-gray-500 mb-4 max-w-md">{error}</p>
+                <h3 className="text-lg font-bold text-app-foreground mb-2">Unable to Load Products</h3>
+                <p className="text-app-muted-foreground mb-4 max-w-md">{error}</p>
                 <button
                     onClick={retry}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="px-6 py-2 bg-app-info text-white rounded-lg hover:bg-app-info transition-colors font-medium"
                 >
                     Try Again
                 </button>
@@ -250,10 +250,10 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <PackageX className="w-8 h-8 text-gray-400" />
+                    <PackageX className="w-8 h-8 text-app-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">No Products Found</h3>
-                <p className="text-gray-500">
+                <h3 className="text-lg font-bold text-app-foreground mb-2">No Products Found</h3>
+                <p className="text-app-muted-foreground">
                     {searchQuery
                         ? `No results for "${searchQuery}". Try a different search term.`
                         : 'No products available. Add products to get started.'
@@ -267,10 +267,10 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
         <div className="space-y-4">
             {/* Offline Mode Banner */}
             {offlineMode && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                <div className="flex items-center gap-2 px-4 py-2 bg-app-warning-soft border border-app-warning rounded-lg text-app-warning text-sm">
                     <WifiOff size={16} />
                     <span className="font-medium">Offline Mode</span>
-                    <span className="text-amber-600">— Showing cached products. Orders will sync when you reconnect.</span>
+                    <span className="text-app-warning">— Showing cached products. Orders will sync when you reconnect.</span>
                 </div>
             )}
 
@@ -280,21 +280,21 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                     <div
                         key={product.id}
                         onClick={() => onAddToCart(product)}
-                        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 cursor-pointer transition-all active:scale-95 select-none flex flex-col justify-between h-[160px]"
+                        className="bg-white p-4 rounded-xl border border-app-border shadow-sm hover:shadow-md hover:border-app-info cursor-pointer transition-all active:scale-95 select-none flex flex-col justify-between h-[160px]"
                     >
                         <div>
                             {/* Placeholder for Image */}
-                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm font-bold mb-3">
+                            <div className="w-8 h-8 rounded-full bg-app-info-soft text-app-info flex items-center justify-center text-sm font-bold mb-3">
                                 {product.name.substring(0, 2).toUpperCase()}
                             </div>
-                            <h3 className="font-medium text-gray-800 leading-tight line-clamp-2">{product.name}</h3>
-                            <p className="text-xs text-gray-400 mt-1">{product.sku}</p>
+                            <h3 className="font-medium text-app-foreground leading-tight line-clamp-2">{product.name}</h3>
+                            <p className="text-xs text-app-muted-foreground mt-1">{product.sku}</p>
                         </div>
 
                         <div className="flex justify-between items-end mt-2">
-                            <span className="font-bold text-lg text-gray-900">${Number(product.basePrice).toFixed(2)}</span>
+                            <span className="font-bold text-lg text-app-foreground">${Number(product.basePrice).toFixed(2)}</span>
                             {Number(product.taxRate) > 0 && (
-                                <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
+                                <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-app-muted-foreground">
                                     {product.isTaxIncluded ? 'Tax Inc' : '+Tax'}
                                 </span>
                             )}
@@ -307,7 +307,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
             {hasMore && (
                 <div ref={observerTarget} className="flex justify-center py-8">
                     {loadingMore && (
-                        <div className="flex items-center gap-2 text-gray-500">
+                        <div className="flex items-center gap-2 text-app-muted-foreground">
                             <Loader2 className="w-5 h-5 animate-spin" />
                             <span className="text-sm">Loading more products...</span>
                         </div>
@@ -317,7 +317,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
 
             {/* End of catalog indicator */}
             {!hasMore && products.length > 0 && (
-                <div className="text-center py-6 text-sm text-gray-400">
+                <div className="text-center py-6 text-sm text-app-muted-foreground">
                     {searchQuery
                         ? `Showing all ${products.length} results for "${searchQuery}"`
                         : `All ${products.length} products loaded`

@@ -108,7 +108,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  {/* Header */}
  <div className="p-8 pb-3 flex flex-col items-center text-center">
  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${status === 'APPROVED' ? 'bg-app-primary-light text-app-primary' :
- status === 'REJECTED' ? 'bg-rose-50 text-rose-500 animate-shake' :
+ status === 'REJECTED' ? 'bg-app-error-soft text-app-error animate-shake' :
  'bg-app-warning-bg text-app-warning'
  }`}>
  {status === 'APPROVED' ? <Check size={32} /> :
@@ -119,7 +119,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  {status === 'APPROVED' ? 'Authorized' : 'Manager Override Required'}
  </h2>
  <p className="text-xs text-app-muted-foreground font-bold mt-1">
- Action: <span className="text-rose-500 uppercase font-black">{actionLabel}</span>
+ Action: <span className="text-app-error uppercase font-black">{actionLabel}</span>
  </p>
  </div>
 
@@ -139,13 +139,13 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  key={i}
  className={`w-10 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-200 ${i < pin.length
  ? status === 'REJECTED'
- ? 'bg-rose-100 border-rose-400'
- : 'bg-indigo-100 border-indigo-400'
+ ? 'bg-app-error-soft border-app-error'
+ : 'bg-app-info-soft border-app-info'
  : 'bg-app-bg border-app-border'
  }`}
  >
  {i < pin.length && (
- <div className={`w-3 h-3 rounded-full ${status === 'REJECTED' ? 'bg-rose-500' : 'bg-indigo-500'
+ <div className={`w-3 h-3 rounded-full ${status === 'REJECTED' ? 'bg-app-error' : 'bg-app-info'
  } animate-in zoom-in duration-150`} />
  )}
  </div>
@@ -174,8 +174,8 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  {/* Error message */}
  {error && (
  <div className="flex items-center justify-center gap-1.5 mb-2 animate-in slide-in-from-bottom-2">
- <AlertCircle size={12} className="text-rose-500" />
- <span className="text-xs font-bold text-rose-500">{error}</span>
+ <AlertCircle size={12} className="text-app-error" />
+ <span className="text-xs font-bold text-app-error">{error}</span>
  {attempts > 0 && (
  <span className="text-[10px] text-rose-400">({3 - attempts} attempts left)</span>
  )}
@@ -195,7 +195,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  ? 'bg-app-primary text-app-foreground hover:bg-app-primary shadow-lg shadow-emerald-200'
  : 'bg-app-surface-2 text-app-muted-foreground cursor-not-allowed'
  : val === 'C'
- ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 border border-rose-100'
+ ? 'bg-app-error-soft text-app-error hover:bg-app-error-soft border border-rose-100'
  : 'bg-app-bg text-app-foreground hover:bg-app-surface-2 border border-app-border'
  }`}
  >

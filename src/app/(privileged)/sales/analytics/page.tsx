@@ -129,7 +129,7 @@ export default function SalesAnalyticsPage() {
                 <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
-                            <DollarSign size={22} className="text-orange-500" />
+                            <DollarSign size={22} className="text-app-warning" />
                             <div>
                                 <p className="text-[10px] text-app-muted-foreground uppercase">Discounts</p>
                                 <p className="text-lg font-bold text-app-warning">{fmt(overall.discount)}</p>

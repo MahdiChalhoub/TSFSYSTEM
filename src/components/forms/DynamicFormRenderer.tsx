@@ -16,16 +16,16 @@ function FieldWrapper({
 }) {
     return (
         <div className="space-y-1">
-            <label className="block text-sm font-semibold text-stone-700">
+            <label className="block text-sm font-semibold text-app-muted-foreground">
                 {field.label}
-                {field.required && <span className="text-rose-500 ml-1">*</span>}
+                {field.required && <span className="text-app-error ml-1">*</span>}
             </label>
             {children}
             {field.help && !error && (
-                <p className="text-xs text-stone-400">{field.help}</p>
+                <p className="text-xs text-app-muted-foreground">{field.help}</p>
             )}
             {error && (
-                <p className="text-xs text-rose-600 font-medium">{error}</p>
+                <p className="text-xs text-app-error font-medium">{error}</p>
             )}
         </div>
     )
@@ -33,8 +33,8 @@ function FieldWrapper({
 
 const BASE_INPUT =
     'w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors'
-const INPUT_NORMAL = `${BASE_INPUT} border-stone-200 focus:ring-stone-400 focus:border-stone-400`
-const INPUT_ERROR  = `${BASE_INPUT} border-rose-300 focus:ring-rose-300 focus:border-rose-400 bg-rose-50`
+const INPUT_NORMAL = `${BASE_INPUT} border-app-border focus:ring-app-border focus:border-app-border`
+const INPUT_ERROR  = `${BASE_INPUT} border-app-error focus:ring-app-error focus:border-app-error bg-app-error-soft`
 
 function renderField(
     field: FormField,
@@ -111,7 +111,7 @@ function renderField(
                         onChange={e => onChange(e.target.checked)}
                         className="w-4 h-4 rounded accent-stone-900"
                     />
-                    <span className="text-sm text-stone-600">{field.placeholder ?? field.label}</span>
+                    <span className="text-sm text-app-muted-foreground">{field.placeholder ?? field.label}</span>
                 </label>
             )
 
@@ -256,7 +256,7 @@ export function DynamicFormRenderer({
 
     if (fields.length === 0) {
         return (
-            <div className="p-6 text-center text-stone-400 text-sm border border-dashed border-stone-200 rounded-xl">
+            <div className="p-6 text-center text-app-muted-foreground text-sm border border-dashed border-app-border rounded-xl">
                 This form has no fields defined.
             </div>
         )
@@ -272,7 +272,7 @@ export function DynamicFormRenderer({
     return (
         <form onSubmit={handleSubmit} className={className} noValidate>
             {globalError && (
-                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
+                <div className="mb-4 p-3 bg-app-error-soft border border-app-error rounded-lg text-app-error text-sm">
                     {globalError}
                 </div>
             )}
@@ -349,8 +349,8 @@ export function DynamicFormDisplay({
                 }
                 return (
                     <div key={field.key} className={field.type === 'textarea' ? 'col-span-2' : ''}>
-                        <dt className="text-xs font-bold text-stone-500 uppercase tracking-wider">{field.label}</dt>
-                        <dd className={`text-sm text-stone-900 mt-0.5 ${field.type === 'textarea' ? 'whitespace-pre-wrap' : ''}`}>{display}</dd>
+                        <dt className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">{field.label}</dt>
+                        <dd className={`text-sm text-app-foreground mt-0.5 ${field.type === 'textarea' ? 'whitespace-pre-wrap' : ''}`}>{display}</dd>
                     </div>
                 )
             })}

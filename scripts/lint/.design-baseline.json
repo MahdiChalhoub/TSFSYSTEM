@@ -1,0 +1,3625 @@
+{
+  "generated_at": "2026-05-05T00:14:45.592Z",
+  "total_violations": 4484,
+  "files": {
+    "src/app/(privileged)/(saas)/[...slug]/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/[code]/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/connector/buffer/page.tsx": {
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/connector/logs/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/connector/page.tsx": {
+      "oversized-title": 8,
+      "hardcoded-grid-cols": 4
+    },
+    "src/app/(privileged)/(saas)/connector/policies/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 7
+    },
+    "src/app/(privileged)/(saas)/countries/page.tsx": {
+      "tiny-text": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/country-tax-templates/editor.tsx": {
+      "tiny-text": 10
+    },
+    "src/app/(privileged)/(saas)/currencies/page.tsx": {
+      "tiny-text": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/encryption/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/(saas)/health/page.tsx": {
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 5,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/(saas)/kernel/page.tsx": {
+      "oversized-title": 2,
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/(saas)/modules/dependencies/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/modules/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/(saas)/organizations/OrganizationsClient.tsx": {
+      "hardcoded-grid-cols": 5
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/AddonsTab.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/BillingTab.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/BrandingTab.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tiny-text": 3
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/ModulesTab.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/OverviewTab.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/SitesTab.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/UsageTab.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/dialogs/ClientAssignDialog.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/dialogs/CreateSiteDialog.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/_components/dialogs/CreateUserDialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/[id]/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/page.tsx": {
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 5,
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/registrations/RegistrationQueue.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/organizations/registrations/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/(saas)/payment-gateways/GatewayEditorDialog.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/(saas)/payment-gateways/components/DetailPanel.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/(saas)/saas-home/SaasHomeClient.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/saas-home/loading.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/saas-home/page.tsx": {
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/(saas)/subscription/page.tsx": {
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/(saas)/subscription-plans/[id]/page.tsx": {
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 6
+    },
+    "src/app/(privileged)/(saas)/subscription-plans/page.tsx": {
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 10
+    },
+    "src/app/(privileged)/(saas)/switcher/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/(saas)/updates/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/access/client-access/page.tsx": {
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/access/supplier-access/page.tsx": {
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/approvals/page.tsx": {
+      "tw-color-palette": 3,
+      "min-h-screen-on-page": 1,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-tickets/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-tickets/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-wallets/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/admin-wallets/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/cart-promotions/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/cart-promotions/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/client-access/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/client-access/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/config/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/config/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/coupons/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/coupons/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/dashboard/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/dashboard/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-tickets/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-tickets/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-wallet/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/my-wallet/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/order-lines/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/order-lines/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/quote-requests/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/quote-requests/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/reviews/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/reviews/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/shipping-rates/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/shipping-rates/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/wishlist/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/client_portal/wishlist/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/client-gate-preview/client.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/contacts/[id]/page.tsx": {
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 7
+    },
+    "src/app/(privileged)/crm/contacts/_components/ContactPreviewPanel.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/contacts/form.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 10
+    },
+    "src/app/(privileged)/crm/contacts/manager.tsx": {
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/crm/contacts/page-legacy.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 3,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/(privileged)/crm/contacts/page.tsx": {
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/crm/dashboard/page.tsx": {
+      "oversized-title": 2,
+      "gradient-on-text-or-icon": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/crm/followups/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "gradient-on-text-or-icon": 2,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/crm/insights/page.tsx": {
+      "tw-color-palette": 9,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/crm/price-groups/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/price-groups/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/price-rules/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/price-rules/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/pricing/manager.tsx": {
+      "tw-color-palette": 16,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/crm/pricing/page.tsx": {
+      "tw-color-palette": 7,
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/settings/tags/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 2,
+      "gradient-on-text-or-icon": 4,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/crm/supplier-gate-preview/client.tsx": {
+      "oversized-title": 4,
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/crm/supplier-performance/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4,
+      "tw-color-palette": 5,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/dashboard/page-legacy.tsx": {
+      "hardcoded-grid-cols": 5,
+      "oversized-title": 9
+    },
+    "src/app/(privileged)/dashboard/page.tsx": {
+      "hardcoded-grid-cols": 5,
+      "oversized-title": 5,
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/delivery/_components/DriverDashboard.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/delivery/_components/DriverProfileModal.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/delivery/_components/DriverStatement.tsx": {
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/delivery/_components/LogExpenseModal.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/delivery/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/ecommerce/coupons/CouponsClient.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/ecommerce/orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/ecommerce/orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/ecommerce/promotions/PromotionsClient.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/ecommerce/quotes/QuotesClient.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/ecommerce/shipping/ShippingClient.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/ecommerce/storefront-config/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/ecommerce/storefront-config/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/ecommerce/themes/SectionBuilder.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/ecommerce/webhooks/WebhooksClient.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/error.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/account-book/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/account-categories/_components/CategoryFormModal.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tiny-text": 2
+    },
+    "src/app/(privileged)/finance/accounts/new/page.tsx": {
+      "tiny-text": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/aging/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/finance/allocation-workbench/AllocationWorkbenchClient.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/assets/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/assets/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/assets/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1,
+      "tw-color-palette": 10
+    },
+    "src/app/(privileged)/finance/audit/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/audit/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/audit-logs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/audit-logs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/audit-trail/page.tsx": {
+      "tw-color-palette": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/balances/page-client.tsx": {
+      "hardcoded-grid-cols": 2,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 4,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/finance/bank-reconciliation/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 6,
+      "gradient-on-text-or-icon": 4,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/finance/bank-statements/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/budget/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 7,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/budget-lines/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/budgets/[id]/page.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 5,
+      "tw-color-palette": 6
+    },
+    "src/app/(privileged)/finance/budgets/alerts/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/finance/budgets/new/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/budgets/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/finance/cash-register/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "tw-color-palette": 8,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/[id]/statement.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/migrate/execution-viewer.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 1,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/migrate/viewer.tsx": {
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/templates/migration-map-builder.tsx": {
+      "tw-color-palette": 9
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/templates/viewer.tsx": {
+      "min-h-screen-on-page": 1,
+      "tw-color-palette": 18,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/chart-of-accounts/viewer.tsx": {
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/finance/coa/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/coa/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/customer-balances/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/customer-balances/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/dashboard/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/dashboard/viewer.tsx": {
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 4,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/finance/deferred-expenses/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/deferred-expenses/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/deferred-expenses/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 4,
+      "tw-color-palette": 10
+    },
+    "src/app/(privileged)/finance/einvoice/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/einvoice/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/einvoicing/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/finance/events/[id]/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/events/new/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/events/page.tsx": {
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/expense-approvals/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "tw-color-palette": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/expenses/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/expenses/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/expenses/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 3,
+      "tw-color-palette": 7,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/financial-events/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/financial-events/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/fiscal-periods/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/fiscal-periods/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/fiscal-years/_components/CloseEntriesPanel.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/fiscal-years/_components/PeriodsGrid.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/fiscal-years/_components/SnapshotBrowserCard.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/fiscal-years/_components/SummaryTab.tsx": {
+      "hardcoded-grid-cols": 4
+    },
+    "src/app/(privileged)/finance/fiscal-years/mobile/MobileYearCreateSheet.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/finance/gateway/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/finance/gateway-configs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/gateway-configs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/invoice-lines/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/invoice-lines/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/invoices/[id]/InvoiceClientPage.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/finance/invoices/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/invoices/page.tsx": {
+      "tw-color-palette": 8,
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/finance/journal/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/journal/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/ledger/[id]/edit/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/ledger/_components/JournalRow.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/finance/ledger/import/page.tsx": {
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 5,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/ledger/manager.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/finance/ledger/new/CascadingAccountPicker.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/finance/ledger/new/form.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/ledger/opening/form.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/ledger/opening/list/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/loans/[id]/early-payoff-calculator.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5
+    },
+    "src/app/(privileged)/finance/loans/[id]/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/loans/[id]/schedule/page.tsx": {
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 6
+    },
+    "src/app/(privileged)/finance/loans/new/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/loans/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/opening-balances/manager.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/finance/org-tax-policies/_components/PresetCard.tsx": {
+      "tiny-text": 2
+    },
+    "src/app/(privileged)/finance/payment-allocations/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/payment-allocations/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/payment-approvals/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/payments/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/payments/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/payments/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1,
+      "tw-color-palette": 8
+    },
+    "src/app/(privileged)/finance/periodic-tax/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/periodic-tax/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/pricing/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/profit-centers/page.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 2,
+      "tw-color-palette": 9,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/profit-distribution/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/profit-distribution/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/profit-distribution/page.tsx": {
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 7
+    },
+    "src/app/(privileged)/finance/purchase-returns/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4,
+      "gradient-on-text-or-icon": 1,
+      "tw-color-palette": 6
+    },
+    "src/app/(privileged)/finance/reconciliation-sessions/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/_shared/components.tsx": {
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/finance/reports/balance-sheet/viewer.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 1,
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/finance/reports/builder/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/cash-flow/page.tsx": {
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/finance/reports/dashboard/page.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 12,
+      "tw-color-palette": 8
+    },
+    "src/app/(privileged)/finance/reports/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/page.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/finance/reports/pnl/viewer.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/statement/form.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/reports/statement/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/finance/reports/trial-balance/viewer.tsx": {
+      "oversized-title": 1,
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/revenue/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 7,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/sales-returns/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1,
+      "tw-color-palette": 8
+    },
+    "src/app/(privileged)/finance/settings/AccountingSetupHub.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/finance/settings/barcode/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/settings/barcode/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/settings/form-definitions/page.tsx": {
+      "tw-color-palette": 4,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/finance/settings/payment-methods/page.tsx": {
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/finance/setup/wizard.tsx": {
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/statements/page.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 2,
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/finance/supplier-balances/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/supplier-balances/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/tax-groups/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/tax-groups/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/tax-groups/page-client.tsx": {
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/finance/tax-policy/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/tax-rate-categories/page.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/finance/tax-reports/page.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 8,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/finance/vat-rate-history/page.tsx": {
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/finance/vat-return/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vat-return/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vat-settlement/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vat-settlement/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vouchers/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vouchers/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/finance/vouchers/page.tsx": {
+      "tw-color-palette": 11,
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/home/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/hr/attendance/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/attendance/client.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/attendance/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/attendance/page.tsx": {
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/hr/departments/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/departments/client.tsx": {
+      "tw-color-palette": 12,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/departments/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/departments/page.tsx": {
+      "oversized-title": 4,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/hr/employees/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/employees/[id]/wise-panel.tsx": {
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/hr/employees/form.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 4,
+      "tw-color-palette": 8
+    },
+    "src/app/(privileged)/hr/employees/manager.tsx": {
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/hr/employees/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/employees/page.tsx": {
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/hr/leaves/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/leaves/client.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/hr/leaves/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/leaves/page.tsx": {
+      "oversized-title": 5
+    },
+    "src/app/(privileged)/hr/overview/page-client.tsx": {
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/(privileged)/hr/payroll/page.tsx": {
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/hr/shifts/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/shifts/client.tsx": {
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/hr/shifts/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/hr/shifts/page.tsx": {
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/integrations/webhooks/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/integrations/webhooks/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/adjustment-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/adjustment-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/adjustment-orders/page.tsx": {
+      "tw-color-palette": 9,
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 5
+    },
+    "src/app/(privileged)/inventory/adjustments/manager.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 14,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/inventory/adjustments/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/aisles/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/aisles/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/alerts/AlertsClient.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/inventory/alerts/page.tsx": {
+      "oversized-title": 5,
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/analytics/page.tsx": {
+      "tw-color-palette": 35,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2,
+      "gradient-on-text-or-icon": 2
+    },
+    "src/app/(privileged)/inventory/attributes/AttributesClient.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/attributes/AttributesClientPage.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/inventory/attributes/CategoryView.tsx": {
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/inventory/attributes/ComponentParts.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/inventory/attributes/scope-wizard/ScopeWizardClient.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/barcode/page.tsx": {
+      "oversized-title": 2,
+      "tw-color-palette": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/barcode-policy/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/bins/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/bins/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/brands/NoTenantNotice.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/brands/components/BulkDialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/brands/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/categories/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/categories/components/BulkDialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/categories/components/CatalogueLanguagesDialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/categories/new/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/inventory/categories/rule-wizard/CategoryRuleWizardClient.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/category-rules/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/combo/manager.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 11
+    },
+    "src/app/(privileged)/inventory/combo/page.tsx": {
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/(privileged)/inventory/counting-lines/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/counting-lines/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/counting-sessions/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/counting-sessions/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/countries/CountriesClient.tsx": {
+      "hardcoded-grid-cols": 4
+    },
+    "src/app/(privileged)/inventory/countries/[id]/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/inventory/expiry-alerts/ExpiryAlertsClient.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/expiry-alerts/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "tw-color-palette": 7
+    },
+    "src/app/(privileged)/inventory/fresh/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 5
+    },
+    "src/app/(privileged)/inventory/fresh-profiles/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/global/manager.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 3,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/inventory/global/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/goods-receipts/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/intelligence/components/AllocationOptimizer.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/intelligence/components/DemandForecast.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/inventory/intelligence/components/TransferAnalysis.tsx": {
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/inventory/intelligence/page.tsx": {
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/inventory/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/inventory/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/inventory-group-members/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/inventory-groups/page.tsx": {
+      "hardcoded-grid-cols": 4,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/inventory-movements/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/inventory-movements/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/label-policy/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/label-records/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/labels/page.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/inventory/labels/printer.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 4,
+      "tiny-text": 2
+    },
+    "src/app/(privileged)/inventory/labels/tabs/LabelsQueueTab.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/labels/tabs/LayoutTab.tsx": {
+      "hardcoded-grid-cols": 2,
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/inventory/labels/tabs/MaintenanceTab.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/labels/tabs/OutputTab.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tiny-text": 4
+    },
+    "src/app/(privileged)/inventory/listview-settings/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/low-stock/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "tw-color-palette": 5
+    },
+    "src/app/(privileged)/inventory/movements/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/packages/_shared/TemplateFormModal.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/packaging/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/packaging-suggestions/SuggestionsManager.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/parfums/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/parfums/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/policies/page.tsx": {
+      "hardcoded-grid-cols": 10,
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/pos-settings/page.tsx": {
+      "oversized-title": 1,
+      "min-h-screen-on-page": 1,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 5
+    },
+    "src/app/(privileged)/inventory/price-change-requests/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/price-governance/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/price-regulations/page.tsx": {
+      "hardcoded-grid-cols": 6
+    },
+    "src/app/(privileged)/inventory/product-audit-trail/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/product-barcodes/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/product-explorer/ExplorerClient.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/inventory/product-groups/[id]/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/product-groups/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/product-locations/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/product-locations/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/product-tasks/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/products/[id]/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/products/_components/ProductCardGrid.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/racks/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/racks/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/readiness/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/serial-logs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/serial-logs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/serials/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/serials/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/serials/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "tw-color-palette": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/shelves/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/shelves/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/stock-alerts/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/stock-alerts/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/stock-count/SyncPanel.tsx": {
+      "tw-color-palette": 2,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/inventory/stock-count/[id]/count/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/inventory/stock-count/[id]/verify/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/stock-count/page.tsx": {
+      "tw-color-palette": 3,
+      "oversized-title": 5,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/inventory/stock-matrix/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/stock-moves/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/stock-moves/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/sync/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/sync/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/transfer-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/transfer-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/transfer-orders/page.tsx": {
+      "tw-color-palette": 11,
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 5
+    },
+    "src/app/(privileged)/inventory/transfers/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/transfers/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/transfers/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/inventory/units/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/units/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/valuation/page.tsx": {
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/(privileged)/inventory/warehouses/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/warehouses/form.tsx": {
+      "hardcoded-grid-cols": 8
+    },
+    "src/app/(privileged)/inventory/warehouses/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/weight-policy/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/inventory/zones/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/inventory/zones/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/layout.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/loading.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/marketplace/page.tsx": {
+      "tw-color-palette": 17,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/mcp/agent-logs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/agent-logs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/agents/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/agents/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/chat/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/mcp/conversations/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/conversations/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/providers/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/providers/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/tools/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/tools/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/usage/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/mcp/usage/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/migration/jobs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/migration/jobs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/[id]/edit/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/[id]/mappings/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/[id]/verification/page.tsx": {
+      "oversized-title": 4,
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 13,
+      "hardcoded-grid-cols": 4,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/migration_v2/jobs/page.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/migration_v2/page.tsx": {
+      "tw-color-palette": 17,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/platform-dashboard/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 4,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/pos/consignment-settlements/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/consignment-settlements/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/credit-notes/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/credit-notes/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/deliveries/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/deliveries/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/delivery-zones/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/delivery-zones/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/discount-rules/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/discount-rules/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/manager-address-book/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/manager-address-book/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/po-lines/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/po-lines/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-audit-events/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-audit-events/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-audit-rules/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-audit-rules/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-registers/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-registers/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-settings/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-settings/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-tickets/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/pos-tickets/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase-returns/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/purchase-returns/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/quotations/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/quotations/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/sales-returns/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/sales-returns/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/sourcing/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/sourcing/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/supplier-package-prices/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/pos/supplier-pricing/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/pos/supplier-pricing/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/products/ProductRows.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/products/ProductStats.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/products/[id]/edit/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/products/create-group/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/products/groups/[id]/edit/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/products/new/advanced-form.tsx": {
+      "hardcoded-grid-cols": 6
+    },
+    "src/app/(privileged)/products/new/ai-suggestions.tsx": {
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/products/new/form.tsx": {
+      "hardcoded-grid-cols": 4
+    },
+    "src/app/(privileged)/products/new/packaging-tree.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/products/new/pricing-engine.tsx": {
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 5,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/products/new/smart-form.tsx": {
+      "gradient-on-text-or-icon": 8,
+      "tw-color-palette": 9,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 11,
+      "tiny-text": 2
+    },
+    "src/app/(privileged)/products/new/wizard-step-type.tsx": {
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 5,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/products/page-legacy.tsx": {
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/products/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/purchases/AutoReplenishButton.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/purchases/PurchasesDashboardWidgets.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/[id]/page.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/approvals/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/purchases/consignments/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/credit-notes/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/dashboard/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 4,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/purchases/invoice-verification/page.tsx": {
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/purchases/invoice-verification/panels/ActionsPanel.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/purchases/invoice-verification/panels/ComparisonPanel.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/purchases/invoice-verification/panels/DocumentViewerPanel.tsx": {
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/purchases/invoices/page-client.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/invoicing/InvoicingScreen.tsx": {
+      "tw-color-palette": 26,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/purchases/invoicing/page.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/purchases/new-order-v2/form.tsx": {
+      "gradient-on-text-or-icon": 3,
+      "tw-color-palette": 2,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/purchases/purchase-orders/_components/POExpandedRow.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/purchases/purchase-orders/_components/RejectPODialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/purchase-orders/new/_components/AdminSidebar.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/purchases/purchase-orders/new/_components/LineCardGrid.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/purchases/purchase-orders/new/_components/LineCardMobile.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/purchase-orders/new/_components/OrderKpis.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/quotations/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/purchases/receipts/ReceiveLineDialog.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/purchases/receiving/ReceivingScreen.tsx": {
+      "tw-color-palette": 41,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 5,
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/purchases/returns/new/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/purchases/returns/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/purchases/sourcing/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/purchases/verification/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/pv/PvSwitcher.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/sales/[id]/PaymentReconciliationPanel.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/sales/[id]/page.tsx": {
+      "tw-color-palette": 5,
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/sales/analytics/page.tsx": {
+      "hardcoded-grid-cols": 4,
+      "oversized-title": 1,
+      "tw-color-palette": 12,
+      "gradient-on-text-or-icon": 5
+    },
+    "src/app/(privileged)/sales/consignment/manager.tsx": {
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 3,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/sales/consignment/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/sales/consignment-settlements/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/sales/credit-notes/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 3,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/sales/deliveries/dashboard.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/sales/deliveries/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 5,
+      "tw-color-palette": 8,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/app/(privileged)/sales/delivery-zones/page.tsx": {
+      "hardcoded-grid-cols": 5,
+      "oversized-title": 3,
+      "tw-color-palette": 3,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/(privileged)/sales/discounts/manager.tsx": {
+      "tw-color-palette": 5,
+      "hardcoded-grid-cols": 6,
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/sales/discounts/page.tsx": {
+      "tw-color-palette": 1,
+      "hardcoded-grid-cols": 8,
+      "oversized-title": 5
+    },
+    "src/app/(privileged)/sales/history/page-original.tsx": {
+      "tw-color-palette": 11,
+      "min-h-screen-on-page": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/sales/history/page-wide.tsx": {
+      "min-h-screen-on-page": 1,
+      "tw-color-palette": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/sales/history/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/sales/import/SalesMapper.tsx": {
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/sales/import/page.tsx": {
+      "oversized-title": 4,
+      "tw-color-palette": 8,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/sales/orders/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/sales/pos-settings/_components/GlobalSettingsPanel.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/sales/pos-settings/_components/PINResetModal.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/app/(privileged)/sales/pos-settings/_components/RegisterDrawer.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 3,
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/sales/pos-settings/_components/UsersPinsPanel.tsx": {
+      "tiny-text": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/sales/pos-settings/components.tsx": {
+      "hardcoded-grid-cols": 3,
+      "tw-color-palette": 6,
+      "tiny-text": 3
+    },
+    "src/app/(privileged)/sales/pos-settings/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/sales/quotations/manager.tsx": {
+      "tw-color-palette": 12,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/sales/quotations/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/sales/registers/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/sales/returns/new/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/sales/returns/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/sales/sessions/page.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 2,
+      "min-h-screen-on-page": 1
+    },
+    "src/app/(privileged)/sales/summary/page.tsx": {
+      "hardcoded-grid-cols": 5,
+      "oversized-title": 10,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/sales/supermarche/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/appearance/OrgThemeSettings.tsx": {
+      "hardcoded-grid-cols": 6
+    },
+    "src/app/(privileged)/settings/appearance/page.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 4
+    },
+    "src/app/(privileged)/settings/audit-trail/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/settings/branding/LoginBrandingEditor.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 1,
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/settings/branding/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/domains/page.tsx": {
+      "tw-color-palette": 3,
+      "hardcoded-grid-cols": 5
+    },
+    "src/app/(privileged)/settings/e-invoicing/monitor/monitor-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/features/FeaturesClient.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/notifications/page.tsx": {
+      "tw-color-palette": 4,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/payment-terms/client.tsx": {
+      "tw-color-palette": 6,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/settings/payment-terms/page.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/print-branding/PrintBrandingClient.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/print-branding/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/CompareModal.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/DiffModal.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/HeaderBar.tsx": {
+      "oversized-title": 1,
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/InspectorStrip.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tiny-text": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/LoadingSkeleton.tsx": {
+      "min-h-screen-on-page": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/MidStrip.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/SectionNav.tsx": {
+      "tiny-text": 2
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/sections/QuantitySection.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_components/sections/ScoringSection.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/_lib/constants.ts": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/purchase-analytics/page.tsx": {
+      "hardcoded-grid-cols": 1,
+      "inline-style-block": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx/EditRateModal.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx/ManualRateForm.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx/PolicyCard.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx/PolicyDrawer.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx/SetBrokerModal.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx_management/NewPolicyForm.parts.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx_management/NewPolicyForm.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx_management/NewRateForm.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/settings/regional/_components/_fx_management/views/SetBrokerDialog.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/regional/_components/fx/RevaluationsView.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/settings/regional/client.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 2
+    },
+    "src/app/(privileged)/settings/roles/RoleManager.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/settings/roles/RolesBuilderClient.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/roles/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/security/TwoFactorSettings.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/settings/security/page.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 3,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/sequences/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/settings/whatsapp/page.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/setup-wizard/client.tsx": {
+      "tw-color-palette": 10,
+      "hardcoded-grid-cols": 20,
+      "oversized-title": 4,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/app/(privileged)/storage/files/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/storage/files/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/admin-price-requests/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/admin-price-requests/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/admin-proformas/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/admin-proformas/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/config/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/config/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/dashboard/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/dashboard/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-notifications/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-notifications/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-orders/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-price-requests/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-price-requests/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-proformas/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-proformas/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-stock/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/my-stock/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/portal-access/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/portal-access/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/proforma-lines/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/supplier_portal/proforma-lines/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/theme-demo/page.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 5
+    },
+    "src/app/(privileged)/users/approvals/page.tsx": {
+      "gradient-on-text-or-icon": 5,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/workspace/auto-rules/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/categories/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/categories/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklist-items/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklist-items/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklist-templates/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklist-templates/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklists/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklists/client.tsx": {
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklists/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/checklists/page.tsx": {
+      "oversized-title": 4
+    },
+    "src/app/(privileged)/workspace/client-portal/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/workspace/comments/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/comments/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/config/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/config/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/evaluations/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/evaluations/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/kpi-config/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/kpi-config/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/overview/page.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/performance/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/performance/client.tsx": {
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 11,
+      "tw-color-palette": 1
+    },
+    "src/app/(privileged)/workspace/performance/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/performance/page.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/workspace/questionnaires/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/questionnaires/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/questions/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/questions/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/requests/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/requests/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/scores/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/scores/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/supplier-portal/page-client.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 4
+    },
+    "src/app/(privileged)/workspace/tasks/TaskCustomizePanel.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tasks/TaskModal.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tasks/TaskModalCard.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tasks/TaskModalRecipe.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tasks/TaskModalSmartDraft.tsx": {
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/workspace/tasks/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tasks/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/templates/[id]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/templates/new/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/tenders/page.tsx": {
+      "hardcoded-grid-cols": 2,
+      "oversized-title": 3
+    },
+    "src/app/(privileged)/workspace/wise-adjustments/client.tsx": {
+      "tw-color-palette": 13,
+      "hardcoded-grid-cols": 3,
+      "oversized-title": 1
+    },
+    "src/app/(privileged)/workspace/wise-adjustments/page.tsx": {
+      "tw-color-palette": 3,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/wise-console/client.tsx": {
+      "tw-color-palette": 17,
+      "tiny-text": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(privileged)/workspace/wise-console/page.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/(privileged)/workspace/wise-rules/client.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/app/(privileged)/workspace/wise-rules/page.tsx": {
+      "tw-color-palette": 3,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(store)/layout.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/(store)/page.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/delivery/[id]/page.tsx": {
+      "tw-color-palette": 26,
+      "gradient-on-text-or-icon": 6,
+      "min-h-screen-on-page": 4,
+      "oversized-title": 4
+    },
+    "src/app/landing/layout.tsx": {
+      "tw-color-palette": 10,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/landing/page.tsx": {
+      "tw-color-palette": 15,
+      "hardcoded-grid-cols": 3,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 2
+    },
+    "src/app/layout.tsx": {
+      "inline-style-block": 2
+    },
+    "src/app/not-found.tsx": {
+      "min-h-screen-on-page": 1,
+      "tw-color-palette": 3,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/app/supplier-portal/[slug]/layout.tsx": {
+      "min-h-screen-on-page": 2,
+      "tw-color-palette": 2
+    },
+    "src/app/supplier-portal/[slug]/notifications/page.tsx": {
+      "tw-color-palette": 4,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/supplier-portal/[slug]/orders/[id]/page.tsx": {
+      "tw-color-palette": 2,
+      "min-h-screen-on-page": 3,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/supplier-portal/[slug]/orders/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "tw-color-palette": 2
+    },
+    "src/app/supplier-portal/[slug]/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 6,
+      "tw-color-palette": 8,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/supplier-portal/[slug]/price-requests/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/supplier-portal/[slug]/profile/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 8
+    },
+    "src/app/supplier-portal/[slug]/proformas/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "tw-color-palette": 5
+    },
+    "src/app/supplier-portal/[slug]/statement/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 8,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/tenant/[slug]/BlogHomePage.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 2
+    },
+    "src/app/tenant/[slug]/LandingHomePage.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/tenant/[slug]/OrgNotFoundPage.tsx": {
+      "min-h-screen-on-page": 1,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/ThemeLayout.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/ThemedHomePage.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/account/layout.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/account/notifications/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/account/orders/[id]/page.tsx": {
+      "min-h-screen-on-page": 4,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/tenant/[slug]/account/orders/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2
+    },
+    "src/app/tenant/[slug]/account/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 6,
+      "hardcoded-grid-cols": 3
+    },
+    "src/app/tenant/[slug]/account/profile/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/app/tenant/[slug]/account/tickets/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2
+    },
+    "src/app/tenant/[slug]/account/wallet/page.tsx": {
+      "tw-color-palette": 7,
+      "min-h-screen-on-page": 2,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 2,
+      "gradient-on-text-or-icon": 3
+    },
+    "src/app/tenant/[slug]/account/wishlist/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/cart/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/categories/page.tsx": {
+      "min-h-screen-on-page": 2
+    },
+    "src/app/tenant/[slug]/checkout/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/login/page.tsx": {
+      "min-h-screen-on-page": 1
+    },
+    "src/app/tenant/[slug]/not-found.tsx": {
+      "min-h-screen-on-page": 1,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/page.tsx": {
+      "min-h-screen-on-page": 1,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/product/[id]/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 1
+    },
+    "src/app/tenant/[slug]/quote/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/app/tenant/[slug]/register/page.tsx": {
+      "min-h-screen-on-page": 2,
+      "oversized-title": 2,
+      "tw-color-palette": 5
+    },
+    "src/app/tenant/[slug]/search/page.tsx": {
+      "min-h-screen-on-page": 2
+    },
+    "src/components/ModuleGuard.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 2
+    },
+    "src/components/SafeModuleBoundary.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/components/ThemeToggle.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/admin/AdminShell.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/admin/AttributeFormModal.tsx": {
+      "tw-color-palette": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/admin/AttributeManager.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/admin/BalanceBarcodeConfigModal.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/admin/BrandFormModal.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/admin/BrandManager.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/admin/CategorySelector.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/admin/CommandPalette.tsx": {
+      "tw-color-palette": 4
+    },
+    "src/components/admin/CountryManager.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/admin/DashboardHeader.tsx": {
+      "tw-color-palette": 3,
+      "oversized-title": 1
+    },
+    "src/components/admin/GroupedProductForm.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 1
+    },
+    "src/components/admin/Launchpad.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/admin/ManagerOverrideModal.tsx": {
+      "tw-color-palette": 5,
+      "oversized-title": 1
+    },
+    "src/components/admin/ModuleGate.tsx": {
+      "tw-color-palette": 2,
+      "oversized-title": 1
+    },
+    "src/components/admin/NamingRuleEditor.tsx": {
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/components/admin/NotificationBell.tsx": {
+      "tw-color-palette": 5
+    },
+    "src/components/admin/ProductReassignmentTable.tsx": {
+      "tw-color-palette": 8
+    },
+    "src/components/admin/ScopePasswordModal.tsx": {
+      "tw-color-palette": 8
+    },
+    "src/components/admin/ScopePinModal.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/components/admin/UnitFormModal.tsx": {
+      "hardcoded-grid-cols": 3
+    },
+    "src/components/admin/_shared/PrintDialog.tsx": {
+      "inline-style-block": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/admin/categories/CategoryFormModal.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/ai/AICharts.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/analytics/AnalyticsProfileSelector.tsx": {
+      "tiny-text": 3
+    },
+    "src/components/app/AppThemeSelector.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/app/ui/AppKpiCard.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/app/ui/AppPageHeader.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/app-sidebar.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/common/AttachmentManager.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 2
+    },
+    "src/components/common/KPICard.tsx": {
+      "tw-color-palette": 1,
+      "oversized-title": 1
+    },
+    "src/components/common/LifecycleBar.tsx": {
+      "tw-color-palette": 4,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/common/PageSkeleton.tsx": {
+      "hardcoded-grid-cols": 4
+    },
+    "src/components/common/TypicalFilter.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/common/TypicalListView.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/dev/DebugOverlay.tsx": {
+      "tw-color-palette": 14,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/errors/ModuleErrorBoundary.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/finance/JurisdictionPreview.tsx": {
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/finance/TaxExplanationDrawer.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/finance/TaxLinePreviewTable.tsx": {
+      "tw-color-palette": 11
+    },
+    "src/components/finance/assets/asset-tag.tsx": {
+      "tiny-text": 1
+    },
+    "src/components/forms/DynamicFormRenderer.tsx": {
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/inventory/ProductList.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 2
+    },
+    "src/components/inventory/ProductPackagingTab.tsx": {
+      "tw-color-palette": 39,
+      "gradient-on-text-or-icon": 4,
+      "hardcoded-grid-cols": 3
+    },
+    "src/components/landing/PricingSection.tsx": {
+      "oversized-title": 5,
+      "tw-color-palette": 12,
+      "gradient-on-text-or-icon": 2,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/layout/index.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/components/modules/core/BusinessSettings.tsx": {
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 6
+    },
+    "src/components/modules/inventory/InventoryWidgets.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 2,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/modules/inventory/ProductActivityFeed.tsx": {
+      "tw-color-palette": 7
+    },
+    "src/components/modules/inventory/SerialTracker.tsx": {
+      "tw-color-palette": 9,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/modules/inventory/StorefrontFeatured.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/modules/sales/OrderPreviewPanel.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/modules/sales/SalesKpiCard.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/modules/sales/SalesWidgets.tsx": {
+      "oversized-title": 3,
+      "tw-color-palette": 6,
+      "gradient-on-text-or-icon": 4
+    },
+    "src/components/pos/AccountBook.tsx": {
+      "tw-color-palette": 20,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/AddressBook.tsx": {
+      "tw-color-palette": 17,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/pos/CartTotals.tsx": {
+      "tw-color-palette": 5,
+      "tiny-text": 1,
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/pos/CloseRegisterModal.tsx": {
+      "inline-style-block": 1,
+      "tw-color-palette": 2,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/CompactClientHeader.tsx": {
+      "oversized-title": 3
+    },
+    "src/components/pos/ManagerOverride.tsx": {
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/MultiPaymentHub.tsx": {
+      "tw-color-palette": 13,
+      "gradient-on-text-or-icon": 4,
+      "oversized-title": 7,
+      "hardcoded-grid-cols": 4
+    },
+    "src/components/pos/Numpad.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/pos/OfflineIndicator.tsx": {
+      "inline-style-block": 1
+    },
+    "src/components/pos/OnlineOnlyOverlay.tsx": {
+      "inline-style-block": 1
+    },
+    "src/components/pos/POSDeliveryModal.tsx": {
+      "tw-color-palette": 8,
+      "gradient-on-text-or-icon": 3,
+      "oversized-title": 3,
+      "hardcoded-grid-cols": 4
+    },
+    "src/components/pos/POSKeyboardShortcuts.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/pos/POSPendingDeliveriesPanel.tsx": {
+      "tw-color-palette": 5,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/pos/POSQuickHold.tsx": {
+      "tw-color-palette": 11,
+      "tiny-text": 2
+    },
+    "src/components/pos/POSSalesHistoryPanel.tsx": {
+      "tw-color-palette": 2,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/ProductGrid.tsx": {
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/QuickProducts.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/pos/ReceiptModal.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1,
+      "tw-color-palette": 3
+    },
+    "src/components/pos/ReturnOrderModal.tsx": {
+      "inline-style-block": 1,
+      "tw-color-palette": 7,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/components/pos/TicketSidebar.tsx": {
+      "tw-color-palette": 8,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/pos/layouts/POSLayoutKiosk.tsx": {
+      "hardcoded-grid-cols": 1,
+      "oversized-title": 1
+    },
+    "src/components/pos/layouts/POSLayoutModern.tsx": {
+      "tw-color-palette": 42,
+      "gradient-on-text-or-icon": 7,
+      "hardcoded-grid-cols": 2,
+      "tiny-text": 2
+    },
+    "src/components/pos/lobby/steps/OpeningStep.tsx": {
+      "oversized-title": 2,
+      "tw-color-palette": 4,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/pos/lobby/steps/PinStep.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/lobby/steps/RegisterStep.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/lobby/steps/SiteStep.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/pos/lobby/steps/UserStep.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/pos/modals/ClientVaultModal.tsx": {
+      "tw-color-palette": 21,
+      "gradient-on-text-or-icon": 4,
+      "oversized-title": 4,
+      "hardcoded-grid-cols": 5
+    },
+    "src/components/pos/modals/CreditWarningModal.tsx": {
+      "oversized-title": 2,
+      "tw-color-palette": 1
+    },
+    "src/components/shared/FileUploader.tsx": {
+      "tw-color-palette": 10
+    },
+    "src/components/shared/LifecycleBadges.tsx": {
+      "tw-color-palette": 8
+    },
+    "src/components/shared/filters/FilterBuilder.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/shared/filters/FilterChips.tsx": {
+      "tw-color-palette": 3
+    },
+    "src/components/shared/filters/SavedFilters.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/components/supermarche/components/CheckoutBar.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/supermarche/components/PriceDisplay.tsx": {
+      "oversized-title": 3
+    },
+    "src/components/supermarche/components/SupermarcheNumpad.tsx": {
+      "oversized-title": 1,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/supermarche/engine/ThemeSelector.tsx": {
+      "hardcoded-grid-cols": 2
+    },
+    "src/components/supermarche/layouts/SupermarcheLayoutGrid.tsx": {
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/supermarche/layouts/SupermarcheLayoutKiosk.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/tenant/ClientPortalLogin.tsx": {
+      "tw-color-palette": 17,
+      "gradient-on-text-or-icon": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/tenant/StorefrontCatalog.tsx": {
+      "oversized-title": 2,
+      "tw-color-palette": 11,
+      "hardcoded-grid-cols": 1,
+      "gradient-on-text-or-icon": 1
+    },
+    "src/components/tenant/StorefrontFooter.tsx": {
+      "tw-color-palette": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/tenant/StorefrontHeader.tsx": {
+      "tw-color-palette": 8
+    },
+    "src/components/tenant/TenantQuickLogin.tsx": {
+      "tw-color-palette": 8,
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/components/theme/ThemeSwitcher.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/ui/GuidedTour.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/ui/SearchableDropdown.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/components/ui/SmartDatePicker.tsx": {
+      "tw-color-palette": 7,
+      "hardcoded-grid-cols": 4
+    },
+    "src/components/ui/card-with-variants.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/ui/card.tsx": {
+      "oversized-title": 1
+    },
+    "src/components/ui/password-strength.tsx": {
+      "tw-color-palette": 7
+    },
+    "src/components/ui/progress.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/ui/universal-data-table.tsx": {
+      "tw-color-palette": 11
+    },
+    "src/components/ui/variants/card-glass.tsx": {
+      "gradient-on-text-or-icon": 1,
+      "oversized-title": 1
+    },
+    "src/components/ui/variants/card-modern.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/universal-list/ColumnSelector.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/components/universal-list/FilterBar.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/components/universal-list/UniversalList.tsx": {
+      "oversized-title": 1,
+      "tw-color-palette": 1
+    },
+    "src/components/verification/ComparisonPanel.tsx": {
+      "hardcoded-grid-cols": 2,
+      "tw-color-palette": 2
+    },
+    "src/components/workspace/WorkspaceSwitcher.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/lib/design-systems/design-system-framework.ts": {
+      "inline-style-block": 1
+    },
+    "src/lib/settings-framework/components/CollapsibleCard.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/lib/settings-framework/components/ConfigDiffModal.tsx": {
+      "hardcoded-grid-cols": 1
+    },
+    "src/modules/migration/components/COAMappingModal.tsx": {
+      "tw-color-palette": 2
+    },
+    "src/modules/migration/components/MigrationAuditPage.tsx": {
+      "tw-color-palette": 28,
+      "gradient-on-text-or-icon": 3,
+      "min-h-screen-on-page": 1,
+      "hardcoded-grid-cols": 14,
+      "oversized-title": 7
+    },
+    "src/modules/migration/components/MigrationPipeline.tsx": {
+      "tw-color-palette": 5,
+      "gradient-on-text-or-icon": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/modules/migration/components/MigrationReviewDashboard.tsx": {
+      "tw-color-palette": 58,
+      "hardcoded-grid-cols": 10,
+      "oversized-title": 9,
+      "gradient-on-text-or-icon": 13,
+      "tiny-text": 1
+    },
+    "src/modules/migration/page.tsx": {
+      "tw-color-palette": 61,
+      "gradient-on-text-or-icon": 11,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 8,
+      "hardcoded-grid-cols": 4
+    },
+    "src/modules/packages/page.tsx": {
+      "tw-color-palette": 20,
+      "min-h-screen-on-page": 1,
+      "oversized-title": 2,
+      "hardcoded-grid-cols": 1
+    },
+    "src/modules/storage/constants.ts": {
+      "tw-color-palette": 3
+    },
+    "src/modules/storage/packages.tsx": {
+      "tw-color-palette": 45,
+      "oversized-title": 2,
+      "gradient-on-text-or-icon": 3,
+      "hardcoded-grid-cols": 2
+    },
+    "src/modules/storage/page.tsx": {
+      "tw-color-palette": 36,
+      "oversized-title": 1,
+      "gradient-on-text-or-icon": 1,
+      "hardcoded-grid-cols": 3
+    },
+    "src/root/.gemini/antigravity/scratch/TSFSYSTEM/src/app/(privileged)/layout.tsx": {
+      "oversized-title": 1
+    },
+    "src/storefront/engine/components/StripePayment.tsx": {
+      "tw-color-palette": 1
+    },
+    "src/types/sales.ts": {
+      "tw-color-palette": 14
+    }
+  }
+}

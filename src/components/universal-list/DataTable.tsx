@@ -67,7 +67,7 @@ export default function DataTable<T = any>({
  <div className="animate-pulse">
  <div className="h-10 bg-app-bg border-b" />
  {[...Array(5)].map((_, i) => (
- <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-50">
+ <div key={i} className="flex gap-4 px-4 py-3 border-b border-app-border">
  <div className="h-4 bg-app-surface-2 rounded w-24" />
  <div className="h-4 bg-app-surface-2 rounded w-32" />
  <div className="h-4 bg-app-surface-2 rounded w-16" />
@@ -122,7 +122,7 @@ export default function DataTable<T = any>({
  )}
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50">
+ <tbody className="divide-y divide-app-border">
  {data.length === 0 ? (
  <tr>
  <td
@@ -224,7 +224,7 @@ export default function DataTable<T = any>({
  1 +
  (actions?.length ? 1 : 0)
  }
- className="px-4 py-3 bg-app-primary-light/30 border-l-4 border-emerald-400"
+ className="px-4 py-3 bg-app-primary-light/30 border-l-4 border-app-success"
  >
  {renderExpanded(row)}
  </td>

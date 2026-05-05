@@ -87,9 +87,9 @@ export default function BarcodeSettingsPage() {
                     <span className="text-xs font-mono uppercase text-app-muted-foreground tracking-widest">Next Barcode Preview</span>
                     <div className="text-4xl font-mono font-bold tracking-widest">{exampleBarcode}</div>
                     <div className="text-xs text-app-muted-foreground mt-2 flex gap-4">
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Prefix: {prefix}</span>
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span> Sequence: {seq}</span>
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Check Digit: X</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-app-success"></span> Prefix: {prefix}</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-app-info"></span> Sequence: {seq}</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-app-error"></span> Check Digit: X</span>
                     </div>
                 </div>
 
@@ -139,7 +139,7 @@ export default function BarcodeSettingsPage() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-app-success text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? <RefreshCw size={20} className="animate-spin" /> : <Save size={20} />}
                         <span>Save Settings</span>

@@ -59,8 +59,8 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
     const isDone = (op: Operation) => ['RECEIVED', 'DONE', 'COMPLETED'].includes(op.status);
 
     const getTypeIcon = (op: Operation) => {
-        if (op.failure_type === 'SUPPLIER_FAILURE') return <ShoppingBag size={15} className="text-rose-500" />;
-        if (op.failure_type === 'INTERNAL_REJECTION') return <UserX size={15} className="text-orange-500" />;
+        if (op.failure_type === 'SUPPLIER_FAILURE') return <ShoppingBag size={15} className="text-app-error" />;
+        if (op.failure_type === 'INTERNAL_REJECTION') return <UserX size={15} className="text-app-warning" />;
         if (isFailed(op)) return <XCircle size={15} className="text-app-error" />;
         if (isDone(op)) return <CheckCircle2 size={15} className="text-app-primary" />;
         if (op.type === 'PURCHASE') return <Package size={15} className="text-app-info" />;
@@ -69,8 +69,8 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
     };
 
     const getColors = (op: Operation): string => {
-        if (op.failure_type === 'SUPPLIER_FAILURE') return 'bg-rose-50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800/40';
-        if (op.failure_type === 'INTERNAL_REJECTION') return 'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800/40';
+        if (op.failure_type === 'SUPPLIER_FAILURE') return 'bg-app-error-soft border-app-error dark:bg-rose-950/20 dark:border-rose-800/40';
+        if (op.failure_type === 'INTERNAL_REJECTION') return 'bg-app-warning-soft border-app-warning dark:bg-orange-950/20 dark:border-orange-800/40';
         if (isFailed(op)) return 'bg-app-error-bg border-app-error';
         if (isDone(op)) return 'bg-app-primary-light/50 border-emerald-100';
         if (op.type === 'PURCHASE') return 'bg-app-info-bg/50 border-blue-100';
@@ -128,8 +128,8 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                                 <span className={`text-sm font-black ${isFailed(op) ? 'line-through opacity-50 text-app-foreground' : 'text-app-foreground'}`}>
                                     {Number(op.quantity).toLocaleString()} Units
                                 </span>
-                                <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md mt-1 ${op.failure_type === 'SUPPLIER_FAILURE' ? 'bg-rose-100 text-rose-700' :
-                                        op.failure_type === 'INTERNAL_REJECTION' ? 'bg-orange-100 text-orange-700' :
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md mt-1 ${op.failure_type === 'SUPPLIER_FAILURE' ? 'bg-app-error-soft text-app-error' :
+                                        op.failure_type === 'INTERNAL_REJECTION' ? 'bg-app-warning-soft text-app-warning' :
                                             isFailed(op) ? 'bg-app-error-bg text-app-error' :
                                                 isDone(op) ? 'bg-app-primary-light text-app-success' :
                                                     'bg-app-surface/70 text-app-muted-foreground'
@@ -143,7 +143,7 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                         {(op.reason || op.failed_by) && (
                             <div className="mt-2.5 pt-2 border-t border-black/5 space-y-1">
                                 {op.failed_by && (
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-app-error">
                                         <AlertTriangle size={10} />
                                         {op.failure_type === 'SUPPLIER_FAILURE' ? 'Logged by:' : 'Rejected by:'}
                                         <span className="font-semibold capitalize">{op.failed_by}</span>
@@ -167,7 +167,7 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                     {op.discrepancies.damaged > 0 && (
-                                        <span className="text-[9px] bg-orange-100 text-orange-700 border border-orange-200 px-2 py-0.5 rounded font-bold">
+                                        <span className="text-[9px] bg-app-warning-soft text-app-warning border border-app-warning px-2 py-0.5 rounded font-bold">
                                             ⚠️ {op.discrepancies.damaged} Damaged
                                         </span>
                                     )}

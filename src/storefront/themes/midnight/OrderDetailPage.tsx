@@ -17,13 +17,13 @@ interface OrderDetail {
 }
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     CART: { label: 'Draft', icon: Package, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
-    PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    PROCESSING: { label: 'In Flow', icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-app-info/10' },
+    CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
+    PROCESSING: { label: 'In Flow', icon: Package, color: 'text-amber-400', bg: 'bg-app-warning/10' },
     SHIPPED: { label: 'In Transit', icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    CANCELLED: { label: 'Voided', icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    RETURNED: { label: 'Reversed', icon: RotateCcw, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    DELIVERED: { label: 'Delivered', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-app-success/10' },
+    CANCELLED: { label: 'Voided', icon: XCircle, color: 'text-rose-400', bg: 'bg-app-error/10' },
+    RETURNED: { label: 'Reversed', icon: RotateCcw, color: 'text-amber-400', bg: 'bg-app-warning/10' },
 }
 const PAYMENT_STATUS_MAP: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending Settlement', color: 'text-amber-400' },
@@ -51,7 +51,7 @@ export default function MidnightOrderDetailPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin shadow-2xl shadow-emerald-500/20" />
+                <div className="w-10 h-10 border-4 border-app-success border-t-transparent rounded-full animate-spin shadow-2xl shadow-emerald-500/20" />
             </div>
         )
     }
@@ -59,7 +59,7 @@ export default function MidnightOrderDetailPage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-center">
                 <div className="space-y-6">
-                    <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-rose-500">
+                    <div className="w-20 h-20 bg-app-error/10 border border-app-error/20 rounded-[2rem] flex items-center justify-center mx-auto text-app-error">
                         <XCircle size={40} />
                     </div>
                     <h1 className="text-3xl font-black text-white italic tracking-tighter">Null Data Stream</h1>
@@ -77,8 +77,8 @@ export default function MidnightOrderDetailPage() {
     const ps = PAYMENT_STATUS_MAP[order.payment_status] || PAYMENT_STATUS_MAP.PENDING
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
-            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed top-[-10%] left-[-10%] w-[60%] h-[60%] bg-app-success/5 blur-[150px] rounded-full pointer-events-none z-0" />
+            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-app-info/5 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
                     <Link href={path('/account/orders')}
@@ -105,13 +105,13 @@ export default function MidnightOrderDetailPage() {
                 </div>
                 {order.status !== 'CART' && order.status !== 'CANCELLED' && (
                     <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3.5rem] relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-emerald-500/10 transition-colors">
+                        <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-app-success/10 transition-colors">
                             <TrendingUp size={120} />
                         </div>
                         <h3 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em] mb-12">Deployment Lifecycle</h3>
                         <div className="flex items-start justify-between relative">
                             <div className="absolute top-6 left-[10%] right-[10%] h-[1px] bg-slate-800" />
-                            <div className="absolute top-6 left-[10%] h-[1px] bg-emerald-500 transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                            <div className="absolute top-6 left-[10%] h-[1px] bg-app-success transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
                                 style={{
                                     width: (() => {
                                         const steps = ['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
@@ -130,8 +130,8 @@ export default function MidnightOrderDetailPage() {
                                 return (
                                     <div key={step} className="flex flex-col items-center relative z-10" style={{ width: '20%' }}>
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500
-                                            ${isCurrent ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-110 rotate-12'
-                                                : isCompleted ? 'bg-emerald-500 border-emerald-500 text-white'
+                                            ${isCurrent ? 'bg-app-success/20 border-app-success/50 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-110 rotate-12'
+                                                : isCompleted ? 'bg-app-success border-app-success text-white'
                                                     : 'bg-slate-950 border-white/5 text-app-muted-foreground'}`}>
                                             <StepIcon size={20} />
                                         </div>
@@ -174,8 +174,8 @@ export default function MidnightOrderDetailPage() {
                         </div>
                     </div>
                     <div className="space-y-6">
-                        <div className="p-8 bg-slate-900/60 border border-emerald-500/10 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 text-emerald-500/5"><CreditCard size={80} /></div>
+                        <div className="p-8 bg-slate-900/60 border border-app-success/10 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 text-app-success/5"><CreditCard size={80} /></div>
                             <div className="space-y-6">
                                 <h3 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Financial Summary</h3>
                                 <div className="space-y-4">
@@ -202,7 +202,7 @@ export default function MidnightOrderDetailPage() {
                             {order.delivery_address && (
                                 <div className="space-y-3 pt-6 border-t border-white/5">
                                     <div className="flex items-center gap-2 text-app-muted-foreground text-[10px] font-black uppercase tracking-widest">
-                                        <MapPin size={12} className="text-emerald-500" /> Dispatch Endpoint
+                                        <MapPin size={12} className="text-app-success" /> Dispatch Endpoint
                                     </div>
                                     <p className="text-app-muted-foreground text-xs leading-relaxed font-bold uppercase tracking-tight italic">{order.delivery_address}</p>
                                 </div>
@@ -216,7 +216,7 @@ export default function MidnightOrderDetailPage() {
                                 </div>
                             )}
                         </div>
-                        <div className="p-8 bg-blue-600 hover:bg-emerald-600 rounded-[2.5rem] text-center transition-all cursor-pointer group shadow-xl">
+                        <div className="p-8 bg-app-info hover:bg-app-success rounded-[2.5rem] text-center transition-all cursor-pointer group shadow-xl">
                             <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] flex items-center justify-center gap-2">
                                 Download Artifact <FileText size={14} className="group-hover:rotate-12 transition-transform" />
                             </p>
@@ -231,7 +231,7 @@ function SummaryCard({ label, value, meta, icon, color = 'text-white' }: any) {
     return (
         <div className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] space-y-4 hover:bg-slate-900/60 transition-all group">
             <div className="flex justify-between items-start">
-                <div className="p-3 bg-white/5 rounded-2xl scale-90 group-hover:scale-100 transition-all text-app-muted-foreground group-hover:text-emerald-500">{icon}</div>
+                <div className="p-3 bg-white/5 rounded-2xl scale-90 group-hover:scale-100 transition-all text-app-muted-foreground group-hover:text-app-success">{icon}</div>
                 <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">{label}</div>
             </div>
             <div>

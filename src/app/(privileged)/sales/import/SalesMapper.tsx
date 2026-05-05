@@ -116,7 +116,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                     <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-app-success bg-app-success-bg/30' : 'border-app-border bg-app-surface/50 group-hover:border-app-info group-hover:bg-app-info-bg/30'}`}>
                         {file ? (
                             <>
-                                <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20">
+                                <div className="p-4 bg-app-success text-white rounded-2xl shadow-lg shadow-emerald-500/20">
                                     <FileText size={40} />
                                 </div>
                                 <div className="text-center">

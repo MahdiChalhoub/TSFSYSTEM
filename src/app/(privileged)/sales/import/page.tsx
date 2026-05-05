@@ -17,7 +17,7 @@ export default async function SalesImportPage() {
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-3">
-                        <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-500/20">
+                        <div className="p-3 bg-app-success rounded-2xl shadow-lg shadow-emerald-500/20">
                             <FileUp size={28} className="text-white" />
                         </div>
                         <h1 className="text-3xl font-black uppercase tracking-tight">Sales Import Engine</h1>
@@ -63,7 +63,7 @@ export default async function SalesImportPage() {
                                 { label: "Quantity", desc: "Positive numeric values" },
                                 { label: "Unit Price", desc: "Selling price excluding tax" },
                             ].map((tip, i) => (
-                                <li key={i} className="flex flex-col gap-1 border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                                <li key={i} className="flex flex-col gap-1 border-b border-app-border pb-4 last:border-0 last:pb-0">
                                     <span className="text-[10px] font-black uppercase text-app-muted-foreground">{tip.label}</span>
                                     <span className="text-xs font-medium text-app-muted-foreground tracking-tight">{tip.desc}</span>
                                 </li>

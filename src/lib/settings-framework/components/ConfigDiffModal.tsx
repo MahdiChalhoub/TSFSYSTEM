@@ -23,13 +23,13 @@ export function ConfigDiffModal({ entries, onClose }: {
                         <div key={i} className="rounded-lg border border-app-border/40 bg-app-background/50 p-2.5">
                             <div className="text-[10px] font-bold text-app-foreground mb-1.5">{e.field.replace(/_/g, ' ')}</div>
                             <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-md bg-red-500/5 border border-red-500/10 px-2 py-1">
-                                    <span className="text-[8px] font-bold text-red-500/60 uppercase">Before</span>
-                                    <div className="text-[10px] text-red-600/80 font-mono mt-0.5 break-all">{JSON.stringify(e.oldVal)}</div>
+                                <div className="rounded-md bg-app-error/5 border border-app-error/10 px-2 py-1">
+                                    <span className="text-[8px] font-bold text-app-error/60 uppercase">Before</span>
+                                    <div className="text-[10px] text-app-error/80 font-mono mt-0.5 break-all">{JSON.stringify(e.oldVal)}</div>
                                 </div>
-                                <div className="rounded-md bg-emerald-500/5 border border-emerald-500/10 px-2 py-1">
-                                    <span className="text-[8px] font-bold text-emerald-500/60 uppercase">After</span>
-                                    <div className="text-[10px] text-emerald-600/80 font-mono mt-0.5 break-all">{JSON.stringify(e.newVal)}</div>
+                                <div className="rounded-md bg-app-success/5 border border-app-success/10 px-2 py-1">
+                                    <span className="text-[8px] font-bold text-app-success/60 uppercase">After</span>
+                                    <div className="text-[10px] text-app-success/80 font-mono mt-0.5 break-all">{JSON.stringify(e.newVal)}</div>
                                 </div>
                             </div>
                         </div>

@@ -23,7 +23,7 @@ export default function POSAuditPage() {
  <div className="flex border-b border-app-border">
  <button
  onClick={() => setTab('EVENTS')}
- className={`pb-3 px-4 font-bold text-sm transition-colors border-b-2 ${tab === 'EVENTS' ? 'border-rose-500 text-app-error' : 'border-transparent text-app-muted-foreground hover:text-app-muted-foreground'}`}
+ className={`pb-3 px-4 font-bold text-sm transition-colors border-b-2 ${tab === 'EVENTS' ? 'border-app-error text-app-error' : 'border-transparent text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  Audit Log
  </button>

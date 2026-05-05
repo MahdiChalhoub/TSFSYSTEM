@@ -138,7 +138,7 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
             </div>
 
             {register.isOpen && register.currentSession && (
-                <div className="bg-[var(--app-warning-bg)] border border-amber-400/25 rounded-2xl p-4 mb-4 text-center">
+                <div className="bg-[var(--app-warning-bg)] border border-app-warning/25 rounded-2xl p-4 mb-4 text-center">
                     <p className="text-[var(--app-warning)] text-sm font-bold">⚠ Register currently open</p>
                     <p className="text-[var(--app-muted-foreground)] text-xs mt-1">By {register.currentSession.cashierName}</p>
                     <button onClick={() => onEnterPOS({ registerId: register.id, registerName: register.name, sessionId: register.currentSession!.id, cashierId: verifiedUser.id, cashierName: verifiedUser.name, warehouseId: register.warehouseId, cashAccountId: register.cashAccountId, allowedAccounts: register.allowedAccounts, siteName: site.name, paymentMethods: register.paymentMethods || [] })}
@@ -182,7 +182,7 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
                                         <Lock size={11} /> Show Details
                                     </button>
                                 )}
-                                {managerUnlocked && <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-success)]/10 border border-emerald-400/20 text-xs font-bold text-[var(--app-success)]"><Unlock size={11} /> Full View</span>}
+                                {managerUnlocked && <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-success)]/10 border border-app-success/20 text-xs font-bold text-[var(--app-success)]"><Unlock size={11} /> Full View</span>}
                             </div>
 
                             <div className={clsx('grid gap-2 text-[9px] text-[var(--app-muted-foreground)] uppercase tracking-wider font-bold px-1', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
@@ -193,12 +193,12 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
                                 {managerUnlocked && <span className="text-center">Action</span>}
                             </div>
 
-                            <div className={clsx('grid gap-2 items-center p-1.5 rounded-xl', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px] bg-[var(--app-success)]/5 border border-emerald-400/15' : 'grid-cols-[1fr_110px]')}>
+                            <div className={clsx('grid gap-2 items-center p-1.5 rounded-xl', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px] bg-[var(--app-success)]/5 border border-app-success/15' : 'grid-cols-[1fr_110px]')}>
                                 <div className="flex items-center gap-2">
                                     <span className="w-6 h-6 rounded-lg bg-[var(--app-success-bg)] text-[var(--app-success)] flex items-center justify-center"><Banknote size={11} /></span>
                                     <span className="text-xs font-black text-[var(--app-success)]">CASH</span>
                                 </div>
-                                {managerUnlocked && <input type="number" value={cashSoftware} onChange={e => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-foreground)] text-xs font-bold text-center outline-none focus:border-emerald-400" />}
+                                {managerUnlocked && <input type="number" value={cashSoftware} onChange={e => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-foreground)] text-xs font-bold text-center outline-none focus:border-app-success" />}
                                 <input type="number" value={cashReal} onChange={e => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-[var(--app-success)]/10 border border-[var(--app-success)]/20 rounded-lg text-[var(--app-success)] text-xs font-bold text-center outline-none" />
                                 {managerUnlocked && (() => {
                                     const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
@@ -208,14 +208,14 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
                                     const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
                                     return diff !== 0 ? (
                                         <button onClick={() => setCashSoftware(cashReal)}
-                                            className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-amber-400/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
+                                            className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-app-warning/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
                                             ⇄ Calibrate
                                         </button>
                                     ) : <span className="text-[10px] text-[var(--app-success)]/50 text-center font-bold">✓ OK</span>;
                                 })()}
                             </div>
 
-                            <div className={clsx('grid gap-2 items-center rounded-xl px-1.5 py-1 bg-[var(--app-warning)]/5 border border-amber-400/10', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                            <div className={clsx('grid gap-2 items-center rounded-xl px-1.5 py-1 bg-[var(--app-warning)]/5 border border-app-warning/10', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
                                 <div className="flex items-center gap-2">
                                     <span className="w-6 h-6 rounded-lg bg-[var(--app-warning)]/20 text-[var(--app-warning)] flex items-center justify-center"><DollarSign size={11} /></span>
                                     <div>
@@ -263,7 +263,7 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
                                         {managerUnlocked && (diff !== 0 ? (
                                             <button
                                                 onClick={() => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: entry.real }; setReconEntries(c); }}
-                                                className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-amber-400/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
+                                                className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-app-warning/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
                                                 ⇄ Calibrate
                                             </button>
                                         ) : <span className="text-[10px] text-[var(--app-success)]/50 text-center font-bold">✓ OK</span>)}

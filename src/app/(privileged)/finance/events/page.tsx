@@ -24,13 +24,13 @@ const EVENT_CONFIG: Record<string, { icon: string, color: string, bg: string, la
     PARTNER_INJECTION: { icon: '💰', color: 'text-app-success', bg: 'bg-app-success-bg', label: 'Injection' },
     CAPITAL_INJECTION: { icon: '🏦', color: 'text-app-success', bg: 'bg-app-success-bg', label: 'Capital' },
     PARTNER_LOAN: { icon: '🤝', color: 'text-app-info', bg: 'bg-app-info-bg', label: 'Partner Loan' },
-    LOAN_DISBURSEMENT: { icon: '📤', color: 'text-orange-700', bg: 'bg-orange-50', label: 'Disbursement' },
-    LOAN_REPAYMENT: { icon: '📥', color: 'text-teal-700', bg: 'bg-teal-50', label: 'Repayment' },
+    LOAN_DISBURSEMENT: { icon: '📤', color: 'text-app-warning', bg: 'bg-app-warning-soft', label: 'Disbursement' },
+    LOAN_REPAYMENT: { icon: '📥', color: 'text-app-success', bg: 'bg-app-success-soft', label: 'Repayment' },
     EXPENSE: { icon: '💸', color: 'text-app-error', bg: 'bg-app-error-bg', label: 'Expense' },
     SALARY_PAYMENT: { icon: '👤', color: 'text-purple-700', bg: 'bg-purple-50', label: 'Salary' },
     DEFERRED_EXPENSE_CREATION: { icon: '📋', color: 'text-app-warning', bg: 'bg-app-warning-bg', label: 'Deferred Create' },
     DEFERRED_EXPENSE_RECOGNITION: { icon: '📊', color: 'text-app-warning', bg: 'bg-app-warning-bg', label: 'Deferred Recog' },
-    ASSET_ACQUISITION: { icon: '🏗️', color: 'text-indigo-700', bg: 'bg-indigo-50', label: 'Asset Purchase' },
+    ASSET_ACQUISITION: { icon: '🏗️', color: 'text-app-info', bg: 'bg-app-info-soft', label: 'Asset Purchase' },
     ASSET_DEPRECIATION: { icon: '📉', color: 'text-app-foreground', bg: 'bg-app-surface-2', label: 'Depreciation' },
     ASSET_DISPOSAL: { icon: '🗑️', color: 'text-app-muted-foreground', bg: 'bg-app-surface', label: 'Disposal' },
 }
@@ -103,7 +103,7 @@ export default function FinancialEventsPage() {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-warning flex items-center justify-center">
                             <Zap size={20} className="text-white" />
                         </div>
                         Financial Events

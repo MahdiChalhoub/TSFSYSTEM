@@ -52,16 +52,16 @@ export function SerialTracker() {
     return (
         <div className="space-y-6">
             {/* Search Header */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="bg-white p-6 rounded-3xl border border-app-border shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
                         <Input
                             placeholder="Search Serial Number, IMEI, or SKU..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            className="h-14 pl-12 rounded-2xl bg-gray-50/50 border-gray-100 text-sm font-medium focus:ring-slate-900/5 focus:border-slate-900"
+                            className="h-14 pl-12 rounded-2xl bg-gray-50/50 border-app-border text-sm font-medium focus:ring-slate-900/5 focus:border-slate-900"
                         />
                     </div>
                     <Button
@@ -81,23 +81,23 @@ export function SerialTracker() {
                         <div
                             key={s.id}
                             onClick={() => fetchHistory(s)}
-                            className={`p-6 rounded-[2rem] border transition-all cursor-pointer group ${selectedSerial?.id === s.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-gray-100 hover:border-slate-200'}`}
+                            className={`p-6 rounded-[2rem] border transition-all cursor-pointer group ${selectedSerial?.id === s.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-app-border hover:border-app-border'}`}
                         >
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <div className={`p-2 rounded-lg ${selectedSerial?.id === s.id ? 'bg-white/10' : 'bg-slate-50 text-slate-600'}`}>
+                                        <div className={`p-2 rounded-lg ${selectedSerial?.id === s.id ? 'bg-white/10' : 'bg-slate-50 text-app-muted-foreground'}`}>
                                             <Barcode size={16} />
                                         </div>
                                         <h3 className="font-black text-lg tracking-tight uppercase">{s.serial_number}</h3>
                                     </div>
-                                    <p className={`text-xs font-bold leading-tight ${selectedSerial?.id === s.id ? 'text-slate-400' : 'text-gray-500'}`}>
+                                    <p className={`text-xs font-bold leading-tight ${selectedSerial?.id === s.id ? 'text-app-muted-foreground' : 'text-app-muted-foreground'}`}>
                                         {s.product_name}
                                     </p>
                                 </div>
-                                <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${s.status === 'AVAILABLE' ? 'bg-emerald-500 text-white' :
-                                    s.status === 'SOLD' ? 'bg-blue-500 text-white' :
-                                        'bg-amber-500 text-white'
+                                <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${s.status === 'AVAILABLE' ? 'bg-app-success text-white' :
+                                    s.status === 'SOLD' ? 'bg-app-info text-white' :
+                                        'bg-app-warning text-white'
                                     }`}>
                                     {s.status}
                                 </div>
@@ -115,12 +115,12 @@ export function SerialTracker() {
                     ))}
 
                     {!loading && serials.length === 0 && (
-                        <div className="p-20 bg-gray-50/50 rounded-[3rem] border border-dashed border-gray-200 flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-gray-300 mb-4">
+                        <div className="p-20 bg-gray-50/50 rounded-[3rem] border border-dashed border-app-border flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-app-muted-foreground mb-4">
                                 <Barcode size={32} />
                             </div>
-                            <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">No Serial Data</h3>
-                            <p className="text-xs text-gray-400 mt-2 font-medium">Use the search bar to locate specific units.</p>
+                            <h3 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">No Serial Data</h3>
+                            <p className="text-xs text-app-muted-foreground mt-2 font-medium">Use the search bar to locate specific units.</p>
                         </div>
                     )}
                 </div>
@@ -128,40 +128,40 @@ export function SerialTracker() {
                 {/* History Sidebar */}
                 <div className="space-y-6">
                     {selectedSerial ? (
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm sticky top-24">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-app-border shadow-sm sticky top-24">
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-app-info-soft text-app-info rounded-xl flex items-center justify-center">
                                     <History size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-tighter">Unit Timeline</h3>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">History Log</p>
+                                    <h3 className="text-sm font-black text-app-foreground uppercase tracking-tighter">Unit Timeline</h3>
+                                    <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">History Log</p>
                                 </div>
                             </div>
 
                             <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-50">
                                 {historyLoading ? (
                                     <div className="flex justify-center p-12">
-                                        <Loader2 className="animate-spin text-slate-300" size={32} />
+                                        <Loader2 className="animate-spin text-app-muted-foreground" size={32} />
                                     </div>
                                 ) : history.map((log, idx) => (
                                     <div key={log.id} className="relative pl-10">
-                                        <div className={`absolute left-0 top-1 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${idx === 0 ? 'bg-indigo-600' : 'bg-slate-200'
+                                        <div className={`absolute left-0 top-1 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${idx === 0 ? 'bg-app-info' : 'bg-slate-200'
                                             }`}>
                                             {idx === 0 && <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
                                         </div>
                                         <div className="space-y-1">
                                             <div className="flex justify-between items-center">
-                                                <p className="text-[11px] font-black text-gray-900 uppercase tracking-tight">{log.action}</p>
-                                                <span className="text-[9px] font-bold text-gray-400">
+                                                <p className="text-[11px] font-black text-app-foreground uppercase tracking-tight">{log.action}</p>
+                                                <span className="text-[9px] font-bold text-app-muted-foreground">
                                                     {format(new Date(log.created_at), 'dd/MM HH:mm')}
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] text-gray-500 font-medium bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-center justify-between">
+                                            <p className="text-[10px] text-app-muted-foreground font-medium bg-slate-50 p-2 rounded-lg border border-app-border flex items-center justify-between">
                                                 <span>Ref: {log.reference || 'N/A'}</span>
                                                 <span className="text-[8px] opacity-50">{log.warehouse_name || ''}</span>
                                             </p>
-                                            <div className="flex items-center gap-1.5 text-[9px] text-gray-400 font-bold uppercase tracking-wider pl-1">
+                                            <div className="flex items-center gap-1.5 text-[9px] text-app-muted-foreground font-bold uppercase tracking-wider pl-1">
                                                 <User size={10} /> {log.user_name || 'System Auto'}
                                             </div>
                                         </div>
@@ -177,9 +177,9 @@ export function SerialTracker() {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-gray-50/50 p-12 rounded-[2.5rem] border border-dashed border-gray-200 flex flex-col items-center text-center">
-                            <ArrowRight size={24} className="text-gray-300 mb-4 animate-bounce-x" />
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Select a serial to view lifecycle</p>
+                        <div className="bg-gray-50/50 p-12 rounded-[2.5rem] border border-dashed border-app-border flex flex-col items-center text-center">
+                            <ArrowRight size={24} className="text-app-muted-foreground mb-4 animate-bounce-x" />
+                            <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Select a serial to view lifecycle</p>
                         </div>
                     )}
                 </div>

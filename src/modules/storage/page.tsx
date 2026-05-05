@@ -39,7 +39,7 @@ const PROVIDER_OPTIONS = [
     { value: 'R2', label: 'Cloudflare R2', icon: Cloud, color: 'text-orange-400' },
     { value: 'S3', label: 'AWS S3', icon: Cloud, color: 'text-yellow-400' },
     { value: 'MINIO', label: 'MinIO', icon: Database, color: 'text-purple-400' },
-    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-slate-400' },
+    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-app-muted-foreground' },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -168,19 +168,19 @@ export default function StorageSettingsPage() {
                         </div>
                         Cloud Storage
                     </h1>
-                    <p className="text-gray-400 mt-2">Configure external file storage for documents, images, and attachments</p>
+                    <p className="text-app-muted-foreground mt-2">Configure external file storage for documents, images, and attachments</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowUploader(!showUploader)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 transition-all text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-app-success/20 text-emerald-400 hover:bg-app-success/30 border border-app-success/30 transition-all text-sm font-medium"
                     >
                         <Upload size={16} />
                         Upload File
                     </button>
                     <button
                         onClick={fetchData}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-700 transition-all text-sm"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800 text-app-muted-foreground hover:text-white hover:bg-gray-700 border border-gray-700 transition-all text-sm"
                     >
                         <RefreshCcw size={16} />
                     </button>
@@ -207,14 +207,14 @@ export default function StorageSettingsPage() {
             <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl">
                 <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Settings size={18} className="text-gray-400" />
+                        <Settings size={18} className="text-app-muted-foreground" />
                         <h2 className="text-lg font-semibold text-white">Provider Configuration</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         {!editMode ? (
                             <button
                                 onClick={() => setEditMode(true)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-700 transition-all text-sm"
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-app-muted-foreground hover:text-white hover:bg-gray-700 border border-gray-700 transition-all text-sm"
                             >
                                 <Unlock size={14} />
                                 Edit
@@ -223,14 +223,14 @@ export default function StorageSettingsPage() {
                             <>
                                 <button
                                     onClick={() => setEditMode(false)}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white border border-gray-700 transition-all text-sm"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-app-muted-foreground hover:text-white border border-gray-700 transition-all text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-all text-sm font-medium disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-success text-white hover:bg-app-success transition-all text-sm font-medium disabled:opacity-50"
                                 >
                                     {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                                     Save
@@ -242,14 +242,14 @@ export default function StorageSettingsPage() {
 
                 <div className="p-6 space-y-6">
                     {/* Status Banner */}
-                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${config?.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${config?.is_active ? 'bg-app-success/10 border-app-success/30 text-emerald-400' : 'bg-app-error/10 border-app-error/30 text-red-400'}`}>
                         {config?.is_active ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                         <span className="text-sm font-medium">
                             {currentProvider?.label || 'Local'} — {config?.is_active ? 'Active' : 'Inactive'}
                         </span>
                         {config?.provider_type !== 'LOCAL' && (
-                            <span className="ml-auto text-xs text-gray-500">
-                                Bucket: <span className="text-gray-300">{config?.bucket_name}</span>
+                            <span className="ml-auto text-xs text-app-muted-foreground">
+                                Bucket: <span className="text-app-muted-foreground">{config?.bucket_name}</span>
                             </span>
                         )}
                     </div>
@@ -259,15 +259,15 @@ export default function StorageSettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Provider Type */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Provider Type</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Provider Type</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {PROVIDER_OPTIONS.map(p => (
                                         <button
                                             key={p.value}
                                             onClick={() => setDraft(d => ({ ...d, provider_type: p.value }))}
                                             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all ${draft.provider_type === p.value
-                                                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                                                : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'
+                                                ? 'border-app-success/50 bg-app-success/10 text-emerald-400'
+                                                : 'border-gray-700 bg-gray-800/50 text-app-muted-foreground hover:border-gray-600'
                                                 }`}
                                         >
                                             <p.icon size={16} className={p.color} />
@@ -280,35 +280,35 @@ export default function StorageSettingsPage() {
                             {/* Endpoint URL */}
                             {draft.provider_type !== 'LOCAL' && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Endpoint URL</label>
+                                    <label className="block text-sm font-medium text-app-muted-foreground mb-2">Endpoint URL</label>
                                     <input
                                         value={draft.endpoint_url}
                                         onChange={e => setDraft(d => ({ ...d, endpoint_url: e.target.value }))}
                                         placeholder="https://your-account.r2.cloudflarestorage.com"
-                                        className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                        className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                     />
                                 </div>
                             )}
 
                             {/* Bucket Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Bucket Name</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Bucket Name</label>
                                 <input
                                     value={draft.bucket_name}
                                     onChange={e => setDraft(d => ({ ...d, bucket_name: e.target.value }))}
                                     placeholder="tsf-files"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                 />
                             </div>
 
                             {/* Region */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Region</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Region</label>
                                 <input
                                     value={draft.region}
                                     onChange={e => setDraft(d => ({ ...d, region: e.target.value }))}
                                     placeholder="auto"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                 />
                             </div>
 
@@ -316,25 +316,25 @@ export default function StorageSettingsPage() {
                             {draft.provider_type !== 'LOCAL' && (
                                 <>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
-                                            Access Key {config?.access_key_masked && <span className="text-gray-600 ml-1">(current: {config.access_key_masked})</span>}
+                                        <label className="block text-sm font-medium text-app-muted-foreground mb-2">
+                                            Access Key {config?.access_key_masked && <span className="text-app-muted-foreground ml-1">(current: {config.access_key_masked})</span>}
                                         </label>
                                         <input
                                             type="password"
                                             value={draft.access_key}
                                             onChange={e => setDraft(d => ({ ...d, access_key: e.target.value }))}
                                             placeholder="Leave blank to keep current"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                            className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">Secret Key</label>
+                                        <label className="block text-sm font-medium text-app-muted-foreground mb-2">Secret Key</label>
                                         <input
                                             type="password"
                                             value={draft.secret_key}
                                             onChange={e => setDraft(d => ({ ...d, secret_key: e.target.value }))}
                                             placeholder="Leave blank to keep current"
-                                            className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                            className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                         />
                                     </div>
                                 </>
@@ -342,34 +342,34 @@ export default function StorageSettingsPage() {
 
                             {/* Path Prefix */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Path Prefix</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Path Prefix</label>
                                 <input
                                     value={draft.path_prefix}
                                     onChange={e => setDraft(d => ({ ...d, path_prefix: e.target.value }))}
                                     placeholder="Auto: {org-slug}/"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                 />
                             </div>
 
                             {/* Max File Size */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Max File Size (MB)</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Max File Size (MB)</label>
                                 <input
                                     type="number"
                                     value={draft.max_file_size_mb}
                                     onChange={e => setDraft(d => ({ ...d, max_file_size_mb: parseInt(e.target.value) || 50 }))}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                 />
                             </div>
 
                             {/* Allowed Extensions */}
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Allowed Extensions (comma-separated)</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-2">Allowed Extensions (comma-separated)</label>
                                 <input
                                     value={draft.allowed_extensions}
                                     onChange={e => setDraft(d => ({ ...d, allowed_extensions: e.target.value }))}
                                     placeholder="pdf, jpg, jpeg, png, doc, docx, xls, xlsx"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-app-success focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -394,7 +394,7 @@ export default function StorageSettingsPage() {
                         <button
                             onClick={handleTest}
                             disabled={testing}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/30 transition-all text-sm font-medium disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-app-info/20 text-blue-400 hover:bg-app-info/30 border border-app-info/30 transition-all text-sm font-medium disabled:opacity-50"
                         >
                             {testing ? <Loader2 size={14} className="animate-spin" /> : <TestTube size={14} />}
                             Test Connection
@@ -413,23 +413,23 @@ export default function StorageSettingsPage() {
             <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl">
                 <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <FileText size={18} className="text-gray-400" />
+                        <FileText size={18} className="text-app-muted-foreground" />
                         Recent Files
-                        <span className="text-sm text-gray-500 font-normal">({files.length})</span>
+                        <span className="text-sm text-app-muted-foreground font-normal">({files.length})</span>
                     </h2>
                 </div>
 
                 {files.length === 0 ? (
                     <div className="p-12 text-center">
-                        <Cloud size={48} className="mx-auto text-gray-700 mb-4" />
-                        <p className="text-gray-500">No files uploaded yet</p>
-                        <p className="text-xs text-gray-600 mt-1">Upload your first file to get started</p>
+                        <Cloud size={48} className="mx-auto text-app-muted-foreground mb-4" />
+                        <p className="text-app-muted-foreground">No files uploaded yet</p>
+                        <p className="text-xs text-app-muted-foreground mt-1">Upload your first file to get started</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-800/50">
                         {files.map(f => (
                             <div key={f.uuid} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-800/30 transition-colors">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${f.content_type?.startsWith('image/') ? 'bg-purple-500/20' : 'bg-blue-500/20'
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${f.content_type?.startsWith('image/') ? 'bg-purple-500/20' : 'bg-app-info/20'
                                     }`}>
                                     {f.content_type?.startsWith('image/') ?
                                         <Image size={18} className="text-purple-400" /> :
@@ -438,11 +438,11 @@ export default function StorageSettingsPage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm text-gray-200 truncate">{f.original_filename}</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-app-muted-foreground">
                                         {f.file_size_display} · {f.category} · {f.uploaded_by_name || 'System'}
                                     </p>
                                 </div>
-                                <span className="text-xs text-gray-600 shrink-0">
+                                <span className="text-xs text-app-muted-foreground shrink-0">
                                     {new Date(f.uploaded_at).toLocaleDateString()}
                                 </span>
                             </div>
@@ -459,8 +459,8 @@ function InfoCard({ label, value, icon: Icon }: { label: string; value: string; 
     return (
         <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-800">
             <div className="flex items-center gap-2 mb-2">
-                <Icon size={14} className="text-gray-500" />
-                <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
+                <Icon size={14} className="text-app-muted-foreground" />
+                <span className="text-xs text-app-muted-foreground uppercase tracking-wide">{label}</span>
             </div>
             <p className="text-sm text-white font-medium truncate">{value}</p>
         </div>

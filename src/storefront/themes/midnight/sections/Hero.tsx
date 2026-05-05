@@ -20,12 +20,12 @@ export default function MidnightHero({ settings, products, categories }: Section
     return (
         <section className="relative overflow-hidden bg-slate-950">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/20 via-transparent to-indigo-950/20" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[128px]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-app-success/5 rounded-full blur-[128px]" />
 
             <div className="relative max-w-6xl mx-auto px-4 pt-12 pb-20">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className="space-y-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-app-success/10 border border-app-success/20 rounded-full">
                             <Sparkles size={14} className="text-emerald-400" />
                             <span className="text-xs font-black text-emerald-400 uppercase tracking-[0.2em]">
                                 {tagline}
@@ -41,7 +41,7 @@ export default function MidnightHero({ settings, products, categories }: Section
                         </p>
 
                         <div className="flex flex-wrap items-center gap-4">
-                            <Link href={path('/search')} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]">
+                            <Link href={path('/search')} className="px-8 py-4 bg-app-success text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-app-success transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]">
                                 {ctaText}
                             </Link>
 
@@ -61,16 +61,16 @@ export default function MidnightHero({ settings, products, categories }: Section
 
                     {/* Animated Visual */}
                     <div className="relative hidden lg:block perspective-1000">
-                        <div className="absolute inset-0 bg-emerald-500/20 blur-[120px] rounded-full animate-pulse" />
-                        <div className="relative bg-slate-900/40 border border-white/10 rounded-[4rem] p-16 text-center aspect-square flex flex-col items-center justify-center overflow-hidden group hover:border-emerald-500/30 transition-colors">
+                        <div className="absolute inset-0 bg-app-success/20 blur-[120px] rounded-full animate-pulse" />
+                        <div className="relative bg-slate-900/40 border border-white/10 rounded-[4rem] p-16 text-center aspect-square flex flex-col items-center justify-center overflow-hidden group hover:border-app-success/30 transition-colors">
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <Store size={80} className="text-emerald-500/20 mb-8 transform group-hover:scale-110 transition-transform duration-700" />
+                            <Store size={80} className="text-app-success/20 mb-8 transform group-hover:scale-110 transition-transform duration-700" />
                             <h3 className="text-2xl font-black text-white tracking-tighter uppercase mb-2">Original DNA</h3>
                             <p className="text-app-muted-foreground text-sm font-bold uppercase tracking-widest">Verified Multi-Tenant Node</p>
 
                             {/* Floating decorative cards */}
-                            <div className="absolute top-10 right-10 w-24 h-32 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl backdrop-blur-md -rotate-12 animate-float" />
-                            <div className="absolute bottom-10 left-10 w-20 h-28 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl backdrop-blur-md rotate-12 animate-float-delayed" />
+                            <div className="absolute top-10 right-10 w-24 h-32 bg-app-success/10 border border-app-success/20 rounded-2xl backdrop-blur-md -rotate-12 animate-float" />
+                            <div className="absolute bottom-10 left-10 w-20 h-28 bg-app-info/10 border border-app-info/20 rounded-2xl backdrop-blur-md rotate-12 animate-float-delayed" />
                         </div>
                     </div>
                 </div>

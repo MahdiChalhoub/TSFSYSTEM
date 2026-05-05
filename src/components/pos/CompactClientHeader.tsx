@@ -84,7 +84,7 @@ export function CompactClientHeader({ client, currency = '$', uniqueItems, total
  >
  <div className="flex flex-col text-right">
  <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest leading-none group-hover:text-app-primary transition-colors mb-2">Vault Balance</span>
- <span className={clsx("font-black text-2xl tracking-tighter tabular-nums leading-none", balance > 0 ? "text-rose-500" : "text-app-primary")}>
+ <span className={clsx("font-black text-2xl tracking-tighter tabular-nums leading-none", balance > 0 ? "text-app-error" : "text-app-primary")}>
  {currency}{balance.toLocaleString()}
  </span>
  </div>

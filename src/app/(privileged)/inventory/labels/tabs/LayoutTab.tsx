@@ -148,7 +148,7 @@ export default function LayoutTab({ initialTemplates }: Props) {
                                 <span className="text-[12px] font-bold text-app-foreground">{t.name}</span>
                                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={(e) => { e.stopPropagation(); handleDuplicate(t.id) }} className="p-1 rounded hover:bg-app-primary/10"><Copy size={11} style={{ color: v('--app-primary') }} /></button>
-                                    {!t.is_system && <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id) }} className="p-1 rounded hover:bg-rose-500/10"><Trash2 size={11} className="text-app-error" /></button>}
+                                    {!t.is_system && <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id) }} className="p-1 rounded hover:bg-app-error/10"><Trash2 size={11} className="text-app-error" /></button>}
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5 mt-1">

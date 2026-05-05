@@ -32,12 +32,12 @@ export default function BoutiqueCategoriesPage() {
                     style={{ fontFamily: "'Playfair Display', serif" }}>
                     Collections
                 </h1>
-                <p className="text-gray-400 text-sm mb-10">Browse our curated collections and find your style.</p>
+                <p className="text-app-muted-foreground text-sm mb-10">Browse our curated collections and find your style.</p>
 
                 {categories.length === 0 ? (
                     <div className="text-center py-20">
                         <Grid3X3 size={48} className="mx-auto text-violet-200 mb-4" />
-                        <p className="text-gray-400 text-lg">No collections available yet</p>
+                        <p className="text-app-muted-foreground text-lg">No collections available yet</p>
                         <Link href={`/tenant/${slug}/search`}
                             className="inline-flex items-center gap-2 mt-4 text-violet-600 text-sm font-semibold hover:underline">
                             Browse all products <ArrowRight size={16} />
@@ -64,7 +64,7 @@ export default function BoutiqueCategoriesPage() {
                                         style={{ fontFamily: "'Playfair Display', serif" }}>
                                         {cat.name}
                                     </h3>
-                                    <p className="text-xs text-gray-400 mt-1">
+                                    <p className="text-xs text-app-muted-foreground mt-1">
                                         {cat.product_count || 0} {(cat.product_count || 0) === 1 ? 'item' : 'items'}
                                     </p>
                                 </button>
@@ -79,13 +79,13 @@ export default function BoutiqueCategoriesPage() {
                                         style={{ fontFamily: "'Playfair Display', serif" }}>
                                         {categories.find(c => c.id === activeCat)?.name || 'Products'}
                                     </h2>
-                                    <span className="text-sm text-gray-400">
+                                    <span className="text-sm text-app-muted-foreground">
                                         {displayProducts.length} {displayProducts.length === 1 ? 'item' : 'items'}
                                     </span>
                                 </div>
 
                                 {displayProducts.length === 0 ? (
-                                    <p className="text-center py-10 text-gray-400">No products in this collection</p>
+                                    <p className="text-center py-10 text-app-muted-foreground">No products in this collection</p>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
                                         {displayProducts.map(product => (

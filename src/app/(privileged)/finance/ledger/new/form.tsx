@@ -660,7 +660,7 @@ export default function JournalEntryForm({
                                     onChange={e => updateLine(idx, 'searchString', e.target.value)}
                                     className={`w-full p-2 border rounded-lg text-tp-md font-bold focus:ring-1 focus:ring-app-primary/20 outline-none transition-all shadow-sm ${
                                         line.accountId 
-                                        ? 'border-emerald-500/30 bg-emerald-500/5 text-app-foreground' 
+                                        ? 'border-app-success/30 bg-app-success/5 text-app-foreground' 
                                         : 'border-app-border/60 bg-app-surface text-app-foreground'
                                     }`}
                                 />
@@ -736,7 +736,7 @@ export default function JournalEntryForm({
                                     <input
                                         type="number" step="0.01" min="0" value={line.credit}
                                         onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-rose-500/20 outline-none bg-app-surface shadow-sm transition-all focus:border-rose-500/50 text-app-error placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
+                                        className="w-full px-2 py-2 border border-app-border/60 rounded-lg text-right font-mono font-bold text-tp-md focus:ring-1 focus:ring-app-error/20 outline-none bg-app-surface shadow-sm transition-all focus:border-app-error/50 text-app-error placeholder:text-transparent focus:placeholder:text-app-muted-foreground/20"
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -746,7 +746,7 @@ export default function JournalEntryForm({
                             <button
                                 type="button"
                                 onClick={() => removeLine(idx)}
-                                className="absolute bottom-2 right-2 text-app-error hover:bg-rose-500/10 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
+                                className="absolute bottom-2 right-2 text-app-error hover:bg-app-error/10 p-2 rounded-lg transition-colors border border-transparent hover:border-app-error/20"
                             >
                                 <Trash2 size={15} />
                             </button>

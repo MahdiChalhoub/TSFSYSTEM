@@ -193,7 +193,7 @@ export default function ConsignmentManager({
                                             <th className="px-6 py-4 text-right">Value</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50">
+                                    <tbody className="divide-y divide-app-border">
                                         {availableStock.length === 0 && (
                                             <tr>
                                                 <td colSpan={6} className="px-6 py-12 text-center text-app-muted-foreground">
@@ -273,7 +273,7 @@ export default function ConsignmentManager({
                                                 <th className="px-6 py-3 text-right font-bold">Total Payout</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-50">
+                                        <tbody className="divide-y divide-app-border">
                                             {supplier.items.map((line: Record<string, any>) => (
                                                 <tr key={line.id} className="hover:bg-app-surface/20">
                                                     <td className="px-6 py-4">
@@ -323,7 +323,7 @@ export default function ConsignmentManager({
                                 {settlements.map((settle) => (
                                     <div key={settle.id} className="bg-app-surface/50 border border-app-border rounded-2xl p-5 hover:border-app-success hover:bg-app-success-bg/10 transition-all group">
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                            <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-app-success group-hover:text-white transition-colors">
                                                 <FileText size={20} />
                                             </div>
                                             <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${settle.status === 'PAID' ? 'bg-app-success-bg text-app-success' : 'bg-app-warning-bg text-app-warning'

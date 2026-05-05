@@ -399,7 +399,7 @@ export default function GlobalAuditTrailPage() {
                                                                         {fc.old_value || '(empty)'}
                                                                     </div>
                                                                     <ArrowRight size={10} className="text-app-muted-foreground shrink-0" />
-                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-green-500/5 text-[11px] font-mono text-app-success font-bold truncate border border-app-success/20">
+                                                                    <div className="flex-1 min-w-0 p-1.5 rounded-lg bg-app-success/5 text-[11px] font-mono text-app-success font-bold truncate border border-app-success/20">
                                                                         {fc.new_value || '(empty)'}
                                                                     </div>
                                                                 </div>

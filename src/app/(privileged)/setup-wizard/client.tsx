@@ -341,7 +341,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  <p className="text-xs text-app-muted-foreground font-medium">{STEPS[step].subtitle}</p>
  </div>
  <div className="ml-auto flex items-center gap-2">
- {step <= 1 && <Badge className="bg-rose-50 text-rose-600 border-0 font-black text-[9px] uppercase tracking-widest">Required</Badge>}
+ {step <= 1 && <Badge className="bg-app-error-soft text-app-error border-0 font-black text-[9px] uppercase tracking-widest">Required</Badge>}
  <Badge className="bg-app-background text-app-muted-foreground border-0 font-black text-[10px] uppercase tracking-widest">Step {step + 1}/{STEPS.length}</Badge>
  </div>
  </div>
@@ -382,8 +382,8 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
 function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
  return (
  <div className="space-y-4">
- <div className="p-4 rounded-xl bg-rose-50 border border-rose-100 mb-2">
- <p className="text-xs font-bold text-rose-700">
+ <div className="p-4 rounded-xl bg-app-error-soft border border-rose-100 mb-2">
+ <p className="text-xs font-bold text-app-error">
  ⚠️ This is <strong>required</strong> before you can use the system. It determines your tax mode (HT or TTC), VAT recovery, and accounting behavior.
  </p>
  </div>
@@ -398,8 +398,8 @@ function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
  className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300
  ${isActive ? 'border-app-border bg-app-surface text-app-foreground shadow-xl shadow-app-border/20' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="flex items-start gap-4">
- <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-app-foreground/20' : 'bg-sky-50'} flex items-center justify-center shrink-0`}>
- <Icon size={24} className={isActive ? 'text-app-foreground' : 'text-sky-600'} />
+ <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-app-foreground/20' : 'bg-app-info-soft'} flex items-center justify-center shrink-0`}>
+ <Icon size={24} className={isActive ? 'text-app-foreground' : 'text-app-info'} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="text-sm font-black">{fr.name}</div>
@@ -428,8 +428,8 @@ function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
 function StepFinancialFoundation({ config, data, setData }: StepProps) {
  return (
  <div className="space-y-8">
- <div className="p-4 rounded-xl bg-rose-50 border border-rose-100">
- <p className="text-xs font-bold text-rose-700">
+ <div className="p-4 rounded-xl bg-app-error-soft border border-rose-100">
+ <p className="text-xs font-bold text-app-error">
  ⚠️ All three sections below are <strong>mandatory</strong>. Without a currency, chart of accounts, and fiscal year, no financial operations can be performed.
  </p>
  </div>
@@ -538,14 +538,14 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <button onClick={() => setData({ want_migration: true })}
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
- ${data.want_migration === true ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
+ ${data.want_migration === true ? 'border-app-warning bg-app-warning-soft shadow-lg shadow-orange-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="w-14 h-14 rounded-2xl bg-app-warning flex items-center justify-center mb-4 shadow-lg">
  <FileSpreadsheet size={28} className="text-app-foreground" />
  </div>
  <div className="text-lg font-black text-app-foreground">Yes, import my data</div>
  <div className="text-xs text-app-muted-foreground font-medium mt-1">Import products, contacts, or transactions from Excel, CSV, or another system</div>
- <div className="mt-3 flex items-center gap-1 text-xs font-bold text-orange-600"><ArrowUpRight size={14} /> Opens the Migration Center</div>
- {data.want_migration === true && <CheckCircle2 size={18} className="absolute top-3 right-3 text-orange-500" />}
+ <div className="mt-3 flex items-center gap-1 text-xs font-bold text-app-warning"><ArrowUpRight size={14} /> Opens the Migration Center</div>
+ {data.want_migration === true && <CheckCircle2 size={18} className="absolute top-3 right-3 text-app-warning" />}
  </button>
  <button onClick={() => setData({ want_migration: false })}
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
@@ -723,7 +723,7 @@ function StepLocations({ config, data, setData }: StepProps) {
  <div className="space-y-4 mt-4">
  {data.warehouses.map((wh, i) => (
  <div key={i} className="p-5 rounded-2xl border border-app-border bg-app-surface space-y-4 group relative">
- <button onClick={() => rm(i)} className="absolute top-3 right-3 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-3 right-3 p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
  <div className="lg:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Name</label><input type="text" value={wh.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Downtown" className={INPUT_CLS} /></div>
  <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Code</label><input type="text" value={wh.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SD01" maxLength={8} className={INPUT_CLS + ' uppercase'} /></div>
@@ -789,7 +789,7 @@ function StepCRMSetup({ config, data, setData }: StepProps) {
  <div className="space-y-4 mt-4">
  {data.crm_price_groups.map((g, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
  <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Tier Name</label><input type="text" value={g.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="VIP" className={INPUT_CLS} /></div>
  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Description</label><input type="text" value={g.description} onChange={e => upd(i, 'description', e.target.value)} placeholder="Customers with 10%+ lifetime discount" className={INPUT_CLS} /></div>
@@ -821,7 +821,7 @@ function StepHRSetup({ config, data, setData }: StepProps) {
  <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Departments</h3>
  <p className="text-xs text-app-muted-foreground">Set up the organizational structure of your company.</p>
  </div>
- <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-50 text-teal-600 font-bold text-xs hover:bg-teal-100 transition-all"><Plus size={14} /> Add Dept</button>
+ <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-success-soft text-app-success font-bold text-xs hover:bg-app-success-soft transition-all"><Plus size={14} /> Add Dept</button>
  </div>
  {data.hr_departments.length === 0 && (
  <div className="p-8 rounded-2xl border-2 border-dashed border-app-border text-center">
@@ -832,7 +832,7 @@ function StepHRSetup({ config, data, setData }: StepProps) {
  <div className="space-y-4 mt-4">
  {data.hr_departments.map((d, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Department Name</label><input type="text" value={d.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Sales & Marketing" className={INPUT_CLS} /></div>
  <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Code</label><input type="text" value={d.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SALES" maxLength={10} className={INPUT_CLS + ' uppercase'} /></div>
@@ -1016,7 +1016,7 @@ function StepWorkspaceSetup({ config, data, setData }: StepProps) {
  <div className="space-y-4 mt-4">
  {data.workspace_checklists.map((c, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error-soft transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mr-8">
  <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Name</label><input type="text" value={c.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Opening" className={INPUT_CLS} /></div>
  <div>
@@ -1149,7 +1149,7 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
  </div>
  </div>
  {selectedCoa && (
- <div className="p-3 rounded-lg bg-sky-50 border border-sky-100 text-[11px] text-sky-700">
+ <div className="p-3 rounded-lg bg-app-info-soft border border-sky-100 text-[11px] text-app-info">
  <span className="font-bold">📂 COA Mapping:</span> A child account will be created under <strong>{selectedCoa.code} - {selectedCoa.name}</strong> (e.g., <code>{selectedCoa.code}.001 - {name || 'Account Name'}</code>)
  </div>
  )}
@@ -1181,7 +1181,7 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><Scale size={16} className="text-sky-500" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Fiscal Regime</span></div>
+ <div className="flex items-center gap-2 mb-3"><Scale size={16} className="text-app-info" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Fiscal Regime</span></div>
  <p className="text-lg font-black text-app-foreground">{fr?.name || data.fiscal_regime}</p>
  <p className="text-xs text-app-muted-foreground mt-1">{fr?.taxMode === 'HT' ? 'Tax Exclusive (HT)' : fr?.taxMode === 'MIXED' ? 'Mixed (HT + TTC)' : 'Tax Inclusive (TTC)'}</p>
  </CardContent></Card>

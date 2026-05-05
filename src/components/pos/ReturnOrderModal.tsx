@@ -265,9 +265,9 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
 
 	{/* FNE Credit Note Badge + QR */}
 	{result.fne_status === 'CERTIFIED' && (
-	<div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 space-y-3">
+	<div className="bg-app-success/10 border border-app-success/20 rounded-2xl p-4 space-y-3">
 	<div className="flex items-center justify-center gap-2">
-	<span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-lg">FNE Avoir Certifié ✓</span>
+	<span className="text-[10px] font-black uppercase tracking-widest bg-app-success/20 text-emerald-400 px-2.5 py-1 rounded-lg">FNE Avoir Certifié ✓</span>
 	</div>
 	<div className="text-emerald-300 text-xs font-mono font-bold">{result.fne_reference}</div>
 	{result.fne_token && (
@@ -280,7 +280,7 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
 	</div>
 	)}
 	{result.fne_status === 'FAILED' && (
-	<div className="bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+	<div className="bg-app-error/10 border border-app-error/20 rounded-2xl px-4 py-3">
 	<div className="flex items-center justify-center gap-2">
 	<AlertTriangle size={14} className="text-red-400" />
 	<span className="text-red-400 text-xs font-bold">FNE Avoir — Certification échouée</span>

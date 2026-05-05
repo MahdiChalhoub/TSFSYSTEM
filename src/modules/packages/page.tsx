@@ -35,13 +35,13 @@ interface PackageUpload {
 }
 
 const statusColors: Record<string, string> = {
-    uploading: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    ready: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    scheduled: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    applying: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-    applied: "bg-green-500/20 text-green-400 border-green-500/30",
-    failed: "bg-red-500/20 text-red-400 border-red-500/30",
-    rolled_back: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    uploading: "bg-app-info/20 text-blue-400 border-app-info/30",
+    ready: "bg-app-success/20 text-emerald-400 border-app-success/30",
+    scheduled: "bg-app-warning/20 text-amber-400 border-app-warning/30",
+    applying: "bg-app-info/20 text-cyan-400 border-app-info/30",
+    applied: "bg-app-success/20 text-green-400 border-app-success/30",
+    failed: "bg-app-error/20 text-red-400 border-app-error/30",
+    rolled_back: "bg-slate-500/20 text-app-muted-foreground border-slate-500/30",
 }
 
 const typeIcons: Record<string, any> = {
@@ -171,14 +171,14 @@ export default function PackagesPage() {
                         <h1 className="text-3xl font-black text-white tracking-tight">
                             Package Storage Center
                         </h1>
-                        <p className="text-slate-400 mt-1">
+                        <p className="text-app-muted-foreground mt-1">
                             Upload, manage, and deploy kernel and module packages
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-white/5">
                             <HardDrive className="w-4 h-4 text-cyan-400" />
-                            <span className="text-sm text-slate-300">
+                            <span className="text-sm text-app-muted-foreground">
                                 {stats?.total || 0} packages stored
                             </span>
                         </div>
@@ -200,7 +200,7 @@ export default function PackagesPage() {
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold text-white">{stat.count}</p>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                                    <p className="text-xs text-app-muted-foreground uppercase tracking-wider">{stat.label}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -222,7 +222,7 @@ export default function PackagesPage() {
                         <div
                             {...getRootProps()}
                             className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${isDragActive
-                                ? "border-cyan-500 bg-cyan-500/10"
+                                ? "border-app-info bg-app-info/10"
                                 : "border-white/10 hover:border-white/20 hover:bg-white/5"
                                 }`}
                         >
@@ -231,15 +231,15 @@ export default function PackagesPage() {
                                 <div className="space-y-4">
                                     <Loader2 className="w-12 h-12 mx-auto text-cyan-400 animate-spin" />
                                     <Progress value={uploadProgress} className="max-w-xs mx-auto" />
-                                    <p className="text-sm text-slate-400">Uploading... {uploadProgress}%</p>
+                                    <p className="text-sm text-app-muted-foreground">Uploading... {uploadProgress}%</p>
                                 </div>
                             ) : (
                                 <>
-                                    <Package className="w-12 h-12 mx-auto text-slate-500 mb-4" />
-                                    <p className="text-slate-300 font-medium">
+                                    <Package className="w-12 h-12 mx-auto text-app-muted-foreground mb-4" />
+                                    <p className="text-app-muted-foreground font-medium">
                                         {isDragActive ? "Drop here..." : "Drag & drop package or click to browse"}
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-2">
+                                    <p className="text-xs text-app-muted-foreground mt-2">
                                         Supports: *.kernel.zip, *.frontend.zip, *.module.zip
                                     </p>
                                 </>
@@ -277,7 +277,7 @@ export default function PackagesPage() {
                                 <Loader2 className="w-8 h-8 mx-auto text-cyan-400 animate-spin" />
                             </div>
                         ) : packages.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500">
+                            <div className="p-12 text-center text-app-muted-foreground">
                                 <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                 <p>No packages uploaded yet</p>
                             </div>
@@ -288,14 +288,14 @@ export default function PackagesPage() {
                                     return (
                                         <div key={pkg.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
                                             <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center">
-                                                <TypeIcon className="w-6 h-6 text-slate-400" />
+                                                <TypeIcon className="w-6 h-6 text-app-muted-foreground" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-semibold text-white truncate">{pkg.name}</p>
                                                     <Badge variant="outline" className="text-xs">v{pkg.version}</Badge>
                                                 </div>
-                                                <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                                                <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
                                                     <span>{pkg.package_type_display}</span>
                                                     <span>•</span>
                                                     <span>{formatFileSize(pkg.file_size)}</span>
@@ -311,7 +311,7 @@ export default function PackagesPage() {
                                                     <Button
                                                         size="sm"
                                                         onClick={() => applyPackage(pkg)}
-                                                        className="bg-emerald-600 hover:bg-emerald-500"
+                                                        className="bg-app-success hover:bg-app-success"
                                                     >
                                                         <Play className="w-4 h-4 mr-1" /> Apply
                                                     </Button>
@@ -321,7 +321,7 @@ export default function PackagesPage() {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => rollbackPackage(pkg)}
-                                                        className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                                        className="border-app-warning/30 text-amber-400 hover:bg-app-warning/10"
                                                     >
                                                         <RotateCcw className="w-4 h-4 mr-1" /> Rollback
                                                     </Button>
@@ -330,7 +330,7 @@ export default function PackagesPage() {
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => deletePackage(pkg)}
-                                                    className="text-red-400 hover:bg-red-500/10"
+                                                    className="text-red-400 hover:bg-app-error/10"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>

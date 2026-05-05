@@ -74,8 +74,8 @@ export default function BudgetAlertsPage() {
   const severityColor = (severity: string) => {
     switch (severity) {
       case 'CRITICAL': return 'bg-app-error text-white'
-      case 'WARNING': return 'bg-orange-600 text-white'
-      case 'INFO': return 'bg-blue-600 text-white'
+      case 'WARNING': return 'bg-app-warning text-white'
+      case 'INFO': return 'bg-app-info text-white'
       default: return 'bg-app-surface-2'
     }
   }
@@ -248,10 +248,10 @@ export default function BudgetAlertsPage() {
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-orange-200/60 flex items-center justify-center">
-                <AlertTriangle size={22} className="text-orange-700" />
+                <AlertTriangle size={22} className="text-app-warning" />
               </div>
               <div>
-                <p className="text-xs font-bold text-orange-600 uppercase tracking-widest">Warning</p>
+                <p className="text-xs font-bold text-app-warning uppercase tracking-widest">Warning</p>
                 <p className="text-2xl font-bold text-orange-900 mt-0.5">{warningCount}</p>
               </div>
             </div>
