@@ -280,3 +280,91 @@ def audit_model_change(
             )
 
     return log
+
+
+def get_resource_audit_history(organization, resource_type: str, resource_id, limit: int = 50):
+    """
+    Return the last `limit` audit entries for a single resource, in the
+    shape the side-panel AuditTab components consume:
+
+        [{ id, timestamp, action, actor, old_value, new_value, description }, …]
+
+    `action` is normalized to one of `CREATE` / `UPDATE` / `DELETE` so
+    the existing icon + tint logic in AuditTab.tsx keeps working — the
+    underlying AuditLog action is `<resource>.<verb>` (e.g. `'brand.update'`).
+
+    `old_value` / `new_value` are reconstructed from the linked AuditTrail
+    rows (one per changed field) so the diff renderer in the tab still has
+    field-level data to compare. CREATE/DELETE entries get an empty new/old
+    pair which the renderer handles with no special-casing.
+
+    Single source of truth for both BrandViewSet.audit and
+    CategoryViewSet.audit (and future viewsets that want a side-panel
+    audit tab on a TenantOwnedModel that uses AuditLogMixin).
+    """
+    if not organization or resource_id is None:
+        return []
+    try:
+        rid_int = int(resource_id)
+    except (TypeError, ValueError):
+        return []
+
+    # Fetch the request-level audit rows. `resource_type` from
+    # AuditLogMixin is `instance.__class__.__name__.lower()` — match
+    # case-insensitively so callers can pass either 'brand' or 'Brand'.
+    logs = (
+        AuditLog.all_objects
+        .filter(
+            organization=organization,
+            resource_type__iexact=resource_type,
+            resource_id=rid_int,
+        )
+        .select_related('user')
+        .prefetch_related('field_changes')
+        .order_by('-timestamp')[:limit]
+    )
+
+    out = []
+    for log in logs:
+        # Normalize 'brand.update' → 'UPDATE'. Defensive split: some
+        # callers (raw audit_log()) write fully-custom actions like
+        # 'login.success' that don't map cleanly to CREATE/UPDATE/DELETE
+        # — those get returned as-is so the tab can still show them.
+        verb = log.action.rsplit('.', 1)[-1].upper() if '.' in log.action else log.action.upper()
+
+        # Reconstruct old/new dicts from per-field AuditTrail rows.
+        old_value: Dict[str, Any] = {}
+        new_value: Dict[str, Any] = {}
+        for trail in log.field_changes.all():
+            old_value[trail.field_name] = trail.old_value
+            new_value[trail.field_name] = trail.new_value
+
+        # Actor display: prefer full name → email → username.
+        actor = None
+        if log.user_id and log.user:
+            actor = log.user.get_full_name() or log.user.email or log.user.username
+        elif log.username:
+            actor = log.username
+
+        # Description: details dict has a fields_changed list for UPDATE,
+        # otherwise fall back to resource_repr or empty.
+        details = log.details or {}
+        if verb == 'UPDATE' and details.get('fields_changed'):
+            description = f"Updated: {', '.join(details['fields_changed'])}"
+        elif verb == 'CREATE':
+            description = f"Created {log.resource_repr or resource_type}"
+        elif verb == 'DELETE':
+            description = f"Deleted {log.resource_repr or resource_type}"
+        else:
+            description = log.resource_repr or ''
+
+        out.append({
+            'id': str(log.id),
+            'timestamp': log.timestamp,
+            'action': verb,
+            'actor': actor,
+            'old_value': old_value or None,
+            'new_value': new_value or None,
+            'description': description,
+        })
+    return out

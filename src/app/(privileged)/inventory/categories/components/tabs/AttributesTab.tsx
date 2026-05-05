@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRightLeft, Package, Barcode, X, ArrowRight, Check } from 'lucide-react'
+import { Plus, Tag, Loader2, AlertTriangle, Unlink, Pencil, ShieldAlert, ArrowRightLeft, Package, Barcode, X, ArrowRight, Check, ChevronRight, ChevronDown } from 'lucide-react'
 import { DeleteConflictDialog } from '@/components/ui/DeleteConflictDialog'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -56,6 +56,17 @@ interface LinkedAttrsResponse {
     [key: string]: unknown
 }
 
+interface ScopeValue {
+    id: number
+    name: string
+    code?: string
+    in_scope: boolean
+    /** How many categories are scoped to this leaf today. > 0 means
+     *  the leaf is already restricted; un-checking here doesn't make
+     *  it universal again (other categories still scope it). */
+    scoped_to_count: number
+}
+
 function pickErrorMessage(e: unknown, fallback: string): string {
     if (e instanceof Error) return e.message || fallback
     return fallback
@@ -81,7 +92,7 @@ function pickConflict(e: unknown): ConflictPayload | null {
  *  3. Per-product "Edit" button (attributes are complex — no bulk dropdown)
  *  4. Only when all products reassigned → Refresh & Retry unlinks
  * ═══════════════════════════════════════════════════════════ */
-export function AttributesTab({ categoryId }: { categoryId: number; categoryName: string }) {
+export function AttributesTab({ categoryId, categoryName }: { categoryId: number; categoryName: string }) {
     const [linkedAttrs, setLinkedAttrs] = useState<AttributeRow[]>([])
     const [allAttrs, setAllAttrs] = useState<AttributeRow[]>([])
     const [loading, setLoading] = useState(true)
@@ -89,6 +100,14 @@ export function AttributesTab({ categoryId }: { categoryId: number; categoryName
     const [showLink, setShowLink] = useState(false)
     const [conflict, setConflict] = useState<ConflictPayload | null>(null)
     const [unlinkTarget, setUnlinkTarget] = useState<AttributeRow | null>(null) // Pre-flight confirmation
+    /* Per-child scoping (mirrors brand AttributesTab):
+     *   - expanded — which root ids show their children inline
+     *   - valueScopes — per-root child cache; loaded on first expand
+     *   - scopeLoading / scopeSaving — UI flags */
+    const [expanded, setExpanded] = useState<Set<number>>(new Set())
+    const [valueScopes, setValueScopes] = useState<Map<number, ScopeValue[]>>(new Map())
+    const [scopeLoading, setScopeLoading] = useState<Set<number>>(new Set())
+    const [scopeSaving, setScopeSaving] = useState<Set<number>>(new Set())
     // Migration flow state
     const [migrateSource, setMigrateSource] = useState<AttributeRow | null>(null) // The source group we're migrating away from
     const [migrateTargetId, setMigrateTargetId] = useState<number | ''>('')
@@ -131,6 +150,78 @@ export function AttributesTab({ categoryId }: { categoryId: number; categoryName
     // at risk. Zero products → unlink is safe, run it directly and let the
     // success toast confirm. Any products → show the guard with the
     // Migrate / Force / Cancel paths.
+    /* Per-child scoping helpers — fetch on first expand, optimistic
+     * toggle, idempotent bulk save. Mirrors the brand AttributesTab so
+     * the two pages stay aligned. */
+    const fetchScopeChildren = useCallback(async (rootId: number) => {
+        setScopeLoading(prev => new Set(prev).add(rootId))
+        try {
+            const res: any = await erpFetch(
+                `inventory/categories/${categoryId}/attribute_value_scope/?parent_id=${rootId}`
+            )
+            const values: ScopeValue[] = Array.isArray(res?.values) ? res.values : []
+            setValueScopes(prev => {
+                const next = new Map(prev)
+                next.set(rootId, values)
+                return next
+            })
+        } catch {
+            toast.error('Failed to load attribute values')
+        } finally {
+            setScopeLoading(prev => {
+                const next = new Set(prev)
+                next.delete(rootId)
+                return next
+            })
+        }
+    }, [categoryId])
+
+    const toggleExpand = useCallback((rootId: number) => {
+        setExpanded(prev => {
+            const next = new Set(prev)
+            if (next.has(rootId)) {
+                next.delete(rootId)
+            } else {
+                next.add(rootId)
+                if (!valueScopes.has(rootId)) fetchScopeChildren(rootId)
+            }
+            return next
+        })
+    }, [valueScopes, fetchScopeChildren])
+
+    const toggleChildScope = useCallback(async (rootId: number, childId: number) => {
+        const current = valueScopes.get(rootId) || []
+        const next = current.map(v => v.id === childId ? { ...v, in_scope: !v.in_scope } : v)
+        setValueScopes(prev => {
+            const m = new Map(prev)
+            m.set(rootId, next)
+            return m
+        })
+        setScopeSaving(prev => new Set(prev).add(rootId))
+        try {
+            const value_ids = next.filter(v => v.in_scope).map(v => v.id)
+            await erpFetch(`inventory/categories/${categoryId}/attribute_value_scope/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parent_id: rootId, value_ids }),
+            })
+            fetchScopeChildren(rootId)
+        } catch {
+            toast.error('Failed to save scope')
+            setValueScopes(prev => {
+                const m = new Map(prev)
+                m.set(rootId, current)
+                return m
+            })
+        } finally {
+            setScopeSaving(prev => {
+                const s = new Set(prev)
+                s.delete(rootId)
+                return s
+            })
+        }
+    }, [valueScopes, categoryId, fetchScopeChildren])
+
     const requestUnlink = (group: AttributeRow) => {
         if ((group.product_count ?? 0) > 0) {
             setUnlinkTarget(group)
@@ -500,12 +591,29 @@ export function AttributesTab({ categoryId }: { categoryId: number; categoryName
                             const pc = group.product_count ?? 0
                             const bc = group.barcode_count ?? 0
                             const hasProducts = pc > 0
+                            const isOpen = expanded.has(group.id)
+                            const children = valueScopes.get(group.id)
+                            const childLoading = scopeLoading.has(group.id)
+                            const saving = scopeSaving.has(group.id)
+                            const inScopeCount = (children || []).filter(c => c.in_scope).length
                             return (
-                                <div key={group.id} className="flex items-center gap-3 px-4 py-2.5 group transition-all hover:bg-app-surface/50">
+                              <div key={group.id} className="group">
+                                <div className="flex items-center gap-3 px-4 py-2.5 transition-all hover:bg-app-surface/50">
+                                    <button onClick={() => toggleExpand(group.id)} aria-label={isOpen ? 'Collapse' : 'Expand'}
+                                        className="flex-shrink-0 p-0.5 rounded transition-colors hover:bg-app-surface"
+                                        style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                    </button>
                                     <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}><Tag size={12} /></div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             <p className="text-tp-md font-bold text-app-foreground truncate">{group.name}</p>
+                                            {isOpen && children && (
+                                                <span className="text-tp-xxs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded"
+                                                    style={{ color: 'var(--app-warning)', background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)' }}>
+                                                    {inScopeCount}/{children.length}
+                                                </span>
+                                            )}
                                             <span className="text-tp-xxs font-bold px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
                                                 style={group.source === 'auto' || group.source === 'both' ? { background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' } : { background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
                                                 {group.source === 'auto' ? 'AUTO' : group.source === 'both' ? 'AUTO' : 'PRE-REG'}
@@ -553,6 +661,59 @@ export function AttributesTab({ categoryId }: { categoryId: number; categoryName
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Expanded children — checkbox per leaf value, scoped to this category */}
+                                {isOpen && (
+                                    <div className="pl-12 pr-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-150"
+                                        style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
+                                        {childLoading && !children ? (
+                                            <div className="flex items-center gap-2 py-2 text-tp-xs text-app-muted-foreground">
+                                                <Loader2 size={11} className="animate-spin" /> Loading values…
+                                            </div>
+                                        ) : children && children.length === 0 ? (
+                                            <p className="text-tp-xs text-app-muted-foreground italic py-2">
+                                                No leaf values defined under this attribute group yet.
+                                            </p>
+                                        ) : children ? (
+                                            <>
+                                                <p className="text-tp-xxs text-app-muted-foreground mb-1.5 leading-snug">
+                                                    Pick which {group.name.toLowerCase()} values are valid for <strong>{categoryName}</strong>.
+                                                    Empty = all values universal. Checking a value scopes it to this category
+                                                    (and any other category already scoped) — unchecked values stay universal
+                                                    unless another category has scoped them.
+                                                </p>
+                                                <div className="space-y-0.5">
+                                                    {children.map(v => {
+                                                        const exclusive = v.scoped_to_count > 0
+                                                        return (
+                                                            <label key={v.id}
+                                                                className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={v.in_scope}
+                                                                    disabled={saving}
+                                                                    onChange={() => toggleChildScope(group.id, v.id)}
+                                                                    className="w-3.5 h-3.5 cursor-pointer accent-app-warning"
+                                                                />
+                                                                <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
+                                                                {v.code && (
+                                                                    <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                )}
+                                                                {exclusive && !v.in_scope && (
+                                                                    <span title={`Currently scoped to ${v.scoped_to_count} other categor${v.scoped_to_count === 1 ? 'y' : 'ies'}`}
+                                                                        style={{ color: 'var(--app-warning)' }}>
+                                                                        <AlertTriangle size={11} />
+                                                                    </span>
+                                                                )}
+                                                            </label>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </>
+                                        ) : null}
+                                    </div>
+                                )}
+                              </div>
                             )
                         })}
                     </div>

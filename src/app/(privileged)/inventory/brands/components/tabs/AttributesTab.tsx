@@ -9,12 +9,24 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Plus, Tag, Loader2, Unlink, Sparkles } from 'lucide-react'
+import { Plus, Tag, Loader2, Unlink, Sparkles, ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 
 interface AttrGroup { id: number; name: string; code?: string }
+
+interface ScopeValue {
+    id: number
+    name: string
+    code?: string
+    in_scope: boolean
+    /** How many brands are currently scoped to this leaf. > 0 means
+     *  the value is no longer universal — picking it for this brand
+     *  doesn't change anything, but un-picking would not auto-restore
+     *  universal access if other brands are still scoped to it. */
+    scoped_to_count: number
+}
 
 export function AttributesTab({ brandId, brandName }: { brandId: number; brandName: string }) {
     const [linked, setLinked] = useState<AttrGroup[]>([])
@@ -28,6 +40,15 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
     const [loading, setLoading] = useState(true)
     const [linking, setLinking] = useState(false)
     const [showLink, setShowLink] = useState(false)
+    /** Expanded linked-root ids — only these have their children fetched + shown. */
+    const [expanded, setExpanded] = useState<Set<number>>(new Set())
+    /** Per-root cache: rootId → list of children with in_scope flags. Loaded on
+     *  first expand so closed groups don't pay the round-trip. */
+    const [valueScopes, setValueScopes] = useState<Map<number, ScopeValue[]>>(new Map())
+    /** Per-root in-flight set so we show a small spinner while fetching. */
+    const [scopeLoading, setScopeLoading] = useState<Set<number>>(new Set())
+    /** Per-root saving flag so toggles can't race the POST. */
+    const [scopeSaving, setScopeSaving] = useState<Set<number>>(new Set())
     const router = useRouter()
 
     const loadData = useCallback(() => {
@@ -108,6 +129,88 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
         } catch { toast.error('Failed to link') }
         finally { setLinking(false) }
     }
+
+    /* ── Per-child value scoping ──────────────────────────────────────
+     *
+     *  When a linked root is expanded for the first time, fetch its
+     *  children + which ones currently have THIS brand in their
+     *  scope_brands M2M. The toggle wires up to a bulk POST that
+     *  re-syncs the brand's membership across all children of the root
+     *  (idempotent — backend diffs current vs requested).
+     */
+    const fetchChildren = useCallback(async (rootId: number) => {
+        setScopeLoading(prev => new Set(prev).add(rootId))
+        try {
+            const res: any = await erpFetch(
+                `inventory/brands/${brandId}/attribute_value_scope/?parent_id=${rootId}`
+            )
+            const values: ScopeValue[] = Array.isArray(res?.values) ? res.values : []
+            setValueScopes(prev => {
+                const next = new Map(prev)
+                next.set(rootId, values)
+                return next
+            })
+        } catch {
+            toast.error('Failed to load attribute values')
+        } finally {
+            setScopeLoading(prev => {
+                const next = new Set(prev)
+                next.delete(rootId)
+                return next
+            })
+        }
+    }, [brandId])
+
+    const toggleExpand = useCallback((rootId: number) => {
+        setExpanded(prev => {
+            const next = new Set(prev)
+            if (next.has(rootId)) {
+                next.delete(rootId)
+            } else {
+                next.add(rootId)
+                // Fetch on first expand only; cache hit = instant re-open.
+                if (!valueScopes.has(rootId)) fetchChildren(rootId)
+            }
+            return next
+        })
+    }, [valueScopes, fetchChildren])
+
+    const toggleChildScope = useCallback(async (rootId: number, childId: number) => {
+        const current = valueScopes.get(rootId) || []
+        const next = current.map(v => v.id === childId ? { ...v, in_scope: !v.in_scope } : v)
+        // Optimistic update; revert on failure.
+        setValueScopes(prev => {
+            const m = new Map(prev)
+            m.set(rootId, next)
+            return m
+        })
+        setScopeSaving(prev => new Set(prev).add(rootId))
+        try {
+            const value_ids = next.filter(v => v.in_scope).map(v => v.id)
+            await erpFetch(`inventory/brands/${brandId}/attribute_value_scope/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parent_id: rootId, value_ids }),
+            })
+            // Re-fetch to pick up updated scoped_to_count from the server
+            // (since other rows may have changed if multiple users are editing).
+            fetchChildren(rootId)
+        } catch {
+            toast.error('Failed to save scope')
+            // Revert optimistic update
+            setValueScopes(prev => {
+                const m = new Map(prev)
+                m.set(rootId, current)
+                return m
+            })
+        } finally {
+            setScopeSaving(prev => {
+                const s = new Set(prev)
+                s.delete(rootId)
+                return s
+            })
+        }
+    }, [valueScopes, brandId, fetchChildren])
 
     const unlinkAttr = async (attrId: number) => {
         // Lightweight confirm — Brand.attributes is a metadata link,
@@ -237,28 +340,107 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
                     </div>
                 ) : (
                     <div className="divide-y divide-app-border/30">
-                        {linked.map(g => (
-                            <div key={g.id} className="flex items-center gap-3 px-4 py-2.5 group transition-colors hover:bg-app-surface-hover">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
-                                        color: 'var(--app-success)'
-                                    }}>
-                                    <Tag size={13} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-tp-md font-semibold text-app-foreground truncate">{g.name}</p>
-                                    {g.code && (
-                                        <p className="text-tp-xxs font-mono text-app-muted-foreground mt-0.5">{g.code}</p>
+                        {linked.map(g => {
+                            const isOpen = expanded.has(g.id)
+                            const children = valueScopes.get(g.id)
+                            const childLoading = scopeLoading.has(g.id)
+                            const saving = scopeSaving.has(g.id)
+                            const inScopeCount = (children || []).filter(c => c.in_scope).length
+                            return (
+                                <div key={g.id} className="group">
+                                    {/* Root row — clickable chevron + tag + label + Unlink */}
+                                    <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-app-surface-hover">
+                                        <button onClick={() => toggleExpand(g.id)} aria-label={isOpen ? 'Collapse' : 'Expand'}
+                                            className="flex-shrink-0 p-0.5 rounded transition-colors hover:bg-app-surface"
+                                            style={{ color: 'var(--app-muted-foreground)' }}>
+                                            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                        </button>
+                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{
+                                                background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                                                color: 'var(--app-success)'
+                                            }}>
+                                            <Tag size={13} />
+                                        </div>
+                                        <button onClick={() => toggleExpand(g.id)} className="flex-1 min-w-0 text-left">
+                                            <p className="text-tp-md font-semibold text-app-foreground truncate">{g.name}</p>
+                                            {g.code && (
+                                                <p className="text-tp-xxs font-mono text-app-muted-foreground mt-0.5">{g.code}</p>
+                                            )}
+                                        </button>
+                                        {isOpen && children && (
+                                            <span className="text-tp-xxs font-bold uppercase tracking-widest px-2 py-0.5 rounded-md"
+                                                style={{
+                                                    color: 'var(--app-success)',
+                                                    background: 'color-mix(in srgb, var(--app-success) 8%, transparent)',
+                                                }}>
+                                                {inScopeCount} / {children.length}
+                                            </span>
+                                        )}
+                                        <button onClick={() => unlinkAttr(g.id)} disabled={linking}
+                                            className="flex items-center gap-1 text-tp-xs font-semibold px-2 py-1 rounded-lg transition-all disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
+                                            <Unlink size={11} />Unlink
+                                        </button>
+                                    </div>
+
+                                    {/* Expanded children — checkbox per leaf value, scoped to this brand */}
+                                    {isOpen && (
+                                        <div className="pl-12 pr-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-150"
+                                            style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
+                                            {childLoading && !children ? (
+                                                <div className="flex items-center gap-2 py-2 text-tp-xs text-app-muted-foreground">
+                                                    <Loader2 size={11} className="animate-spin" /> Loading values…
+                                                </div>
+                                            ) : children && children.length === 0 ? (
+                                                <p className="text-tp-xs text-app-muted-foreground italic py-2">
+                                                    No leaf values defined under this attribute group yet.
+                                                </p>
+                                            ) : children ? (
+                                                <>
+                                                    <p className="text-tp-xxs text-app-muted-foreground mb-1.5 leading-snug">
+                                                        Pick which {g.name.toLowerCase()} values are valid for <strong>{brandName}</strong>.
+                                                        Empty = all values universal. Checking a value scopes it to this brand
+                                                        (and any other brand already scoped) — unchecked values stay universal.
+                                                    </p>
+                                                    <div className="space-y-0.5">
+                                                        {children.map(v => {
+                                                            // scoped_to_count > 0 means this value is already restricted
+                                                            // (some brand has it). Surface a small icon so unchecking a
+                                                            // value doesn't surprise the operator into thinking they made
+                                                            // it universal again — they'd need every brand to release it.
+                                                            const exclusive = v.scoped_to_count > 0
+                                                            return (
+                                                                <label key={v.id}
+                                                                    className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={v.in_scope}
+                                                                        disabled={saving}
+                                                                        onChange={() => toggleChildScope(g.id, v.id)}
+                                                                        className="w-3.5 h-3.5 cursor-pointer accent-app-success"
+                                                                    />
+                                                                    <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
+                                                                    {v.code && (
+                                                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                    )}
+                                                                    {exclusive && !v.in_scope && (
+                                                                        <span title={`Currently scoped to ${v.scoped_to_count} other brand${v.scoped_to_count === 1 ? '' : 's'}`}
+                                                                            style={{ color: 'var(--app-warning)' }}>
+                                                                            <AlertTriangle size={11} />
+                                                                        </span>
+                                                                    )}
+                                                                </label>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </>
+                                            ) : null}
+                                        </div>
                                     )}
                                 </div>
-                                <button onClick={() => unlinkAttr(g.id)} disabled={linking}
-                                    className="flex items-center gap-1 text-tp-xs font-semibold px-2 py-1 rounded-lg transition-all disabled:opacity-50 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                    style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', minHeight: 32 }}>
-                                    <Unlink size={11} />Unlink
-                                </button>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 )}
             </div>

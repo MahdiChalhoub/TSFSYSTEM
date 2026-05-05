@@ -14,6 +14,9 @@ import { TenantSwitcher } from './TenantSwitcher';
 import { BranchLocationSwitcher } from './BranchSwitcher';
 import { NotificationBell } from './NotificationBell';
 import { useAppTheme } from '@/components/app/AppThemeProvider';
+import { useTranslation } from '@/hooks/use-translation';
+import { LOCALES, type Locale } from '@/translations/dictionaries';
+import { Check } from 'lucide-react';
 
 interface MenuItem {
     title: string; icon?: any; path?: string; children?: MenuItem[];
@@ -296,16 +299,22 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
     const { toggleSidebar, sidebarOpen, viewScope, canToggleScope, navLayout, setNavLayout } = useAdmin();
     const [profileOpen, setProfileOpen] = useState(false);
     const [themeOpen, setThemeOpen] = useState(false);
+    const [langOpen, setLangOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const themeRef = useRef<HTMLDivElement>(null);
+    const langRef = useRef<HTMLDivElement>(null);
+
+    const { locale, switchLocale } = useTranslation();
+    const currentLang = LOCALES.find(l => l.id === locale) || LOCALES[0];
 
     useEffect(() => { setMounted(true); }, []);
     useEffect(() => {
         const h = (e: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
             if (themeRef.current && !themeRef.current.contains(e.target as Node)) setThemeOpen(false);
+            if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
         };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
@@ -452,6 +461,47 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                             <>
                                 <div className="fixed inset-0 z-40" onClick={() => setThemeOpen(false)} />
                                 <ThemePanel onClose={() => setThemeOpen(false)} />
+                            </>
+                        )}
+                    </div>
+
+                    {/* Language */}
+                    <div className="relative flex-shrink-0" ref={langRef}>
+                        <button onClick={() => setLangOpen(!langOpen)}
+                            title={`Language: ${currentLang.name}`}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                            style={{ color: langOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)', background: langOpen ? 'var(--app-primary-light)' : 'transparent' }}
+                            onMouseEnter={(e) => { if (!langOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-foreground)'; } }}
+                            onMouseLeave={(e) => { if (!langOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; } }}
+                            suppressHydrationWarning>
+                            <span className="text-sm leading-none" suppressHydrationWarning>{currentLang.flag}</span>
+                        </button>
+                        {langOpen && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
+                                <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}>
+                                    <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                        <p className="label-micro" style={{ color: 'var(--app-muted-foreground)' }}>Language</p>
+                                    </div>
+                                    <div className="p-1.5">
+                                        {LOCALES.map((lang) => (
+                                            <button key={lang.id} dir={lang.dir}
+                                                onClick={() => { switchLocale(lang.id as Locale); setLangOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150"
+                                                style={{
+                                                    background: locale === lang.id ? 'var(--app-primary-light)' : 'transparent',
+                                                    color: locale === lang.id ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                                }}
+                                                onMouseEnter={(e) => { if (locale !== lang.id) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-foreground)'; } }}
+                                                onMouseLeave={(e) => { if (locale !== lang.id) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; } }}>
+                                                <span className="text-base leading-none">{lang.flag}</span>
+                                                <span className="text-xs font-bold flex-1 text-left">{lang.name}</span>
+                                                {locale === lang.id && <Check size={13} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </>
                         )}
                     </div>

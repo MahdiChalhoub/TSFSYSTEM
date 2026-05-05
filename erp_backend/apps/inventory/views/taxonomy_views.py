@@ -1326,6 +1326,124 @@ class BrandViewSet(BrandViewSetDeleteGuardMixin, TenantModelViewSet):
         return Response({'status': 'unlinked', 'brand_id': brand.id, 'attribute_id': int(aid)})
 
     @action(detail=True, methods=['get'])
+    def audit(self, request, pk=None):
+        """Last 50 audit entries for this brand (create / update / delete).
+
+        Reads from kernel `erp_auditlog` (the table AuditLogMixin actually
+        writes to). Mirrors CategoryViewSet.audit so the side-panel Audit
+        tab works identically on both pages.
+        """
+        from kernel.audit.audit_logger import get_resource_audit_history
+        organization, err = _get_org_or_400()
+        if err: return err
+        try:
+            entries = get_resource_audit_history(organization, 'brand', pk, limit=50)
+            return Response({'results': entries, 'count': len(entries)})
+        except Exception:
+            return Response({'results': [], 'count': 0})
+
+    @action(detail=True, methods=['get', 'post'], url_path='attribute_value_scope')
+    def attribute_value_scope(self, request, pk=None):
+        """Per-child attribute scoping for a brand.
+
+        GET  ?parent_id=<root_attr_id>  →
+            { parent_id, values: [{ id, name, code, in_scope, scoped_to_count }, …] }
+
+            For each LEAF under the given root group, returns whether
+            this brand is in the leaf's `scope_brands` M2M (`in_scope`)
+            plus how many brands are currently scoped to that leaf
+            (`scoped_to_count`) so the UI can warn when picking a leaf
+            would shrink another brand's available values.
+
+        POST { parent_id, value_ids: [ids] }  →
+            Replaces this brand's membership across all leaves under
+            `parent_id`: leaves whose id is in `value_ids` get this
+            brand ADDED to their `scope_brands`; leaves NOT in
+            `value_ids` get it REMOVED. Idempotent.
+
+        Semantics caveat — `scope_brands` is an exclusivity gate: a
+        leaf with empty `scope_brands` is universal (every brand can
+        use it), but once ANY brand is added the leaf becomes
+        restricted to that set. Picking a value here therefore narrows
+        it to this brand and silently makes it unavailable to brands
+        not in the M2M. The frontend surfaces this via
+        `scoped_to_count` so the operator can spot the implication.
+        """
+        brand, organization, err = self._get_brand_or_404(pk)
+        if err: return err
+
+        if request.method == 'GET':
+            parent_id = request.query_params.get('parent_id')
+            try:
+                pid = int(parent_id) if parent_id else None
+            except (TypeError, ValueError):
+                return Response({'error': 'parent_id must be an integer'}, status=400)
+            if pid is None:
+                return Response({'error': 'parent_id is required'}, status=400)
+
+            # Pull children + prefetch scope_brands count so we don't
+            # do N+1 queries for `scoped_to_count`.
+            from django.db.models import Count
+            children = (
+                ProductAttribute.objects
+                .filter(organization=organization, parent_id=pid)
+                .annotate(scoped_to_count=Count('scope_brands'))
+                .order_by('sort_order', 'name')
+            )
+            scoped_to_brand_ids = set(
+                ProductAttribute.objects
+                .filter(organization=organization, parent_id=pid, scope_brands=brand)
+                .values_list('id', flat=True)
+            )
+            return Response({
+                'parent_id': pid,
+                'values': [{
+                    'id': c.id,
+                    'name': c.name,
+                    'code': c.code,
+                    'in_scope': c.id in scoped_to_brand_ids,
+                    'scoped_to_count': c.scoped_to_count,
+                } for c in children],
+            })
+
+        # POST — bulk-set this brand's membership for every child of parent_id.
+        parent_id = request.data.get('parent_id')
+        raw_ids = request.data.get('value_ids', [])
+        try:
+            pid = int(parent_id)
+        except (TypeError, ValueError):
+            return Response({'error': 'parent_id must be an integer'}, status=400)
+        if not isinstance(raw_ids, (list, tuple)):
+            return Response({'error': 'value_ids must be a list'}, status=400)
+        try:
+            selected_ids = {int(v) for v in raw_ids}
+        except (TypeError, ValueError):
+            return Response({'error': 'value_ids must be ints'}, status=400)
+
+        children = list(
+            ProductAttribute.objects
+            .filter(organization=organization, parent_id=pid)
+            .only('id')
+        )
+        added, removed = 0, 0
+        for child in children:
+            currently = child.scope_brands.filter(pk=brand.pk).exists()
+            should_have = child.id in selected_ids
+            if should_have and not currently:
+                child.scope_brands.add(brand)
+                added += 1
+            elif not should_have and currently:
+                child.scope_brands.remove(brand)
+                removed += 1
+        return Response({
+            'status': 'ok',
+            'parent_id': pid,
+            'added': added,
+            'removed': removed,
+            'in_scope_count': len(selected_ids),
+        })
+
+    @action(detail=True, methods=['get'])
     def suggested_attribute_groups(self, request, pk=None):
         """Root attribute groups the brand's products carry but the
         brand isn't M2M-linked to yet. Powers the "Suggested" pills
@@ -1571,28 +1689,19 @@ class CategoryViewSet(TenantModelViewSet):
     @action(detail=True, methods=['get'])
     def audit(self, request, pk=None):
         """Last 50 audit entries for this category (create / update / delete).
-        Uses the generic AuditLog table keyed by (table_name, record_id)."""
-        from erp.models_audit import AuditLog
+
+        Reads from the kernel `erp_auditlog` table — the one
+        `AuditLogMixin.save()` actually writes to. Previously this read
+        from the legacy `auditlog` table (different schema) and missed
+        every change written by the modern audit path; the side-panel
+        Audit tab silently showed only stale historical entries.
+        """
+        from kernel.audit.audit_logger import get_resource_audit_history
         organization, err = _get_org_or_400()
         if err: return err
         try:
-            entries = AuditLog.objects.filter(
-                organization_id=organization.id,
-                table_name__iexact='Category',
-                record_id=str(pk),
-            ).order_by('-timestamp')[:50]
-            return Response({
-                'results': [{
-                    'id': str(e.id),
-                    'timestamp': e.timestamp,
-                    'action': e.action,
-                    'actor': (e.actor.get_full_name() or e.actor.email or e.actor.username) if e.actor else None,
-                    'old_value': e.old_value,
-                    'new_value': e.new_value,
-                    'description': e.description,
-                } for e in entries],
-                'count': entries.count() if hasattr(entries, 'count') else len(entries),
-            })
+            entries = get_resource_audit_history(organization, 'category', pk, limit=50)
+            return Response({'results': entries, 'count': len(entries)})
         except Exception:
             return Response({'results': [], 'count': 0})
 
@@ -1880,6 +1989,87 @@ class CategoryViewSet(TenantModelViewSet):
         # Safe to unlink — remove explicit M2M
         category.attributes.remove(attr)
         return Response({"status": "unlinked", "attribute": attr.name})
+
+    @action(detail=True, methods=['get', 'post'], url_path='attribute_value_scope')
+    def attribute_value_scope(self, request, pk=None):
+        """Per-child attribute scoping for a category.
+
+        Mirrors `BrandViewSet.attribute_value_scope` with `scope_categories`
+        instead of `scope_brands`. See that action's docstring for the
+        full GET / POST contract and the exclusivity-gate caveat.
+        """
+        category = self.get_object()
+        organization = category.organization
+        from apps.inventory.models import ProductAttribute
+
+        if request.method == 'GET':
+            parent_id = request.query_params.get('parent_id')
+            try:
+                pid = int(parent_id) if parent_id else None
+            except (TypeError, ValueError):
+                return Response({'error': 'parent_id must be an integer'}, status=400)
+            if pid is None:
+                return Response({'error': 'parent_id is required'}, status=400)
+
+            from django.db.models import Count
+            children = (
+                ProductAttribute.objects
+                .filter(organization=organization, parent_id=pid)
+                .annotate(scoped_to_count=Count('scope_categories'))
+                .order_by('sort_order', 'name')
+            )
+            scoped_to_cat_ids = set(
+                ProductAttribute.objects
+                .filter(organization=organization, parent_id=pid, scope_categories=category)
+                .values_list('id', flat=True)
+            )
+            return Response({
+                'parent_id': pid,
+                'values': [{
+                    'id': c.id,
+                    'name': c.name,
+                    'code': c.code,
+                    'in_scope': c.id in scoped_to_cat_ids,
+                    'scoped_to_count': c.scoped_to_count,
+                } for c in children],
+            })
+
+        # POST — bulk-set this category's membership for every child of parent_id.
+        parent_id = request.data.get('parent_id')
+        raw_ids = request.data.get('value_ids', [])
+        try:
+            pid = int(parent_id)
+        except (TypeError, ValueError):
+            return Response({'error': 'parent_id must be an integer'}, status=400)
+        if not isinstance(raw_ids, (list, tuple)):
+            return Response({'error': 'value_ids must be a list'}, status=400)
+        try:
+            selected_ids = {int(v) for v in raw_ids}
+        except (TypeError, ValueError):
+            return Response({'error': 'value_ids must be ints'}, status=400)
+
+        children = list(
+            ProductAttribute.objects
+            .filter(organization=organization, parent_id=pid)
+            .only('id')
+        )
+        added, removed = 0, 0
+        for child in children:
+            currently = child.scope_categories.filter(pk=category.pk).exists()
+            should_have = child.id in selected_ids
+            if should_have and not currently:
+                child.scope_categories.add(category)
+                added += 1
+            elif not should_have and currently:
+                child.scope_categories.remove(category)
+                removed += 1
+        return Response({
+            'status': 'ok',
+            'parent_id': pid,
+            'added': added,
+            'removed': removed,
+            'in_scope_count': len(selected_ids),
+        })
 
     @action(detail=True, methods=['get'])
     def migrate_attribute_preview(self, request, pk=None):
