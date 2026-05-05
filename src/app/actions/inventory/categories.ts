@@ -1,7 +1,7 @@
 'use server';
 
 import { erpFetch, handleAuthError } from "@/lib/erp-api";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export type CategoryState = {
  message?: string;
@@ -42,6 +42,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
  }
 
  revalidatePath('/inventory/categories');
+        revalidateTag('categories');
  return { message: 'success' };
  } catch (e: any) {
  console.error('[createCategory] Exception:', e);
@@ -75,6 +76,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
  });
 
  revalidatePath('/inventory/categories');
+        revalidateTag('categories');
  return { message: 'success' };
  } catch (e: unknown) {
  return { message: 'Failed to update category' };
@@ -92,6 +94,7 @@ export async function reparentCategory(id: number, newParentId: number | null) {
  body: JSON.stringify({ parent: newParentId })
  });
  revalidatePath('/inventory/categories');
+        revalidateTag('categories');
  return { success: true };
  } catch (e: any) {
  return { success: false, message: e?.message || 'Failed to move category' };
@@ -105,6 +108,7 @@ export async function deleteCategory(id: number, options: { force?: boolean } = 
             : `inventory/categories/${id}/`;
         await erpFetch(url, { method: 'DELETE' });
         revalidatePath('/inventory/categories');
+        revalidateTag('categories');
         return { success: true };
     } catch (e: any) {
         // 409 = conflict (products or sub-categories) — caller shows migrate dialog

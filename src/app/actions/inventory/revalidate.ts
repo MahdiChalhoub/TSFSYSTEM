@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 /**
  * Revalidate inventory entity paths after client-side mutations.
@@ -15,6 +15,7 @@ export async function revalidateEntityPath(entityType: string) {
             break
         case 'category':
             revalidatePath('/inventory/categories')
+            revalidateTag('categories')
             break
         case 'brand':
             revalidatePath('/inventory/brands')

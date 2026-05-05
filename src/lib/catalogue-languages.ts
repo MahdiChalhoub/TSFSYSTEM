@@ -53,13 +53,46 @@ export function getCachedCatalogueLanguages(): LocaleCode[] | null {
     return _cachedLanguages;
 }
 
+/** Filter entries down to codes whose `is_catalogue` role is on for at
+ *  least one country. Legacy entries (no `roles` map) stay catalogue-active
+ *  so pre-roles storage keeps working. */
+function entriesToCatalogueCodes(entries: CatalogueLanguageEntry[]): LocaleCode[] {
+    const out: LocaleCode[] = [];
+    for (const e of entries) {
+        if (!e.roles || Object.keys(e.roles).length === 0) {
+            out.push(e.code);
+            continue;
+        }
+        for (const k in e.roles) {
+            if (e.roles[k]?.is_catalogue) {
+                out.push(e.code);
+                break;
+            }
+        }
+    }
+    return out;
+}
+
 export async function getCatalogueLanguages(): Promise<LocaleCode[]> {
     if (_cachedLanguages) return _cachedLanguages;
     if (_inflight) return _inflight;
     _inflight = (async () => {
         try {
+            // Fetch the rich shape so we can apply the is_catalogue role
+            // filter (catalogue forms must NOT show inputs for languages
+            // the admin flagged System-only).
             const res = await erpFetch('inventory/categories/catalogue-languages/') as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
-            const langs = Array.isArray(res?.languages) ? res.languages : DEFAULT_LANGUAGES;
+            let langs: LocaleCode[];
+            if (Array.isArray(res?.entries) && res.entries.length > 0) {
+                const filtered = entriesToCatalogueCodes(res.entries);
+                // Empty filter result → fall back to legacy `languages`
+                // array so forms never crash on a zero-locale state.
+                langs = filtered.length > 0
+                    ? filtered
+                    : (Array.isArray(res?.languages) ? res!.languages! : DEFAULT_LANGUAGES);
+            } else {
+                langs = Array.isArray(res?.languages) ? res!.languages! : DEFAULT_LANGUAGES;
+            }
             _cachedLanguages = langs;
             return langs;
         } catch {
@@ -160,6 +193,9 @@ export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntr
         body: JSON.stringify({ entries }),
     }) as { entries?: CatalogueLanguageEntry[] } | null;
     const final: CatalogueLanguageEntry[] = Array.isArray(res?.entries) ? res.entries : entries;
-    _cachedLanguages = final.map(e => e.code);
+    // Cache the catalogue-filtered list so the next form-mount sees the
+    // same data the API would return after a refresh.
+    const filtered = entriesToCatalogueCodes(final);
+    _cachedLanguages = filtered.length > 0 ? filtered : final.map(e => e.code);
     return final;
 }

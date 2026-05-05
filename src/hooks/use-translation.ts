@@ -24,6 +24,16 @@ export function useTranslation() {
             const val = langCookie.split('=')[1] as Locale;
             if (dictionaries[val]) setLocale(val);
         }
+
+        // Subscribe to cross-component locale changes — switchLocale() in
+        // any other useTranslation() instance dispatches `app-lang-change`,
+        // and every subscriber updates its own state without a page reload.
+        const onLangChange = (e: Event) => {
+            const code = (e as CustomEvent<string>).detail;
+            if (code && dictionaries[code as Locale]) setLocale(code as Locale);
+        };
+        window.addEventListener('app-lang-change', onLangChange);
+        return () => window.removeEventListener('app-lang-change', onLangChange);
     }, []);
 
     // Reflect direction on <html> when locale changes (RTL for ar, etc.)
@@ -62,11 +72,14 @@ export function useTranslation() {
 
     const switchLocale = (newLocale: Locale) => {
         if (typeof document === 'undefined') return;
-        setLocale(newLocale);
         document.cookie = `app_lang=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-        // Reloading ensures all components (including server-side rendered ones)
-        // pick up the new language context if we choose to pass it to the backend.
-        window.location.reload();
+        setLocale(newLocale);
+        // Notify any other useTranslation() consumers in this tab so they
+        // update without a reload. The dictionary is purely client-side,
+        // so no full reload is needed — setting state re-renders every
+        // subscriber. The custom event covers cross-component instances
+        // (each useTranslation() call has its own state).
+        window.dispatchEvent(new CustomEvent('app-lang-change', { detail: newLocale }));
     };
 
     const isRtl = (RTL_LOCALES as readonly string[]).includes(locale);

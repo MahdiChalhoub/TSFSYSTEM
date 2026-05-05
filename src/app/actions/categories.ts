@@ -1,7 +1,7 @@
 'use server';
 
 import { erpFetch } from "@/lib/erp-api";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export type CategoryState = {
     message?: string;
@@ -217,6 +217,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
         }
 
         revalidatePath('/inventory/categories');
+        revalidateTag('categories');
         return warnings.length
             ? { message: `Category created but: ${warnings.join('; ')}.` }
             : { message: 'success' };
@@ -306,6 +307,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
         }
 
         revalidatePath('/inventory/categories');
+        revalidateTag('categories');
         return warnings.length
             ? { message: `Category updated but: ${warnings.join('; ')}.` }
             : { message: 'success' };
@@ -327,6 +329,7 @@ export async function deleteCategory(id: number) {
             method: 'DELETE'
         });
         revalidatePath('/inventory/categories');
+        revalidateTag('categories');
         return { success: true };
     } catch (e) {
         return { success: false, message: 'Failed to delete category' };
@@ -349,7 +352,8 @@ export async function moveProducts(productIds: number[], targetCategoryId: numbe
         });
 
         revalidatePath('/inventory/categories/maintenance');
-        revalidatePath('/inventory/categories'); // Update main list too
+        revalidatePath('/inventory/categories');
+        revalidateTag('categories'); // Update main list too
         return { success: true };
     } catch (e) {
         console.error('Move products error:', e);

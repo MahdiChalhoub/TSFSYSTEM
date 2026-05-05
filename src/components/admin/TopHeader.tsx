@@ -313,11 +313,24 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
     // to the full LOCALES catalogue before the fetch resolves AND when no
     // language has been flagged is_system yet (so nobody is locked out).
     const [systemCodes, setSystemCodes] = useState<string[] | null>(null);
-    useEffect(() => {
+    const refreshSystemCodes = () => {
         getSystemLanguageCodes().then(codes => {
             setSystemCodes(codes.length > 0 ? codes : null);
         }).catch(() => setSystemCodes(null));
+    };
+    useEffect(() => {
+        refreshSystemCodes();
+        // Refetch when Regional Settings dispatches the change event so the
+        // dropdown picks up new System-UI flags without a page refresh.
+        const onLangSettingsChange = () => refreshSystemCodes();
+        window.addEventListener('app-langs-settings-change', onLangSettingsChange);
+        return () => window.removeEventListener('app-langs-settings-change', onLangSettingsChange);
     }, []);
+    // Also refetch every time the user opens the dropdown — covers the case
+    // where a different tab updated the settings and the event missed.
+    useEffect(() => {
+        if (langOpen) refreshSystemCodes();
+    }, [langOpen]);
     const visibleLocales = systemCodes
         ? LOCALES.filter(l => systemCodes.includes(l.id))
         : LOCALES;

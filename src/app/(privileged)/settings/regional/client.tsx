@@ -148,6 +148,12 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
         try {
             const saved = await setCatalogueLanguageEntries(next);
             setLangEntries(saved);
+            // Notify the topbar (and any other consumer of system-flagged
+            // codes) that the language settings changed — they refetch
+            // without waiting for a page reload.
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('app-langs-settings-change'));
+            }
         } catch (e: unknown) {
             setLangEntries(prev);
             const msg = e instanceof Error ? e.message : null;
