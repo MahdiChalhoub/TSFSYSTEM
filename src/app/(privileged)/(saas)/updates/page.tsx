@@ -164,7 +164,7 @@ export default function SystemUpdatesPage() {
                         </div>
 
                         <div className="p-4 bg-app-accent-bg rounded-2xl border border-app-accent">
-                            <h4 className="text-[9px] md:text-[10px] font-black text-app-accent uppercase tracking-widest mb-1">Architecture Note</h4>
+                            <div className="text-[9px] md:text-[10px] font-black text-app-accent uppercase tracking-widest mb-1">Architecture Note</div>
                             <p className="text-[10px] md:text-[11px] text-app-muted-foreground leading-relaxed font-medium">
                                 This channel updates core framework logic, security protocols, and shared system services.
                             </p>
@@ -250,7 +250,7 @@ export default function SystemUpdatesPage() {
                     <ShieldAlert size={24} className="md:w-8 md:h-8" />
                 </div>
                 <div>
-                    <h4 className="text-lg md:text-xl font-black text-app-error uppercase tracking-tight">Privileged Action Warning</h4>
+                    <h4 className="font-black text-app-error uppercase tracking-tight">Privileged Action Warning</h4>
                     <p className="text-xs md:text-sm text-app-error/80 font-medium leading-relaxed mt-1">
                         System updates replace the base platform architecture. This process is non-reversible and will affect all organizations globally.
                         Always verify the <strong>integrity signature</strong> of the kernel package before applying.

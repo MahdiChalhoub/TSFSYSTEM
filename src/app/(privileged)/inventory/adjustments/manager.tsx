@@ -328,7 +328,7 @@ export default function StockAdjustmentManager({
                             <Package size={150} />
                         </div>
                         <div className="relative z-10">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-2">Product Snapshot</h4>
+                            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-2">Product Snapshot</div>
                             <div className="text-xl font-bold mb-1">{selectedProduct.name}</div>
                             <div className="flex gap-4 mt-4">
                                 <div>

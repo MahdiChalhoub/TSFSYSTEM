@@ -223,7 +223,7 @@ export function HeaderBar(p: Props) {
                 )}
                 <ToolBtn icon={<History size={10} />} label="History" onClick={p.onShowHistory} title="Version history">
                     {c._version_count && c._version_count > 0 && (
-                        <span className="text-[7px] px-1 rounded font-black ml-0.5" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{c._version_count}</span>
+                        <span className="px-1 rounded font-black ml-0.5" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{c._version_count}</span>
                     )}
                 </ToolBtn>
                 <ToolBtn icon={<Download size={10} />} label="Templates" onClick={p.onShowTemplates} title="Config templates" />

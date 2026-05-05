@@ -589,7 +589,7 @@ export default function MigrationPage() {
                         </div>
 
                         <div className="mt-6 p-4 rounded-xl bg-app-info/10 border border-app-info/20">
-                            <h4 className="text-blue-400 font-medium text-sm flex items-center gap-2">
+                            <h4 className="text-blue-400 font-medium flex items-center gap-2">
                                 <Server className="w-4 h-4" /> How to export from UltimatePOS
                             </h4>
                             <ol className="text-white/40 text-sm mt-2 space-y-1 list-decimal list-inside">

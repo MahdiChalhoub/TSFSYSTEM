@@ -334,7 +334,7 @@ export default function FollowUpBoard() {
                     {/* Performance Mini-Stats */}
                     <div className={`${APP_CARD} bg-gradient-to-br from-app-primary/10 to-transparent border-app-primary/10 p-6 rounded-[2rem] relative overflow-hidden group`}>
                         <TrendingUp className="absolute -right-4 -bottom-4 w-24 h-24 text-app-primary opacity-[0.05] group-hover:rotate-12 transition-all duration-700" />
-                        <h4 className="text-[10px] font-black uppercase text-app-primary tracking-[0.2em] mb-4">Flow Accuracy</h4>
+                        <h4 className="font-black uppercase text-app-primary tracking-[0.2em] mb-4">Flow Accuracy</h4>
                         <div className="space-y-4">
                             <div className="flex justify-between items-end">
                                 <div>

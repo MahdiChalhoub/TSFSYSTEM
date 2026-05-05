@@ -594,7 +594,7 @@ export default function OrderHistoryPage() {
  onSort={settings.setSort}
  renderExpanded={(order) => (
  <div className="p-6 bg-stone-50/50 rounded-2xl mx-10 mb-4 border border-app-border animate-in slide-in-from-top-2 duration-300">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-4 px-2">Détails des Articles</h4>
+ <div className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-4 px-2">Détails des Articles</div>
  <div className="bg-app-surface rounded-xl border border-app-border overflow-hidden shadow-sm">
  <table className="w-full text-left text-xs">
  <thead className="bg-app-bg text-app-muted-foreground font-bold">

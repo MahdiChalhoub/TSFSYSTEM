@@ -68,9 +68,9 @@ export function DesignEngineSwitcher({ className, showLabel = true }: DesignEngi
               {Object.entries(presetsByCategory).map(([category, presets]) => (
                 <div key={category} className="mb-4">
                   {/* Category Header */}
-                  <h4 className="text-xs font-semibold text-[var(--text-app-muted-foreground)] uppercase tracking-wider mb-2 px-1">
+                  <div className="text-xs font-semibold text-[var(--text-app-muted-foreground)] uppercase tracking-wider mb-2 px-1">
                     {category}
-                  </h4>
+                  </div>
 
                   {/* Presets in Category */}
                   <div className="space-y-2">
@@ -146,7 +146,7 @@ function PresetOption({ presetOption, isActive, onClick }: PresetOptionProps) {
         {/* Preset Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-[var(--text-app-foreground)]">
+            <h4 className="font-semibold text-[var(--text-app-foreground)]">
               {presetOption.name}
             </h4>
             {isActive && (

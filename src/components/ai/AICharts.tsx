@@ -191,7 +191,7 @@ export function AIChart({ chart }: AIChartProps) {
     return (
         <div className="bg-white rounded-xl p-4 shadow-sm border border-app-border">
             {title && (
-                <h4 className="text-sm font-semibold text-app-muted-foreground mb-4">{title}</h4>
+                <h4 className="font-semibold text-app-muted-foreground mb-4">{title}</h4>
             )}
             {renderChart()}
         </div>

@@ -162,7 +162,7 @@ export default function MidnightOrderDetailPage() {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-lg font-black text-white italic truncate">{line.product_name}</h4>
+                                        <h4 className="font-black text-white italic truncate">{line.product_name}</h4>
                                         <p className="text-app-muted-foreground text-xs font-mono tracking-widest uppercase mt-1">REF: {line.product_sku}</p>
                                     </div>
                                     <div className="text-right flex-shrink-0 space-y-1">

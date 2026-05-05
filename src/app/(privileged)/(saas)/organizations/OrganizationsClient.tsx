@@ -413,7 +413,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                                 <Zap size={16} style={{ color: m.status === 'INSTALLED' ? 'var(--app-success)' : 'var(--app-muted-foreground)' }} />
                                             </div>
                                             <div>
-                                                <h4 className="text-[13px] font-bold text-app-foreground">{m.name}</h4>
+                                                <h4 className="font-bold text-app-foreground">{m.name}</h4>
                                                 <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-widest">{m.code}</p>
                                             </div>
                                         </div>

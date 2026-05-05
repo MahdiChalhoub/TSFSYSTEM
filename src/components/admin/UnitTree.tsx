@@ -95,7 +95,7 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
 
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="text-[13px] font-bold" style={{ color: 'var(--app-foreground)' }}>{unit.name}</h4>
+                            <h4 className="font-bold" style={{ color: 'var(--app-foreground)' }}>{unit.name}</h4>
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide" style={{
                                 background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
                                 color: 'var(--app-muted-foreground)',

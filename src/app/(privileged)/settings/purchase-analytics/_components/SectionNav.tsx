@@ -53,11 +53,11 @@ export function SectionNav({ active, onSelect, overrideCounts = {}, warningCount
                             {s.label}
                         </span>
                         {warn > 0 && (
-                            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"
+                            <span className="px-1.5 py-0.5 rounded-full font-black tabular-nums"
                                 style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>{warn}</span>
                         )}
                         {ovr > 0 && (
-                            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-black tabular-nums"
+                            <span className="px-1.5 py-0.5 rounded-full font-black tabular-nums"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{ovr}</span>
                         )}
                     </button>

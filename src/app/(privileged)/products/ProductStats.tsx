@@ -51,7 +51,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  </span>
  </div>
  <div>
- <h4 className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Catalog Integrity</h4>
+ <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Catalog Integrity</div>
  <div className="flex items-baseline gap-2">
  <span className="text-3xl font-black text-app-foreground leading-tight">Elite</span>
  <span className="text-xs font-bold text-app-primary">Master Data</span>
@@ -73,7 +73,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  <span className="text-[10px] font-black text-app-info/50 uppercase tracking-tighter">Live Stock</span>
  </div>
  <div>
- <h4 className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Total SKUs</h4>
+ <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Total SKUs</div>
  <div className="flex items-baseline gap-2">
  <span className="text-3xl font-black text-app-foreground leading-tight">{stats.total_products}</span>
  <span className="text-xs font-bold text-app-info">Registered</span>
@@ -99,7 +99,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  )}
  </div>
  <div>
- <h4 className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Missing Barcodes</h4>
+ <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Missing Barcodes</div>
  <div className="flex items-baseline gap-2">
  <span className="text-3xl font-black text-app-foreground leading-tight">{stats.missing_barcode}</span>
  <span className="text-xs font-bold text-app-warning">Ungoverned</span>
@@ -120,7 +120,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  </div>
  </div>
  <div>
- <h4 className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Pricing Gaps</h4>
+ <div className="text-sm font-bold text-app-muted-foreground uppercase tracking-widest">Pricing Gaps</div>
  <div className="flex items-baseline gap-2">
  <span className={`text-3xl font-black leading-tight ${stats.zero_selling_price > 0 ? 'text-app-error' : 'text-app-foreground'}`}>{stats.zero_selling_price}</span>
  <span className={`text-xs font-bold ${stats.zero_selling_price > 0 ? 'text-app-error' : 'text-app-primary'}`}>0.00 Prices</span>

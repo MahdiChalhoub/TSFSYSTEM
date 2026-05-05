@@ -312,9 +312,9 @@ export default function AgentDashboard() {
                             <ShieldAlert size={15} style={{ color: 'var(--app-warning, #f59e0b)' }} />
                         </div>
                         <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                            <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning, #f59e0b)' }}>
                                 Agent Safeguards Active
-                            </h4>
+                            </div>
                             <p className="text-[11px] mt-0.5 leading-relaxed font-medium" style={{ color: 'var(--app-foreground)', opacity: 0.85 }}>
                                 All virtual employees are sandboxed. Data modifications require audit logs and role-based permissions.
                             </p>

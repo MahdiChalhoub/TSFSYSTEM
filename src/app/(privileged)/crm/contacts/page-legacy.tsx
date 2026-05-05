@@ -144,7 +144,7 @@ export default async function ContactsPage() {
                     <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
                         <Building2 size={20} />
                     </div>
-                    <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Site Attribution</h4>
+                    <h4 className="font-black text-app-foreground uppercase tracking-tight mb-1.5">Site Attribution</h4>
                     <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
                         Distinguish between a contact's <b>Home Site</b> and their <b>Transaction Site</b>.
                     </p>
@@ -153,7 +153,7 @@ export default async function ContactsPage() {
                     <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
                         <CreditCard size={20} />
                     </div>
-                    <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Ledger Precision</h4>
+                    <h4 className="font-black text-app-foreground uppercase tracking-tight mb-1.5">Ledger Precision</h4>
                     <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
                         Every contact has a direct 1:1 link to the General Ledger with live balances.
                     </p>
@@ -162,7 +162,7 @@ export default async function ContactsPage() {
                     <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
                         <ShieldCheck size={20} />
                     </div>
-                    <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Trusted Data</h4>
+                    <h4 className="font-black text-app-foreground uppercase tracking-tight mb-1.5">Trusted Data</h4>
                     <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
                         Contact information stays consistent across all modules.
                     </p>

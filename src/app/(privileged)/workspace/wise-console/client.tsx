@@ -73,7 +73,7 @@ function ScoreBar({ val, label }: { val: string; label: string }) {
     return (
         <div className="flex flex-col items-center gap-1">
             <div className="w-3 rounded-t-sm" style={{ height: `${pct * 0.32}px`, background: color, opacity: 0.6 }} />
-            <span className="text-[7px] uppercase opacity-30">{label}</span>
+            <span className="uppercase opacity-30">{label}</span>
         </div>
     );
 }
@@ -181,7 +181,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                     {/* Score ring */}
                                                     <div className="w-14 h-14 rounded-2xl bg-app-surface/5 flex flex-col items-center justify-center shrink-0">
                                                         <div className="text-xl font-black">{Math.round(parseFloat(emp.global_score))}</div>
-                                                        <div className="text-[7px] uppercase opacity-30">Score</div>
+                                                        <div className="uppercase opacity-30">Score</div>
                                                     </div>
 
                                                     <div className="flex-1 min-w-0">

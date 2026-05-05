@@ -516,7 +516,7 @@ function CurrencyRow({ item, isSelected, onSelect, onEdit, onDelete, compact, se
           <span className="font-mono text-[13px] font-black text-app-foreground tracking-tight">{item.code}</span>
           <span className="text-[12px] font-bold text-app-muted-foreground truncate">{item.name}</span>
           {!item.is_active && (
-            <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+            <span className="font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--app-error) 10%, transparent)', color: 'var(--app-error)' }}>
               Inactive
             </span>

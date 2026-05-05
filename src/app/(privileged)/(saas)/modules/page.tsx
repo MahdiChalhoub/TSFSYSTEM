@@ -271,7 +271,7 @@ export default function SaaSModulesPage() {
                                                             <span className="text-[10px] font-black text-app-foreground uppercase tracking-widest">Module Responsibility</span>
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <h4 className="text-sm font-black text-app-foreground">{m.name}</h4>
+                                                            <h4 className="font-black text-app-foreground">{m.name}</h4>
                                                             <p className="text-[11px] text-app-muted-foreground font-medium leading-relaxed">
                                                                 {coreDetails?.description || m.description || "No detailed description available."}
                                                             </p>
@@ -390,7 +390,7 @@ export default function SaaSModulesPage() {
                     <Info size={32} />
                 </div>
                 <div>
-                    <h4 className="text-xl font-black text-app-success uppercase tracking-tight">Infrastructure Policy</h4>
+                    <h4 className="font-black text-app-success uppercase tracking-tight">Infrastructure Policy</h4>
                     <p className="text-sm text-app-success/60 font-medium leading-relaxed mt-1">
                         Deployment actions are non-reversible for data states and will trigger migrations on all linked organization databases.
                         <strong> Push</strong> enables the module for all tenants. <strong> Revoke</strong> disables it globally. <strong> Delete</strong> will fail if data usage is detected.

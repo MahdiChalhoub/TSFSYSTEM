@@ -372,8 +372,8 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                             <p className="text-[12px] font-black text-app-foreground truncate">{form.name || 'Preview'}</p>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-[9px] text-app-muted-foreground font-mono font-bold">{form.code || 'CODE'}</span>
-                                {form.default_pos_enabled && <span className="text-[7px] font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>POS</span>}
-                                {form.is_digital && <span className="text-[7px] font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>⚡ DIGITAL</span>}
+                                {form.default_pos_enabled && <span className="font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>POS</span>}
+                                {form.is_digital && <span className="font-bold px-1 py-px rounded" style={{ background: 'color-mix(in srgb, var(--app-accent) 12%, transparent)', color: 'var(--app-accent)' }}>⚡ DIGITAL</span>}
                             </div>
                         </div>
                     </div>

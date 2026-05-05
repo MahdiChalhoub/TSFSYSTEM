@@ -185,7 +185,7 @@ export default function MCPUsagePage() {
                         <AlertTriangle size={15} />
                     </div>
                     <div className="min-w-0">
-                        <h4 className="text-[12px] font-black text-app-foreground">
+                        <h4 className="font-black text-app-foreground">
                             Daily AI cap nearly exhausted
                         </h4>
                         <p className="text-[11px] text-app-muted-foreground mt-0.5">

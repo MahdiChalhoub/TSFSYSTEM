@@ -427,7 +427,7 @@ export default function TaxPolicyDashboard() {
 
                                 {/* Checklist Card */}
                                 <div className="p-8 rounded-[2rem] border border-app-border bg-app-surface/30 flex flex-col gap-4">
-                                    <h4 className="font-black text-app-foreground uppercase tracking-widest text-[10px]">Setup Checklist</h4>
+                                    <div className="font-black text-app-foreground uppercase tracking-widest text-[10px]">Setup Checklist</div>
                                     {(health?.indicators || []).map((ind) => {
                                         const isOk = ind.status === 'ok'
                                         return (

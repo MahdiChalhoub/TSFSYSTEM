@@ -218,9 +218,11 @@ export function DajingoPageShell({
                       system. Font-family inherits Outfit from body. */}
                   <h1 className="truncate">{title}</h1>
                   {subtitle && (
-                    <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                      {subtitle}
-                    </p>
+                    /* .app-page-subtitle bakes in the eyebrow style:
+                       11px → 12px@md, font-bold, uppercase, tracking-widest,
+                       muted foreground. One source of truth — change the
+                       class in app-theme-engine.css to update everywhere. */
+                    <p className="app-page-subtitle">{subtitle}</p>
                   )}
                 </div>
               </div>

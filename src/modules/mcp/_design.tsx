@@ -67,9 +67,8 @@ export function PageHeader({
                         weight classes; that defeats the system. */}
                     <h1 className="truncate">{title}</h1>
                     {subtitle && (
-                        <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
-                            {subtitle}
-                        </p>
+                        /* Canonical eyebrow style — see app-theme-engine.css */
+                        <p className="app-page-subtitle truncate">{subtitle}</p>
                     )}
                 </div>
             </div>
@@ -163,7 +162,7 @@ export function KPIStrip({ items }: { items: KPI[] }) {
                                 style={{ color: 'var(--app-muted-foreground)' }}>
                                 {s.label}
                             </div>
-                            <div className="text-base font-black text-app-foreground tabular-nums truncate">
+                            <div className="text-base font-bold text-app-foreground tabular-nums truncate">
                                 {s.value}
                             </div>
                         </div>
@@ -198,7 +197,7 @@ export function NavTile({
                     {icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-black text-app-foreground truncate">{title}</div>
+                    <div className="text-[13px] font-bold text-app-foreground truncate">{title}</div>
                     <div className="text-[11px] font-medium text-app-muted-foreground line-clamp-2">{caption}</div>
                 </div>
             </div>
@@ -277,7 +276,7 @@ export function StatusPill({
     icon?: ReactNode
 }) {
     return (
-        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+        <span className="inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
             style={{
                 background: `color-mix(in srgb, ${color} 12%, transparent)`,
                 color,

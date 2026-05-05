@@ -255,7 +255,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  <div className="w-24 h-24 rounded-full bg-app-info/10 border border-app-info/30 flex items-center justify-center mb-6">
  <Star className="text-indigo-400" size={40} />
  </div>
- <h4 className="text-lg font-black text-app-foreground mb-2">Fidelity Score</h4>
+ <h4 className="font-black text-app-foreground mb-2">Fidelity Score</h4>
  <p className="text-xs font-bold text-app-foreground/30 mb-8 max-w-[200px]">Base evaluation of customer retention and brand loyalty</p>
 
  <div className="w-full space-y-3">

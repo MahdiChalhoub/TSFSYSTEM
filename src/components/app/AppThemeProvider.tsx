@@ -23,9 +23,17 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useLayoutEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react';
+
+// Use useLayoutEffect on the client (synchronous before paint, no flash)
+// and fall back to useEffect during SSR (no DOM, can't useLayoutEffect).
+// This is the canonical "useIsomorphicLayoutEffect" pattern.
+const useIsomorphicLayoutEffect =
+    typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 import type {
     ThemePreset,
     ColorMode,
@@ -89,7 +97,9 @@ const DEFAULT_COMPONENTS: ComponentConfig = {
     cards: { borderRadius: '0.75rem', shadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--app-border)', padding: '1.25rem', style: 'subtle' },
     buttons: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 1.25rem', fontSize: '0.875rem', fontWeight: '500' },
     inputs: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 0.875rem', fontSize: '0.875rem', border: '1px solid var(--app-border)' },
-    typography: { headingFont: "'Outfit', sans-serif", bodyFont: "'Outfit', sans-serif", h1Size: '2rem', h2Size: '1.5rem', h3Size: '1.25rem', bodySize: '0.875rem', smallSize: '0.75rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
+    /* Canonical typography defaults — synced with globals.css.
+       Sizes: h1=18 h2=16 h3=15 body=15 small=13 (px). Outfit body. */
+    typography: { headingFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", bodyFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", h1Size: '1.125rem', h2Size: '1rem', h3Size: '0.9375rem', bodySize: '0.9375rem', smallSize: '0.8125rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
     tables: { rowHeight: '3rem', headerStyle: 'bold', borderStyle: 'rows', striped: false, hoverEffect: true, density: 'comfortable' },
     modals: { maxWidth: '600px', borderRadius: '0.75rem', padding: '1.5rem', backdrop: 'blur', animation: 'scale', shadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
     forms: { labelPosition: 'top', labelStyle: 'bold', fieldSpacing: '1rem', groupSpacing: '1.5rem', validationStyle: 'inline' },
@@ -175,20 +185,40 @@ function applyFullThemeToDOM(
     r.setProperty('--input-font-size', components.inputs?.fontSize || '0.875rem');
     r.setProperty('--input-border', components.inputs?.border || '1px solid var(--app-border)');
 
-    // Typography
-    r.setProperty('--font-heading', components.typography?.headingFont || "'Outfit', sans-serif");
-    r.setProperty('--font-body', components.typography?.bodyFont || "'Outfit', sans-serif");
-    r.setProperty('--font-size-h1', components.typography?.h1Size || '2rem');
-    r.setProperty('--font-size-h2', components.typography?.h2Size || '1.5rem');
-    r.setProperty('--font-size-h3', components.typography?.h3Size || '1.25rem');
-    r.setProperty('--font-size-body', components.typography?.bodySize || '0.875rem');
-    r.setProperty('--font-size-small', components.typography?.smallSize || '0.75rem');
-    r.setProperty('--font-weight-normal', components.typography?.fontWeight || '400');
-    r.setProperty('--font-line-height', components.typography?.lineHeight || '1.5');
+    // ─────────────────────────────────────────────────────────────
+    // Typography — CANONICAL, system-wide. Not theme-overridable.
+    //
+    // Theme system is the runtime source-of-truth for colors,
+    // components, spacing — but typography is locked. Every page on
+    // every tenant on every theme renders with the same h1/h2/h3/
+    // body/small scale and the same Outfit font. This eliminates
+    // the historical "different page = different title size" drift
+    // caused by themes shipping their own h1Size: '2rem' etc.
+    //
+    // If a theme really needs different typography (specific brand
+    // typography for a tenant's storefront), do it via the storefront
+    // CSS files (src/app/store/store.css) or per-page CSS module —
+    // not through the org-wide theme.
+    //
+    // Sizes mirror globals.css :root defaults:
+    //   h1=18 h2=16 h3=15 body=15 small=13 (px)
+    //   font: Outfit (loaded by next/font in app/layout.tsx)
+    //   weight: 700 for headings, 400 base
+    // ─────────────────────────────────────────────────────────────
+    const CANONICAL_FONT = "'Outfit', ui-sans-serif, system-ui, sans-serif";
+    r.setProperty('--font-heading',     CANONICAL_FONT);
+    r.setProperty('--font-body',        CANONICAL_FONT);
+    r.setProperty('--font-size-h1',     '1.125rem');     /* 18px */
+    r.setProperty('--font-size-h2',     '1rem');         /* 16px */
+    r.setProperty('--font-size-h3',     '0.9375rem');    /* 15px */
+    r.setProperty('--font-size-body',   '0.9375rem');    /* 15px */
+    r.setProperty('--font-size-small',  '0.8125rem');    /* 13px */
+    r.setProperty('--font-weight-normal', '400');
+    r.setProperty('--font-line-height',   '1.5');
 
-    // Sync legacy base font vars
-    r.setProperty('--app-font', components.typography?.bodyFont || 'Inter, sans-serif');
-    r.setProperty('--app-font-display', components.typography?.headingFont || 'Outfit, sans-serif');
+    // Legacy aliases — same canonical values so no caller can route around.
+    r.setProperty('--app-font',         CANONICAL_FONT);
+    r.setProperty('--app-font-display', CANONICAL_FONT);
     // Tables
     r.setProperty('--table-row-height', components.tables?.rowHeight || '3rem');
     r.setProperty('--table-density', components.tables?.density || 'comfortable');
@@ -332,9 +362,27 @@ export function AppThemeProvider({
     useEffect(() => { loadFromBackend(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Apply CSS vars when theme/mode changes ──
-    useEffect(() => {
+    // Skip-marker: the synchronous inline apply at line ~325 already wrote
+    // the cached theme on first render. The useEffect that fires on mount
+    // would re-write the SAME values one frame later, which costs ~50
+    // setProperty calls + a recompute pass — visible as a brief style
+    // shimmer on slow connections. Track what's been applied and skip
+    // when the next call would write the same slug+mode.
+    //
+    // Switched to useLayoutEffect so subsequent theme changes (user picks
+    // a new theme) take effect synchronously before the next paint
+    // instead of after, eliminating the flash on switch too.
+    const appliedKeyRef = useRef<string | null>(
+        // Seed from the inline first-render apply so the very first
+        // useEffect run is recognised as a no-op.
+        initial.theme ? `${initial.theme.slug}|${initial.colorMode}` : null,
+    );
+    useIsomorphicLayoutEffect(() => {
         if (!currentTheme) return;
+        const nextKey = `${currentTheme.slug}|${colorMode}`;
+        if (appliedKeyRef.current === nextKey) return;     // already applied this exact theme/mode pair
         applyFullThemeToDOM(activeColors, activeLayout, activeComponents, activeNavigation, currentTheme.slug, colorMode);
+        appliedKeyRef.current = nextKey;
     }, [currentTheme, colorMode, activeColors, activeLayout, activeComponents, activeNavigation]);
 
     // ── Persist to localStorage ──
@@ -388,10 +436,14 @@ export function AppThemeProvider({
                 const found = all.find(t => t.slug === resolvedSlug)
                     || all.find(t => t.slug === dbSlug)
                     || system[0];
-                if (found) setCurrentTheme(found);
+                // Skip re-setting state when the resolved theme matches what
+                // we already painted with from cache. Avoids a wasted rerender
+                // + the apply useEffect firing again with identical values.
+                if (found && found.slug !== currentTheme?.slug) setCurrentTheme(found);
 
                 // Color mode: prefer local (set instantly on toggle) over DB.
-                setColorModeState(persistedMode || dbMode);
+                const nextMode = persistedMode || dbMode;
+                if (nextMode !== colorMode) setColorModeState(nextMode);
             } else {
                 console.warn('[ThemeEngine] Backend fetch failed:', response.status);
             }

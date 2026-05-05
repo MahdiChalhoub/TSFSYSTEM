@@ -35,7 +35,7 @@ export function StorefrontFooter() {
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Shop</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Shop</div>
                         <ul className="space-y-2.5">
                             <li>
                                 <Link href={`/tenant/${slug}`}
@@ -76,7 +76,7 @@ export function StorefrontFooter() {
 
                     {/* Account Links */}
                     <div>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Account</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Account</div>
                         <ul className="space-y-2.5">
                             <li>
                                 <Link href={`/tenant/${slug}/account`}

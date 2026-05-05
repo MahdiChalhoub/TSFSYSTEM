@@ -41,7 +41,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  </div>
 
  <div className="flex-1 min-w-0 flex flex-col justify-center">
- <h4 className="text-xs font-black text-app-foreground leading-tight uppercase line-clamp-2">
+ <h4 className="font-black text-app-foreground leading-tight uppercase line-clamp-2">
  {asset.name}
  </h4>
  <p className="text-[9px] text-app-muted-foreground font-bold mt-1 tracking-tight">
@@ -70,7 +70,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  </div>
  <div className="mt-2 flex items-center gap-1 bg-app-surface text-app-foreground px-1.5 py-0.5 rounded-full">
  <QrIcon size={8} />
- <span className="text-[7px] font-black uppercase tracking-tighter">Scan to Audit</span>
+ <span className="font-black uppercase tracking-tighter">Scan to Audit</span>
  </div>
  </div>
  </Card>

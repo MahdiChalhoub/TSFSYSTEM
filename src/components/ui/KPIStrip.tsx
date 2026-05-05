@@ -26,7 +26,7 @@ export const KPIStrip = React.memo(function KPIStrip({ stats }: { stats: KPIStat
             style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
           <div className="min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+            <div className="text-sm font-bold text-app-foreground tabular-nums">{s.value}</div>
           </div>
         </div>
       ))}

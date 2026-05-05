@@ -37,7 +37,7 @@ export class SafeModuleBoundary extends Component<Props, State> {
                         <AlertCircle size={20} />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-red-400">Module Error</h4>
+                        <h4 className="font-bold text-red-400">Module Error</h4>
                         <p className="text-xs text-red-300/70">
                             {this.props.moduleName || 'Component'} failed to load.
                             <span className="block mt-1 font-mono text-[10px] opacity-50">{this.state.error?.message}</span>

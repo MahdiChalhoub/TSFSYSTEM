@@ -291,7 +291,7 @@ export function DajingoListView<T>({
               className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0 ${showFiltersProp ? 'border-app-primary text-app-primary' : 'border-app-border text-app-muted-foreground hover:text-app-foreground'}`}
               style={showFiltersProp ? { background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)' } : {}}>
               <SlidersHorizontal size={13} /><span className="hidden sm:inline">Filters</span>
-              {(afc || 0) > 0 && <span className="text-[9px] font-black bg-app-primary text-white px-1.5 py-0.5 rounded-full">{afc}</span>}
+              {(afc || 0) > 0 && <span className="text-[9px] font-bold bg-app-primary text-white px-1.5 py-0.5 rounded-full">{afc}</span>}
             </button>
           )}
 
@@ -311,7 +311,7 @@ export function DajingoListView<T>({
       )}
 
       {/* ── Mobile header ── */}
-      <div className="sm:hidden flex-shrink-0 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+      <div className="sm:hidden flex-shrink-0 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
         {(allData || data).length} {entityLabel}{(allData || data).length !== 1 ? 's' : ''} · Tap to expand
       </div>
 
@@ -326,7 +326,7 @@ export function DajingoListView<T>({
         <div style={effectiveMinWidth ? { minWidth: effectiveMinWidth } : undefined}>
 
           {/* ── Sticky Column Headers ── */}
-          <div className="hidden sm:flex sticky top-0 z-10 items-center py-2 bg-app-surface/90 backdrop-blur-sm border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+          <div className="hidden sm:flex sticky top-0 z-10 items-center py-2 bg-app-surface/90 backdrop-blur-sm border-b border-app-border/50 text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider"
             style={{ paddingLeft: '12px', paddingRight: '12px' }}>
 
             {/* LEFT: split into two header columns — Actions, then Product */}
@@ -458,7 +458,7 @@ export function DajingoListView<T>({
       {selectedIds && selectedIds.size > 0 && (
         <div className="flex-shrink-0 px-3 py-2 border-t border-app-primary/30 flex items-center gap-2 flex-wrap"
           style={{ background: 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))' }}>
-          <span className="text-[11px] font-black text-app-primary">{selectedIds.size} selected</span>
+          <span className="text-[11px] font-bold text-app-primary">{selectedIds.size} selected</span>
           {bulkActions && <div className="flex items-center gap-1.5 ml-2">{bulkActions}</div>}
           {onToggleSelect && (
             <button onClick={() => {

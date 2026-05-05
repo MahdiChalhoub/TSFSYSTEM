@@ -438,9 +438,9 @@ function ProfileModal({ mode, pageContext, profile, onClose, onSaved, onDuplicat
                                                 {getDisplayValue(field, effectiveVal)}
                                             </div>
                                             {hasOverride ? (
-                                                <span className="text-[7px] px-1 py-0.5 rounded bg-app-primary/10 text-app-primary font-black">OVERRIDE</span>
+                                                <span className="px-1 py-0.5 rounded bg-app-primary/10 text-app-primary font-black">OVERRIDE</span>
                                             ) : (
-                                                <span className="text-[7px] text-app-muted-foreground/50">global</span>
+                                                <span className="text-app-muted-foreground/50">global</span>
                                             )}
                                         </div>
                                     );
@@ -451,7 +451,7 @@ function ProfileModal({ mode, pageContext, profile, onClose, onSaved, onDuplicat
                                     <div key={field.key} className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${hasOverride ? 'border-app-primary/30 bg-app-primary/5' : 'border-app-border/40 bg-app-background/30'}`}>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-[10px] font-bold text-app-foreground">{field.label}</div>
-                                            <div className="text-[7px] text-app-muted-foreground">
+                                            <div className="text-app-muted-foreground">
                                                 Global: {typeof globalVal === 'number' ? globalVal : String(globalVal)}
                                             </div>
                                         </div>

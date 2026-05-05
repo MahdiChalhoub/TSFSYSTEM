@@ -14,21 +14,21 @@ export default function EmporiumFooter() {
                         <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-warning">
                             <ShieldCheck size={24} />
                         </div>
-                        <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Secure Shopping</h4>
+                        <div className="font-black text-app-foreground uppercase tracking-wider text-sm">Secure Shopping</div>
                         <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">Your data is protected by industry-leading encryption and buyer protection policies.</p>
                     </div>
                     <div className="space-y-4">
                         <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-info">
                             <Globe size={24} />
                         </div>
-                        <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Worldwide Delivery</h4>
+                        <div className="font-black text-app-foreground uppercase tracking-wider text-sm">Worldwide Delivery</div>
                         <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">We partner with global logistics leaders to ensure fast delivery to over 120 countries.</p>
                     </div>
                     <div className="space-y-4">
                         <div className="w-12 h-12 bg-app-surface rounded-2xl border border-app-border shadow-sm flex items-center justify-center mx-auto md:mx-0 text-app-success">
                             <CreditCard size={24} />
                         </div>
-                        <h4 className="font-black text-app-foreground uppercase tracking-wider text-sm">Flexible Payments</h4>
+                        <div className="font-black text-app-foreground uppercase tracking-wider text-sm">Flexible Payments</div>
                         <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">Choose from a variety of payment methods including Cards, Wallets, and Installments.</p>
                     </div>
                 </div>
@@ -36,7 +36,7 @@ export default function EmporiumFooter() {
             {/* Main Links */}
             <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 lg:grid-cols-4 gap-12">
                 <div className="space-y-6 col-span-2 lg:col-span-1">
-                    <h5 className="font-black text-app-foreground italic tracking-tighter text-xl lowercase">{orgName?.replace(/\s+/g, '') || slug}</h5>
+                    <h5 className="font-black text-app-foreground italic tracking-tighter lowercase">{orgName?.replace(/\s+/g, '') || slug}</div>
                     <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">
                         The elite marketplace for quality products and verified vendors. Join thousands of satisfied customers worldwide.
                     </p>
@@ -47,7 +47,7 @@ export default function EmporiumFooter() {
                     </div>
                 </div>
                 <div className="space-y-6">
-                    <h5 className="font-black text-app-foreground uppercase tracking-widest text-xs">Platform</h5>
+                    <div className="font-black text-app-foreground uppercase tracking-widest text-xs">Platform</div>
                     <nav className="flex flex-col gap-3">
                         <Link href={`/tenant/${slug}`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Home</Link>
                         <Link href={`/tenant/${slug}/categories`} className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Categories</Link>
@@ -56,7 +56,7 @@ export default function EmporiumFooter() {
                     </nav>
                 </div>
                 <div className="space-y-6">
-                    <h5 className="font-black text-app-foreground uppercase tracking-widest text-xs">Customer Service</h5>
+                    <div className="font-black text-app-foreground uppercase tracking-widest text-xs">Customer Service</div>
                     <nav className="flex flex-col gap-3">
                         <Link href="#" className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Order Tracking</Link>
                         <Link href="#" className="text-sm font-bold text-app-muted-foreground hover:text-app-foreground transition-colors">Shipping Policy</Link>
@@ -65,7 +65,7 @@ export default function EmporiumFooter() {
                     </nav>
                 </div>
                 <div className="space-y-6">
-                    <h5 className="font-black text-app-foreground uppercase tracking-widest text-xs">Contact Us</h5>
+                    <div className="font-black text-app-foreground uppercase tracking-widest text-xs">Contact Us</h5>
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-app-bg rounded-xl flex items-center justify-center text-app-muted-foreground shrink-0">

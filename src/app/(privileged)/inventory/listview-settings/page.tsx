@@ -134,7 +134,7 @@ function ListViewSection({ config }: { config: ListViewConfig }) {
  <div>
  <div className="flex items-center gap-2 mb-3">
  <Eye className="h-4 w-4 text-app-muted-foreground" />
- <h4 className="text-sm font-semibold text-app-muted-foreground">Column Visibility & Order</h4>
+ <h4 className="font-semibold text-app-muted-foreground">Column Visibility & Order</h4>
  </div>
  <div className="space-y-1">
  {settings.columnOrder
@@ -179,7 +179,7 @@ function ListViewSection({ config }: { config: ListViewConfig }) {
  <div>
  <div className="flex items-center gap-2 mb-3">
  <SlidersHorizontal className="h-4 w-4 text-app-muted-foreground" />
- <h4 className="text-sm font-semibold text-app-muted-foreground">Display Settings</h4>
+ <h4 className="font-semibold text-app-muted-foreground">Display Settings</h4>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
@@ -216,7 +216,7 @@ function ListViewSection({ config }: { config: ListViewConfig }) {
  <div>
  <div className="flex items-center gap-2 mb-3">
  <Save className="h-4 w-4 text-app-muted-foreground" />
- <h4 className="text-sm font-semibold text-app-muted-foreground">Filter Presets</h4>
+ <h4 className="font-semibold text-app-muted-foreground">Filter Presets</h4>
  </div>
  {settings.filterPresets.length > 0 ? (
  <div className="space-y-1 mb-3">

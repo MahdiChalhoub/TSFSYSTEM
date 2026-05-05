@@ -99,7 +99,7 @@ export default async function PricingPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <Users size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Group Pricing</h4>
+                            <h4 className="font-black text-white">Group Pricing</h4>
                             <p className="text-violet-100 text-sm font-medium leading-relaxed">
                                 Assign contacts to price groups (VIP, Wholesale, Seasonal) for automatic bulk pricing.
                             </p>
@@ -108,7 +108,7 @@ export default async function PricingPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <DollarSign size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Flexible Rules</h4>
+                            <h4 className="font-black text-white">Flexible Rules</h4>
                             <p className="text-violet-100 text-sm font-medium leading-relaxed">
                                 Fixed price, percentage discount, or amount off — per product, category, or globally.
                             </p>
@@ -117,7 +117,7 @@ export default async function PricingPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <Layers size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Priority Cascade</h4>
+                            <h4 className="font-black text-white">Priority Cascade</h4>
                             <p className="text-violet-100 text-sm font-medium leading-relaxed">
                                 When multiple rules apply, the highest-priority group wins. Direct contact rules always take precedence.
                             </p>

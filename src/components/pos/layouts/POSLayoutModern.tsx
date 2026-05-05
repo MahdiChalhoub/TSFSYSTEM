@@ -768,7 +768,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                                 {!isLinked && (
                                     <div className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center">
-                                        <span className="text-[6px] text-app-foreground font-black">!</span>
+                                        <span className="text-app-foreground font-black">!</span>
                                     </div>
                                 )}
                             </button>
@@ -987,7 +987,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             {/* ── Received + Charge ── */}
                             <div className="flex items-stretch gap-2">
                                 <div className="flex-1 relative">
-                                    <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-app-muted-foreground uppercase tracking-widest">Received</span>
+                                    <span className="absolute left-2.5 top-1.5 font-black text-app-muted-foreground uppercase tracking-widest">Received</span>
                                     <div className="flex items-stretch">
                                         <input
                                             type="text"

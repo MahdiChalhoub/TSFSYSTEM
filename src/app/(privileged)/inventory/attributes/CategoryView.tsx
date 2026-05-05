@@ -343,7 +343,7 @@ function AttrCheckRow({ group, isLinked, color, onToggle }: {
             {/* Governance badges — compact */}
             <div className="flex items-center gap-1 flex-shrink-0">
                 {group.is_required && (
-                    <span className="text-[7px] font-black uppercase px-1 py-0 rounded"
+                    <span className="font-black uppercase px-1 py-0 rounded"
                         style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}>
                         REQ
                     </span>

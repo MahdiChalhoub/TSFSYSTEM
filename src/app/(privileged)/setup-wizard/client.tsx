@@ -1209,9 +1209,9 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  </div>
  <Card className="rounded-[2rem] border-app-success/30 bg-gradient-to-br from-white to-emerald-50/30 overflow-hidden">
  <CardContent className="p-8">
- <h4 className="text-sm font-black text-app-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
+ <div className="text-sm font-black text-app-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
  <Sparkles size={16} className="text-app-primary" /> What happens next?
- </h4>
+ </div>
  <div className="space-y-4">
  {[
  { title: 'POS Initialization', desc: 'A default "Main Register" has been created and linked to your first cash drawer.' },

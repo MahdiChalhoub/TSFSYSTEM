@@ -139,7 +139,7 @@ export function CartTotals({
             <div className="space-y-2">
                 <div className="relative">
                     <Banknote className="absolute left-3 top-[1.8rem] text-indigo-400" size={14} />
-                    <label className="text-[7px] font-black text-app-muted-foreground block mb-1 tracking-widest">Cash Received</label>
+                    <label className="font-black text-app-muted-foreground block mb-1 tracking-widest">Cash Received</label>
                     <input
                         type="text"
                         inputMode="numeric"

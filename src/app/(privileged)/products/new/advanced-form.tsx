@@ -711,7 +711,7 @@ export default function AdvancedProductForm({
  {activeTab === 'suppliers' && (
  <div className="space-y-3">
  <div className="p-3 bg-app-surface rounded-lg border border-app-border space-y-3">
- <h4 className="text-[12px] font-semibold text-app-foreground">Primary Supplier</h4>
+ <h4 className="font-semibold text-app-foreground">Primary Supplier</h4>
  <p className="text-[10px] text-app-muted-foreground leading-relaxed">Map to the supplier&apos;s catalog for perfect Purchase Orders.</p>
 
  <div>
@@ -749,7 +749,7 @@ export default function AdvancedProductForm({
  </div>
  ) : (
  <div className="space-y-3">
- <h4 className="text-[12px] font-semibold text-app-foreground">Combo Blueprint</h4>
+ <h4 className="font-semibold text-app-foreground">Combo Blueprint</h4>
  <div className="relative">
  <input type="text" className="w-full pl-8 pr-3 py-2 border border-app-border rounded-lg text-[11px] bg-app-background outline-none" placeholder="Search product to add..." />
  <Search className="w-3.5 h-3.5 text-app-muted-foreground absolute left-2.5 top-2.5" />
@@ -764,12 +764,12 @@ export default function AdvancedProductForm({
  {activeTab === 'prices' && (
  <div className="space-y-3">
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-app-accent" /> Price Groups</h4>
+ <h4 className="font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-app-accent" /> Price Groups</h4>
  <p className="text-[10px] text-app-muted-foreground mb-2">Assign to VIP, Wholesale, etc.</p>
  <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">Save product first</div>
  </div>
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-app-accent" /> Active Promos</h4>
+ <h4 className="font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-app-accent" /> Active Promos</h4>
  <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">No live promos</div>
  </div>
  </div>
@@ -779,7 +779,7 @@ export default function AdvancedProductForm({
  {activeTab === 'stock' && (
  <div className="space-y-4">
  <div className="p-4 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-3">
+ <h4 className="font-semibold text-app-foreground flex items-center gap-1.5 mb-3">
  <Warehouse className="w-3.5 h-3.5 text-app-warning" />
  Reorder Settings
  </h4>

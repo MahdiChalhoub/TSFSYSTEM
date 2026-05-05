@@ -751,9 +751,9 @@ export function CategoryFormModal({
 
                             {/* Codes — merged into Identity below the name fields */}
                             <div className="pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
-                                <h5 className="text-tp-xs font-bold uppercase tracking-widest text-app-muted-foreground mb-2 flex items-center gap-1.5">
+                                <div className="text-tp-xs font-bold uppercase tracking-widest text-app-muted-foreground mb-2 flex items-center gap-1.5">
                                     <Hash size={10} /> Codes &amp; Barcode
-                                </h5>
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">

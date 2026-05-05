@@ -66,7 +66,7 @@ function KpiCard({ label, value, icon: Icon, color, trend, href }: any) {
 
             <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground group-hover:text-app-primary transition-colors">{label}</p>
-                <h4 className="text-3xl font-black text-app-foreground mt-1.5 tracking-tight group-hover:scale-105 origin-left transition-transform">{value}</h4>
+                <h4 className="font-black text-app-foreground mt-1.5 tracking-tight group-hover:scale-105 origin-left transition-transform">{value}</div>
             </div>
         </Link>
     )
@@ -213,7 +213,7 @@ export default function SaasHomeClient({ stats }: Props) {
                         {/* Footer Action */}
                         <div className="mt-10 p-6 rounded-[2rem] bg-app-background/50 border border-app-border/30 relative overflow-hidden group/footer">
                             <div className="absolute inset-0 bg-app-primary/5 opacity-0 group-hover/footer:opacity-100 transition-opacity" />
-                            <h4 className="text-[11px] font-black uppercase tracking-widest text-app-foreground mb-1">Global Documentation</h4>
+                            <div className="text-[11px] font-black uppercase tracking-widest text-app-foreground mb-1">Global Documentation</h4>
                             <p className="text-[10px] text-app-muted-foreground leading-relaxed mb-4">Access architectural guidelines and deployment workflows.</p>
                             <button className="w-full py-3 rounded-xl bg-app-surface border border-app-border/50 text-[10px] font-black uppercase tracking-widest text-app-foreground flex items-center justify-center gap-2 hover:bg-app-hover transition-all">
                                 Architecture Wiki <ArrowRight size={14} />

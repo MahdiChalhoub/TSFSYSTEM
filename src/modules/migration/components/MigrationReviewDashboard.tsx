@@ -421,7 +421,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <span className={`text-xl font-black ${healthPercent >= 95 ? 'text-app-success' : healthPercent >= 70 ? 'text-app-warning' : 'text-app-error'
                                     }`}>{healthPercent}%</span>
-                                <span className="text-app-muted-foreground text-[7px] font-bold uppercase tracking-widest">Health</span>
+                                <span className="text-app-muted-foreground font-bold uppercase tracking-widest">Health</span>
                             </div>
                         </div>
                     )}
@@ -513,28 +513,28 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
                                 <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Global Progress</p>
                                 <div className="flex items-end justify-between">
-                                    <h4 className="text-2xl font-black text-app-foreground">{review?.total_good ? Math.round((review.total_good / (review.total_mappings || 1)) * 100) : 0}%</h4>
+                                    <h4 className="font-black text-app-foreground">{review?.total_good ? Math.round((review.total_good / (review.total_mappings || 1)) * 100) : 0}%</h4>
                                     <Badge className="bg-app-success-soft text-app-success border-none font-black text-[9px]">DATA SYNC</Badge>
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
                                 <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Audit Ready</p>
                                 <div className="flex items-end justify-between">
-                                    <h4 className="text-2xl font-black text-app-success">{(review?.total_good || 0).toLocaleString()}</h4>
+                                    <h4 className="font-black text-app-success">{(review?.total_good || 0).toLocaleString()}</h4>
                                     <CheckCircle2 className="w-4 h-4 text-app-success mb-1" />
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
                                 <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Needs Attention</p>
                                 <div className="flex items-end justify-between">
-                                    <h4 className="text-2xl font-black text-app-warning">{(review?.needs_review_count || 0).toLocaleString()}</h4>
+                                    <h4 className="font-black text-app-warning">{(review?.needs_review_count || 0).toLocaleString()}</h4>
                                     <AlertTriangle className="w-4 h-4 text-app-warning mb-1" />
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
                                 <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Ledger Errors</p>
                                 <div className="flex items-end justify-between">
-                                    <h4 className="text-2xl font-black text-app-error">{(review?.total_errors || 0).toLocaleString()}</h4>
+                                    <h4 className="font-black text-app-error">{(review?.total_errors || 0).toLocaleString()}</h4>
                                     <XCircle className="w-4 h-4 text-app-error mb-1" />
                                 </div>
                             </div>
@@ -585,7 +585,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
 
                                                         <div className="space-y-3">
                                                             <div>
-                                                                <h4 className="text-sm font-black text-app-foreground group-hover:text-app-success transition-colors uppercase tracking-tight">{label}</h4>
+                                                                <h4 className="font-black text-app-foreground group-hover:text-app-success transition-colors uppercase tracking-tight">{label}</h4>
                                                                 <div className="flex items-center gap-2 mt-1">
                                                                     <div className="flex-1 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                                         <div

@@ -57,7 +57,7 @@ export default function LandingLayout({
                         </p>
                     </div>
                     <div>
-                        <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Platform</h4>
+                        <div className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Platform</div>
                         <ul className="space-y-3 text-sm">
                             <li><a href="#" className="hover:text-emerald-400">Features</a></li>
                             <li><a href="#" className="hover:text-emerald-400">Pricing</a></li>
@@ -65,7 +65,7 @@ export default function LandingLayout({
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Company</h4>
+                        <div className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Company</div>
                         <ul className="space-y-3 text-sm">
                             <li><a href="#" className="hover:text-emerald-400">About Us</a></li>
                             <li><a href="#" className="hover:text-emerald-400">Privacy Policy</a></li>

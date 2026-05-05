@@ -198,7 +198,7 @@ export default function CategoryRulesPage() {
 
                             {/* Required Fields */}
                             <div>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Required Fields</h4>
+                                <div className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Required Fields</div>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                     {[
                                         { key: 'requires_barcode', label: 'Barcode' },
@@ -221,7 +221,7 @@ export default function CategoryRulesPage() {
 
                             {/* Defaults */}
                             <div>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Defaults</h4>
+                                <div className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Defaults</div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[10px] font-bold text-app-muted-foreground mb-1">Product Type</label>
@@ -252,7 +252,7 @@ export default function CategoryRulesPage() {
 
                             {/* Automation */}
                             <div>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Automation</h4>
+                                <div className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Automation</div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                     {[
                                         { key: 'auto_create_packaging', label: 'Auto-create packaging' },

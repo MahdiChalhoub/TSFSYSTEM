@@ -77,7 +77,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     <div className="flex items-center gap-3 border-r border-emerald-800 pr-8">
                         <ShieldCheck className="text-emerald-400" size={32} />
                         <div>
-                            <h4 className="font-bold text-sm">Financial Integrity Guide</h4>
+                            <h4 className="font-bold">Financial Integrity Guide</h4>
                             <p className="text-tp-xs text-emerald-300 uppercase tracking-wide">How your reports are calculated</p>
                         </div>
                     </div>

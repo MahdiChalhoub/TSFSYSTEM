@@ -359,7 +359,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-app-success border-app-success' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
-                                                {isCash && <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
+                                                {isCash && <span className="font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
                                                 <span className="text-[9px] opacity-40">{a.type}</span>
                                             </button>
                                         )
@@ -844,7 +844,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         <div className="flex items-center gap-1.5">
                                             <p className="text-[11px] font-bold text-app-foreground truncate">{name}</p>
                                             {isSelf && (
-                                                <span className="text-[7px] font-black px-1 py-0.5 rounded"
+                                                <span className="font-black px-1 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                                                     YOU
                                                 </span>
@@ -1053,7 +1053,7 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
                 <span className="flex-1 truncate text-[11px] font-medium"
                     style={{ color: authorized ? 'var(--app-info)' : 'var(--app-muted-foreground)' }}>{name}</span>
                 {/* PIN status */}
-                <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md`}
+                <span className={`font-black px-1.5 py-0.5 rounded-md`}
                     style={{
                         background: user.pos_pin ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
                         color: user.pos_pin ? 'var(--app-primary)' : 'var(--app-error)',

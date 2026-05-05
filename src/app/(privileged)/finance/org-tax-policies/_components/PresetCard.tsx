@@ -96,14 +96,14 @@ export function OrgTaxPolicyPresetCard({ preset, onImport, importing }: {
             {preset.allowed_scopes && preset.allowed_scopes.length > 0 && (
                 <div className="flex gap-1 flex-wrap">
                     {preset.allowed_scopes.map((s: string) => (
-                        <span key={s} className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded"
+                        <span key={s} className="font-black uppercase tracking-wider px-1 py-0.5 rounded"
                             style={{
                                 color: 'var(--app-primary)',
                                 background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
                             }}>{s}</span>
                     ))}
                     {preset.required_documents && preset.required_documents.length > 0 && (
-                        <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded"
+                        <span className="font-black uppercase tracking-wider px-1 py-0.5 rounded"
                             style={{
                                 color: 'var(--app-accent)',
                                 background: 'color-mix(in srgb, var(--app-accent) 8%, transparent)',

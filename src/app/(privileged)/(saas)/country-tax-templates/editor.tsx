@@ -558,9 +558,9 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-bold text-app-foreground truncate">{p.name || `Preset ${i + 1}`}</div>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                          {appliedCount > 0 && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>{appliedCount} applied</span>}
-                          {exemptCount > 0 && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>{exemptCount} exempt</span>}
-                          {reducedCount > 0 && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>{reducedCount} reduced</span>}
+                          {appliedCount > 0 && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>{appliedCount} applied</span>}
+                          {exemptCount > 0 && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>{exemptCount} exempt</span>}
+                          {reducedCount > 0 && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>{reducedCount} reduced</span>}
                           <span className="text-[8px] font-bold text-app-muted-foreground">{p.official_vat_treatment} / {p.internal_vat_treatment}</span>
                         </div>
                       </div>
@@ -647,7 +647,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                               {/* Treatment badge */}
                               {selected && (
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase tracking-wider"
+                                  <span className="font-black px-1.5 py-px rounded-full uppercase tracking-wider"
                                     style={{ background: `color-mix(in srgb, ${tc} 12%, transparent)`, color: tc }}>
                                     {treatment.replace('_', ' ')}
                                   </span>
@@ -710,7 +710,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                                 if (cond === 'WHEN_EXEMPT' && !isExempt) return true
                                 if (cond === 'WHEN_APPLIED' && treatment !== 'APPLIED') return true
                                 return false
-                              }).length > 0 && <span className="text-[7px] font-bold text-app-muted-foreground italic ml-1">(other docs hidden — change treatment to see)</span>}
+                              }).length > 0 && <span className="font-bold text-app-muted-foreground italic ml-1">(other docs hidden — change treatment to see)</span>}
                             </div>
                           )}
                         </div>
@@ -846,10 +846,10 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-bold text-app-foreground truncate">{p.name || `Profile ${i + 1}`}</div>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                          {p.vat_registered && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>VAT</span>}
-                          {p.reverse_charge && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>RC</span>}
-                          {appliedCount > 0 && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>{appliedCount} applied</span>}
-                          {exemptCount > 0 && <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>{exemptCount} exempt</span>}
+                          {p.vat_registered && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>VAT</span>}
+                          {p.reverse_charge && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>RC</span>}
+                          {appliedCount > 0 && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>{appliedCount} applied</span>}
+                          {exemptCount > 0 && <span className="font-black px-1.5 py-px rounded-full uppercase" style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>{exemptCount} exempt</span>}
                           <span className="text-[8px] font-bold text-app-muted-foreground">{p.required_documents.length} docs</span>
                         </div>
                       </div>
@@ -926,7 +926,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                               <span className="text-[9px] font-bold text-app-muted-foreground ml-1.5">{tax.tax_type}</span>
                               {selected && (
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <span className="text-[7px] font-black px-1.5 py-px rounded-full uppercase tracking-wider"
+                                  <span className="font-black px-1.5 py-px rounded-full uppercase tracking-wider"
                                     style={{ background: `color-mix(in srgb, ${tc} 12%, transparent)`, color: tc }}>
                                     {treatment.replace('_', ' ')}
                                   </span>

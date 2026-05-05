@@ -292,7 +292,7 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
 
             <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-[0.1em] mb-1">Inventory Value</p>
             <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-mono font-bold text-app-foreground">
+                <h4 className="font-mono font-bold text-app-foreground">
                     {status.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </h4>
                 {isOutOfSync && (

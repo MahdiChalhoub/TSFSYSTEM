@@ -790,7 +790,7 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
           {/* Note: per-row activate intentionally removed — see comment in
               parent component. Activation is a tenant-level concern. */}
           {hasTaxTemplate && (
-            <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+            <span className="font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
               Tax
             </span>

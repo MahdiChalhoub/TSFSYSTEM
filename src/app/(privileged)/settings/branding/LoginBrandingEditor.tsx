@@ -322,7 +322,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                     </div>
                                 </div>
 
-                                <h4 className="text-sm font-black text-white">Welcome Back</h4>
+                                <h4 className="font-black text-white">Welcome Back</h4>
                                 <p className="text-[8px] text-app-faint">Enter your credentials</p>
 
                                 {/* Mini form */}
@@ -350,7 +350,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                     Sign In <ArrowRight size={10} />
                                 </button>
 
-                                <p className="text-[6px] text-center text-app-foreground pt-1">
+                                <p className="text-center text-app-foreground pt-1">
                                     Powered by Blanc Engine · E2E Encrypted
                                 </p>
                             </div>

@@ -154,7 +154,7 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
                                     </div>
 
                                     <div className="flex-1">
-                                        <h4 className="font-black text-sm text-app-foreground group-hover:text-app-primary transition-colors">
+                                        <h4 className="font-black text-app-foreground group-hover:text-app-primary transition-colors">
                                             {driver.full_name}
                                         </h4>
                                         <div className="flex items-center gap-2 mt-0.5">

@@ -144,10 +144,10 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-1">
                                     {p.default_label_type && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold" style={{ ...soft('--app-info', 10), color: v('--app-info') }}>⇒ {p.default_label_type}</span>}
-                                    {p.supports_zpl && <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-app-background text-app-muted-foreground">ZPL</span>}
-                                    {p.supports_epl && <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-app-background text-app-muted-foreground">EPL</span>}
-                                    {p.supports_escpos && <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-app-background text-app-muted-foreground">ESC/POS</span>}
-                                    {p.supports_pdf && <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-app-background text-app-muted-foreground">PDF</span>}
+                                    {p.supports_zpl && <span className="px-1 py-0.5 rounded font-bold bg-app-background text-app-muted-foreground">ZPL</span>}
+                                    {p.supports_epl && <span className="px-1 py-0.5 rounded font-bold bg-app-background text-app-muted-foreground">EPL</span>}
+                                    {p.supports_escpos && <span className="px-1 py-0.5 rounded font-bold bg-app-background text-app-muted-foreground">ESC/POS</span>}
+                                    {p.supports_pdf && <span className="px-1 py-0.5 rounded font-bold bg-app-background text-app-muted-foreground">PDF</span>}
                                 </div>
                                 {p.last_tested_at && <p className="text-[9px] text-app-muted-foreground mt-1">Last tested: {new Date(p.last_tested_at).toLocaleString()}</p>}
                             </div>
@@ -158,7 +158,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                 {/* ── Printer Form (inline) ── */}
                 {formOpen && (
                     <div className="bg-app-surface rounded-2xl border border-app-border/50 p-4 space-y-3">
-                        <h4 className="text-[12px] font-black text-app-foreground">{editId ? 'Edit Printer' : 'Add Printer'}</h4>
+                        <h4 className="font-black text-app-foreground">{editId ? 'Edit Printer' : 'Add Printer'}</h4>
                         <div className="grid grid-cols-2 gap-3">
                             {([['name', 'Printer Name'], ['model_name', 'Model'], ['location', 'Location'], ['address', 'IP / Address'], ['device_identifier', 'Device ID'], ['driver_name', 'Driver']] as const).map(([key, label]) => (
                                 <div key={key}>

@@ -321,7 +321,7 @@ export default function CustomDomainsPage() {
                                     <div className="border-t border-app-border bg-app-warning-bg/30 p-6 space-y-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-full bg-app-warning-bg text-app-warning flex items-center justify-center text-xs font-black">1</div>
-                                            <h4 className="text-sm font-black text-app-foreground">Verify Domain Ownership</h4>
+                                            <h4 className="font-black text-app-foreground">Verify Domain Ownership</h4>
                                             <span className="text-xs text-app-muted-foreground">(auto-checks every 5 min)</span>
                                         </div>
                                         <p className="text-sm text-app-muted-foreground">
@@ -356,7 +356,7 @@ export default function CustomDomainsPage() {
                                     <div className="border-t border-app-border bg-app-info-bg/30 p-6 space-y-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-full bg-app-info-bg text-app-info flex items-center justify-center text-xs font-black">2</div>
-                                            <h4 className="text-sm font-black text-app-foreground">Point Your Domain to Our Server</h4>
+                                            <h4 className="font-black text-app-foreground">Point Your Domain to Our Server</h4>
                                         </div>
                                         <p className="text-sm text-app-muted-foreground">
                                             Add a <strong>CNAME record</strong> (or A record for root domains) to route traffic:
@@ -417,7 +417,7 @@ export default function CustomDomainsPage() {
 
             {/* Architecture Info */}
             <div className="bg-app-background border border-app-border rounded-2xl p-6 space-y-4">
-                <h4 className="text-sm font-black text-app-foreground flex items-center gap-2">
+                <h4 className="font-black text-app-foreground flex items-center gap-2">
                     <Zap size={14} className="text-app-primary" /> Production Features
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -430,7 +430,7 @@ export default function CustomDomainsPage() {
                 </div>
 
                 <div className="border-t border-app-border pt-4 mt-4">
-                    <h4 className="text-sm font-black text-app-foreground mb-3">Domain Types Explained</h4>
+                    <h4 className="font-black text-app-foreground mb-3">Domain Types Explained</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div className="flex items-start gap-3">
                             <span className="text-lg">🛒</span>

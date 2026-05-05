@@ -23,7 +23,7 @@ export function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
  {isCore ? <Crown size={18} /> : <Package size={18} />}
  </div>
  <div>
- <h4 className="font-bold text-app-foreground text-sm">{module.name}</h4>
+ <h4 className="font-bold text-app-foreground">{module.name}</h4>
  <p className="text-[10px] text-app-muted-foreground font-mono uppercase tracking-widest">{module.code}</p>
  {module.description && (
  <p className="text-[10px] text-app-muted-foreground mt-0.5 line-clamp-1">{module.description}</p>

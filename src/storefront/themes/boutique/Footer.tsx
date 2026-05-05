@@ -25,7 +25,7 @@ export default function BoutiqueFooter() {
 
                     {/* Shop */}
                     <div>
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Shop</h4>
+                        <div className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Shop</div>
                         <nav className="flex flex-col gap-2.5">
                             <Link href={base} className="text-sm text-indigo-300 hover:text-white transition">Home</Link>
                             <Link href={`${base}/categories`} className="text-sm text-indigo-300 hover:text-white transition">Collections</Link>
@@ -35,7 +35,7 @@ export default function BoutiqueFooter() {
 
                     {/* Account */}
                     <div>
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Account</h4>
+                        <div className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Account</div>
                         <nav className="flex flex-col gap-2.5">
                             <Link href={`${base}/account`} className="text-sm text-indigo-300 hover:text-white transition">My Account</Link>
                             <Link href={`${base}/account/orders`} className="text-sm text-indigo-300 hover:text-white transition">Orders</Link>
@@ -45,7 +45,7 @@ export default function BoutiqueFooter() {
 
                     {/* Support */}
                     <div>
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Support</h4>
+                        <div className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-4">Support</div>
                         <nav className="flex flex-col gap-2.5">
                             <Link href={`${base}/account/tickets`} className="text-sm text-indigo-300 hover:text-white transition">Contact Us</Link>
                             <Link href={`${base}/account/wallet`} className="text-sm text-indigo-300 hover:text-white transition">Wallet & Loyalty</Link>

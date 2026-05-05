@@ -125,7 +125,7 @@ export default function AISuggestionsPanel({ productName, onAccept }: AISuggesti
                         <Sparkles className="w-3.5 h-3.5 text-white" />
                     </div>
                     <div>
-                        <h4 className="text-[12px] font-bold text-app-foreground">AI Assistant Detected</h4>
+                        <h4 className="font-bold text-app-foreground">AI Assistant Detected</h4>
                         <p className="text-[10px] text-app-muted-foreground">Auto-suggestions based on product name</p>
                     </div>
                 </div>

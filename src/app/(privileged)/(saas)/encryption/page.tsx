@@ -389,7 +389,7 @@ export default function EncryptionPage() {
                                         <item.icon className={item.color} size={16} />
                                     </div>
                                     <div className="min-w-0">
-                                        <h4 className="text-sm font-bold text-app-foreground">{item.title}</h4>
+                                        <h4 className="font-bold text-app-foreground">{item.title}</h4>
                                         <p className="text-xs text-app-muted-foreground">{item.desc}</p>
                                     </div>
                                 </div>

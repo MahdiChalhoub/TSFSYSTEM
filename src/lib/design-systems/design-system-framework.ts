@@ -282,9 +282,11 @@ export function applyDesignSystem(
   root.style.setProperty("--color-border", colors.border);
 
   // ── 2. BRIDGE: Font Family ──────────────────────────────────
-  // globals.css reads: font-family: var(--app-font, 'Outfit', sans-serif)
-  root.style.setProperty("--app-font", system.typography.fontFamily);
-  root.style.setProperty("--font-family", system.typography.fontFamily);
+  // Typography is now LOCKED to the canonical Outfit + 18/16/15px scale
+  // by AppThemeProvider. design-systems intentionally no longer writes
+  // --app-font / --font-family — letting it would let a "Material" or
+  // "Ant Design" preset rewrite the body font and break consistency.
+  // The mono font is still allowed since it's used only by code blocks.
   if (system.typography.fontFamilyMono) {
     root.style.setProperty("--app-font-mono", system.typography.fontFamilyMono);
   }

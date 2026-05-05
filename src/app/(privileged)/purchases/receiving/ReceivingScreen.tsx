@@ -1028,7 +1028,7 @@ function LineCard({
                             { label: 'Risk Score', value: Number(line.adjustment_risk_score).toFixed(2) },
                         ].map(m => (
                             <div key={m.label} className="bg-app-background rounded-lg p-2 text-center">
-                                <p className="text-[7px] font-black uppercase tracking-wider text-app-muted-foreground">{m.label}</p>
+                                <p className="font-black uppercase tracking-wider text-app-muted-foreground">{m.label}</p>
                                 <p className="text-xs font-bold text-app-foreground mt-0.5">{m.value}</p>
                             </div>
                         ))}

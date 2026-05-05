@@ -148,9 +148,9 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  </div>
 
  <div className="flex-1">
- <h4 className="font-bold text-app-foreground uppercase text-[10px] tracking-widest text-app-primary">
+ <div className="font-bold text-app-foreground uppercase text-[10px] tracking-widest text-app-primary">
  Section Type
- </h4>
+ </div>
  <p className="font-black text-lg text-app-foreground">
  {section.type.split('_').join(' ').toUpperCase()}
  </p>
@@ -180,7 +180,7 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  <div className="w-12 h-12 rounded-xl bg-app-surface shadow-sm flex items-center justify-center text-app-muted-foreground group-hover:text-app-primary group-hover:bg-app-primary/5 mb-4 transition-all">
  <Plus size={24} />
  </div>
- <h4 className="font-black text-app-foreground text-lg uppercase tracking-tight">{item.name}</h4>
+ <h4 className="font-black text-app-foreground uppercase tracking-tight">{item.name}</h4>
  <p className="text-xs text-app-muted-foreground font-medium mt-1 leading-relaxed">{item.description}</p>
  </button>
  ))}

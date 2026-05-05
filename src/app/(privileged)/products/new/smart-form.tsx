@@ -767,10 +767,10 @@ export default function SmartProductForm({
                                     {/* ── All Pricing Levels Summary ── */}
                                     {(sellPrice > 0 || packagingLevels.length > 0) && (
                                         <div className="p-4 rounded-xl bg-gradient-to-b from-app-surface to-app-background border border-app-border">
-                                            <h4 className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                            <div className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                                 <DollarSign className="w-3.5 h-3.5 text-app-primary" />
                                                 All Pricing Levels
-                                            </h4>
+                                            </div>
                                             <div className="border border-app-border rounded-lg overflow-hidden">
                                                 <table className="w-full text-[11px]">
                                                     <thead>
@@ -839,10 +839,10 @@ export default function SmartProductForm({
 
                                     {/* ── Product Groups (Combo) ── */}
                                     <div className="p-4 rounded-xl bg-app-surface border border-app-border">
-                                        <h4 className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                        <div className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                             <Package className="w-3.5 h-3.5 text-app-accent" />
                                             Product Groups / Combos
-                                        </h4>
+                                        </div>
                                         <div className="space-y-2">
                                             <div>
                                                 <label className="block text-[9px] font-semibold text-app-muted-foreground mb-1 uppercase tracking-wider">Assign to Group</label>
@@ -933,7 +933,7 @@ export default function SmartProductForm({
                                     {/* ═══ 3. Expiry & Shelf Life ═══ */}
                                     <div className="p-4 rounded-xl bg-gradient-to-b from-amber-50/30 to-orange-50/20 border border-app-warning/40">
                                         <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-[11px] font-bold text-app-foreground flex items-center gap-1.5">
+                                            <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                                 <span className="text-[14px]">🕐</span>
                                                 Expiry & Shelf Life
                                             </h4>
@@ -1062,7 +1062,7 @@ export default function SmartProductForm({
 
                                     {/* ═══ 5. Replenishment Rules ═══ */}
                                     <div className="p-4 bg-app-background rounded-xl border border-app-border space-y-3">
-                                        <h4 className="text-[12px] font-bold text-app-foreground flex items-center gap-1.5">
+                                        <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                             <Warehouse className="w-3.5 h-3.5 text-app-warning" />
                                             Replenishment Rules
                                         </h4>
@@ -1106,7 +1106,7 @@ export default function SmartProductForm({
                             {activeTab === 'supplier' && (
                                 <div className="space-y-4">
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border space-y-3">
-                                        <h4 className="text-[12px] font-bold text-app-foreground flex items-center gap-1.5">
+                                        <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                             <Truck className="w-3.5 h-3.5 text-app-info" />
                                             Primary Supplier
                                         </h4>
@@ -1223,10 +1223,10 @@ function AttrGroupSelector({
                     </span>
                     <div className="flex items-center gap-1.5">
                         {group.show_in_name && (
-                            <span className="text-[7px] font-bold uppercase tracking-wider text-app-warning">📝 in name</span>
+                            <span className="font-bold uppercase tracking-wider text-app-warning">📝 in name</span>
                         )}
                         {group.is_variant && (
-                            <span className="text-[7px] font-bold uppercase tracking-wider text-app-success">variant</span>
+                            <span className="font-bold uppercase tracking-wider text-app-success">variant</span>
                         )}
                     </div>
                 </div>

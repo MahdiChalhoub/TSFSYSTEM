@@ -114,7 +114,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                                         <div className="flex items-center gap-1.5">
                                             <p className="text-[11px] font-bold text-app-foreground truncate">{name}</p>
                                             {isSelf && (
-                                                <span className="text-[7px] font-black px-1 py-0.5 rounded"
+                                                <span className="font-black px-1 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
                                                     YOU
                                                 </span>

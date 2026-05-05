@@ -21,8 +21,8 @@ function FormSection({ icon, title, children }: { icon: React.ReactNode; title: 
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                     {icon}
                 </div>
-                <h4 className="text-tp-xs font-bold uppercase tracking-wider"
-                    style={{ color: 'var(--app-muted-foreground)' }}>{title}</h4>
+                <div className="text-tp-xs font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--app-muted-foreground)' }}>{title}</div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                 {children}

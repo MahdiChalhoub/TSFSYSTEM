@@ -87,7 +87,7 @@ function GroupRow({ tg, onEdit, onDelete, onSetDefault, settingDefault, deleting
                 <span className="text-[13px] font-black tabular-nums leading-none">
                     {Number(tg.rate).toFixed(0)}
                 </span>
-                <span className="text-[7px] font-black leading-none mt-0.5">%</span>
+                <span className="font-black leading-none mt-0.5">%</span>
             </div>
 
             {/* Name + Badges */}

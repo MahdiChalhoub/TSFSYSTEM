@@ -16,7 +16,7 @@ export default function MidnightFooter() {
                         </p>
                     </div>
                     <div className="space-y-3">
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Quick Links</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Quick Links</div>
                         <div className="space-y-2">
                             <p className="text-xs text-app-muted-foreground hover:text-app-muted-foreground cursor-pointer transition-colors">Products</p>
                             <p className="text-xs text-app-muted-foreground hover:text-app-muted-foreground cursor-pointer transition-colors">Categories</p>
@@ -24,7 +24,7 @@ export default function MidnightFooter() {
                         </div>
                     </div>
                     <div className="space-y-3">
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Support</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Support</div>
                         <div className="space-y-2">
                             <p className="text-xs text-app-muted-foreground hover:text-app-muted-foreground cursor-pointer transition-colors">Contact Us</p>
                             <p className="text-xs text-app-muted-foreground hover:text-app-muted-foreground cursor-pointer transition-colors">FAQ</p>

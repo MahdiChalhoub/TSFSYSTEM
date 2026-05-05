@@ -416,7 +416,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                                         {item.product.name}
                                                     </p>
                                                     {showBrand && item.product.brand_name && (
-                                                        <p className="text-[7px] text-app-muted-foreground">{item.product.brand_name}</p>
+                                                        <p className="text-app-muted-foreground">{item.product.brand_name}</p>
                                                     )}
                                                 </div>
                                                 {showBarcode && item.product.barcode && (
@@ -429,7 +429,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                                 )}
                                                 <div className="flex justify-between items-end">
                                                     {showSku && (
-                                                        <span className="text-[7px] text-app-muted-foreground">{item.product.sku}</span>
+                                                        <span className="text-app-muted-foreground">{item.product.sku}</span>
                                                     )}
                                                     {showPrice && (
                                                         <span

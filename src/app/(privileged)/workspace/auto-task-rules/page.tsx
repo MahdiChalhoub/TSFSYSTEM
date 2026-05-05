@@ -932,7 +932,7 @@ export default function AutoTaskRulesPage() {
                                     background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
-                                <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Name this automation</h4>
+                                <div className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Name this automation</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                                     <div style={{ gridColumn: 'span 2' }}>
                                         <label className={labelCls}>What will this do? *</label>
@@ -964,9 +964,9 @@ export default function AutoTaskRulesPage() {
                                     border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
                                     borderLeft: '3px solid var(--app-primary)',
                                 }}>
-                                <h4 className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
+                                <div className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
                                     When should this run?
-                                </h4>
+                                </div>
 
                                 {/* Repeats? Yes/No segmented */}
                                 <div>
@@ -1086,9 +1086,9 @@ export default function AutoTaskRulesPage() {
                             >
                                 <div className="flex items-center gap-2 mb-2">
                                     <Filter size={13} style={{ color: 'var(--app-primary)' }} />
-                                    <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
+                                    <div className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">
                                         Only when… (optional filters)
-                                    </h4>
+                                    </div>
                                 </div>
                                 <p className="text-tp-xs font-medium text-app-muted-foreground mb-3">
                                     Narrow down when the automation fires. Leave everything blank to always run.
@@ -1185,9 +1185,9 @@ export default function AutoTaskRulesPage() {
                                     borderLeft: '3px solid var(--app-primary)',
                                 }}
                             >
-                                <h4 className="text-tp-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-primary)' }}>
+                                <div className="text-tp-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--app-primary)' }}>
                                     What task gets created?
-                                </h4>
+                                </div>
                                 <div>
                                     <label className={labelCls}>Task title the assignee will see *</label>
                                     <input
@@ -1378,7 +1378,7 @@ export default function AutoTaskRulesPage() {
                                     background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
-                                <h4 className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Who should do this?</h4>
+                                <div className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide mb-2">Who should do this?</div>
                                 <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                                     {([
                                         { v: 'user' as const, icon: <User size={12} />, label: 'One person' },

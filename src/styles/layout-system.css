@@ -223,8 +223,10 @@
 }
 
 .page-header-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  /* Anchored to the canonical typography scale (--font-size-h1) so
+     every page header agrees with .app-page-title and bare <h1>. */
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold, 700);
   color: var(--app-foreground);
   min-width: 0;
   flex: 1 1 auto;

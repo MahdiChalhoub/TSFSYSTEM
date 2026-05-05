@@ -347,7 +347,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-app-success border-app-success' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
-                                                {isCash && <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
+                                                {isCash && <span className="font-black px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>PRIMARY</span>}
                                                 <span className="text-[9px] opacity-40">{a.type}</span>
                                             </button>
                                         )

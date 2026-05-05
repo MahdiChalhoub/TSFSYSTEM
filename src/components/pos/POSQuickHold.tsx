@@ -225,9 +225,9 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  title="Quick Hold (Ctrl+H)"
  >
  <Bookmark size={9} />
- <span className="text-[7px] font-black uppercase hidden xl:inline">Hold</span>
+ <span className="font-black uppercase hidden xl:inline">Hold</span>
  {holds.length > 0 && (
- <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-app-info text-app-foreground text-[7px] font-black rounded-full flex items-center justify-center">
+ <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-app-info text-app-foreground font-black rounded-full flex items-center justify-center">
  {holds.length > 9 ? '9+' : holds.length}
  </span>
  )}

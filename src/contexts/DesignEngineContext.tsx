@@ -971,14 +971,16 @@ export function DesignEngineProvider({
     root.style.setProperty('--input-font-size', config.components.inputs.fontSize)
     root.style.setProperty('--input-border', config.components.inputs.border)
 
-    // Apply TYPOGRAPHY variables
-    root.style.setProperty('--font-heading', config.components.typography.headingFont)
-    root.style.setProperty('--font-body', config.components.typography.bodyFont)
-    root.style.setProperty('--font-size-h1', config.components.typography.h1Size)
-    root.style.setProperty('--font-size-h2', config.components.typography.h2Size)
-    root.style.setProperty('--font-size-h3', config.components.typography.h3Size)
-    root.style.setProperty('--font-size-body', config.components.typography.bodySize)
-    root.style.setProperty('--font-size-small', config.components.typography.smallSize)
+    // Typography is now LOCKED to the canonical scale in AppThemeProvider
+    // (see components/app/AppThemeProvider.tsx). DesignEngine presets
+    // can still SHIP typography fields for the preview UI, but they
+    // are intentionally NOT written to the live :root vars here —
+    // doing so would race AppThemeProvider and let preset.h1Size = '3rem'
+    // win, recreating the historical drift this consolidation fixes.
+    //
+    // To change typography globally: edit globals.css :root + the
+    // CANONICAL_FONT block in AppThemeProvider.tsx. There is no
+    // per-preset typography override anymore.
 
     // Apply NAVIGATION variables
     // Guard: presets with position:'top' set width:'100%' which breaks the sidebar layout.

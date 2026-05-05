@@ -418,10 +418,12 @@
   flex-wrap: wrap;
 }
 
-/* Page title */
+/* Page title — canonical h1. All sizing comes from the typography
+   variables in globals.css so changing the scale in one place
+   updates every page header. */
 .app-page-title {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: var(--font-size-h1);            /* 18px */
+  font-weight: var(--font-weight-bold, 700); /* 700 — Outfit-900 falls back to system font */
   color: var(--app-foreground);
   font-family: var(--app-font-display, var(--app-font));
   line-height: 1.2;
@@ -429,13 +431,21 @@
   margin: 0;
 }
 
-/* Page subtitle / description */
+/* Page subtitle / eyebrow — uppercase + bold + wide tracking,
+   the muted "52 PRODUCTS · 5 COMBOS · 8 OUT OF STOCK" pattern under
+   every page title. Matches what the rest of the system reaches for
+   via ad-hoc Tailwind (`text-[11px] font-bold uppercase tracking-widest`). */
 .app-page-subtitle {
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;                          /* 11px — eyebrow */
   color: var(--app-muted-foreground);
   margin-top: 0.125rem;
-  font-weight: 400;
+  font-weight: var(--font-weight-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;                         /* tracking-widest */
   line-height: 1.4;
+}
+@media (min-width: 768px) {
+  .app-page-subtitle { font-size: 0.75rem; }     /* 12px on tablet+ */
 }
 
 /* Base button — sizing/spacing only, no visual style */
@@ -901,6 +911,13 @@ textarea,
   --header-height: 80px;
 }
 
+/* Density modes only adjust SPACING + control sizes — NEVER typography.
+   Typography lives entirely in the canonical --font-size-h1..body scale
+   defined at :root in globals.css. Mixing density-driven font scales
+   here was the historic cause of "title is bigger than expected on
+   page X but not page Y" bugs — the density attribute was silently
+   getting set somewhere and bumping h1 from 18px to 24px or 48px.
+   Spacing tokens stay; size tokens removed. */
 [data-density="compact"] {
   --button-height: 2rem;
   --button-padding: 0 0.875rem;
@@ -911,9 +928,6 @@ textarea,
   --card-padding: 0.875rem;
   --nav-width: 280px;
   --header-height: 64px;
-  --font-size-body: 0.8125rem;
-  --font-size-h1: 1.5rem;
-  --font-size-h2: 1.25rem;
 }
 
 [data-density="comfortable"] {
@@ -926,9 +940,6 @@ textarea,
   --card-padding: 2.5rem;
   --nav-width: 380px;
   --header-height: 100px;
-  --font-size-body: 1rem;
-  --font-size-h1: 3rem;
-  --font-size-h2: 2.25rem;
 }
 
 /* Apply Globally */

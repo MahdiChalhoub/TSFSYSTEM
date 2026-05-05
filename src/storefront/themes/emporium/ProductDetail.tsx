@@ -156,7 +156,7 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                     <Store size={22} />
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-app-foreground tracking-tight leading-none mb-1 uppercase text-sm">Official Node</h4>
+                                    <h4 className="font-black text-app-foreground tracking-tight leading-none mb-1 uppercase">Official Node</h4>
                                     <p className="text-[10px] font-black text-app-success uppercase tracking-widest">Verified Global Vendor</p>
                                 </div>
                             </div>

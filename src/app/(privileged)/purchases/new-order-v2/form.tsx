@@ -684,10 +684,10 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                                     {/* Supplier info */}
                                     {selectedSupplier && (
                                         <div className="p-4 rounded-xl bg-gradient-to-b from-app-surface to-app-background border border-app-border">
-                                            <h4 className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                            <div className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                                 <Truck className="w-3.5 h-3.5 text-app-primary" />
                                                 Supplier Details
-                                            </h4>
+                                            </div>
                                             <div className="grid grid-cols-2 gap-2 text-[11px]">
                                                 <div><span className="text-app-muted-foreground">Name:</span> <span className="font-bold text-app-foreground">{selectedSupplier.name}</span></div>
                                                 {selectedSupplier.phone && <div><span className="text-app-muted-foreground">Phone:</span> <span className="font-bold text-app-foreground">{selectedSupplier.phone}</span></div>}

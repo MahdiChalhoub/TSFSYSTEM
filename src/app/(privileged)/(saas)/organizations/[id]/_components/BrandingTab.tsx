@@ -170,23 +170,23 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white"
                                 style={{ background: `linear-gradient(135deg, ${brandColor}, color-mix(in srgb, ${brandColor} 60%, #6366f1))` }}
                             >T</div>
-                            <h4 className="text-base font-black text-white">TENANT</h4>
+                            <h4 className="font-black text-white">TENANT</h4>
                             <p className="text-[9px] text-app-faint">{tagline || "Secure enterprise gateway."}</p>
                         </div>
                     </div>
                     <div className="flex flex-col items-center justify-center p-5" style={{ background: '#111827' }}>
                         <div className="w-full max-w-[160px] space-y-2.5">
                             <div className="flex items-center gap-1.5"><Fingerprint size={10} style={{ color: brandColor }} /></div>
-                            <h5 className="text-xs font-black text-white">Welcome Back</h5>
+                            <h5 className="font-black text-white">Welcome Back</h5>
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-1.5 h-6 rounded px-2"
                                     style={{ background: '#0f172a', border: `1px solid color-mix(in srgb, ${brandColor} 30%, #1e293b)` }}
-                                ><User size={8} className="text-app-muted-foreground" /><span className="text-[7px] text-app-muted-foreground">Username</span></div>
+                                ><User size={8} className="text-app-muted-foreground" /><span className="text-app-muted-foreground">Username</span></div>
                                 <div className="flex items-center gap-1.5 h-6 rounded px-2"
                                     style={{ background: '#0f172a', border: '1px solid #1e293b' }}
-                                ><Lock size={8} className="text-app-muted-foreground" /><span className="text-[7px] text-app-muted-foreground">Password</span></div>
+                                ><Lock size={8} className="text-app-muted-foreground" /><span className="text-app-muted-foreground">Password</span></div>
                             </div>
-                            <button className="w-full h-6 rounded text-white text-[7px] font-bold flex items-center justify-center gap-1"
+                            <button className="w-full h-6 rounded text-white font-bold flex items-center justify-center gap-1"
                                 style={{ background: brandColor }}
                             >Sign In <ArrowRight size={8} /></button>
                         </div>

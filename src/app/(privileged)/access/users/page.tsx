@@ -260,7 +260,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4 space-y-5">
                     {/* Basic Info */}
                     <section>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Edit3 size={11} /> Basic Info</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Edit3 size={11} /> Basic Info</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                             <div><label className={lbl}>First Name</label><input className={inp} value={form.first_name} onChange={e => set('first_name', e.target.value)} /></div>
                             <div><label className={lbl}>Last Name</label><input className={inp} value={form.last_name} onChange={e => set('last_name', e.target.value)} /></div>
@@ -270,7 +270,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
 
                     {/* Role & Status */}
                     <section>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Shield size={11} /> Role & Status</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Shield size={11} /> Role & Status</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
                             <div>
                                 <label className={lbl}>Role</label>
@@ -291,7 +291,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
 
                     {/* POS PIN */}
                     <section>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Key size={11} /> POS PIN</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Key size={11} /> POS PIN</div>
                         <div className="flex items-center gap-2">
                             <input type={showPin ? 'text' : 'password'} placeholder="Enter 4-6 digit PIN" value={pinVal}
                                 onChange={e => setPinVal(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -312,7 +312,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
 
                     {/* Linked Contacts */}
                     <section>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Link2 size={11} /> Linked Contacts</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Link2 size={11} /> Linked Contacts</div>
                         {linkedContacts.length === 0 ? (
                             <p className="text-[11px] font-bold text-app-muted-foreground p-3 rounded-xl" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                                 No CRM contacts linked to this user.
@@ -330,7 +330,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
 
                     {/* Security */}
                     <section>
-                        <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Lock size={11} /> Security</h4>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5"><Lock size={11} /> Security</div>
                         {!showPwReset ? (
                             <button onClick={() => setShowPwReset(true)}
                                 className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all"

@@ -149,7 +149,7 @@ export function LifecycleBar({ status, approvals = [], onAction, canAction, isLo
             {/* Audit Log (mini) */}
             {approvals.length > 0 && (
                 <div className="mt-2 pt-4 border-t border-dashed">
-                    <h4 className="text-[10px] font-bold uppercase opacity-40 mb-3 flex items-center gap-1">
+                    <h4 className="font-bold uppercase opacity-40 mb-3 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> Approval Trail
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -34,7 +34,7 @@ function ToggleTile({ on, onToggle, icon: Icon, color, title, descOn, descOff, i
                 <div className="text-[12px] font-black text-app-foreground flex items-center gap-1.5">
                     {title}
                     {inherited && (
-                        <span className="text-[7px] font-bold px-1 py-px rounded"
+                        <span className="font-bold px-1 py-px rounded"
                             style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 12%, transparent)', color: 'var(--app-info, #3b82f6)' }}>
                             INHERITED
                         </span>
@@ -335,7 +335,7 @@ export default function NewFinancialAccountPage() {
                             <FolderTree size={15} />
                         </div>
                         <div>
-                            <h4 className="text-[12px] font-black text-app-foreground leading-none mb-1">Auto-Linked to COA</h4>
+                            <h4 className="font-black text-app-foreground leading-none mb-1">Auto-Linked to COA</h4>
                             <p className="text-[11px] font-bold text-app-muted-foreground leading-relaxed">
                                 Child account under <span className="font-black text-app-foreground">{coaCode} — {coaName}</span> · Code: <span className="font-mono font-black" style={{ color: selectedCat.color || 'var(--app-primary)' }}>{previewCode}</span>
                             </p>

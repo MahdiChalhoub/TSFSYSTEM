@@ -93,7 +93,7 @@ export default async function ContactsPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <Building2 size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Site Attribution</h4>
+                            <h4 className="font-black text-white">Site Attribution</h4>
                             <p className="text-indigo-100 text-sm font-medium leading-relaxed">
                                 Distinguish between a contact's <b>Home Site</b> (registration) and their <b>Transaction Site</b> (activity) for perfect multi-branch analytics.
                             </p>
@@ -102,7 +102,7 @@ export default async function ContactsPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <CreditCard size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Ledger Precision</h4>
+                            <h4 className="font-black text-white">Ledger Precision</h4>
                             <p className="text-indigo-100 text-sm font-medium leading-relaxed">
                                 Every contact has a direct 1:1 link to the General Ledger. Balances are calculated live from validated journal entries.
                             </p>
@@ -111,7 +111,7 @@ export default async function ContactsPage() {
                             <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <ShieldCheck size={24} />
                             </div>
-                            <h4 className="text-xl font-black text-white">Safe Transitions</h4>
+                            <h4 className="font-black text-white">Safe Transitions</h4>
                             <p className="text-indigo-100 text-sm font-medium leading-relaxed">
                                 Automated sub-ledger generation prevents manual accounting errors when establishing new business relationships.
                             </p>

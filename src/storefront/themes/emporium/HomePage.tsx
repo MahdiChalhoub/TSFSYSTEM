@@ -73,7 +73,7 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                         {/* Marketplace Promo Card */}
                         <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white overflow-hidden relative group">
                             <Sparkles className="absolute -right-2 -top-2 w-24 h-24 text-white/10 rotate-12 group-hover:scale-110 transition-transform" />
-                            <h4 className="text-xl font-black leading-tight mb-2">Prime Clearance</h4>
+                            <h4 className="font-black leading-tight mb-2">Prime Clearance</h4>
                             <p className="text-sm text-indigo-100 mb-4 font-medium">Get exclusive access to warehouse liquidations.</p>
                             <button className="w-full py-2.5 bg-app-surface text-app-info rounded-xl text-xs font-black shadow-lg shadow-indigo-950/20 active:scale-95 transition-all">
                                 VIEW DEALS

@@ -159,7 +159,7 @@ export default function PaymentMethodsPage() {
                                     <div className="min-w-0">
                                         <p className="text-[12px] font-bold text-app-foreground truncate">{m.name}</p>
                                         {m.is_system && (
-                                            <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full"
+                                            <span className="font-black px-1.5 py-0.5 rounded-full"
                                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>SYSTEM</span>
                                         )}
                                     </div>

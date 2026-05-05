@@ -88,7 +88,7 @@ export function InspectorStrip({ configScore, scoreBreakdown, isProfileMode }: P
                             {scoreBreakdown.map((c, ci) => (
                                 <div key={ci} className="flex items-center justify-between text-[9px]">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-3.5 h-3.5 rounded flex items-center justify-center text-[7px] font-black text-white"
+                                        <span className="w-3.5 h-3.5 rounded flex items-center justify-center font-black text-white"
                                             style={{ background: c.pass ? 'var(--app-success, #22c55e)' : 'var(--app-error, #ef4444)' }}>
                                             {c.pass ? '✓' : '✗'}
                                         </span>

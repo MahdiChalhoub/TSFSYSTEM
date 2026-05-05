@@ -300,7 +300,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             {/* Create / Edit Form */}
             {(showCreate || editingId) && (
                 <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-5 space-y-4">
-                    <h4 className="font-bold text-app-foreground text-sm">
+                    <h4 className="font-bold text-app-foreground">
                         {showCreate ? '✦ New Package' : '✏️ Edit Package'}
                     </h4>
 
