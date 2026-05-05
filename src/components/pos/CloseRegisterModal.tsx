@@ -106,20 +106,20 @@ export default function CloseRegisterModal({
 
  return (
  <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && step === 'form' && onCancel()}>
- <div className="w-full max-w-lg bg-app-surface rounded-3xl border border-app-text/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+ <div className="w-full max-w-lg bg-app-surface rounded-3xl border border-app-foreground/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
 
  {/* Header */}
- <div className="bg-gradient-to-r from-rose-600/20 to-orange-600/10 px-6 py-5 border-b border-app-text/5 flex items-center justify-between">
+ <div className="bg-gradient-to-r from-rose-600/20 to-orange-600/10 px-6 py-5 border-b border-app-foreground/5 flex items-center justify-between">
  <div>
- <h2 className="text-app-text font-black text-lg tracking-tight">
+ <h2 className="text-app-foreground font-black text-lg tracking-tight">
  {step === 'form' ? 'Close Register' : 'Shift Closed ✓'}
  </h2>
- <p className="text-app-text/40 text-xs font-medium mt-0.5">
+ <p className="text-app-foreground/40 text-xs font-medium mt-0.5">
  {registerName} · {cashierName}
  </p>
  </div>
  {step === 'form' && (
- <button onClick={onCancel} className="w-9 h-9 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text flex items-center justify-center transition-all">
+ <button onClick={onCancel} className="w-9 h-9 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/40 hover:text-app-foreground flex items-center justify-center transition-all">
  <X size={16} />
  </button>
  )}
@@ -128,46 +128,46 @@ export default function CloseRegisterModal({
  {step === 'form' && (
  <div className="p-6 space-y-5">
  {/* Opening balance info */}
- <div className="flex items-center gap-3 bg-app-text/5 rounded-2xl px-4 py-3 text-sm">
- <DollarSign size={16} className="text-app-text/30" />
- <span className="text-app-text/50">Opening balance</span>
- <span className="ml-auto font-bold text-app-text">{fmt(openingBalance, currency)}</span>
+ <div className="flex items-center gap-3 bg-app-foreground/5 rounded-2xl px-4 py-3 text-sm">
+ <DollarSign size={16} className="text-app-foreground/30" />
+ <span className="text-app-foreground/50">Opening balance</span>
+ <span className="ml-auto font-bold text-app-foreground">{fmt(openingBalance, currency)}</span>
  </div>
 
  {/* Cash counted */}
  <div>
- <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-2">Cash in Drawer (Counted)</label>
+ <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-2">Cash in Drawer (Counted)</label>
  <input
  type="number"
  value={cashCounted}
  onChange={e => setCashCounted(e.target.value)}
  placeholder="0"
- className="w-full px-4 py-3.5 bg-app-text/5 border border-app-text/10 rounded-2xl text-app-text text-2xl font-black outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500/30 text-center transition-all"
+ className="w-full px-4 py-3.5 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground text-2xl font-black outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500/30 text-center transition-all"
  autoFocus
  />
  </div>
 
  {/* Notes */}
  <div>
- <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-2">Closing Notes (optional)</label>
+ <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-2">Closing Notes (optional)</label>
  <textarea
  value={notes}
  onChange={e => setNotes(e.target.value)}
  rows={2}
  placeholder="Any notes about this shift..."
- className="w-full px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-2xl text-app-text/80 text-sm outline-none focus:ring-2 focus:ring-rose-500/40 resize-none"
+ className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-rose-500/40 resize-none"
  />
  </div>
 
  {/* Action buttons */}
  <div className="flex items-center gap-3 pt-2">
- <button onClick={onCancel} className="flex-1 py-3 rounded-2xl bg-app-text/5 hover:bg-app-text/10 text-app-text/50 font-bold text-sm transition-all">
+ <button onClick={onCancel} className="flex-1 py-3 rounded-2xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/50 font-bold text-sm transition-all">
  Cancel
  </button>
  <button
  onClick={handleClose}
  disabled={loading || cashCounted === ''}
- className="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-app-text font-black text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+ className="flex-1 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-app-foreground font-black text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
  >
  {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
  {loading ? 'Closing…' : 'Close Register'}
@@ -181,18 +181,18 @@ export default function CloseRegisterModal({
  {/* Printable area */}
  <div ref={printRef} id="shift-report">
  <div className="center" style={{ textAlign: 'center', marginBottom: 12 }}>
- <div className="text-app-text font-black text-xl">{report.registerName}</div>
- <div className="text-app-text/40 text-xs">{report.siteName} · Shift Report</div>
+ <div className="text-app-foreground font-black text-xl">{report.registerName}</div>
+ <div className="text-app-foreground/40 text-xs">{report.siteName} · Shift Report</div>
  </div>
 
  <div className="divider" style={{ borderTop: '1px dashed rgba(255,255,255,0.15)', margin: '12px 0' }} />
 
  {/* Session info */}
- <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-app-text/50 mb-4">
- <div><span className="text-app-text/30">Cashier</span><div className="text-app-text/70 font-bold">{report.cashierName}</div></div>
- <div><span className="text-app-text/30">Duration</span><div className="text-app-text/70 font-bold">{report.duration}</div></div>
- <div><span className="text-app-text/30">Opened</span><div className="text-app-text/70 font-bold">{fmtDate(report.openedAt)}</div></div>
- <div><span className="text-app-text/30">Closed</span><div className="text-app-text/70 font-bold">{fmtDate(report.closedAt)}</div></div>
+ <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-app-foreground/50 mb-4">
+ <div><span className="text-app-foreground/30">Cashier</span><div className="text-app-foreground/70 font-bold">{report.cashierName}</div></div>
+ <div><span className="text-app-foreground/30">Duration</span><div className="text-app-foreground/70 font-bold">{report.duration}</div></div>
+ <div><span className="text-app-foreground/30">Opened</span><div className="text-app-foreground/70 font-bold">{fmtDate(report.openedAt)}</div></div>
+ <div><span className="text-app-foreground/30">Closed</span><div className="text-app-foreground/70 font-bold">{fmtDate(report.closedAt)}</div></div>
  </div>
 
  <div className="divider" style={{ borderTop: '1px dashed rgba(255,255,255,0.15)', margin: '10px 0' }} />
@@ -203,22 +203,22 @@ export default function CloseRegisterModal({
  </div>
  <div className="space-y-1">
  {report.paymentBreakdown.length === 0 ? (
- <div className="text-app-text/20 text-xs text-center py-2">No sales recorded</div>
+ <div className="text-app-foreground/20 text-xs text-center py-2">No sales recorded</div>
  ) : report.paymentBreakdown.map(b => (
  <div key={b.method} className="flex items-center justify-between py-1.5">
  <div>
- <span className="text-app-text/80 text-sm font-bold">{b.label}</span>
- <span className="text-app-text/30 text-xs ml-2">×{b.count}</span>
+ <span className="text-app-foreground/80 text-sm font-bold">{b.label}</span>
+ <span className="text-app-foreground/30 text-xs ml-2">×{b.count}</span>
  </div>
- <span className="font-black text-app-text text-sm">{fmt(b.total, currency)}</span>
+ <span className="font-black text-app-foreground text-sm">{fmt(b.total, currency)}</span>
  </div>
  ))}
  </div>
- <div className="flex items-center justify-between py-2 border-t border-app-text/10 mt-2">
- <span className="text-app-text font-black text-sm">TOTAL SALES</span>
+ <div className="flex items-center justify-between py-2 border-t border-app-foreground/10 mt-2">
+ <span className="text-app-foreground font-black text-sm">TOTAL SALES</span>
  <span className="font-black text-app-primary text-base">{fmt(report.totalSales, currency)}</span>
  </div>
- <div className="text-app-text/30 text-xs text-right">{report.totalTransactions} transaction{report.totalTransactions !== 1 ? 's' : ''}</div>
+ <div className="text-app-foreground/30 text-xs text-right">{report.totalTransactions} transaction{report.totalTransactions !== 1 ? 's' : ''}</div>
 
  <div className="divider" style={{ borderTop: '1px dashed rgba(255,255,255,0.15)', margin: '12px 0' }} />
 
@@ -227,12 +227,12 @@ export default function CloseRegisterModal({
  Cash Reconciliation
  </div>
  <div className="space-y-1 text-sm">
- <div className="flex justify-between text-app-text/50"><span>Opening balance</span><span className="font-bold text-app-text/70">{fmt(report.openingBalance, currency)}</span></div>
- <div className="flex justify-between text-app-text/50"><span>+ Cash sales</span><span className="font-bold text-app-text/70">{fmt(report.totalCashIn, currency)}</span></div>
- <div className="flex justify-between text-app-text/50"><span>Expected in drawer</span><span className="font-bold text-app-text/80">{fmt(report.expectedBalance, currency)}</span></div>
- <div className="flex justify-between text-app-text/50"><span>Counted in drawer</span><span className="font-bold text-app-text">{fmt(report.closingBalance, currency)}</span></div>
+ <div className="flex justify-between text-app-foreground/50"><span>Opening balance</span><span className="font-bold text-app-foreground/70">{fmt(report.openingBalance, currency)}</span></div>
+ <div className="flex justify-between text-app-foreground/50"><span>+ Cash sales</span><span className="font-bold text-app-foreground/70">{fmt(report.totalCashIn, currency)}</span></div>
+ <div className="flex justify-between text-app-foreground/50"><span>Expected in drawer</span><span className="font-bold text-app-foreground/80">{fmt(report.expectedBalance, currency)}</span></div>
+ <div className="flex justify-between text-app-foreground/50"><span>Counted in drawer</span><span className="font-bold text-app-foreground">{fmt(report.closingBalance, currency)}</span></div>
  <div className={clsx(
- "flex justify-between font-black text-sm border-t border-app-text/10 pt-2 mt-1",
+ "flex justify-between font-black text-sm border-t border-app-foreground/10 pt-2 mt-1",
  Math.abs(report.difference) < 0.01 ? "text-app-primary" :
  report.difference > 0 ? "text-app-info" : "text-rose-400"
  )}>
@@ -244,22 +244,22 @@ export default function CloseRegisterModal({
  {notes && (
  <>
  <div className="divider" style={{ borderTop: '1px dashed rgba(255,255,255,0.15)', margin: '12px 0' }} />
- <div className="text-app-text/30 text-xs">{notes}</div>
+ <div className="text-app-foreground/30 text-xs">{notes}</div>
  </>
  )}
  </div>
 
  {/* Actions */}
- <div className="flex gap-3 pt-2 border-t border-app-text/5">
+ <div className="flex gap-3 pt-2 border-t border-app-foreground/5">
  <button
  onClick={handlePrint}
- className="flex-1 py-3 rounded-2xl bg-app-text/5 hover:bg-app-text/10 text-app-text/70 font-bold text-sm transition-all flex items-center justify-center gap-2"
+ className="flex-1 py-3 rounded-2xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/70 font-bold text-sm transition-all flex items-center justify-center gap-2"
  >
  <Printer size={16} /> Print Report
  </button>
  <button
  onClick={onClose}
- className="flex-1 py-3 rounded-2xl bg-app-primary hover:bg-app-primary text-app-text font-black text-sm transition-all flex items-center justify-center gap-2"
+ className="flex-1 py-3 rounded-2xl bg-app-primary hover:bg-app-primary text-app-foreground font-black text-sm transition-all flex items-center justify-center gap-2"
  >
  <ArrowRight size={16} /> Back to Lobby
  </button>

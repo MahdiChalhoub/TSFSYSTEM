@@ -127,9 +127,9 @@ function applyFullThemeToDOM(
     r.setProperty('--app-surface', colors.surface);
     r.setProperty('--app-surface-2', colors.surfaceHover);
     r.setProperty('--app-surface-hover', colors.surfaceHover);
-    r.setProperty('--app-text', colors.text);
-    r.setProperty('--app-text-muted', colors.textMuted);
-    r.setProperty('--app-text-faint', colors.textMuted);
+    r.setProperty('--app-foreground', colors.text);
+    r.setProperty('--app-muted-foreground', colors.textMuted);
+    r.setProperty('--app-muted-foreground', colors.textMuted);
     r.setProperty('--app-border', colors.border);
     r.setProperty('--app-border-strong', colors.border);
     // Sidebar
@@ -635,8 +635,8 @@ export function ThemeScript() {
   if (c.primary)    { s.setProperty('--app-primary', c.primary); s.setProperty('--app-primary-dark', c.primaryDark || c.primary); s.setProperty('--app-primary-light', c.primary + '1f'); s.setProperty('--app-primary-glow', c.primary + '59'); }
   if (c.bg)         { s.setProperty('--app-bg', c.bg); }
   if (c.surface)    { s.setProperty('--app-surface', c.surface); s.setProperty('--app-surface-2', c.surfaceHover || c.surface); s.setProperty('--app-surface-hover', c.surfaceHover || c.surface); }
-  if (c.text)       { s.setProperty('--app-text', c.text); }
-  if (c.textMuted)  { s.setProperty('--app-text-muted', c.textMuted); s.setProperty('--app-text-faint', c.textMuted); }
+  if (c.text)       { s.setProperty('--app-foreground', c.text); }
+  if (c.textMuted)  { s.setProperty('--app-muted-foreground', c.textMuted); s.setProperty('--app-muted-foreground', c.textMuted); }
   if (c.border)     { s.setProperty('--app-border', c.border); s.setProperty('--app-border-strong', c.border); }
   // Sidebar (derived from colors)
   if (c.bg)         { s.setProperty('--app-sidebar-bg', c.bg); }

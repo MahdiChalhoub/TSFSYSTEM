@@ -531,7 +531,14 @@ const DajingoRowInner = React.memo(function DajingoRowInner<T>({
   }
 
   return (
-    <div>
+    /*  Scroll perf — `content-visibility: auto` lets the browser skip layout
+     *  + paint for rows scrolled out of the viewport, so a 50-row × 15-col
+     *  page only ever paints the ~10 rows actually on screen. The
+     *  `contain-intrinsic-size` is the placeholder height the browser uses
+     *  before it has measured the row; pick a value close to typical row
+     *  height so the scrollbar doesn't jitter on first scroll. Once the row
+     *  has been painted once, the browser remembers its real size. */
+    <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 40px' }}>
       {/* ── MOBILE CARD ── */}
       {renderMobileCard ? (
         <div className="sm:hidden">

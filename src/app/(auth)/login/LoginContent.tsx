@@ -150,12 +150,12 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                     {/* Title */}
                     <div className="space-y-3">
                         <h1 className="text-5xl font-black tracking-tight leading-tight"
-                            style={{ color: 'var(--app-text, #fff)' }}
+                            style={{ color: 'var(--app-foreground, #fff)' }}
                         >
                             {displayTitle}
                         </h1>
                         <p className="text-lg max-w-lg leading-relaxed"
-                            style={{ color: 'var(--app-text-muted, #94a3b8)' }}
+                            style={{ color: 'var(--app-muted-foreground, #94a3b8)' }}
                         >
                             {displaySubtitle}
                         </p>
@@ -166,23 +166,23 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: brandColor }} />
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]"
-                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                             >
                                 Secured
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--app-text-muted, #64748b)' }} />
+                            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--app-muted-foreground, #64748b)' }} />
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]"
-                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                             >
                                 Encrypted
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--app-text-muted, #64748b)' }} />
+                            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--app-muted-foreground, #64748b)' }} />
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]"
-                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                             >
                                 Multi-Tenant
                             </span>
@@ -219,7 +219,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                 {displayTitle.charAt(0)}
                             </div>
                         )}
-                        <h2 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-text, #fff)' }}>{displayTitle}</h2>
+                        <h2 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-foreground, #fff)' }}>{displayTitle}</h2>
                     </div>
 
                     {/* Welcome Header */}
@@ -234,10 +234,10 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                 <Fingerprint size={22} style={{ color: brandColor }} />
                             </div>
                         </div>
-                        <h2 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text, #fff)' }}>
+                        <h2 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground, #fff)' }}>
                             Welcome Back
                         </h2>
-                        <p className="text-sm" style={{ color: 'var(--app-text-muted, #94a3b8)' }}>
+                        <p className="text-sm" style={{ color: 'var(--app-muted-foreground, #94a3b8)' }}>
                             Enter your credentials to access the workspace.
                         </p>
                     </div>
@@ -273,11 +273,11 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
 
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest"
-                                        style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                        style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                     >Verification Code</Label>
                                     <div className="relative">
                                         <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2" size={18}
-                                            style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                            style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                         />
                                         <Input
                                             name="otp_token"
@@ -288,12 +288,12 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                             style={{
                                                 background: 'var(--app-bg, #0f172a)',
                                                 border: `2px solid color-mix(in srgb, ${brandColor} 30%, var(--app-border, #1e293b))`,
-                                                color: 'var(--app-text, #fff)',
+                                                color: 'var(--app-foreground, #fff)',
                                             }}
                                         />
                                     </div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-center mt-2"
-                                        style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                        style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                     >
                                         Enter the verification code from your device
                                     </p>
@@ -319,9 +319,9 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                 <div className="text-center">
                                     <button type="button" onClick={() => window.location.reload()}
                                         className="text-xs font-bold uppercase tracking-widest transition-colors"
-                                        style={{ color: 'var(--app-text-muted, #64748b)' }}
-                                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-text, #fff)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted, #64748b)'; }}
+                                        style={{ color: 'var(--app-muted-foreground, #64748b)' }}
+                                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-foreground, #fff)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground, #64748b)'; }}
                                     >
                                         Cancel & Restart
                                     </button>
@@ -335,11 +335,11 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                     {isRoot && (
                                         <div className="space-y-2 animate-in fade-in duration-300">
                                             <Label className="text-[10px] font-black uppercase tracking-widest"
-                                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                             >Workspace</Label>
                                             <div className="relative group">
                                                 <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors" size={18}
-                                                    style={{ color: focusedField === 'slug' ? brandColor : 'var(--app-text-muted, #64748b)' }}
+                                                    style={{ color: focusedField === 'slug' ? brandColor : 'var(--app-muted-foreground, #64748b)' }}
                                                 />
                                                 <Input
                                                     id="slug"
@@ -353,18 +353,18 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                     style={{
                                                         background: 'var(--app-bg, #0f172a)',
                                                         border: `2px solid ${focusedField === 'slug' ? `color-mix(in srgb, ${brandColor} 50%, transparent)` : 'var(--app-border, #1e293b)'}`,
-                                                        color: 'var(--app-text, #fff)',
+                                                        color: 'var(--app-foreground, #fff)',
                                                         boxShadow: focusedField === 'slug' ? `0 0 0 3px color-mix(in srgb, ${brandColor} 10%, transparent)` : 'none',
                                                     }}
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-mono select-none"
-                                                    style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                    style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                                 >
                                                     {branding.suffix}
                                                 </div>
                                             </div>
                                             <p className="text-[10px] font-bold uppercase tracking-wider"
-                                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                             >
                                                 Don't have a workspace?{' '}
                                                 <a href="/register/business" className="font-black underline underline-offset-2 transition-colors"
@@ -379,11 +379,11 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                     {/* Username */}
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase tracking-widest"
-                                            style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                            style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                         >Username</Label>
                                         <div className="relative">
                                             <User className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors" size={18}
-                                                style={{ color: focusedField === 'username' ? brandColor : 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: focusedField === 'username' ? brandColor : 'var(--app-muted-foreground, #64748b)' }}
                                             />
                                             <Input
                                                 name="username"
@@ -395,7 +395,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                 style={{
                                                     background: 'var(--app-bg, #0f172a)',
                                                     border: `2px solid ${focusedField === 'username' ? `color-mix(in srgb, ${brandColor} 50%, transparent)` : 'var(--app-border, #1e293b)'}`,
-                                                    color: 'var(--app-text, #fff)',
+                                                    color: 'var(--app-foreground, #fff)',
                                                     boxShadow: focusedField === 'username' ? `0 0 0 3px color-mix(in srgb, ${brandColor} 10%, transparent)` : 'none',
                                                 }}
                                             />
@@ -411,7 +411,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-[10px] font-black uppercase tracking-widest"
-                                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                             >Password</Label>
                                             <a href="/forgot-password"
                                                 className="text-[10px] font-black uppercase tracking-widest transition-colors"
@@ -422,7 +422,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                         </div>
                                         <div className="relative">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors" size={18}
-                                                style={{ color: focusedField === 'password' ? brandColor : 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: focusedField === 'password' ? brandColor : 'var(--app-muted-foreground, #64748b)' }}
                                             />
                                             <Input
                                                 name="password"
@@ -434,7 +434,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                 style={{
                                                     background: 'var(--app-bg, #0f172a)',
                                                     border: `2px solid ${focusedField === 'password' ? `color-mix(in srgb, ${brandColor} 50%, transparent)` : 'var(--app-border, #1e293b)'}`,
-                                                    color: 'var(--app-text, #fff)',
+                                                    color: 'var(--app-foreground, #fff)',
                                                     boxShadow: focusedField === 'password' ? `0 0 0 3px color-mix(in srgb, ${brandColor} 10%, transparent)` : 'none',
                                                 }}
                                             />
@@ -442,7 +442,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors"
-                                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                             >
                                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                             </button>
@@ -453,7 +453,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                     {!isRoot && sites.length > 0 && (
                                         <div className="space-y-2 animate-in fade-in duration-300">
                                             <Label className="text-[10px] font-black uppercase tracking-widest"
-                                                style={{ color: 'var(--app-text-muted, #64748b)' }}
+                                                style={{ color: 'var(--app-muted-foreground, #64748b)' }}
                                             >Site Location</Label>
                                             <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
                                                 <SelectTrigger
@@ -461,7 +461,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                     style={{
                                                         background: 'var(--app-bg, #0f172a)',
                                                         border: '2px solid var(--app-border, #1e293b)',
-                                                        color: 'var(--app-text, #fff)',
+                                                        color: 'var(--app-foreground, #fff)',
                                                     }}
                                                 >
                                                     <SelectValue placeholder="Select Base" />
@@ -471,7 +471,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                                     style={{
                                                         background: 'var(--app-surface, #111827)',
                                                         border: '1px solid var(--app-border, #1e293b)',
-                                                        color: 'var(--app-text, #fff)',
+                                                        color: 'var(--app-foreground, #fff)',
                                                     }}
                                                 >
                                                     {sites.map((s: Record<string, any>) => (
@@ -520,7 +520,7 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                                         Register My Business
                                     </Button>
                                 </a>
-                                <p className="text-center text-[10px]" style={{ color: 'var(--app-text-muted, #64748b)' }}>
+                                <p className="text-center text-[10px]" style={{ color: 'var(--app-muted-foreground, #64748b)' }}>
                                     Need access to an existing business?{' '}
                                     <a href="/register/user" className="font-bold underline underline-offset-2" style={{ color: brandColor }}>
                                         Request Employee Access
@@ -556,15 +556,15 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                             }}
                             className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-lg transition-all hover:opacity-80"
                             style={{
-                                color: 'var(--app-text-muted, #64748b)',
-                                background: 'color-mix(in srgb, var(--app-text-muted, #64748b) 8%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--app-text-muted, #64748b) 15%, transparent)',
+                                color: 'var(--app-muted-foreground, #64748b)',
+                                background: 'color-mix(in srgb, var(--app-muted-foreground, #64748b) 8%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-muted-foreground, #64748b) 15%, transparent)',
                             }}
                         >
                             🗑️ Clear Session &amp; Cookies
                         </button>
                         <p className="text-[9px] font-bold uppercase tracking-[0.15em]"
-                            style={{ color: 'var(--app-text-muted, #475569)' }}
+                            style={{ color: 'var(--app-muted-foreground, #475569)' }}
                         >
                             Powered by {PLATFORM_CONFIG.name} · End-to-End Encrypted
                         </p>

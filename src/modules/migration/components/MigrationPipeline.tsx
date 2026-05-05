@@ -58,7 +58,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
         <Card className="bg-app-surface border-app-border backdrop-blur-xl">
             <CardContent className="py-4 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
-                <span className="text-app-text-faint font-bold text-xs">Loading pipeline...</span>
+                <span className="text-app-muted-foreground font-bold text-xs">Loading pipeline...</span>
             </CardContent>
         </Card>
     )
@@ -81,7 +81,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                         <Loader2 className="w-3.5 h-3.5 text-gray-300 animate-spin" />
                         <span className="text-gray-300 font-medium text-xs">Waiting for pipeline data...</span>
                     </div>
-                    <button onClick={fetchPipeline} className="text-[10px] text-app-text-faint hover:text-app-text-muted font-bold uppercase tracking-wider">
+                    <button onClick={fetchPipeline} className="text-[10px] text-app-muted-foreground hover:text-app-muted-foreground font-bold uppercase tracking-wider">
                         Retry
                     </button>
                 </CardContent>
@@ -97,7 +97,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
         <Card className="bg-app-surface border-app-border shadow-sm overflow-hidden">
             <CardHeader className="pb-2 bg-app-bg border-b border-app-border">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-app-text-faint flex items-center gap-2">
+                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
                         <Database className="w-3.5 h-3.5" />
                         Import Pipeline — {completedCount}/{totalSteps} steps
                     </CardTitle>
@@ -144,14 +144,14 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                             </div>
                             {/* Step label + sub-progress */}
                             <div className="flex flex-col min-w-0">
-                                <span className={`text-[11px] font-bold truncate ${step.status === 'completed' ? 'text-app-text-faint'
+                                <span className={`text-[11px] font-bold truncate ${step.status === 'completed' ? 'text-app-muted-foreground'
                                     : step.status === 'running' ? 'text-blue-700 font-black'
                                         : 'text-gray-300'
                                     }`}>
                                     {step.label.replace('Importing ', '').replace('Linking ', '')}
                                 </span>
                                 {step.status === 'running' && pipeline.current_step_detail && (
-                                    <span className="text-[9px] text-app-text-faint font-mono truncate">
+                                    <span className="text-[9px] text-app-muted-foreground font-mono truncate">
                                         {pipeline.current_step_detail}
                                     </span>
                                 )}
@@ -167,7 +167,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                             <p className="text-amber-600 text-xs font-black uppercase tracking-wider">
                                 Import stopped at step {completedCount + 1}/{totalSteps}
                             </p>
-                            <p className="text-app-text-faint text-[10px] mt-0.5 font-bold">
+                            <p className="text-app-muted-foreground text-[10px] mt-0.5 font-bold">
                                 {completedCount} steps completed. You can resume from where it stopped.
                             </p>
                         </div>

@@ -75,7 +75,7 @@ export function LayoutShellGateway(props: Props) {
 
     // Desktop shell — identical layout to what was in layout.tsx before
     return (
-        <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
+        <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-foreground)' }}>
             <Sidebar
                 isSaas={props.isSaas}
                 isSuperuser={props.user?.is_superuser || false}

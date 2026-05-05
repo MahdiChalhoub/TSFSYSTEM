@@ -51,13 +51,13 @@ export function WorkspacePanel({
           <ChevronRight size={16} />
         </Button>
         {icon && (
-          <div className="text-app-text-muted">
+          <div className="text-app-muted-foreground">
             {icon}
           </div>
         )}
         {title && (
           <div
-            className="writing-mode-vertical-rl text-xs font-bold text-app-text-muted uppercase tracking-wider"
+            className="writing-mode-vertical-rl text-xs font-bold text-app-muted-foreground uppercase tracking-wider"
             style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
           >
             {title}
@@ -75,7 +75,7 @@ export function WorkspacePanel({
           <div className="flex items-center gap-2">
             {icon}
             {title && (
-              <h3 className="text-sm font-bold text-app-text">{title}</h3>
+              <h3 className="text-sm font-bold text-app-foreground">{title}</h3>
             )}
           </div>
           <div className="flex items-center gap-2">

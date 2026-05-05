@@ -147,10 +147,10 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                         <Zap size={16} style={{ color: 'var(--app-warning, #f59e0b)' }} />
                     </div>
                     <div>
-                        <p className="text-sm font-black" style={{ color: 'var(--app-text)' }}>
+                        <p className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>
                             Express Lane
                         </p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>
                             {registerConfig?.siteName || 'Fast Checkout'}
                         </p>
                     </div>
@@ -173,7 +173,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                     {/* Scan bar */}
                     <div className="px-4 pt-4 pb-2 flex-shrink-0">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-muted-foreground)' }} />
                             <input
                                 type="text"
                                 autoFocus
@@ -184,7 +184,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                 style={{
                                     background: 'var(--app-surface)',
                                     border: '2px solid var(--app-border)',
-                                    color: 'var(--app-text)',
+                                    color: 'var(--app-foreground)',
                                 }}
                                 onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--app-primary)'; }}
                                 onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}
@@ -193,7 +193,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                 <button
                                     onClick={() => onSetSearchQuery('')}
                                     className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    style={{ color: 'var(--app-text-muted)' }}
+                                    style={{ color: 'var(--app-muted-foreground)' }}
                                 >
                                     <X size={16} />
                                 </button>
@@ -230,7 +230,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                     {/* Cart — takes remaining height */}
                     <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
                         {cart.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: 'var(--app-text-muted)' }}>
+                            <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <Zap size={40} strokeWidth={1} />
                                 <p className="text-sm font-bold">Scan items for express checkout</p>
                             </div>
@@ -248,8 +248,8 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                         }}
                                     >
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-black truncate" style={{ color: 'var(--app-text)' }}>{item.name}</p>
-                                            <p className="text-xs font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                                            <p className="text-sm font-black truncate" style={{ color: 'var(--app-foreground)' }}>{item.name}</p>
+                                            <p className="text-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 {currency}{Number(item.price).toFixed(2)} each
                                             </p>
                                         </div>
@@ -258,11 +258,11 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                             <button
                                                 onClick={() => handleProtectedQuantity(item.productId, -1)}
                                                 className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                                style={{ background: 'var(--app-bg)', color: 'var(--app-text-muted)' }}
+                                                style={{ background: 'var(--app-bg)', color: 'var(--app-muted-foreground)' }}
                                             >
                                                 <Minus size={12} />
                                             </button>
-                                            <span className="w-7 text-center text-sm font-black tabular-nums" style={{ color: 'var(--app-text)' }}>
+                                            <span className="w-7 text-center text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
                                                 {item.quantity}
                                             </span>
                                             <button
@@ -314,7 +314,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all"
                                     style={{
                                         background: isActive ? 'var(--app-primary)' : 'var(--app-surface)',
-                                        color: isActive ? '#fff' : isLinked ? 'var(--app-text-muted)' : 'var(--app-text-muted)',
+                                        color: isActive ? '#fff' : isLinked ? 'var(--app-muted-foreground)' : 'var(--app-muted-foreground)',
                                         border: `1px solid ${isActive ? 'var(--app-primary)' : 'var(--app-border)'}`,
                                         opacity: isLinked ? 1 : 0.4,
                                     }}
@@ -331,7 +331,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                         {/* Received + Charge */}
                         <div className="flex gap-3">
                             <div className="flex-1 relative">
-                                <span className="absolute left-3 top-1.5 text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                                <span className="absolute left-3 top-1.5 text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Received
                                 </span>
                                 <input
@@ -346,7 +346,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                     style={{
                                         background: 'var(--app-surface)',
                                         border: '2px solid var(--app-border)',
-                                        color: 'var(--app-text)',
+                                        color: 'var(--app-foreground)',
                                     }}
                                     onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--app-primary)'; }}
                                     onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}
@@ -358,7 +358,7 @@ export function POSLayoutExpress(props: POSLayoutProps) {
                                 className="flex-1 rounded-xl flex flex-col items-center justify-center transition-all active:scale-[0.98]"
                                 style={{
                                     background: cart.length > 0 && !isProcessing ? 'var(--app-primary)' : 'var(--app-surface-2, var(--app-bg))',
-                                    color: cart.length > 0 && !isProcessing ? '#fff' : 'var(--app-text-muted)',
+                                    color: cart.length > 0 && !isProcessing ? '#fff' : 'var(--app-muted-foreground)',
                                     boxShadow: cart.length > 0 && !isProcessing ? '0 8px 24px var(--app-primary-glow, rgba(99,102,241,0.3))' : 'none',
                                 }}
                             >

@@ -111,9 +111,9 @@ export default function ContactFormPage({
   const typeLabel = type === 'CUSTOMER' ? 'Customer' : type === 'SUPPLIER' ? 'Supplier' : type === 'BOTH' ? 'Client + Supplier' : type === 'SERVICE' ? 'Service Provider' : type === 'LEAD' ? 'Lead' : 'Contact';
 
   /* ── shared field style ── */
-  const fieldCls = "w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--app-bg)] border border-[var(--app-border)] focus:border-[var(--app-primary)] focus:ring-2 focus:ring-[var(--app-primary)]30 outline-none transition-all font-semibold text-[var(--app-text)] text-sm";
-  const labelCls = "block text-[0.5625rem] font-bold uppercase tracking-[0.08em] text-[var(--app-text-muted)] mb-1.5 ml-0.5";
-  const iconCls: React.CSSProperties = { position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-text-faint)' };
+  const fieldCls = "w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--app-bg)] border border-[var(--app-border)] focus:border-[var(--app-primary)] focus:ring-2 focus:ring-[var(--app-primary)]30 outline-none transition-all font-semibold text-[var(--app-foreground)] text-sm";
+  const labelCls = "block text-[0.5625rem] font-bold uppercase tracking-[0.08em] text-[var(--app-muted-foreground)] mb-1.5 ml-0.5";
+  const iconCls: React.CSSProperties = { position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--app-muted-foreground)' };
 
   return (
     <div className="app-page" style={{ padding: 'clamp(0.75rem, 2vw, 1.5rem)' }}>
@@ -125,7 +125,7 @@ export default function ContactFormPage({
             width: '2.25rem', height: '2.25rem', borderRadius: 'var(--app-radius-sm)',
             background: 'var(--app-surface)', border: '1px solid var(--app-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: 'var(--app-text-muted)', flexShrink: 0,
+            cursor: 'pointer', color: 'var(--app-muted-foreground)', flexShrink: 0,
           }}
         >
           <ArrowLeft size={16} />
@@ -139,7 +139,7 @@ export default function ContactFormPage({
         <div>
           <h1 style={{
             fontSize: 'clamp(1.125rem, 2vw, 1.5rem)', fontWeight: 800,
-            color: 'var(--app-text)', letterSpacing: '-0.03em',
+            color: 'var(--app-foreground)', letterSpacing: '-0.03em',
           }}>
             {isEdit ? 'Edit' : 'Create'} <span style={{ color: 'var(--app-primary)' }}>{typeLabel}</span>
           </h1>
@@ -180,7 +180,7 @@ export default function ContactFormPage({
                     padding: '0.5rem', borderRadius: 'calc(var(--app-radius-sm) - 0.125rem)',
                     fontSize: '0.8125rem', fontWeight: entityType === et ? 700 : 500,
                     background: entityType === et ? 'var(--app-primary)' : 'transparent',
-                    color: entityType === et ? '#fff' : 'var(--app-text-muted)',
+                    color: entityType === et ? '#fff' : 'var(--app-muted-foreground)',
                     border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                   }}
                 >
@@ -369,7 +369,7 @@ export default function ContactFormPage({
                 <p style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--app-primary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Autonomous Ledger Automation
                 </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--app-text-muted)', marginTop: '0.25rem', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', marginTop: '0.25rem', lineHeight: 1.5 }}>
                   Creating this contact will automatically propagate a sub-account in the General Ledger for accurate balance tracking.
                 </p>
               </div>
@@ -388,7 +388,7 @@ export default function ContactFormPage({
               style={{
                 padding: '0.5rem 1.25rem', borderRadius: 'var(--app-radius-sm)',
                 fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer',
-                background: 'var(--app-surface)', color: 'var(--app-text-muted)',
+                background: 'var(--app-surface)', color: 'var(--app-muted-foreground)',
                 border: '1px solid var(--app-border)',
               }}
             >

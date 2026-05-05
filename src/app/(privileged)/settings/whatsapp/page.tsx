@@ -243,7 +243,7 @@ export default function WhatsappSettingsPage() {
  disabled={isPending}
  className="h-12 px-8 flex items-center gap-2 bg-app-primary hover:bg-app-success text-app-foreground font-bold rounded-2xl transition-all disabled:opacity-50"
  >
- {isPending ? <div className="w-5 h-5 border-2 border-app-text/30 border-t-white rounded-full animate-spin" /> : <Save size={20} />}
+ {isPending ? <div className="w-5 h-5 border-2 border-app-foreground/30 border-t-white rounded-full animate-spin" /> : <Save size={20} />}
  Save Configuration
  </button>
  </div>

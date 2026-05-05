@@ -75,7 +75,7 @@ function AppearancePageInner() {
   const totalThemes = systemThemes.length + customThemes.length
 
   return (
-    <div className="min-h-full" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
+    <div className="min-h-full" style={{ background: 'var(--app-bg)', color: 'var(--app-foreground)' }}>
 
       {/* ── Page Header ─────────────────────────────────────────── */}
       <div className="px-8 pt-8 pb-6" style={{ borderBottom: '1px solid var(--app-border)' }}>
@@ -84,7 +84,7 @@ function AppearancePageInner() {
             <Palette size={20} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Settings</p>
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Settings</p>
             <h1 className="text-2xl font-black tracking-tight">Appearance <span style={{ color: 'var(--app-primary)' }}>&amp; Themes</span></h1>
           </div>
 
@@ -124,7 +124,7 @@ function AppearancePageInner() {
                 color: 'var(--app-primary)',
                 border: '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)',
               } : {
-                color: 'var(--app-text-muted)',
+                color: 'var(--app-muted-foreground)',
                 border: '1px solid transparent',
               }}
             >
@@ -152,10 +152,10 @@ function AppearancePageInner() {
                 style={{
                   background: 'var(--app-surface)',
                   border: '1px solid var(--app-border)',
-                  color: 'var(--app-text)',
+                  color: 'var(--app-foreground)',
                 }}
               />
-              <span className="text-sm" style={{ color: 'var(--app-text-muted)' }}>
+              <span className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                 {isLoading ? 'Loading...' : `${totalThemes} themes`}
               </span>
             </div>
@@ -170,7 +170,7 @@ function AppearancePageInner() {
 
             {!isLoading && Object.entries(allGrouped).map(([cat, themes]) => (
               <div key={cat}>
-                <h3 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-text-muted)' }}>
+                <h3 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
                   {CATEGORY_LABELS[cat] || cat}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -228,7 +228,7 @@ function AppearancePageInner() {
             ))}
 
             {!isLoading && Object.keys(allGrouped).length === 0 && (
-              <div className="text-center py-16" style={{ color: 'var(--app-text-muted)' }}>
+              <div className="text-center py-16" style={{ color: 'var(--app-muted-foreground)' }}>
                 <Sparkles size={32} className="mx-auto mb-3 opacity-30" />
                 <p className="font-semibold">No themes found</p>
                 <p className="text-sm mt-1">Try a different search term</p>
@@ -242,7 +242,7 @@ function AppearancePageInner() {
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold mb-1">Design Language</h2>
-              <p className="text-sm" style={{ color: 'var(--app-text-muted)' }}>
+              <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                 Controls <strong>component shapes, spacing and corner radius</strong> across the whole app — independent of the color theme. Click a card to apply it.
               </p>
             </div>
@@ -273,7 +273,7 @@ function AppearancePageInner() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-sm">{system.name}</span>
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-muted)' }}>
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'var(--app-surface-2)', color: 'var(--app-muted-foreground)' }}>
                             {meta.badge}
                           </span>
                           {isActive && (
@@ -282,7 +282,7 @@ function AppearancePageInner() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--app-text-muted)' }}>{meta.desc}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{meta.desc}</p>
                       </div>
                     </div>
 
@@ -295,7 +295,7 @@ function AppearancePageInner() {
                       </div>
                       {/* Simulated input */}
                       <div className="flex-1 h-7 border px-2 flex items-center text-[10px]"
-                        style={{ borderRadius: meta.btnRadius, borderColor: 'var(--app-border)', color: 'var(--app-text-muted)', background: 'var(--app-surface)' }}>
+                        style={{ borderRadius: meta.btnRadius, borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)', background: 'var(--app-surface)' }}>
                         Input field
                       </div>
                       {/* Simulated badge */}
@@ -316,7 +316,7 @@ function AppearancePageInner() {
           <div className="space-y-6 max-w-lg">
             <div>
               <h2 className="text-lg font-bold mb-1">Color Mode</h2>
-              <p className="text-sm" style={{ color: 'var(--app-text-muted)' }}>
+              <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                 Controls light/dark rendering across all pages.
               </p>
             </div>
@@ -341,10 +341,10 @@ function AppearancePageInner() {
                       border: '2px solid var(--app-border)',
                     }}
                   >
-                    <opt.icon size={24} style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-text-muted)' }} />
+                    <opt.icon size={24} style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
                     <div className="text-center">
                       <p className="text-sm font-bold">{opt.label}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--app-text-muted)' }}>{opt.desc}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{opt.desc}</p>
                     </div>
                     {isActive && <Check size={14} style={{ color: 'var(--app-primary)' }} />}
                   </button>

@@ -86,20 +86,20 @@ export default function OnlineOnlyOverlay({
         .online-only-overlay__title {
           font-size: 1.35rem;
           font-weight: 700;
-          color: var(--app-text, #F1F5F9);
+          color: var(--app-foreground, #F1F5F9);
           margin: 0 0 0.5rem;
         }
 
         .online-only-overlay__message {
           font-size: 0.9rem;
-          color: var(--app-text-muted, #94A3B8);
+          color: var(--app-muted-foreground, #94A3B8);
           margin: 0 0 0.25rem;
           line-height: 1.5;
         }
 
         .online-only-overlay__hint {
           font-size: 0.8rem;
-          color: var(--app-text-faint, #64748B);
+          color: var(--app-muted-foreground, #64748B);
           margin: 0 0 1.5rem;
         }
 

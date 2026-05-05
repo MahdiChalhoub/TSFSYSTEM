@@ -81,7 +81,7 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
                         className={`p-1 rounded-lg transition-colors ${!hasChildren && 'invisible'}`}
-                        style={{ color: 'var(--app-text-muted)' }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
                     >
                         {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
@@ -95,11 +95,11 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
 
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="text-[13px] font-bold" style={{ color: 'var(--app-text)' }}>{unit.name}</h4>
+                            <h4 className="text-[13px] font-bold" style={{ color: 'var(--app-foreground)' }}>{unit.name}</h4>
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide" style={{
-                                background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
-                                color: 'var(--app-text-muted)',
-                                border: '1px solid color-mix(in srgb, var(--app-text-muted) 12%, transparent)',
+                                background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                                color: 'var(--app-muted-foreground)',
+                                border: '1px solid color-mix(in srgb, var(--app-muted-foreground) 12%, transparent)',
                             }}>
                                 {unit.code}
                             </span>
@@ -113,7 +113,7 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
                                 </span>
                             )}
                         </div>
-                        <div className="text-[11px] mt-0.5 flex flex-wrap gap-x-3" style={{ color: 'var(--app-text-muted)' }}>
+                        <div className="text-[11px] mt-0.5 flex flex-wrap gap-x-3" style={{ color: 'var(--app-muted-foreground)' }}>
                             <span>
                                 {level === 0
                                     ? `Base Unit (${unit.type || 'COUNT'})`
@@ -133,9 +133,9 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
                     <button
                         onClick={() => setIsEditOpen(true)}
                         className="p-1.5 rounded-lg transition-colors"
-                        style={{ color: 'var(--app-text-muted)' }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
                         onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Edit"
                     >
                         <Edit2 size={14} />
@@ -143,9 +143,9 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
                     <button
                         onClick={() => setIsAddChildOpen(true)}
                         className="p-1.5 rounded-lg transition-colors"
-                        style={{ color: 'var(--app-text-muted)' }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
                         onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-info, #3b82f6)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Add Child Unit"
                     >
                         <Plus size={14} />
@@ -154,9 +154,9 @@ function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey,
                         <button
                             onClick={handleDelete}
                             className="p-1.5 rounded-lg transition-colors"
-                            style={{ color: 'var(--app-text-muted)' }}
+                            style={{ color: 'var(--app-muted-foreground)' }}
                             onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
                             title="Delete"
                         >
                             <Trash2 size={14} />

@@ -128,16 +128,16 @@ export function ComparisonPanel({
         <div className="space-y-1">
           {/* Header Row */}
           <div className={`grid ${receiptData ? 'grid-cols-3' : 'grid-cols-2'} gap-4 pb-2 border-b border-app-border/30`}>
-            <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+            <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
               {systemData.label}
             </div>
             {receiptData && (
-              <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+              <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
                 {receiptData.label}
               </div>
             )}
             {physicalData && (
-              <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+              <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
                 {physicalData.label}
               </div>
             )}
@@ -158,7 +158,7 @@ export function ComparisonPanel({
               >
                 {/* System Value */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-app-text-muted uppercase tracking-wide">
+                  <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wide">
                     {field.label}
                   </p>
                   {editing && field.editable ? (
@@ -169,7 +169,7 @@ export function ComparisonPanel({
                       type={field.type === 'number' || field.type === 'currency' ? 'number' : 'text'}
                     />
                   ) : (
-                    <p className="text-sm font-bold text-app-text">
+                    <p className="text-sm font-bold text-app-foreground">
                       {formatValue(sysValue, field.type)}
                     </p>
                   )}
@@ -178,7 +178,7 @@ export function ComparisonPanel({
                 {/* Receipt Value (if exists) */}
                 {receiptData && receiptData.fields[idx] && (
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-app-text-muted uppercase tracking-wide opacity-0">
+                    <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wide opacity-0">
                       {field.label}
                     </p>
                     <p className="text-sm font-semibold text-blue-600">
@@ -189,7 +189,7 @@ export function ComparisonPanel({
 
                 {/* Physical Value */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-app-text-muted uppercase tracking-wide opacity-0">
+                  <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wide opacity-0">
                     {field.label}
                   </p>
                   <div className="flex items-center gap-2">

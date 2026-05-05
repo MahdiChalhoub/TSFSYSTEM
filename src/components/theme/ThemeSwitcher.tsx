@@ -5,7 +5,7 @@
  *
  * FIXED BUGS (April 2026):
  * 1. All --theme-* CSS vars replaced with --app-* (the actual vars set by UnifiedThemeEngine)
- * 2. Inconsistent --theme-muted vs --theme-text-muted unified to --app-text-muted
+ * 2. Inconsistent --theme-muted vs --text-app-muted-foreground unified to --app-muted-foreground
  * 3. Active theme comparison unified to slug (was id in expanded, slug in dropdown)
  * 4. Color preview now respects current colorMode (was hardcoded to dark)
  * 5. Empty categories skipped in dropdown (was only guarded in expanded view)
@@ -119,10 +119,10 @@ export function ThemeSwitcher({
         <p className="text-sm font-semibold" style={{ color: 'var(--app-error)' }}>
           ⚠️ Theme System Error
         </p>
-        <p className="text-xs mt-1" style={{ color: 'var(--app-text-muted)' }}>
+        <p className="text-xs mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
           No themes loaded from backend. Check console for errors.
         </p>
-        <p className="text-xs mt-2 font-mono" style={{ color: 'var(--app-text-muted)' }}>
+        <p className="text-xs mt-2 font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
           systemThemes: {systemThemes.length}, customThemes: {customThemes.length}
         </p>
       </div>
@@ -143,8 +143,8 @@ export function ThemeSwitcher({
             border: '1px solid var(--app-border)',
           }}>
           <div>
-            <h3 className="font-semibold" style={{ color: 'var(--app-text)' }}>Color Mode</h3>
-            <p className="text-sm" style={{ color: 'var(--app-text-muted)' }}>Switch between dark and light mode</p>
+            <h3 className="font-semibold" style={{ color: 'var(--app-foreground)' }}>Color Mode</h3>
+            <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>Switch between dark and light mode</p>
           </div>
           <Button
             variant="outline"
@@ -171,7 +171,7 @@ export function ThemeSwitcher({
           {categories.map((category) => (
             <div key={category.id}>
               <h3 className="text-sm font-semibold uppercase tracking-wider mb-3"
-                style={{ color: 'var(--app-text-muted)' }}>
+                style={{ color: 'var(--app-muted-foreground)' }}>
                 {category.name}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -197,10 +197,10 @@ export function ThemeSwitcher({
                         </div>
                       )}
                       <div className="text-left">
-                        <h4 className="font-semibold mb-1" style={{ color: 'var(--app-text)' }}>
+                        <h4 className="font-semibold mb-1" style={{ color: 'var(--app-foreground)' }}>
                           {theme.name}
                         </h4>
-                        <p className="text-xs line-clamp-2" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-xs line-clamp-2" style={{ color: 'var(--app-muted-foreground)' }}>
                           {theme.description}
                         </p>
                       </div>
@@ -267,10 +267,10 @@ export function ThemeSwitcher({
                   background: 'var(--app-surface)',
                   borderBottom: '1px solid var(--app-border)',
                 }}>
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--app-text)' }}>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--app-foreground)' }}>
                   Choose Theme
                 </h3>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                   {systemThemes.length + customThemes.length} themes available
                 </p>
               </div>
@@ -280,7 +280,7 @@ export function ThemeSwitcher({
                 {categories.map((category) => (
                   <div key={category.id} className="mb-4">
                     <h4 className="text-xs font-semibold uppercase tracking-wider px-2 mb-2"
-                      style={{ color: 'var(--app-text-muted)' }}>
+                      style={{ color: 'var(--app-muted-foreground)' }}>
                       {category.name}
                     </h4>
                     <div className="space-y-1">
@@ -300,7 +300,7 @@ export function ThemeSwitcher({
                               background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
                               color: 'var(--app-primary)',
                             } : {
-                              color: 'var(--app-text)',
+                              color: 'var(--app-foreground)',
                             }}
                           >
                             {/* Color Preview — uses current colorMode */}
@@ -322,7 +322,7 @@ export function ThemeSwitcher({
                                   <Check className="h-4 w-4 flex-shrink-0" />
                                 )}
                               </div>
-                              <p className="text-xs truncate" style={{ color: 'var(--app-text-muted)' }}>
+                              <p className="text-xs truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {theme.description}
                               </p>
                             </div>
@@ -380,7 +380,7 @@ export function CompactThemeSwitcher() {
         style={{
           border: '1px solid var(--app-border)',
           background: 'var(--app-surface)',
-          color: 'var(--app-text)',
+          color: 'var(--app-foreground)',
         }}
       >
         {categories.map(cat => (
@@ -420,7 +420,7 @@ export function SimpleThemeSwitcher() {
       style={{
         border: '1px solid var(--app-border)',
         background: 'var(--app-surface)',
-        color: 'var(--app-text)',
+        color: 'var(--app-foreground)',
       }}
     >
       {categories.map(cat => (

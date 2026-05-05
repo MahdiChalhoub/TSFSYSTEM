@@ -88,10 +88,10 @@ export default function ListViewPoliciesPage() {
                         <Shield className="w-5 h-5" style={{ color: '#fff' }} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--app-text)', margin: 0 }}>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--app-foreground)', margin: 0 }}>
                             List View Governance
                         </h1>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--app-text-muted)', margin: 0 }}>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--app-muted-foreground)', margin: 0 }}>
                             Control which columns and filters each organization can see
                         </p>
                     </div>
@@ -118,7 +118,7 @@ export default function ListViewPoliciesPage() {
                 display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
             }}>
                 <AlertTriangle size={18} style={{ color: 'var(--app-primary)', marginTop: '2px', flexShrink: 0 }} />
-                <div style={{ fontSize: '0.8rem', color: 'var(--app-text)', lineHeight: 1.6 }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--app-foreground)', lineHeight: 1.6 }}>
                     <strong>How it works:</strong> Select a list view → see all fields →
                     toggle columns as <strong>Hidden</strong> or <strong>Forced</strong>,
                     toggle filters as <strong>Blocked</strong>.
@@ -130,7 +130,7 @@ export default function ListViewPoliciesPage() {
             <div style={{ position: 'relative', marginBottom: '1rem' }}>
                 <Search size={16} style={{
                     position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)',
-                    color: 'var(--app-text-muted)'
+                    color: 'var(--app-muted-foreground)'
                 }} />
                 <input
                     placeholder="Search policies..."
@@ -138,7 +138,7 @@ export default function ListViewPoliciesPage() {
                     style={{
                         width: '100%', padding: '0.625rem 0.75rem 0.625rem 2.25rem',
                         borderRadius: '0.75rem', border: '1px solid var(--app-border)',
-                        background: 'var(--app-surface)', color: 'var(--app-text)',
+                        background: 'var(--app-surface)', color: 'var(--app-foreground)',
                         fontSize: '0.85rem', outline: 'none',
                     }}
                 />
@@ -146,14 +146,14 @@ export default function ListViewPoliciesPage() {
 
             {/* ── Policy Cards ─── */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-text-muted)' }}>
+                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>
                     <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem' }} />
                     Loading...
                 </div>
             ) : filtered.length === 0 ? (
                 <div style={{
                     textAlign: 'center', padding: '3rem', borderRadius: '0.75rem',
-                    border: '1px dashed var(--app-border)', color: 'var(--app-text-muted)',
+                    border: '1px dashed var(--app-border)', color: 'var(--app-muted-foreground)',
                 }}>
                     <Shield size={40} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
                     <p style={{ fontWeight: 600 }}>No policies yet</p>
@@ -205,7 +205,7 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--app-text)' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--app-foreground)' }}>
                             {policy.view_key === '*' ? '🌐 Global Policy' : policy.view_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                         <span style={{
@@ -217,7 +217,7 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                         </span>
                     </div>
                     {policy.notes && (
-                        <p style={{ fontSize: '0.7rem', color: 'var(--app-text-muted)', margin: '0.15rem 0 0' }}>{policy.notes}</p>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--app-muted-foreground)', margin: '0.15rem 0 0' }}>{policy.notes}</p>
                     )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
@@ -232,8 +232,8 @@ function PolicyCard({ policy, expanded, onToggle, onEdit, onDelete }: {
                         title="Delete" style={{ ...iconBtnStyle, color: 'var(--app-error)' }}><Trash2 size={14} /></button>
                 </div>
                 {expanded
-                    ? <ChevronUp size={16} style={{ color: 'var(--app-text-muted)' }} />
-                    : <ChevronDown size={16} style={{ color: 'var(--app-text-muted)' }} />}
+                    ? <ChevronUp size={16} style={{ color: 'var(--app-muted-foreground)' }} />
+                    : <ChevronDown size={16} style={{ color: 'var(--app-muted-foreground)' }} />}
             </div>
             {expanded && (
                 <div style={{
@@ -265,7 +265,7 @@ function TagGroup({ title, items, color }: { title: string, items?: string[], co
                     <span key={i} style={{
                         fontSize: '0.65rem', padding: '0.12rem 0.4rem', borderRadius: '0.25rem',
                         background: 'var(--app-surface)', border: '1px solid var(--app-border)',
-                        fontFamily: 'monospace', color: 'var(--app-text)',
+                        fontFamily: 'monospace', color: 'var(--app-foreground)',
                     }}>{i}</span>
                 ))}
             </div>
@@ -275,5 +275,5 @@ function TagGroup({ title, items, color }: { title: string, items?: string[], co
 
 const iconBtnStyle: React.CSSProperties = {
     padding: '0.375rem', borderRadius: '0.375rem', border: 'none',
-    background: 'transparent', cursor: 'pointer', color: 'var(--app-text-muted)',
+    background: 'transparent', cursor: 'pointer', color: 'var(--app-muted-foreground)',
 }

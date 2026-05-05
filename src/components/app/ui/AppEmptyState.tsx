@@ -78,7 +78,7 @@ export function AppEmptyState({
             {/* Title */}
             <h3
                 className={compact ? 'text-sm font-black tracking-tight mb-1' : 'text-lg font-black tracking-tight mb-2'}
-                style={{ color: 'var(--app-text)' }}
+                style={{ color: 'var(--app-foreground)' }}
             >
                 {title}
             </h3>
@@ -87,7 +87,7 @@ export function AppEmptyState({
             {description && (
                 <p
                     className={compact ? 'text-xs font-medium mb-4 max-w-xs' : 'text-sm font-medium mb-6 max-w-sm'}
-                    style={{ color: 'var(--app-text-muted)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                 >
                     {description}
                 </p>

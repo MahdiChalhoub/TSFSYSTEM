@@ -58,7 +58,7 @@ function buildRootThemeCSS(colors: any, layout: any, components: any): string {
     return `:root{` +
         `--app-primary:${p};--app-primary-dark:${pd};--app-primary-light:${p}1f;--app-primary-glow:${p}59;` +
         `--app-bg:${bg};--app-surface:${sf};--app-surface-2:${sh};--app-surface-hover:${sh};` +
-        `--app-text:${tx};--app-text-muted:${mt};--app-text-faint:${mt};` +
+        `--app-foreground:${tx};--app-muted-foreground:${mt};--app-muted-foreground:${mt};` +
         `--app-border:${bd};--app-border-strong:${bd};` +
         `--app-sidebar-bg:${bg};--app-sidebar-surface:color-mix(in srgb,${p} 5%,${sf});` +
         `--app-sidebar-text:${tx};--app-sidebar-muted:${mt};` +

@@ -102,7 +102,7 @@ export default function HROverviewPage() {
  <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{employees.length}</h2>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-sm bg-app-gradient-primary overflow-hidden group hover:shadow-xl transition-all text-app-foreground">
+ <Card className="rounded-[2rem] border-0 shadow-sm bg-app-primary overflow-hidden group hover:shadow-xl transition-all text-app-foreground">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
  <div className="w-12 h-12 rounded-2xl bg-app-foreground/10 text-app-success flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
@@ -253,7 +253,7 @@ export default function HROverviewPage() {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {employees.map(emp => (
  <div key={emp.id} className="flex items-center gap-5 p-6 rounded-[2rem] bg-app-surface border border-app-border hover:shadow-lg transition-all group">
- <div className="w-16 h-16 rounded-[1.5rem] bg-app-gradient-primary-soft text-app-primary flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-app-foreground transition-all">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-soft text-app-primary flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-app-foreground transition-all">
  {emp.first_name?.[0]}{emp.last_name?.[0]}
  </div>
  <div className="flex-1 min-w-0">

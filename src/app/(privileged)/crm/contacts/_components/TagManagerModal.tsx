@@ -26,18 +26,18 @@ function TagRow({ tag, onDelete }: { tag: any; onDelete: (t: any) => void }) {
         width: '1rem', height: '1rem', borderRadius: '0.25rem',
         background: tag.color || '#6366F1', flexShrink: 0,
       }} />
-      <span style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--app-text)' }}>
+      <span style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--app-foreground)' }}>
         {tag.name}
       </span>
       <button
         onClick={() => onDelete(tag)}
         style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--app-text-faint)', padding: '0.1875rem',
+          color: 'var(--app-muted-foreground)', padding: '0.1875rem',
           borderRadius: '0.25rem', transition: 'color 0.1s',
         }}
         onMouseOver={e => e.currentTarget.style.color = 'var(--app-error)'}
-        onMouseOut={e => e.currentTarget.style.color = 'var(--app-text-faint)'}
+        onMouseOut={e => e.currentTarget.style.color = 'var(--app-muted-foreground)'}
       >
         <Trash2 size={12} />
       </button>
@@ -118,14 +118,14 @@ export function TagManagerModal({ isOpen, onClose, initialTags }: {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--app-text)' }}>Contact Categories</h3>
-            <p style={{ fontSize: '0.6875rem', color: 'var(--app-text-muted)', marginTop: '0.125rem' }}>
+            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--app-foreground)' }}>Contact Categories</h3>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--app-muted-foreground)', marginTop: '0.125rem' }}>
               Each parent type can have its own child categories
             </p>
           </div>
           <button onClick={onClose} style={{
             background: 'var(--app-surface-2)', border: 'none', cursor: 'pointer',
-            color: 'var(--app-text-muted)', padding: '0.375rem', borderRadius: '0.375rem',
+            color: 'var(--app-muted-foreground)', padding: '0.375rem', borderRadius: '0.375rem',
           }}>
             <X size={16} />
           </button>
@@ -140,14 +140,14 @@ export function TagManagerModal({ isOpen, onClose, initialTags }: {
               onKeyDown={e => e.key === 'Enter' && newTagName.trim() && handleCreateTag()}
               style={{
                 flex: 1, height: '2rem', fontSize: '0.8125rem', fontWeight: 600,
-                background: 'var(--app-surface)', color: 'var(--app-text)',
+                background: 'var(--app-surface)', color: 'var(--app-foreground)',
                 border: '1px solid var(--app-border)', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
                 padding: '0 0.625rem', outline: 'none', minWidth: '100px',
               }} />
             <select value={newTagType} onChange={e => setNewTagType(e.target.value)}
               style={{
                 height: '2rem', fontSize: '0.6875rem', fontWeight: 600,
-                background: 'var(--app-surface)', color: 'var(--app-text)',
+                background: 'var(--app-surface)', color: 'var(--app-foreground)',
                 border: '1px solid var(--app-border)', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
                 padding: '0 0.5rem', outline: 'none', appearance: 'none', WebkitAppearance: 'none',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
@@ -176,9 +176,9 @@ export function TagManagerModal({ isOpen, onClose, initialTags }: {
         <div style={{ overflowY: 'auto', maxHeight: '24rem' }}>
           {managedTags.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
-              <Tag size={28} style={{ color: 'var(--app-text-faint)', margin: '0 auto 0.5rem' }} />
-              <p style={{ fontSize: '0.875rem', color: 'var(--app-text-muted)', fontWeight: 600 }}>No categories yet</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--app-text-faint)', marginTop: '0.25rem' }}>
+              <Tag size={28} style={{ color: 'var(--app-muted-foreground)', margin: '0 auto 0.5rem' }} />
+              <p style={{ fontSize: '0.875rem', color: 'var(--app-muted-foreground)', fontWeight: 600 }}>No categories yet</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>
                 Create your first category above — pick a name, color, and parent type
               </p>
             </div>
@@ -186,7 +186,7 @@ export function TagManagerModal({ isOpen, onClose, initialTags }: {
             <div style={{ padding: '0.5rem' }}>
               {tagsByType['']?.length > 0 && (
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <div style={{ padding: '0.3125rem 0.5rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <div style={{ padding: '0.3125rem 0.5rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     ● Global (All Types)
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1875rem' }}>

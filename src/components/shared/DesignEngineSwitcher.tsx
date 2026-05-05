@@ -51,14 +51,14 @@ export function DesignEngineSwitcher({ className, showLabel = true }: DesignEngi
           {/* Dropdown Menu */}
           <div className="absolute right-0 mt-2 w-[500px] max-h-[600px] rounded-[var(--card-radius)] border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-50 overflow-hidden">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-[var(--theme-border)] bg-[var(--theme-bg)]">
+            <div className="px-4 py-3 border-b border-[var(--theme-border)] bg-[var(--bg-app-bg)]">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-[var(--theme-primary)]" />
-                <h3 className="text-sm font-semibold text-[var(--theme-text)]">
+                <h3 className="text-sm font-semibold text-[var(--text-app-foreground)]">
                   Design Engine
                 </h3>
               </div>
-              <p className="text-xs text-[var(--theme-text-muted)] mt-1">
+              <p className="text-xs text-[var(--text-app-muted-foreground)] mt-1">
                 Choose a design preset that controls colors, layout, components, and sidebar
               </p>
             </div>
@@ -68,7 +68,7 @@ export function DesignEngineSwitcher({ className, showLabel = true }: DesignEngi
               {Object.entries(presetsByCategory).map(([category, presets]) => (
                 <div key={category} className="mb-4">
                   {/* Category Header */}
-                  <h4 className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider mb-2 px-1">
+                  <h4 className="text-xs font-semibold text-[var(--text-app-muted-foreground)] uppercase tracking-wider mb-2 px-1">
                     {category}
                   </h4>
 
@@ -146,26 +146,26 @@ function PresetOption({ presetOption, isActive, onClick }: PresetOptionProps) {
         {/* Preset Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-[var(--theme-text)]">
+            <h4 className="text-sm font-semibold text-[var(--text-app-foreground)]">
               {presetOption.name}
             </h4>
             {isActive && (
               <Check className="h-4 w-4 text-[var(--theme-primary)] flex-shrink-0" />
             )}
           </div>
-          <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">
+          <p className="text-xs text-[var(--text-app-muted-foreground)] mt-0.5">
             {presetOption.description}
           </p>
 
           {/* Characteristics */}
           <div className="flex gap-2 mt-1.5 flex-wrap">
-            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--text-app-muted-foreground)] border border-[var(--theme-border)]">
               {presetOption.colors.mode}
             </span>
-            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--text-app-muted-foreground)] border border-[var(--theme-border)]">
               {presetOption.layout.density}
             </span>
-            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--text-app-muted-foreground)] border border-[var(--theme-border)]">
               {presetOption.navigation.position === 'hidden' ? 'fullscreen' : presetOption.navigation.position}
             </span>
           </div>

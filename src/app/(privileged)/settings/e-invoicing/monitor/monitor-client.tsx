@@ -160,8 +160,8 @@ export default function FNEMonitorClient() {
   <Zap size={12} /> Direction Générale des Impôts
   </span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
-  <div className="w-16 h-16 rounded-[1.8rem] bg-app-gradient-primary flex items-center justify-center shadow-2xl shadow-emerald-200">
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+  <div className="w-16 h-16 rounded-[1.8rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-emerald-200">
   <ShieldCheck size={32} className="text-white" />
   </div>
   FNE <span className="text-app-success">Monitor</span>
@@ -171,7 +171,7 @@ export default function FNEMonitorClient() {
   <button
   onClick={bulkRetryFailed}
   disabled={bulkRetrying || stats.failed === 0}
-  className="h-12 px-6 rounded-2xl bg-app-gradient-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+  className="h-12 px-6 rounded-2xl bg-app-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
   >
   {bulkRetrying ? <RefreshCw size={18} className="animate-spin" /> : <Shield size={18} />}
   {bulkRetrying ? 'Certification...' : `Retry All Failed (${stats.failed})`}
@@ -188,7 +188,7 @@ export default function FNEMonitorClient() {
  {/* KPI Cards */}
  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
  {[
- { label: 'Total Orders', value: stats.total, icon: <Shield size={20} />, bg: 'bg-app-surface', color: 'text-app-text' },
+ { label: 'Total Orders', value: stats.total, icon: <Shield size={20} />, bg: 'bg-app-surface', color: 'text-app-foreground' },
  { label: 'Certified', value: stats.certified, icon: <ShieldCheck size={20} />, bg: 'bg-app-success-bg', color: 'text-app-success', border: 'border-app-success' },
  { label: 'Failed', value: stats.failed, icon: <ShieldAlert size={20} />, bg: 'bg-app-error-bg', color: 'text-app-error', border: 'border-app-error' },
  { label: 'Pending', value: stats.pending, icon: <Clock size={20} />, bg: 'bg-app-warning-bg', color: 'text-app-warning', border: 'border-app-warning' },
@@ -287,12 +287,12 @@ export default function FNEMonitorClient() {
    </div>
   </td>
   <td className="p-4">
-   <Link href={`/sales/${order.id}`} className="flex items-center gap-1 text-sm font-bold text-app-text hover:text-app-primary transition-colors">
+   <Link href={`/sales/${order.id}`} className="flex items-center gap-1 text-sm font-bold text-app-foreground hover:text-app-primary transition-colors">
    {order.type === 'RETURN' ? '🔄 ' : ''}{order.invoice_number || order.ref_code || `#${order.id}`}
    <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition" />
    </Link>
   </td>
-  <td className="p-4 text-sm text-app-text-muted font-medium">{order.contact_name || 'Walk-In'}</td>
+  <td className="p-4 text-sm text-app-muted-foreground font-medium">{order.contact_name || 'Walk-In'}</td>
   <td className="p-4 text-xs text-app-muted-foreground">
    {order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}
   </td>
@@ -302,7 +302,7 @@ export default function FNEMonitorClient() {
    </Badge>
   </td>
   <td className="p-4 text-right">
-   <span className="text-sm font-black text-app-text tabular-nums">
+   <span className="text-sm font-black text-app-foreground tabular-nums">
    {fmt(parseFloat(String(order.total_amount || 0)))}
    </span>
   </td>

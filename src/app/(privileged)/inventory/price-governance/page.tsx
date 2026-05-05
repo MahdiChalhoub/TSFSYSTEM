@@ -135,7 +135,7 @@ export default function PriceGovernancePage() {
     }
 
     return (
-        <div className="min-h-screen layout-container-padding theme-bg">
+        <div className="min-h-screen layout-container-padding bg-app-bg">
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <div className="flex items-center gap-3 mb-2">
@@ -145,8 +145,8 @@ export default function PriceGovernancePage() {
                         <Shield size={20} />
                     </div>
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black theme-text">Price Governance</h1>
-                        <p className="text-sm theme-text-muted">
+                        <h1 className="text-3xl md:text-4xl font-black text-app-foreground">Price Governance</h1>
+                        <p className="text-sm text-app-muted-foreground">
                             Approval policies for automated price change governance
                         </p>
                     </div>
@@ -188,14 +188,14 @@ export default function PriceGovernancePage() {
                     className="rounded-xl p-5 mb-6 space-y-4"
                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}
                 >
-                    <h3 className="text-sm font-bold theme-text mb-3">
+                    <h3 className="text-sm font-bold text-app-foreground mb-3">
                         {editing ? `Edit: ${editing.name}` : 'New Approval Policy'}
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {/* Name */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Name</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Name</label>
                             <input
                                 value={form.name}
                                 onChange={e => setForm({ ...form, name: e.target.value })}
@@ -207,7 +207,7 @@ export default function PriceGovernancePage() {
 
                         {/* Priority */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Priority (lower = first)</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Priority (lower = first)</label>
                             <input
                                 type="number"
                                 value={form.priority}
@@ -219,7 +219,7 @@ export default function PriceGovernancePage() {
 
                         {/* Role */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Applies to Role</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Applies to Role</label>
                             <input
                                 value={form.applies_to_role}
                                 onChange={e => setForm({ ...form, applies_to_role: e.target.value })}
@@ -231,7 +231,7 @@ export default function PriceGovernancePage() {
 
                         {/* Max Delta % */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Max Price Δ %</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Max Price Δ %</label>
                             <input
                                 type="number"
                                 step="0.01"
@@ -245,7 +245,7 @@ export default function PriceGovernancePage() {
 
                         {/* Min Margin % */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Min Margin %</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Min Margin %</label>
                             <input
                                 type="number"
                                 step="0.01"
@@ -259,7 +259,7 @@ export default function PriceGovernancePage() {
 
                         {/* Max Amount */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Max Amount</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Max Amount</label>
                             <input
                                 type="number"
                                 step="0.01"
@@ -275,7 +275,7 @@ export default function PriceGovernancePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Action */}
                         <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider theme-text-muted mb-1 block">Action</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground mb-1 block">Action</label>
                             <select
                                 value={form.action}
                                 onChange={e => setForm({ ...form, action: e.target.value })}
@@ -307,7 +307,7 @@ export default function PriceGovernancePage() {
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={resetForm} className="px-4 py-2 rounded-lg text-sm font-medium theme-text-muted" style={{ background: 'var(--app-muted)' }}>
+                        <button type="button" onClick={resetForm} className="px-4 py-2 rounded-lg text-sm font-medium text-app-muted-foreground" style={{ background: 'var(--app-muted)' }}>
                             Cancel
                         </button>
                         <button type="submit" className="px-4 py-2 rounded-lg text-sm font-bold text-white" style={{ background: 'var(--app-primary)' }}>
@@ -324,9 +324,9 @@ export default function PriceGovernancePage() {
                 </div>
             ) : policies.length === 0 ? (
                 <div className="text-center py-20 rounded-xl" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <Shield size={40} className="mx-auto mb-3 theme-text-muted opacity-40" />
-                    <p className="text-sm font-bold theme-text-muted">No approval policies configured</p>
-                    <p className="text-xs theme-text-muted mt-1">
+                    <Shield size={40} className="mx-auto mb-3 text-app-muted-foreground opacity-40" />
+                    <p className="text-sm font-bold text-app-muted-foreground">No approval policies configured</p>
+                    <p className="text-xs text-app-muted-foreground mt-1">
                         All price changes will require manual review until you create policies
                     </p>
                 </div>
@@ -357,7 +357,7 @@ export default function PriceGovernancePage() {
 
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold theme-text">{p.name}</span>
+                                                <span className="text-sm font-bold text-app-foreground">{p.name}</span>
                                                 {!p.is_active && (
                                                     <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full" style={{
                                                         background: 'rgba(107,114,128,0.12)', color: 'var(--app-muted-foreground)',
@@ -429,7 +429,7 @@ export default function PriceGovernancePage() {
                                         </button>
                                         <button
                                             onClick={() => startEdit(p)}
-                                            className="p-2 rounded-lg transition-all hover:scale-110 theme-text-muted"
+                                            className="p-2 rounded-lg transition-all hover:scale-110 text-app-muted-foreground"
                                             title="Edit"
                                         >
                                             <Edit2 size={15} />

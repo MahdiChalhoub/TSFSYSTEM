@@ -57,8 +57,8 @@ export const PinStep = memo(function PinStep({ register, cashier, onVerified }: 
                 <div className="w-20 h-20 rounded-full bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/30 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-3 font-black text-2xl shadow-xl shadow-[var(--app-primary-glow)]">
                     {cashier.name.substring(0, 2).toUpperCase()}
                 </div>
-                <h2 className="text-2xl font-black text-[var(--app-text)]">{cashier.name}</h2>
-                <p className="text-[var(--app-text-muted)] text-sm mt-0.5">{register.name}</p>
+                <h2 className="text-2xl font-black text-[var(--app-foreground)]">{cashier.name}</h2>
+                <p className="text-[var(--app-muted-foreground)] text-sm mt-0.5">{register.name}</p>
             </div>
 
             {/* PIN dots */}
@@ -95,10 +95,10 @@ export const PinStep = memo(function PinStep({ register, cashier, onVerified }: 
                             key === '✓'
                                 ? pin.length >= 4
                                     ? 'bg-[var(--app-primary)] text-white shadow-xl shadow-[var(--app-primary-glow)] hover:shadow-[var(--app-primary-glow)]'
-                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] cursor-not-allowed'
+                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-muted-foreground)] cursor-not-allowed'
                                 : key === 'DEL'
                                     ? 'bg-[var(--app-error-bg)] text-[var(--app-error)] hover:bg-[var(--app-error-bg)]'
-                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] border border-[var(--app-border)]/50'
+                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-foreground)] hover:bg-[var(--app-surface-hover)] border border-[var(--app-border)]/50'
                         )}
                     >
                         {loading && key === '✓' ? <Loader2 size={18} className="animate-spin mx-auto" /> : key === 'DEL' ? <Delete size={18} className="mx-auto" /> : key}

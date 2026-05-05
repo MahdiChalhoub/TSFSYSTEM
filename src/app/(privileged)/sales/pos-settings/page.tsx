@@ -182,21 +182,21 @@ export default function POSSettingsPage() {
               <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                 <Monitor size={14} className="text-white" />
               </div>
-              <span className="text-[12px] font-black text-app-text hidden sm:inline">POS</span>
-              <span className="text-[10px] font-bold text-app-text-faint">{totalFiltered}/{stats.TOTAL}</span>
+              <span className="text-[12px] font-black text-app-foreground hidden sm:inline">POS</span>
+              <span className="text-[10px] font-bold text-app-muted-foreground">{totalFiltered}/{stats.TOTAL}</span>
             </div>
             <div className="flex-1 relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-text-faint" />
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
               <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search registers…"
-                className="w-full pl-8 pr-4 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-text placeholder:text-app-text-faint focus:bg-app-surface focus:border-app-border outline-none transition-all" />
+                className="w-full pl-8 pr-4 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
             </div>
             <button onClick={() => setIsAdding(true)}
               className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
               <Plus size={12} /><span className="hidden sm:inline">New</span>
             </button>
             <button onClick={() => setFocusMode(false)} title="Exit focus mode"
-              className="p-1.5 rounded-lg border border-app-border text-app-text-muted hover:text-app-text hover:bg-app-surface transition-all flex-shrink-0">
+              className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
               <Minimize2 size={13} />
             </button>
           </div>
@@ -208,29 +208,29 @@ export default function POSSettingsPage() {
                   <Monitor size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-text tracking-tight">POS Configuration</h1>
-                  <p className="text-[10px] md:text-[11px] font-bold text-app-text-faint uppercase tracking-widest">
+                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">POS Configuration</h1>
+                  <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     {stats.TOTAL} Registers · {stats.SITES} Sites
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <DraftIndicator savedAt={draftSavedAt} />
                     <button type="button" onClick={() => setShowOverlay(true)}
-                      className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-app-surface border border-app-border/50 text-app-text-muted hover:text-app-text transition-all"
+                      className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-app-surface border border-app-border/50 text-app-muted-foreground hover:text-app-foreground transition-all"
                       title="Keyboard shortcuts (?)">?</button>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
                 <button onClick={() => setShowUsers(true)} 
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <Key size={13} /><span className="hidden md:inline">Users & PINs</span>
                 </button>
                 <button onClick={() => setShowSettings(true)}
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <Settings2 size={13} /><span className="hidden md:inline">Global Rules</span>
                 </button>
                 <button onClick={load}
-                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <RefreshCcw size={13} /><span className="hidden md:inline">Refresh</span>
                 </button>
                 <button onClick={() => setIsAdding(true)}
@@ -239,7 +239,7 @@ export default function POSSettingsPage() {
                   <Plus size={14} /><span className="hidden sm:inline">New Register</span>
                 </button>
                 <button onClick={() => setFocusMode(true)} title="Focus mode"
-                  className="flex items-center gap-1 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <Maximize2 size={13} />
                 </button>
               </div>
@@ -269,7 +269,7 @@ export default function POSSettingsPage() {
                       <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isActive ? conf.color : 'var(--app-muted-foreground)' }}>
                         {conf.label}
                       </div>
-                      <div className="text-sm font-black text-app-text tabular-nums">{count}</div>
+                      <div className="text-sm font-black text-app-foreground tabular-nums">{count}</div>
                     </div>
                   </button>
                 )
@@ -279,10 +279,10 @@ export default function POSSettingsPage() {
             {/* Search Bar */}
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                 <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search by register name, branch, or cash account…"
-                  className="w-full pl-9 pr-4 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                  className="w-full pl-9 pr-4 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
               </div>
               {(searchQuery || activeFilter) && (
                 <button onClick={() => { setSearchQuery(''); setActiveFilter(null) }}
@@ -301,39 +301,39 @@ export default function POSSettingsPage() {
         <div className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
           style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderColor: 'var(--app-border)', borderLeft: '3px solid var(--app-primary)' }}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[12px] font-black text-app-text uppercase tracking-wider">New Register</h3>
+            <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">New Register</h3>
             <button onClick={() => setIsAdding(false)} className="p-1 hover:bg-app-border/50 rounded-lg transition-colors">
-              <X size={14} className="text-app-text-muted" />
+              <X size={14} className="text-app-muted-foreground" />
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 items-end">
             <div>
-              <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest mb-1 block">Name *</label>
+              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Name *</label>
               <input value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Caisse 1"
-                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint focus:border-app-primary/50 outline-none" />
+                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:border-app-primary/50 outline-none" />
             </div>
             <div>
-              <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest mb-1 block">Branch *</label>
+              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Branch *</label>
               <select value={createForm.siteId} onChange={e => { const v = +e.target.value; setCreateForm(f => ({ ...f, siteId: v, warehouseId: 0 })) }}
-                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                 <option value={0}>Select…</option>
                 {branchOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest mb-1 block">Warehouse</label>
+              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Warehouse</label>
               <select value={createForm.warehouseId} onChange={e => setCreateForm(f => ({ ...f, warehouseId: +e.target.value }))}
-                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none"
+                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none"
                 disabled={!createForm.siteId}>
                 <option value={0}>{createForm.siteId ? '-- none --' : 'Select branch first'}</option>
                 {filteredCreateWarehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({w.location_type || 'WH'})</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest mb-1 block">Cash Account</label>
+              <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Cash Account</label>
               <select value={createForm.cashAccountId} onChange={e => setCreateForm(f => ({ ...f, cashAccountId: +e.target.value }))}
-                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                className="w-full text-[12px] font-bold px-2.5 py-2 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                 <option value={0}>Auto-create</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
               </select>
@@ -343,7 +343,7 @@ export default function POSSettingsPage() {
                 className={`w-9 h-5 rounded-full relative transition-all shrink-0 ${createForm.enableAccountBook ? 'bg-app-primary' : 'bg-app-surface'}`}>
                 <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${createForm.enableAccountBook ? 'left-[18px]' : 'left-[3px]'}`} />
               </button>
-              <span className="text-[10px] text-app-text-muted font-bold">Book</span>
+              <span className="text-[10px] text-app-muted-foreground font-bold">Book</span>
             </div>
             <div>
               <button onClick={handleCreate} disabled={creating}
@@ -358,7 +358,7 @@ export default function POSSettingsPage() {
       {/* ═══ REGISTER TABLE ═══ */}
       <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
         {/* Column Headers */}
-        <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-text-faint uppercase tracking-wider">
+        <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
           <div className="w-5 flex-shrink-0" />
           <div className="w-7 flex-shrink-0" />
           <div className="flex-1 min-w-0">Register</div>
@@ -386,7 +386,7 @@ export default function POSSettingsPage() {
                       background: 'color-mix(in srgb, var(--app-info) 4%, var(--app-surface))',
                       borderLeft: '3px solid var(--app-info)',
                     }}>
-                    <button className="w-5 h-5 flex items-center justify-center rounded-md text-app-text-muted">
+                    <button className="w-5 h-5 flex items-center justify-center rounded-md text-app-muted-foreground">
                       {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                     </button>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -394,7 +394,7 @@ export default function POSSettingsPage() {
                       <MapPin size={14} />
                     </div>
                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <span className="font-bold text-[13px] text-app-text">{site.name}</span>
+                      <span className="font-bold text-[13px] text-app-foreground">{site.name}</span>
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
                         style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
                         {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
@@ -413,7 +413,7 @@ export default function POSSettingsPage() {
                               borderLeft: `1px solid color-mix(in srgb, var(--app-border) 40%, transparent)`,
                               marginLeft: '22px',
                             }}>
-                            <button className="w-5 h-5 flex items-center justify-center rounded-md text-app-text-muted">
+                            <button className="w-5 h-5 flex items-center justify-center rounded-md text-app-muted-foreground">
                               {expandedId === reg.id ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
                             </button>
 
@@ -428,7 +428,7 @@ export default function POSSettingsPage() {
                             </div>
 
                             <div className="flex-1 min-w-0 flex items-center gap-2">
-                              <span className="font-medium text-[13px] text-app-text truncate">{reg.name}</span>
+                              <span className="font-medium text-[13px] text-app-foreground truncate">{reg.name}</span>
                               {reg.isOpen && (
                                 <span className="text-[8px] font-black px-1.5 py-0.5 rounded"
                                   style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}>
@@ -449,7 +449,7 @@ export default function POSSettingsPage() {
                             </div>
 
                             <div className="hidden lg:flex w-24 items-center flex-shrink-0">
-                              <span className="text-[10px] text-app-text-muted truncate">
+                              <span className="text-[10px] text-app-muted-foreground truncate">
                                 {reg.warehouseId ? '✓ Set' : '—'}
                               </span>
                             </div>
@@ -465,7 +465,7 @@ export default function POSSettingsPage() {
 
                             <div className="w-16 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-right">
                               <button onClick={e => { e.stopPropagation(); setExpandedId(reg.id) }}
-                                className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted hover:text-app-text transition-colors">
+                                className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors">
                                 <Settings2 size={12} />
                               </button>
                             </div>
@@ -490,10 +490,10 @@ export default function POSSettingsPage() {
                 style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 15%, transparent), color-mix(in srgb, var(--app-primary) 5%, transparent))', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
                 <Monitor size={28} style={{ color: 'var(--app-primary)', opacity: 0.7 }} />
               </div>
-              <p className="text-base font-bold text-app-text-muted mb-1">
+              <p className="text-base font-bold text-app-muted-foreground mb-1">
                 {searchQuery || activeFilter ? 'No matching registers' : 'No registers yet'}
               </p>
-              <p className="text-xs text-app-text-faint mb-6 max-w-xs">
+              <p className="text-xs text-app-muted-foreground mb-6 max-w-xs">
                 {searchQuery || activeFilter
                   ? 'Try adjusting your search or filter.'
                   : 'Create your first POS register to get started.'}

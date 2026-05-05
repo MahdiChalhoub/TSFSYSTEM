@@ -108,14 +108,14 @@ export function AppSection({
                 <div>
                     <h3
                         className="text-sm font-black tracking-tight"
-                        style={{ color: 'var(--app-text)' }}
+                        style={{ color: 'var(--app-foreground)' }}
                     >
                         {title}
                     </h3>
                     {description && (
                         <p
                             className="text-xs font-medium mt-0.5"
-                            style={{ color: 'var(--app-text-muted)' }}
+                            style={{ color: 'var(--app-muted-foreground)' }}
                         >
                             {description}
                         </p>

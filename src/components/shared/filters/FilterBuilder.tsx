@@ -148,7 +148,7 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
             placeholder="Min"
             className="w-32"
           />
-          <span className="theme-text-muted">and</span>
+          <span className="text-app-muted-foreground">and</span>
           <Input
             type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
             value={condition.value2 || ''}
@@ -221,7 +221,7 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
         className="flex items-center gap-2 p-3 theme-surface rounded-lg border theme-border"
       >
         {/* Drag handle */}
-        <GripVertical className="w-4 h-4 theme-text-muted cursor-move" />
+        <GripVertical className="w-4 h-4 text-app-muted-foreground cursor-move" />
 
         {/* Logic badge (AND/OR) - only show after first condition */}
         {index > 0 && (
@@ -298,8 +298,8 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold theme-text">Filter Conditions</h3>
-            <p className="text-sm theme-text-muted">
+            <h3 className="font-bold text-app-foreground">Filter Conditions</h3>
+            <p className="text-sm text-app-muted-foreground">
               {group.conditions.length === 0
                 ? 'No conditions yet'
                 : `${group.conditions.length} condition${group.conditions.length === 1 ? '' : 's'}`}
@@ -349,11 +349,11 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
 
         {/* Preview */}
         {group.conditions.length > 0 && (
-          <div className="p-3 theme-bg rounded-lg border theme-border">
-            <p className="text-xs font-bold theme-text-muted uppercase mb-2">
+          <div className="p-3 bg-app-bg rounded-lg border theme-border">
+            <p className="text-xs font-bold text-app-muted-foreground uppercase mb-2">
               Preview
             </p>
-            <p className="text-sm theme-text font-mono">
+            <p className="text-sm text-app-foreground font-mono">
               {group.conditions.map((c, i) => {
                 const field = getField(c.field)
                 return (

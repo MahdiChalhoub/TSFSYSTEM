@@ -100,7 +100,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  <div className="bg-app-surface rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative">
  <button
  onClick={onClose}
- className="absolute top-5 right-5 p-2 rounded-full hover:bg-app-surface-2 text-app-text-muted hover:text-app-text-muted transition-all z-20"
+ className="absolute top-5 right-5 p-2 rounded-full hover:bg-app-surface-2 text-app-muted-foreground hover:text-app-muted-foreground transition-all z-20"
  >
  <X size={18} />
  </button>
@@ -115,17 +115,17 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  status === 'VERIFYING' ? <Loader2 size={32} className="animate-spin" /> :
  <ShieldAlert size={32} />}
  </div>
- <h2 className="text-lg font-black text-app-text uppercase tracking-tight">
+ <h2 className="text-lg font-black text-app-foreground uppercase tracking-tight">
  {status === 'APPROVED' ? 'Authorized' : 'Manager Override Required'}
  </h2>
- <p className="text-xs text-app-text-faint font-bold mt-1">
+ <p className="text-xs text-app-muted-foreground font-bold mt-1">
  Action: <span className="text-rose-500 uppercase font-black">{actionLabel}</span>
  </p>
  </div>
 
  {status === 'APPROVED' ? (
  <div className="p-10 flex flex-col items-center animate-in zoom-in-95">
- <div className="w-20 h-20 bg-app-primary rounded-full flex items-center justify-center text-app-text shadow-xl shadow-emerald-200 mb-4">
+ <div className="w-20 h-20 bg-app-primary rounded-full flex items-center justify-center text-app-foreground shadow-xl shadow-emerald-200 mb-4">
  <Check size={40} strokeWidth={3} />
  </div>
  <p className="text-xs text-app-primary font-black uppercase tracking-widest">Proceeding...</p>
@@ -192,11 +192,11 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  onClick={() => handleKey(val)}
  className={`h-14 rounded-xl text-lg font-black transition-all active:scale-95 ${val === '✓'
  ? pin.length >= 4
- ? 'bg-app-primary text-app-text hover:bg-app-primary shadow-lg shadow-emerald-200'
- : 'bg-app-surface-2 text-app-text-muted cursor-not-allowed'
+ ? 'bg-app-primary text-app-foreground hover:bg-app-primary shadow-lg shadow-emerald-200'
+ : 'bg-app-surface-2 text-app-muted-foreground cursor-not-allowed'
  : val === 'C'
  ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 border border-rose-100'
- : 'bg-app-bg text-app-text hover:bg-app-surface-2 border border-app-border'
+ : 'bg-app-bg text-app-foreground hover:bg-app-surface-2 border border-app-border'
  }`}
  >
  {status === 'VERIFYING' && val === '✓' ? <Loader2 size={20} className="animate-spin mx-auto" /> : val}
@@ -205,7 +205,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  </div>
 
  {/* Info */}
- <div className="flex items-center justify-center gap-2 text-[10px] text-app-text-muted">
+ <div className="flex items-center justify-center gap-2 text-[10px] text-app-muted-foreground">
  <Lock size={10} />
  <span>Enter manager override PIN to authorize</span>
  </div>

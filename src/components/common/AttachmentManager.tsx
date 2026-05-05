@@ -114,17 +114,17 @@ export default function AttachmentManager({
  return (
  <div className={`space-y-4 animate-in fade-in duration-300 ${compact ? '' : 'mt-6'}`}>
  <div className="flex items-center justify-between">
- <h3 className="text-lg font-black text-app-text flex items-center gap-2">
+ <h3 className="text-lg font-black text-app-foreground flex items-center gap-2">
  <Cloud size={20} className="text-app-info" />
  {title}
- <span className="ml-2 px-2 py-0.5 rounded-full bg-app-surface-2 text-app-text-muted text-[10px] font-bold">
+ <span className="ml-2 px-2 py-0.5 rounded-full bg-app-surface-2 text-app-muted-foreground text-[10px] font-bold">
  {files.length}
  </span>
  </h3>
  <button
  onClick={() => fileInputRef.current?.click()}
  disabled={chunked.uploading}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface hover:bg-app-bg text-app-text-muted hover:text-app-text border border-app-border shadow-sm transition-all text-sm font-bold disabled:opacity-50"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface hover:bg-app-bg text-app-muted-foreground hover:text-app-foreground border border-app-border shadow-sm transition-all text-sm font-bold disabled:opacity-50"
  >
  <Plus size={16} /> Add File
  </button>
@@ -137,7 +137,7 @@ export default function AttachmentManager({
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-2">
  <Loader2 size={16} className="animate-spin text-app-info" />
- <span className="text-xs font-bold text-app-text">Uploading...</span>
+ <span className="text-xs font-bold text-app-foreground">Uploading...</span>
  </div>
  <span className="text-xs font-mono font-bold text-app-info">{chunked.progress}%</span>
  </div>
@@ -147,7 +147,7 @@ export default function AttachmentManager({
  style={{ width: `${chunked.progress}%` }}
  />
  </div>
- {chunked.speed && <p className="text-[10px] text-app-text-muted mt-1 mt-1 font-medium">{chunked.speed}</p>}
+ {chunked.speed && <p className="text-[10px] text-app-muted-foreground mt-1 mt-1 font-medium">{chunked.speed}</p>}
  </div>
  )}
 
@@ -174,8 +174,8 @@ export default function AttachmentManager({
  <div className="w-16 h-16 rounded-2xl bg-app-surface shadow-sm flex items-center justify-center mx-auto mb-4 border border-app-border">
  <Upload size={24} className="text-gray-300" />
  </div>
- <p className="text-app-text-muted font-bold">No attachments yet</p>
- <p className="text-xs text-app-text-faint mt-1 font-medium">Drag and drop or click to upload</p>
+ <p className="text-app-muted-foreground font-bold">No attachments yet</p>
+ <p className="text-xs text-app-muted-foreground mt-1 font-medium">Drag and drop or click to upload</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -193,11 +193,11 @@ export default function AttachmentManager({
  <Icon size={20} className={isImage ? 'text-purple-500' : 'text-app-info'} />
  </div>
  <div className="min-w-0 flex-1">
- <p className="text-sm font-bold text-app-text truncate" title={file.original_filename}>
+ <p className="text-sm font-bold text-app-foreground truncate" title={file.original_filename}>
  {file.original_filename}
  </p>
  <div className="flex items-center gap-2 mt-0.5">
- <span className="text-[10px] text-app-text-faint font-bold">{file.file_size_display || formatBytes(file.file_size)}</span>
+ <span className="text-[10px] text-app-muted-foreground font-bold">{file.file_size_display || formatBytes(file.file_size)}</span>
  <span className={`text-[8px] px-1.5 py-0.5 rounded uppercase tracking-widest font-black border ${catColor}`}>
  {file.category.replace('_', ' ')}
  </span>
@@ -206,14 +206,14 @@ export default function AttachmentManager({
  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
  <button
  onClick={() => handleDownload(file)}
- className="p-1.5 rounded-lg text-app-text-faint hover:text-app-info hover:bg-app-info-bg transition-all"
+ className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-info hover:bg-app-info-bg transition-all"
  title="Download"
  >
  <Download size={14} />
  </button>
  <button
  onClick={() => handleDelete(file)}
- className="p-1.5 rounded-lg text-app-text-faint hover:text-app-error hover:bg-app-error-bg transition-all"
+ className="p-1.5 rounded-lg text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg transition-all"
  title="Delete"
  >
  <Trash2 size={14} />
@@ -234,7 +234,7 @@ export default function AttachmentManager({
  }`}
  >
  <Plus size={16} className="text-gray-300 mr-2" />
- <span className="text-xs font-bold text-app-text-faint">Add More</span>
+ <span className="text-xs font-bold text-app-muted-foreground">Add More</span>
  </div>
  )}
  </div>

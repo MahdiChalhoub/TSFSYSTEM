@@ -70,10 +70,10 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 {mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                             </div>
                             <div>
-                                <h3 className="text-[14px] font-black text-app-text">
+                                <h3 className="text-[14px] font-black text-app-foreground">
                                     {mode === 'self' ? 'Change Your PIN' : `Reset PIN`}
                                 </h3>
-                                <p className="text-[10px] text-app-text-faint">
+                                <p className="text-[10px] text-app-muted-foreground">
                                     {mode === 'self'
                                         ? 'Confirm your identity with your password'
                                         : `Setting new PIN for ${userName}`}
@@ -87,14 +87,14 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                         <div className="flex items-start gap-2 p-2.5 rounded-xl"
                             style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 12%, transparent)' }}>
                             <Lock size={12} className="shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                            <p className="text-[10px] text-app-text-muted leading-relaxed">
+                            <p className="text-[10px] text-app-muted-foreground leading-relaxed">
                                 Enter your <strong>login password</strong> to verify your identity before changing the PIN.
                             </p>
                         </div>
 
                         {/* Password field */}
                         <div>
-                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                 Your Password *
                             </label>
                             <input
@@ -103,7 +103,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 onChange={e => { setPassword(e.target.value); setPasswordError('') }}
                                 placeholder="Enter your login password"
                                 autoFocus
-                                className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-text placeholder:text-app-text-faint outline-none transition-colors ${passwordError ? 'border-red-500/50 bg-red-500/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors ${passwordError ? 'border-red-500/50 bg-red-500/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
                             />
                             {passwordError && (
                                 <p className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
@@ -114,7 +114,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
 
                         {/* New PIN */}
                         <div>
-                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                 New PIN (4-6 digits) *
                             </label>
                             <div className="relative">
@@ -123,10 +123,10 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                     value={newPin}
                                     onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                     placeholder="● ● ● ●"
-                                    className="w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint outline-none focus:border-app-primary/40 transition-colors text-center"
+                                    className="w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/40 transition-colors text-center"
                                 />
                                 <button onClick={() => setShowPin(v => !v)}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-app-text-muted hover:text-app-text transition-colors">
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-app-muted-foreground hover:text-app-foreground transition-colors">
                                     {showPin ? <EyeOff size={13} /> : <Eye size={13} />}
                                 </button>
                             </div>
@@ -134,7 +134,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
 
                         {/* Confirm PIN */}
                         <div>
-                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                 Confirm PIN *
                             </label>
                             <input
@@ -142,7 +142,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 value={confirmPin}
                                 onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 placeholder="● ● ● ●"
-                                className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-text placeholder:text-app-text-faint outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-red-500/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-red-500/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
                             />
                             {confirmPin && confirmPin !== newPin && (
                                 <p className="text-[9px] text-red-400 mt-1">PINs do not match</p>
@@ -152,7 +152,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                         {/* Actions */}
                         <div className="flex gap-2 pt-1">
                             <button onClick={onClose}
-                                className="flex-1 text-[11px] font-bold py-2.5 rounded-xl border border-app-border text-app-text-muted hover:bg-app-surface transition-all">
+                                className="flex-1 text-[11px] font-bold py-2.5 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-surface transition-all">
                                 Cancel
                             </button>
                             <button

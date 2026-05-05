@@ -27,7 +27,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Source ID',
         sortable: true,
         render: (r) => (
-            <span className="font-mono text-xs text-app-text-faint">{r.source_id}</span>
+            <span className="font-mono text-xs text-app-muted-foreground">{r.source_id}</span>
         )
     },
     {
@@ -35,7 +35,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'TSFSYSTEM ID',
         sortable: true,
         render: (r) => (
-            <span className="font-mono text-xs font-bold text-app-text">{r.target_id || 'Failed/Pending'}</span>
+            <span className="font-mono text-xs font-bold text-app-foreground">{r.target_id || 'Failed/Pending'}</span>
         )
     },
     {
@@ -45,7 +45,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         render: (r) => (
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-app-success-bg text-app-success' :
                 r.verify_status === 'FLAGGED' ? 'bg-app-warning-bg text-app-warning' :
-                    'bg-app-surface theme-text-muted'
+                    'bg-app-surface text-app-muted-foreground'
                 }`}>
                 {r.verify_status || 'PENDING'}
             </span>
@@ -125,14 +125,14 @@ export default function VerificationPage() {
                             onClick={() => router.back()}
                             className="p-2 hover:bg-app-surface-2 rounded-xl transition-colors"
                         >
-                            <ArrowLeft className="w-5 h-5 text-app-text" />
+                            <ArrowLeft className="w-5 h-5 text-app-foreground" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-app-text uppercase tracking-tight flex items-center gap-2">
+                            <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tight flex items-center gap-2">
                                 <ShieldCheck className="w-6 h-6 text-purple-600" />
                                 Record Verification
                             </h1>
-                            <p className="text-app-text-faint text-sm mt-1">Run data fidelity checks across all migrated entities.</p>
+                            <p className="text-app-muted-foreground text-sm mt-1">Run data fidelity checks across all migrated entities.</p>
                         </div>
                     </div>
                     <button

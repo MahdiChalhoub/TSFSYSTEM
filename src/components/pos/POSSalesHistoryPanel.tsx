@@ -27,7 +27,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
  INVOICED: { label: 'INVOICED', color: 'text-app-info bg-app-info-bg border-app-info/20', icon: FileText },
  PENDING: { label: 'PENDING', color: 'text-app-warning bg-app-warning-bg border-app-warning/20', icon: Clock },
  CANCELLED: { label: 'CANCELLED', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', icon: XCircle },
- DRAFT: { label: 'DRAFT', color: 'text-app-text-faint bg-app-text/5 border-app-text/10', icon: FileText },
+ DRAFT: { label: 'DRAFT', color: 'text-app-muted-foreground bg-app-foreground/5 border-app-foreground/10', icon: FileText },
 };
 
 interface POSSalesHistoryPanelProps {
@@ -100,43 +100,43 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
  {/* Panel - slides in from right */}
  <div
- className="ml-auto relative w-[520px] max-w-full h-full bg-[#0F172A] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-500 border-l border-app-text/5"
+ className="ml-auto relative w-[520px] max-w-full h-full bg-[#0F172A] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-500 border-l border-app-foreground/5"
  onClick={e => e.stopPropagation()}
  >
  {/* Header */}
- <div className="flex items-center justify-between px-8 py-6 border-b border-app-text/10 bg-app-bg/80 backdrop-blur-xl shrink-0 z-20 relative overflow-hidden">
+ <div className="flex items-center justify-between px-8 py-6 border-b border-app-foreground/10 bg-app-bg/80 backdrop-blur-xl shrink-0 z-20 relative overflow-hidden">
  {/* Glow Effect */}
  <div className="absolute top-0 right-0 w-64 h-64 bg-app-primary/5 blur-[80px] -z-10" />
 
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-2xl bg-emerald-gradient flex items-center justify-center shadow-xl shadow-app-primary/20">
- <Receipt size={22} className="text-app-text fill-white/20" />
+ <Receipt size={22} className="text-app-foreground fill-white/20" />
  </div>
  <div>
  <span className="text-[10px] font-black text-app-primary uppercase tracking-[0.3em] block mb-0.5">Operations Ledger</span>
- <h2 className="text-xl font-black text-app-text uppercase tracking-tighter">Transaction Audit</h2>
+ <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Transaction Audit</h2>
  </div>
  </div>
  <div className="flex items-center gap-2">
  <button onClick={load} disabled={loading}
- className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-primary transition-all disabled:opacity-40 flex items-center justify-center border border-app-text/10">
+ className="w-10 h-10 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/40 hover:text-app-primary transition-all disabled:opacity-40 flex items-center justify-center border border-app-foreground/10">
  <RefreshCw size={16} className={loading ? 'animate-spin text-app-primary' : ''} />
  </button>
  <button onClick={onClose}
- className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-rose-500/20 text-app-text/40 hover:text-rose-500 transition-all flex items-center justify-center border border-app-text/10">
+ className="w-10 h-10 rounded-xl bg-app-foreground/5 hover:bg-rose-500/20 text-app-foreground/40 hover:text-rose-500 transition-all flex items-center justify-center border border-app-foreground/10">
  <X size={18} />
  </button>
  </div>
  </div>
 
  {/* Tabs */}
- <div className="px-8 pt-4 pb-0 border-b border-app-text/5 shrink-0 flex gap-4 bg-app-bg/20">
+ <div className="px-8 pt-4 pb-0 border-b border-app-foreground/5 shrink-0 flex gap-4 bg-app-bg/20">
  {sessionId && (
  <button onClick={() => setTab('session')}
  className={clsx('pb-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all border-b-2',
  tab === 'session'
  ? 'border-app-primary text-app-primary'
- : 'border-transparent text-app-text/20 hover:text-app-text/40')}>
+ : 'border-transparent text-app-foreground/20 hover:text-app-foreground/40')}>
  Live Session
  </button>
  )}
@@ -144,35 +144,35 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  className={clsx('pb-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all border-b-2',
  tab === 'all'
  ? 'border-app-primary text-app-primary'
- : 'border-transparent text-app-text/20 hover:text-app-text/40')}>
+ : 'border-transparent text-app-foreground/20 hover:text-app-foreground/40')}>
  Global Archival
  </button>
  </div>
 
  {/* Search */}
- <div className="px-8 py-5 border-b border-app-text/10 shrink-0 bg-app-bg/20">
+ <div className="px-8 py-5 border-b border-app-foreground/10 shrink-0 bg-app-bg/20">
  <div className="relative group">
- <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text/20 group-focus-within:text-app-primary transition-colors" />
+ <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-foreground/20 group-focus-within:text-app-primary transition-colors" />
  <input
  type="text"
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="SEARCH TRANSACTION ID, CLIENT OR REFERENCE..."
- className="w-full pl-12 pr-4 py-3 text-[11px] font-black uppercase tracking-widest bg-app-text/5 border border-app-text/10 rounded-2xl outline-none focus:ring-4 focus:ring-app-primary/10 focus:border-app-primary/30 text-app-text placeholder:text-app-text/10 transition-all"
+ className="w-full pl-12 pr-4 py-3 text-[11px] font-black uppercase tracking-widest bg-app-foreground/5 border border-app-foreground/10 rounded-2xl outline-none focus:ring-4 focus:ring-app-primary/10 focus:border-app-primary/30 text-app-foreground placeholder:text-app-foreground/10 transition-all"
  />
  </div>
  </div>
 
  {/* Stats bar */}
  {!loading && orders.length > 0 && (
- <div className="px-8 py-4 border-b border-app-text/10 bg-app-bg/40 flex items-center justify-between shrink-0">
+ <div className="px-8 py-4 border-b border-app-foreground/10 bg-app-bg/40 flex items-center justify-between shrink-0">
  <div className="flex flex-col">
- <p className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.2em] mb-1">Audit Volume</p>
- <p className="text-xl font-black text-app-text">{orders.length}</p>
+ <p className="text-[10px] font-black text-app-foreground/30 uppercase tracking-[0.2em] mb-1">Audit Volume</p>
+ <p className="text-xl font-black text-app-foreground">{orders.length}</p>
  </div>
- <div className="w-px h-8 bg-app-text/10" />
+ <div className="w-px h-8 bg-app-foreground/10" />
  <div className="flex flex-col text-right">
- <p className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.2em] mb-1">Aggregate Revenue</p>
+ <p className="text-[10px] font-black text-app-foreground/30 uppercase tracking-[0.2em] mb-1">Aggregate Revenue</p>
  <p className="text-xl font-black text-app-primary tabular-nums">
  {fmt(orders.reduce((s, o) => s + Number(o.total_amount || 0), 0))}
  </p>
@@ -183,7 +183,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  {/* Order List / Detail */}
  <div className="flex-1 overflow-y-auto custom-scrollbar">
  {loading ? (
- <div className="flex flex-col items-center justify-center h-full gap-3 text-app-text-muted">
+ <div className="flex flex-col items-center justify-center h-full gap-3 text-app-muted-foreground">
  <Loader2 size={28} className="animate-spin text-indigo-300" />
  <p className="text-xs font-bold">Loading history...</p>
  </div>
@@ -191,24 +191,24 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  /* ── ORDER DETAIL VIEW ── */
  <div className="p-8 space-y-6">
  <button onClick={() => setSelectedOrder(null)}
- className="h-10 px-4 rounded-xl bg-app-text/5 border border-app-text/10 text-[10px] font-black text-app-primary uppercase tracking-widest hover:bg-app-text/10 transition-all flex items-center gap-2 group">
+ className="h-10 px-4 rounded-xl bg-app-foreground/5 border border-app-foreground/10 text-[10px] font-black text-app-primary uppercase tracking-widest hover:bg-app-foreground/10 transition-all flex items-center gap-2 group">
  <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
  Back to POS
  </button>
 
  {/* Order header */}
- <div className="bg-app-bg/60 border border-app-text/5 rounded-3xl p-6 space-y-5 relative overflow-hidden group">
+ <div className="bg-app-bg/60 border border-app-foreground/5 rounded-3xl p-6 space-y-5 relative overflow-hidden group">
  <div className="absolute top-0 right-0 w-32 h-32 bg-app-primary/5 blur-3xl rounded-full" />
 
  <div className="flex items-start justify-between relative z-10">
  <div>
  <div className="flex items-center gap-2 mb-1">
  <Hash size={12} className="text-app-primary/50" />
- <p className="text-2xl font-black text-app-text tracking-tighter uppercase">{selectedOrder.ref_code || selectedOrder.id}</p>
+ <p className="text-2xl font-black text-app-foreground tracking-tighter uppercase">{selectedOrder.ref_code || selectedOrder.id}</p>
  </div>
  {selectedOrder.invoice_number && (
  <div className="flex items-center gap-2">
- <Receipt size={10} className="text-app-text-muted" />
+ <Receipt size={10} className="text-app-muted-foreground" />
  <p className="text-[10px] font-mono text-app-primary font-black">{selectedOrder.invoice_number}</p>
  </div>
  )}
@@ -224,18 +224,18 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  })()}
  </div>
 
- <div className="grid grid-cols-2 gap-4 pt-4 border-t border-app-text/5 relative z-10">
+ <div className="grid grid-cols-2 gap-4 pt-4 border-t border-app-foreground/5 relative z-10">
  <div className="flex flex-col gap-1">
- <span className="text-[9px] font-black text-app-text/20 uppercase tracking-widest">Timestamp</span>
- <div className="flex items-center gap-2 text-[11px] font-bold text-app-text-muted">
+ <span className="text-[9px] font-black text-app-foreground/20 uppercase tracking-widest">Timestamp</span>
+ <div className="flex items-center gap-2 text-[11px] font-bold text-app-muted-foreground">
  <Clock size={12} className="text-app-primary/40" />
  {new Date(selectedOrder.created_at).toLocaleDateString('fr-FR')} {new Date(selectedOrder.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
  </div>
  </div>
  {selectedOrder.contact_name && (
  <div className="flex flex-col gap-1">
- <span className="text-[9px] font-black text-app-text/20 uppercase tracking-widest">Counterparty</span>
- <div className="flex items-center gap-2 text-[11px] font-bold text-app-text-muted">
+ <span className="text-[9px] font-black text-app-foreground/20 uppercase tracking-widest">Counterparty</span>
+ <div className="flex items-center gap-2 text-[11px] font-bold text-app-muted-foreground">
  <User size={12} className="text-app-primary/40" />
  {selectedOrder.contact_name}
  </div>
@@ -246,17 +246,17 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
  {/* Items */}
  {selectedOrder.items && selectedOrder.items.length > 0 && (
- <div className="bg-app-bg/40 border border-app-text/5 rounded-3xl overflow-hidden p-1">
+ <div className="bg-app-bg/40 border border-app-foreground/5 rounded-3xl overflow-hidden p-1">
  <div className="px-5 py-3 flex items-center gap-3">
  <Package size={14} className="text-app-primary/50" />
- <span className="text-[10px] font-black text-app-text/40 uppercase tracking-[0.3em]">Operational manifest</span>
+ <span className="text-[10px] font-black text-app-foreground/40 uppercase tracking-[0.3em]">Operational manifest</span>
  </div>
  <div className="space-y-1">
  {selectedOrder.items.map((item, i) => (
- <div key={i} className="flex items-center justify-between px-5 py-3 bg-app-surface/[0.02] border border-app-text/5 rounded-2xl mx-1 mb-1 group hover:bg-app-surface/[0.05] transition-colors">
+ <div key={i} className="flex items-center justify-between px-5 py-3 bg-app-surface/[0.02] border border-app-foreground/5 rounded-2xl mx-1 mb-1 group hover:bg-app-surface/[0.05] transition-colors">
  <div className="flex-1 min-w-0">
- <p className="text-[11px] font-black text-app-text uppercase italic tracking-tight truncate">{item.name}</p>
- <p className="text-[9px] text-app-text-muted font-bold uppercase tracking-wider">{item.quantity} UNIT × {fmt(item.unit_price)}</p>
+ <p className="text-[11px] font-black text-app-foreground uppercase italic tracking-tight truncate">{item.name}</p>
+ <p className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-wider">{item.quantity} UNIT × {fmt(item.unit_price)}</p>
  </div>
  <p className="text-xs font-black text-app-primary ml-4 tabular-nums">{fmt(item.quantity * item.unit_price)}</p>
  </div>
@@ -270,12 +270,12 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  <div className="absolute inset-0 bg-app-primary/5 group-hover:bg-app-primary/10 transition-colors" />
  <div className="relative z-10">
  <p className="text-[10px] font-black text-app-primary/60 uppercase tracking-[0.4em] mb-1">Total Settlement</p>
- <p className="text-4xl font-black text-app-text tracking-tighter tabular-nums">{fmt(selectedOrder.total_amount)}</p>
+ <p className="text-4xl font-black text-app-foreground tracking-tighter tabular-nums">{fmt(selectedOrder.total_amount)}</p>
  </div>
  <button
  onClick={() => handlePrint(selectedOrder)}
  disabled={printingId === selectedOrder.id}
- className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-[2rem] bg-emerald-gradient text-app-text shadow-xl shadow-app-primary/20 hover:scale-110 active:scale-95 transition-all border border-emerald-400/30 group/btn"
+ className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-[2rem] bg-emerald-gradient text-app-foreground shadow-xl shadow-app-primary/20 hover:scale-110 active:scale-95 transition-all border border-emerald-400/30 group/btn"
  >
  {printingId === selectedOrder.id
  ? <Loader2 size={24} className="animate-spin" />
@@ -287,9 +287,9 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  </div>
  ) : filtered.length === 0 ? (
  /* ── EMPTY STATE ── */
- <div className="flex flex-col items-center justify-center h-full gap-3 text-app-text-muted">
+ <div className="flex flex-col items-center justify-center h-full gap-3 text-app-muted-foreground">
  <Receipt size={36} strokeWidth={1} />
- <p className="text-xs font-bold text-app-text-faint">
+ <p className="text-xs font-bold text-app-muted-foreground">
  {search ? 'No orders match your search' : 'No orders yet this session'}
  </p>
  </div>
@@ -315,7 +315,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  {/* Content */}
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3 mb-1">
- <p className="text-[13px] font-black text-app-text tracking-tight uppercase italic">{order.ref_code || order.id}</p>
+ <p className="text-[13px] font-black text-app-foreground tracking-tight uppercase italic">{order.ref_code || order.id}</p>
  {order.invoice_number && (
  <span className="text-[9px] font-mono font-black text-app-primary bg-app-primary/10 px-2 py-0.5 rounded-lg border border-app-primary/20">
  {order.invoice_number}
@@ -324,11 +324,11 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  </div>
  <div className="flex items-center gap-3">
  {order.contact_name && (
- <span className="text-[10px] text-app-text-muted font-bold truncate uppercase tracking-wider">
+ <span className="text-[10px] text-app-muted-foreground font-bold truncate uppercase tracking-wider">
  {order.contact_name}
  </span>
  )}
- <span className="text-[9px] text-app-text-muted font-bold tabular-nums">
+ <span className="text-[9px] text-app-muted-foreground font-bold tabular-nums">
  {new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
@@ -336,7 +336,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
  {/* Amount */}
  <div className="text-right shrink-0">
- <p className="text-lg font-black text-app-text tracking-tighter tabular-nums">{fmt(order.total_amount).split(' ')[1]}</p>
+ <p className="text-lg font-black text-app-foreground tracking-tighter tabular-nums">{fmt(order.total_amount).split(' ')[1]}</p>
  <p className={clsx("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color.split(' ')[0])}>{cfg.label}</p>
  </div>
  </button>

@@ -76,8 +76,8 @@ export default function QuotesClient({ initialQuotes }: Props) {
                             <Icon size={18} style={{ color }} />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[var(--app-text)]">{value}</p>
-                            <p className="text-xs text-[var(--app-text-muted)]">{label}</p>
+                            <p className="text-2xl font-bold text-[var(--app-foreground)]">{value}</p>
+                            <p className="text-xs text-[var(--app-muted-foreground)]">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -89,7 +89,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
                     <button key={s} onClick={() => setFilter(s)} id={`filter-${s}`}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === s
                             ? 'bg-[var(--app-accent)] text-white shadow-sm'
-                            : 'bg-[var(--app-card)] text-[var(--app-text-muted)] border border-[var(--app-border)] hover:bg-[var(--app-surface-hover)]'}`}>
+                            : 'bg-[var(--app-card)] text-[var(--app-muted-foreground)] border border-[var(--app-border)] hover:bg-[var(--app-surface-hover)]'}`}>
                         {s}
                         {s !== 'ALL' && (
                             <span className="ml-1.5 opacity-70">{quotes.filter(q => q.status === s).length}</span>
@@ -105,8 +105,8 @@ export default function QuotesClient({ initialQuotes }: Props) {
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#06b6d418' }}>
                             <FileText size={22} style={{ color: 'var(--app-accent-cyan)' }} />
                         </div>
-                        <p className="font-semibold text-[var(--app-text)]">No quote requests</p>
-                        <p className="text-xs text-[var(--app-text-muted)]">
+                        <p className="font-semibold text-[var(--app-foreground)]">No quote requests</p>
+                        <p className="text-xs text-[var(--app-muted-foreground)]">
                             {filter === 'ALL' ? 'Quote requests from the storefront will appear here' : `No ${filter.toLowerCase()} quotes`}
                         </p>
                     </div>
@@ -125,18 +125,18 @@ export default function QuotesClient({ initialQuotes }: Props) {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="font-semibold text-sm text-[var(--app-text)]">{q.contact_name}</span>
+                                                <span className="font-semibold text-sm text-[var(--app-foreground)]">{q.contact_name}</span>
                                                 {q.product_name && (
-                                                    <span className="text-xs text-[var(--app-text-muted)]">· {q.product_name}</span>
+                                                    <span className="text-xs text-[var(--app-muted-foreground)]">· {q.product_name}</span>
                                                 )}
                                                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
                                                     style={{ background: style.bg, color: style.text }}>
                                                     {q.status}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-[var(--app-text-muted)] mt-0.5 truncate max-w-xl">{q.description}</p>
+                                            <p className="text-xs text-[var(--app-muted-foreground)] mt-0.5 truncate max-w-xl">{q.description}</p>
                                         </div>
-                                        <div className="flex items-center gap-3 shrink-0 text-xs text-[var(--app-text-muted)]">
+                                        <div className="flex items-center gap-3 shrink-0 text-xs text-[var(--app-muted-foreground)]">
                                             <span className="font-medium">Qty: {q.quantity}</span>
                                             {q.quoted_price && (
                                                 <span className="font-bold text-[var(--app-accent)]">
@@ -155,15 +155,15 @@ export default function QuotesClient({ initialQuotes }: Props) {
                                         <div className="px-5 pb-5 pt-3 bg-[var(--app-surface)] border-t border-[var(--app-border)]">
                                             <div className="grid grid-cols-2 gap-5">
                                                 <div className="space-y-2">
-                                                    <p className="text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">Request Details</p>
+                                                    <p className="text-xs font-bold text-[var(--app-muted-foreground)] uppercase tracking-wider">Request Details</p>
                                                     <div className="app-card p-3 space-y-1">
-                                                        <p className="text-sm text-[var(--app-text)]">{q.description}</p>
-                                                        <p className="text-xs text-[var(--app-text-muted)]">Qty: {q.quantity}</p>
-                                                        {q.contact && typeof q.contact === 'object' && (q.contact as Record<string, any>).email && <p className="text-xs text-[var(--app-text-muted)]">{(q.contact as Record<string, any>).email}</p>}
+                                                        <p className="text-sm text-[var(--app-foreground)]">{q.description}</p>
+                                                        <p className="text-xs text-[var(--app-muted-foreground)]">Qty: {q.quantity}</p>
+                                                        {q.contact && typeof q.contact === 'object' && (q.contact as Record<string, any>).email && <p className="text-xs text-[var(--app-muted-foreground)]">{(q.contact as Record<string, any>).email}</p>}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-3">
-                                                    <p className="text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">Send Quote</p>
+                                                    <p className="text-xs font-bold text-[var(--app-muted-foreground)] uppercase tracking-wider">Send Quote</p>
                                                     <div>
                                                         <label className="app-label">Quoted Price</label>
                                                         <input id={`quote-price-${q.id}`} type="number" className="app-input"
@@ -201,7 +201,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
 
             {/* Toast */}
             {toast && (
-                <div className="fixed bottom-6 right-6 z-50 app-card px-4 py-3 text-sm text-[var(--app-text)] shadow-xl flex items-center gap-2">
+                <div className="fixed bottom-6 right-6 z-50 app-card px-4 py-3 text-sm text-[var(--app-foreground)] shadow-xl flex items-center gap-2">
                     <CheckCircle size={14} className="text-app-success" /> {toast}
                 </div>
             )}

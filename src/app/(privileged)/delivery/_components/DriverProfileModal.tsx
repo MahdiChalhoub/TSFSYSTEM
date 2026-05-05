@@ -90,7 +90,7 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-app-surface rounded-[2.5rem] shadow-2xl w-full max-w-xl border border-app-border overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Header */}
-                <div className="relative h-32 bg-app-gradient-warning overflow-hidden">
+                <div className="relative h-32 bg-app-warning overflow-hidden">
                     <div className="absolute inset-0 opacity-20 pointer-events-none">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>

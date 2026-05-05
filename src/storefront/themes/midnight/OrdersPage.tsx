@@ -11,7 +11,7 @@ interface Order {
     line_count: number; created_at: string
 }
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    CART: { label: 'Staging', icon: Package, color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
+    CART: { label: 'Staging', icon: Package, color: 'text-app-muted-foreground', bg: 'bg-slate-500/10' },
     PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     PROCESSING: { label: 'Allocating', icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -51,11 +51,11 @@ export default function MidnightOrdersPage() {
             <div className="max-w-4xl mx-auto relative z-10 space-y-12">
                 <div className="space-y-4">
                     <Link href={path('/account')}
-                        className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard Ledger
                     </Link>
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Order <span className="text-emerald-500">History</span></h1>
-                    <p className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Tracking your architectural commerce stream</p>
+                    <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">Tracking your architectural commerce stream</p>
                 </div>
                 {loading ? (
                     <div className="space-y-4">
@@ -63,12 +63,12 @@ export default function MidnightOrdersPage() {
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="py-24 text-center space-y-8 bg-slate-900/20 border border-white/5 rounded-[3.5rem]">
-                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-app-text-muted">
+                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-app-muted-foreground">
                             <Package size={48} />
                         </div>
                         <div className="space-y-2">
                             <h2 className="text-2xl font-black text-white italic">Zero Operations Found</h2>
-                            <p className="text-app-text-faint text-sm">Your commerce history is currently empty. Initialize a new stream.</p>
+                            <p className="text-app-muted-foreground text-sm">Your commerce history is currently empty. Initialize a new stream.</p>
                         </div>
                         <Link href={path('/')}
                             className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 shadow-xl shadow-emerald-900/40 transition-all">
@@ -93,7 +93,7 @@ export default function MidnightOrdersPage() {
                                                 {st.label}
                                             </div>
                                         </div>
-                                        <p className="text-app-text-faint text-xs font-medium">
+                                        <p className="text-app-muted-foreground text-xs font-medium">
                                             {order.line_count} Unit Assets • {order.placed_at ? new Date(order.placed_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Pending Initialization'}
                                         </p>
                                     </div>
@@ -104,10 +104,10 @@ export default function MidnightOrdersPage() {
                                                 <Star size={12} fill="currentColor" /> {order.delivery_rating}.0
                                             </div>
                                         ) : (
-                                            <div className="text-[10px] text-app-text-muted font-bold uppercase tracking-widest">Awaiting Delivery</div>
+                                            <div className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">Awaiting Delivery</div>
                                         )}
                                     </div>
-                                    <ChevronRight size={20} className="text-app-text group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                                    <ChevronRight size={20} className="text-app-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                                 </Link>
                             )
                         })}

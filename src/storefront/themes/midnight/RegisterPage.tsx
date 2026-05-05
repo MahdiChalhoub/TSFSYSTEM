@@ -59,7 +59,7 @@ export default function MidnightRegisterPage() {
                     </div>
                     <div className="space-y-4">
                         <h1 className="text-4xl font-black text-white italic tracking-tighter">Identity <span className="text-emerald-500">Created</span></h1>
-                        <p className="text-app-text-faint text-sm leading-relaxed">Your account has been provisioned. Proceed to authentication.</p>
+                        <p className="text-app-muted-foreground text-sm leading-relaxed">Your account has been provisioned. Proceed to authentication.</p>
                     </div>
                     <Link href={path('/login')}
                         className="inline-flex items-center gap-3 px-10 py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-500 shadow-xl shadow-emerald-900/30 transition-all">
@@ -81,7 +81,7 @@ export default function MidnightRegisterPage() {
                         <UserPlus size={36} />
                     </div>
                     <h1 className="text-4xl font-black text-white italic tracking-tighter">Initialize <span className="text-purple-400">Identity</span></h1>
-                    <p className="text-app-text-faint text-xs font-bold uppercase tracking-widest">{orgName || slug}</p>
+                    <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">{orgName || slug}</p>
                 </div>
 
                 <div className="p-10 bg-slate-900/60 border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden">
@@ -95,32 +95,32 @@ export default function MidnightRegisterPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
                         <div className="relative">
-                            <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                            <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required
-                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-foreground font-medium" />
                         </div>
                         <div className="relative">
-                            <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                            <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-foreground font-medium" />
                         </div>
                         <div className="relative">
-                            <Building2 size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                            <Building2 size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type="text" placeholder="Company (optional)" value={company} onChange={e => setCompany(e.target.value)}
-                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-foreground font-medium" />
                         </div>
                         <div className="relative">
-                            <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                            <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type={showPass ? 'text' : 'password'} placeholder="Password (min 8 chars)" value={password} onChange={e => setPassword(e.target.value)} required
-                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-14 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
-                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-text-muted hover:text-white transition-colors">
+                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-14 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-foreground font-medium" />
+                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white transition-colors">
                                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
                         <div className="relative">
-                            <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                            <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <input type={showPass ? 'text' : 'password'} placeholder="Confirm Password" value={confirm} onChange={e => setConfirm(e.target.value)} required
-                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-foreground font-medium" />
                         </div>
                         <button type="submit" disabled={loading}
                             className="w-full bg-purple-600 hover:bg-purple-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-xl shadow-purple-900/30">
@@ -129,7 +129,7 @@ export default function MidnightRegisterPage() {
                     </form>
 
                     <div className="text-center pt-4 border-t border-white/5 relative z-10">
-                        <span className="text-app-text-muted text-xs">Already have an account?</span>
+                        <span className="text-app-muted-foreground text-xs">Already have an account?</span>
                         <Link href={path('/login')} className="text-emerald-400 font-black uppercase tracking-widest hover:text-emerald-300 transition-colors ml-1 text-xs">
                             Sign In
                         </Link>
@@ -137,7 +137,7 @@ export default function MidnightRegisterPage() {
                 </div>
 
                 <div className="text-center mt-10">
-                    <Link href={path('/')} className="text-[10px] font-black uppercase tracking-widest text-app-text-muted hover:text-white transition-colors flex items-center justify-center gap-2">
+                    <Link href={path('/')} className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground hover:text-white transition-colors flex items-center justify-center gap-2">
                         <ArrowLeft size={12} /> Return to Storefront
                     </Link>
                 </div>

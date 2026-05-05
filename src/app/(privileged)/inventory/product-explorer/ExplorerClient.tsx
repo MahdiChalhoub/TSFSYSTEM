@@ -131,17 +131,17 @@ function TreeRow({ node, depth, expanded, toggle }: {
                 style={{ paddingLeft: `${16 + depth * 28}px` }}
             >
                 {hasChildren && (
-                    <span className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${depthColors[depth] || 'text-app-text-muted'}`}>
+                    <span className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${depthColors[depth] || 'text-app-muted-foreground'}`}>
                         <ChevronRight size={14} />
                     </span>
                 )}
                 {!hasChildren && <span className="w-3.5" />}
 
                 <span className="text-base">{node.icon}</span>
-                <span className="flex-1 font-medium text-sm text-app-text truncate">{node.label}</span>
+                <span className="flex-1 font-medium text-sm text-app-foreground truncate">{node.label}</span>
 
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
-                    ${depthColors[depth] || 'text-app-text-muted'}
+                    ${depthColors[depth] || 'text-app-muted-foreground'}
                     ${depth === 0 ? 'bg-app-primary/10' : depth === 1 ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
                     {node.count}
                 </span>
@@ -154,7 +154,7 @@ function TreeRow({ node, depth, expanded, toggle }: {
             {isOpen && node.products && node.products.length > 0 && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-200">
                     <div
-                        className="grid grid-cols-[1fr_80px_80px_60px] gap-2 px-4 py-1.5 text-[10px] font-semibold text-app-text-muted uppercase tracking-wider border-b border-app-border/20"
+                        className="grid grid-cols-[1fr_80px_80px_60px] gap-2 px-4 py-1.5 text-[10px] font-semibold text-app-muted-foreground uppercase tracking-wider border-b border-app-border/20"
                         style={{ paddingLeft: `${16 + (depth + 1) * 28}px` }}
                     >
                         <span>Product</span>
@@ -170,16 +170,16 @@ function TreeRow({ node, depth, expanded, toggle }: {
                             style={{ paddingLeft: `${16 + (depth + 1) * 28}px` }}
                         >
                             <div className="flex items-center gap-2 min-w-0">
-                                <Package size={13} className="text-app-text-muted shrink-0" />
-                                <span className="truncate text-app-text font-medium">{p.name}</span>
+                                <Package size={13} className="text-app-muted-foreground shrink-0" />
+                                <span className="truncate text-app-foreground font-medium">{p.name}</span>
                             </div>
-                            <span className="text-right text-app-text tabular-nums">
+                            <span className="text-right text-app-foreground tabular-nums">
                                 {p.selling_price_ttc > 0 ? p.selling_price_ttc.toLocaleString() : '—'}
                             </span>
-                            <span className="text-right text-app-text-muted tabular-nums">
+                            <span className="text-right text-app-muted-foreground tabular-nums">
                                 {p.cost_price > 0 ? p.cost_price.toLocaleString() : '—'}
                             </span>
-                            <span className="text-right text-app-text-muted text-xs font-mono truncate">
+                            <span className="text-right text-app-muted-foreground text-xs font-mono truncate">
                                 {p.sku}
                             </span>
                         </div>
@@ -241,8 +241,8 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                             <Layers size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-app-text">Product Explorer</h1>
-                            <p className="text-xs text-app-text-muted">Multi-dimensional product hierarchy</p>
+                            <h1 className="text-xl font-bold text-app-foreground">Product Explorer</h1>
+                            <p className="text-xs text-app-muted-foreground">Multi-dimensional product hierarchy</p>
                         </div>
                     </div>
 
@@ -255,11 +255,11 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                             { label: 'Groups', value: totalGroups, icon: <Boxes size={13} /> },
                         ].map(s => (
                             <div key={s.label} className="text-center">
-                                <div className="flex items-center justify-center gap-1 text-app-text-muted mb-0.5">
+                                <div className="flex items-center justify-center gap-1 text-app-muted-foreground mb-0.5">
                                     {s.icon}
                                     <span className="text-[10px] font-medium uppercase tracking-wide">{s.label}</span>
                                 </div>
-                                <span className="text-lg font-bold text-app-text tabular-nums">{s.value}</span>
+                                <span className="text-lg font-bold text-app-foreground tabular-nums">{s.value}</span>
                             </div>
                         ))}
                     </div>
@@ -281,7 +281,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                             className={`flex items-center gap-1.5 px-4 py-2 transition-all duration-200
                                 ${mode === v.id
                                     ? 'bg-app-primary text-white shadow-sm'
-                                    : 'text-app-text-muted hover:text-app-text hover:bg-app-primary/5'
+                                    : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-primary/5'
                                 }`}
                         >
                             {v.icon} {v.label}
@@ -291,13 +291,13 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
 
                 {/* Search */}
                 <div className="relative flex-1 max-w-sm">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Search products, brands, SKU..."
-                        className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-app-border/50 bg-app-surface text-app-text
-                            placeholder:text-app-text-muted/50 outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/20
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-app-border/50 bg-app-surface text-app-foreground
+                            placeholder:text-app-muted-foreground/50 outline-none focus:border-app-primary/50 focus:ring-1 focus:ring-app-primary/20
                             transition-all duration-200"
                     />
                 </div>
@@ -305,13 +305,13 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                 {/* Expand / Collapse */}
                 <div className="flex gap-1.5">
                     <button onClick={expandAll}
-                        className="text-[11px] font-medium px-3 py-2 rounded-lg border border-app-border/30 text-app-text-muted
-                            hover:text-app-text hover:bg-app-primary/5 transition-all">
+                        className="text-[11px] font-medium px-3 py-2 rounded-lg border border-app-border/30 text-app-muted-foreground
+                            hover:text-app-foreground hover:bg-app-primary/5 transition-all">
                         <ChevronDown size={12} className="inline mr-1" />Expand All
                     </button>
                     <button onClick={collapseAll}
-                        className="text-[11px] font-medium px-3 py-2 rounded-lg border border-app-border/30 text-app-text-muted
-                            hover:text-app-text hover:bg-app-primary/5 transition-all">
+                        className="text-[11px] font-medium px-3 py-2 rounded-lg border border-app-border/30 text-app-muted-foreground
+                            hover:text-app-foreground hover:bg-app-primary/5 transition-all">
                         <ChevronRight size={12} className="inline mr-1" />Collapse
                     </button>
                 </div>
@@ -320,7 +320,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
             {/* ── Tree View ── */}
             <div className="rounded-2xl border border-app-border/50 overflow-hidden" style={{ background: 'var(--app-surface)' }}>
                 {/* Column header */}
-                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-app-border/30 text-[10px] font-semibold text-app-text-muted uppercase tracking-wider"
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-app-border/30 text-[10px] font-semibold text-app-muted-foreground uppercase tracking-wider"
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))' }}>
                     <Hash size={10} />
                     <span className="flex-1">
@@ -330,7 +330,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                 </div>
 
                 {tree.length === 0 ? (
-                    <div className="py-16 text-center text-app-text-muted">
+                    <div className="py-16 text-center text-app-muted-foreground">
                         <Layers size={32} className="mx-auto mb-3 opacity-30" />
                         <p className="text-sm font-medium">No products found</p>
                         <p className="text-xs mt-1">Try a different search or view mode</p>
@@ -350,7 +350,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                     <div className="flex items-center gap-2 px-4 py-3 border-b border-app-border/30"
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))' }}>
                         <Boxes size={15} className="text-app-primary" />
-                        <span className="text-sm font-bold text-app-text">Inventory Groups</span>
+                        <span className="text-sm font-bold text-app-foreground">Inventory Groups</span>
                         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-app-primary/10 text-app-primary">
                             {data.groups.length}
                         </span>
@@ -364,9 +364,9 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                                             'bg-blue-500/10 text-app-info'}`}>
                                     {g.group_type}
                                 </span>
-                                <span className="flex-1 text-sm font-medium text-app-text truncate">{g.name}</span>
+                                <span className="flex-1 text-sm font-medium text-app-foreground truncate">{g.name}</span>
                                 {g.brand_name && (
-                                    <span className="text-xs text-app-text-muted">{g.brand_name}</span>
+                                    <span className="text-xs text-app-muted-foreground">{g.brand_name}</span>
                                 )}
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded
                                     ${g.approval_status === 'APPROVED' ? 'bg-emerald-500/10 text-app-success' :
@@ -374,7 +374,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                                             'bg-red-500/10 text-app-error'}`}>
                                     {g.approval_status}
                                 </span>
-                                <span className="text-[10px] text-app-text-muted font-mono">{g.member_count} members</span>
+                                <span className="text-[10px] text-app-muted-foreground font-mono">{g.member_count} members</span>
                             </div>
                         ))}
                     </div>

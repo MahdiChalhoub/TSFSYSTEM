@@ -68,7 +68,7 @@ export default function PurchaseVerificationPage() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <p className="text-app-text-muted mb-4">Redirecting to new verification system...</p>
+        <p className="text-app-muted-foreground mb-4">Redirecting to new verification system...</p>
         <a href="/purchases/invoice-verification" className="text-app-primary hover:underline">
           Click here if not redirected automatically
         </a>
@@ -281,7 +281,7 @@ function OldPurchaseVerificationPage() {
               <FileText size={12} /> 3-Way Match Engine
             </span>
           </div>
-          <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
+          <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
             <div className="w-16 h-16 rounded-[1.8rem] bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-200">
               <Receipt size={32} className="text-white" />
             </div>
@@ -305,8 +305,8 @@ function OldPurchaseVerificationPage() {
                 <Clock size={20} className="text-app-info" />
                 <Badge className="bg-app-info-bg text-app-info">PENDING</Badge>
               </div>
-              <p className="text-3xl font-black text-app-text">{stats.pending}</p>
-              <p className="text-xs text-app-text-muted mt-1">Awaiting Review</p>
+              <p className="text-3xl font-black text-app-foreground">{stats.pending}</p>
+              <p className="text-xs text-app-muted-foreground mt-1">Awaiting Review</p>
             </CardContent>
           </Card>
 
@@ -316,8 +316,8 @@ function OldPurchaseVerificationPage() {
                 <AlertTriangle size={20} className="text-app-warning" />
                 <Badge className="bg-app-warning-bg text-app-warning">ISSUES</Badge>
               </div>
-              <p className="text-3xl font-black text-app-text">{stats.discrepancies}</p>
-              <p className="text-xs text-app-text-muted mt-1">Discrepancies Found</p>
+              <p className="text-3xl font-black text-app-foreground">{stats.discrepancies}</p>
+              <p className="text-xs text-app-muted-foreground mt-1">Discrepancies Found</p>
             </CardContent>
           </Card>
 
@@ -327,8 +327,8 @@ function OldPurchaseVerificationPage() {
                 <CheckCircle2 size={20} className="text-app-success" />
                 <Badge className="bg-app-success-bg text-app-success">VERIFIED</Badge>
               </div>
-              <p className="text-3xl font-black text-app-text">{stats.verified}</p>
-              <p className="text-xs text-app-text-muted mt-1">Approved</p>
+              <p className="text-3xl font-black text-app-foreground">{stats.verified}</p>
+              <p className="text-xs text-app-muted-foreground mt-1">Approved</p>
             </CardContent>
           </Card>
 
@@ -338,8 +338,8 @@ function OldPurchaseVerificationPage() {
                 <TrendingUp size={20} className="text-purple-500" />
                 <Badge className="bg-purple-100 text-purple-700">TOTAL</Badge>
               </div>
-              <p className="text-2xl font-black text-app-text">{fmt(stats.totalAmount)}</p>
-              <p className="text-xs text-app-text-muted mt-1">Pending Value</p>
+              <p className="text-2xl font-black text-app-foreground">{fmt(stats.totalAmount)}</p>
+              <p className="text-xs text-app-muted-foreground mt-1">Pending Value</p>
             </CardContent>
           </Card>
         </div>
@@ -354,7 +354,7 @@ function OldPurchaseVerificationPage() {
             <Card className="border-app-border/30">
               <CardContent className="p-4 space-y-3">
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                   <Input
                     placeholder="Search invoices..."
                     value={searchQuery}
@@ -404,17 +404,17 @@ function OldPurchaseVerificationPage() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="text-sm font-bold text-app-text">{invoice.invoice_number}</p>
-                        <p className="text-xs text-app-text-muted">{invoice.supplier_name}</p>
+                        <p className="text-sm font-bold text-app-foreground">{invoice.invoice_number}</p>
+                        <p className="text-xs text-app-muted-foreground">{invoice.supplier_name}</p>
                       </div>
                       <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-app-text-faint flex items-center gap-1">
+                      <span className="text-app-muted-foreground flex items-center gap-1">
                         <Calendar size={10} />
                         {new Date(invoice.invoice_date).toLocaleDateString()}
                       </span>
-                      <span className="font-bold text-app-text">{fmt(invoice.total_amount)}</span>
+                      <span className="font-bold text-app-foreground">{fmt(invoice.total_amount)}</span>
                     </div>
                     {invoice.status === 'DISCREPANCY' && (
                       <div className="mt-2 flex items-center gap-1 text-xs text-app-warning">
@@ -467,19 +467,19 @@ function OldPurchaseVerificationPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-app-text-muted">Pending</span>
+                  <span className="text-app-muted-foreground">Pending</span>
                   <span className="font-bold">{stats.pending}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-app-text-muted">Issues</span>
+                  <span className="text-app-muted-foreground">Issues</span>
                   <span className="font-bold text-app-warning">{stats.discrepancies}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-app-text-muted">Verified</span>
+                  <span className="text-app-muted-foreground">Verified</span>
                   <span className="font-bold text-app-success">{stats.verified}</span>
                 </div>
                 <div className="flex justify-between text-xs pt-2 border-t border-app-border/30">
-                  <span className="text-app-text-muted">Total Value</span>
+                  <span className="text-app-muted-foreground">Total Value</span>
                   <span className="font-bold">{fmt(stats.totalAmount)}</span>
                 </div>
               </CardContent>

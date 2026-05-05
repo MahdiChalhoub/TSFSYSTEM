@@ -355,13 +355,13 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <BookOpen size={20} />
  </div>
  <div>
- <h2 className="text-base font-black text-app-text">Account Book</h2>
- <p className="text-[10px] text-app-text-faint font-bold">
+ <h2 className="text-base font-black text-app-foreground">Account Book</h2>
+ <p className="text-[10px] text-app-muted-foreground font-bold">
  Cashier Daily Ledger • {entries.length} entries
  </p>
  </div>
  </div>
- <button onClick={onClose} className="p-2 rounded-xl hover:bg-app-text/60 text-app-text-faint hover:text-app-text-muted transition-all">
+ <button onClick={onClose} className="p-2 rounded-xl hover:bg-app-foreground/60 text-app-muted-foreground hover:text-app-muted-foreground transition-all">
  <X size={18} />
  </button>
  </div>
@@ -369,22 +369,22 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {/* Summary strip */}
  {summary && (
  <div className="mt-3 grid grid-cols-4 gap-2">
- <div className="bg-app-text/80 rounded-lg p-2 text-center">
- <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">In</span>
+ <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
+ <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">In</span>
  <span className="text-sm font-black text-app-primary">{formatMoney(summary.totalIn)}</span>
  </div>
- <div className="bg-app-text/80 rounded-lg p-2 text-center">
- <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Out</span>
+ <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
+ <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Out</span>
  <span className="text-sm font-black text-rose-600">{formatMoney(summary.totalOut)}</span>
  </div>
- <div className="bg-app-text/80 rounded-lg p-2 text-center">
- <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Balance</span>
+ <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
+ <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Balance</span>
  <span className={`text-sm font-black ${summary.netBalance >= 0 ? 'text-app-primary' : 'text-rose-600'}`}>
  {summary.netBalance >= 0 ? '+' : '-'}{formatMoney(summary.netBalance)}
  </span>
  </div>
- <div className="bg-app-text/80 rounded-lg p-2 text-center">
- <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Pending</span>
+ <div className="bg-app-foreground/80 rounded-lg p-2 text-center">
+ <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Pending</span>
  <span className="text-sm font-black text-app-warning">{summary.pendingCount}</span>
  </div>
  </div>
@@ -395,13 +395,13 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="flex-1 overflow-y-auto">
  {loading ? (
  <div className="flex items-center justify-center h-40">
- <Loader2 size={24} className="animate-spin text-app-text-muted" />
+ <Loader2 size={24} className="animate-spin text-app-muted-foreground" />
  </div>
  ) : entries.length === 0 ? (
- <div className="flex flex-col items-center justify-center h-40 text-app-text-muted gap-2">
+ <div className="flex flex-col items-center justify-center h-40 text-app-muted-foreground gap-2">
  <BookOpen size={32} strokeWidth={1} />
- <p className="text-xs text-app-text-faint">No entries yet</p>
- <p className="text-[10px] text-app-text-muted">Log all money in/out during your shift</p>
+ <p className="text-xs text-app-muted-foreground">No entries yet</p>
+ <p className="text-[10px] text-app-muted-foreground">Log all money in/out during your shift</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -427,7 +427,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <TypeIcon size={14} />
  </div>
  <div className="min-w-0 flex-1">
- <p className="text-sm font-bold text-app-text truncate">{entry.description}</p>
+ <p className="text-sm font-bold text-app-foreground truncate">{entry.description}</p>
  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
  <span className={clsx(
  "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
@@ -436,39 +436,39 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {getTypeLabel(entry.entryType)}
  </span>
  {entry.reference && (
- <span className="flex items-center gap-0.5 text-[9px] text-app-text-faint">
+ <span className="flex items-center gap-0.5 text-[9px] text-app-muted-foreground">
  <Hash size={7} /> {entry.reference}
  </span>
  )}
- <span className="text-[9px] text-app-text-muted">
+ <span className="text-[9px] text-app-muted-foreground">
  {new Date(entry.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
  {/* Linking info */}
  {entry.supplierName && (
- <p className="text-[9px] text-app-text-muted mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">
  <Building2 size={8} className="inline mr-0.5" /> {entry.supplierName}
- {entry.supplierInvoiceRef && <span className="ml-1 text-app-text-faint">• INV: {entry.supplierInvoiceRef}</span>}
+ {entry.supplierInvoiceRef && <span className="ml-1 text-app-muted-foreground">• INV: {entry.supplierInvoiceRef}</span>}
  </p>
  )}
  {entry.clientName && (
- <p className="text-[9px] text-app-text-muted mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">
  <Users size={8} className="inline mr-0.5" /> {entry.clientName}
- {entry.clientInvoiceRef && <span className="ml-1 text-app-text-faint">• INV: {entry.clientInvoiceRef}</span>}
+ {entry.clientInvoiceRef && <span className="ml-1 text-app-muted-foreground">• INV: {entry.clientInvoiceRef}</span>}
  </p>
  )}
  {entry.expenseCategory && (
- <p className="text-[9px] text-app-text-muted mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">
  <Receipt size={8} className="inline mr-0.5" /> {entry.expenseCategory}
  </p>
  )}
  {entry.partnerName && (
- <p className="text-[9px] text-app-text-muted mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">
  <Users size={8} className="inline mr-0.5" /> Partner: {entry.partnerName}
  </p>
  )}
  {entry.linkedOrderRef && (
- <p className="text-[9px] text-app-text-muted mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">
  <ShoppingBag size={8} className="inline mr-0.5" /> Order: {entry.linkedOrderRef}
  </p>
  )}
@@ -480,7 +480,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  )}>
  <StatusIcon size={8} /> {statusCfg.label}
  </span>
- <span className="text-[9px] text-app-text-faint">by {entry.cashierName}</span>
+ <span className="text-[9px] text-app-muted-foreground">by {entry.cashierName}</span>
  </div>
  {entry.rejectionNotes && (
  <p className="text-[10px] text-rose-400 mt-1 italic bg-rose-50 px-2 py-1 rounded">
@@ -503,7 +503,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  )}>
  {isIn ? '+' : '-'}{formatMoney(isIn ? entry.amountIn : entry.amountOut)}
  </p>
- <p className="text-[9px] text-app-text-faint font-mono mt-0.5">
+ <p className="text-[9px] text-app-muted-foreground font-mono mt-0.5">
  bal: {entry.runningBalance >= 0 ? '+' : ''}{formatMoney(entry.runningBalance)}
  </p>
 
@@ -513,21 +513,21 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'approve')}
  disabled={reviewingId === entry.id}
- className="p-1 rounded-md bg-app-primary text-app-text hover:bg-app-primary transition-all disabled:opacity-50"
+ className="p-1 rounded-md bg-app-primary text-app-foreground hover:bg-app-primary transition-all disabled:opacity-50"
  title="Approve"
  >
  {reviewingId === entry.id ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
  </button>
  <button
  onClick={() => { setShowRejectForm(showRejectForm === entry.id ? null : entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-rose-500 text-app-text hover:bg-rose-600 transition-all"
+ className="p-1 rounded-md bg-rose-500 text-app-foreground hover:bg-rose-600 transition-all"
  title="Reject"
  >
  <XCircle size={10} />
  </button>
  <button
  onClick={() => { setShowRejectForm(entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-blue-500 text-app-text hover:bg-blue-600 transition-all"
+ className="p-1 rounded-md bg-blue-500 text-app-foreground hover:bg-blue-600 transition-all"
  title="Request Info"
  >
  <HelpCircle size={10} />
@@ -549,7 +549,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {entry.status === 'PENDING' && entry.cashierId === cashierId && !isManager && (
  <button
  onClick={() => handleDelete(entry.id)}
- className="mt-1 p-1 rounded-md text-app-text-muted hover:text-rose-500 hover:bg-rose-50 transition-all"
+ className="mt-1 p-1 rounded-md text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all"
  title="Delete entry"
  >
  <Trash2 size={10} />
@@ -571,14 +571,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'reject')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-rose-500 text-app-text rounded-lg text-[10px] font-bold hover:bg-rose-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-rose-500 text-app-foreground rounded-lg text-[10px] font-bold hover:bg-rose-600 disabled:opacity-50"
  >
  Reject
  </button>
  <button
  onClick={() => handleReview(entry.id, 'need_info')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-blue-500 text-app-text rounded-lg text-[10px] font-bold hover:bg-blue-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-blue-500 text-app-foreground rounded-lg text-[10px] font-bold hover:bg-blue-600 disabled:opacity-50"
  >
  Need Info
  </button>
@@ -597,7 +597,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  />
  <button
  onClick={() => handleRespond(entry.id)}
- className="px-3 py-1.5 bg-blue-500 text-app-text rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
+ className="px-3 py-1.5 bg-blue-500 text-app-foreground rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
  >
  <Send size={10} /> Resubmit
  </button>
@@ -615,15 +615,15 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {showAddForm ? (
  <div className="p-4 space-y-3 animate-in slide-in-from-bottom-4 max-h-[60vh] overflow-y-auto">
  <div className="flex items-center justify-between">
- <h3 className="text-xs font-black text-app-text uppercase tracking-widest">New Entry</h3>
- <button onClick={() => setShowAddForm(false)} className="text-app-text-faint hover:text-app-text-muted">
+ <h3 className="text-xs font-black text-app-foreground uppercase tracking-widest">New Entry</h3>
+ <button onClick={() => setShowAddForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground">
  <X size={14} />
  </button>
  </div>
 
  {/* Entry Type Selector */}
  <div>
- <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest block mb-1.5">Transaction Type</label>
+ <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest block mb-1.5">Transaction Type</label>
  <div className="grid grid-cols-3 gap-1.5">
  {ENTRY_TYPES.map(t => {
  const Icon = t.icon;
@@ -638,7 +638,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  ? t.dir === 'IN'
  ? 'bg-app-primary-light border-app-success text-app-success ring-2 ring-emerald-100'
  : 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-100'
- : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  )}
  >
  <Icon size={14} />
@@ -691,15 +691,15 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {/* ── SUPPLIER SELECTOR (live search from database) ── */}
  {(selectedType.fields?.includes('supplier') || false) && (
  <div className="space-y-2">
- <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest block">
+ <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest block">
  <Building2 size={8} className="inline mr-0.5" /> Select Supplier
  </label>
  {form.supplierId ? (
  <div className="flex items-center justify-between bg-app-warning-bg border border-app-warning rounded-xl px-3 py-2">
- <span className="text-sm font-bold text-app-text">{form.supplierName}</span>
+ <span className="text-sm font-bold text-app-foreground">{form.supplierName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '' })); setInvoices([]); }}
- className="text-app-text-faint hover:text-rose-500 transition-colors"
+ className="text-app-muted-foreground hover:text-rose-500 transition-colors"
  >
  <X size={14} />
  </button>
@@ -726,8 +726,8 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className="w-full px-3 py-2 text-left hover:bg-app-warning-bg transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
  >
  <div>
- <span className="font-bold text-app-text">{c.name}</span>
- {c.phone && <span className="text-app-text-faint ml-2 text-xs">{c.phone}</span>}
+ <span className="font-bold text-app-foreground">{c.name}</span>
+ {c.phone && <span className="text-app-muted-foreground ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
  <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-rose-500' : 'text-app-primary')}>
@@ -739,7 +739,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  )}
  {contactSearching && (
- <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-text-muted" /></div>
+ <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-muted-foreground" /></div>
  )}
  </div>
  )}
@@ -749,15 +749,15 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {/* ── CLIENT SELECTOR (live search from database) ── */}
  {(selectedType.fields?.includes('client') || false) && (
  <div className="space-y-2">
- <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest block">
+ <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest block">
  <Users size={8} className="inline mr-0.5" /> Select Client
  </label>
  {form.clientId ? (
  <div className="flex items-center justify-between bg-app-primary-light border border-app-success rounded-xl px-3 py-2">
- <span className="text-sm font-bold text-app-text">{form.clientName}</span>
+ <span className="text-sm font-bold text-app-foreground">{form.clientName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '' })); setInvoices([]); }}
- className="text-app-text-faint hover:text-rose-500 transition-colors"
+ className="text-app-muted-foreground hover:text-rose-500 transition-colors"
  >
  <X size={14} />
  </button>
@@ -784,8 +784,8 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className="w-full px-3 py-2 text-left hover:bg-app-primary-light transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
  >
  <div>
- <span className="font-bold text-app-text">{c.name}</span>
- {c.phone && <span className="text-app-text-faint ml-2 text-xs">{c.phone}</span>}
+ <span className="font-bold text-app-foreground">{c.name}</span>
+ {c.phone && <span className="text-app-muted-foreground ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
  <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-app-primary' : 'text-rose-500')}>
@@ -797,7 +797,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  )}
  {contactSearching && (
- <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-text-muted" /></div>
+ <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-muted-foreground" /></div>
  )}
  </div>
  )}
@@ -807,15 +807,15 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {/* ── UNPAID INVOICES (auto-loaded for selected contact) ── */}
  {(selectedType.fields?.includes('invoice') || false) && (form.supplierId || form.clientId) && (
  <div className="space-y-1.5">
- <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest block">
+ <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest block">
  <Receipt size={8} className="inline mr-0.5" /> Link to Unpaid Invoice (optional)
  </label>
  {invoicesLoading ? (
- <div className="flex items-center gap-2 text-xs text-app-text-faint py-2">
+ <div className="flex items-center gap-2 text-xs text-app-muted-foreground py-2">
  <Loader2 size={12} className="animate-spin" /> Loading invoices...
  </div>
  ) : invoices.length === 0 ? (
- <p className="text-[10px] text-app-text-faint italic py-1">No unpaid invoices found for this contact</p>
+ <p className="text-[10px] text-app-muted-foreground italic py-1">No unpaid invoices found for this contact</p>
  ) : (
  <div className="space-y-1 max-h-32 overflow-y-auto">
  {invoices.map(inv => {
@@ -833,16 +833,16 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  )}
  >
  <div>
- <span className="font-bold text-app-text">{inv.invoiceNumber}</span>
- <span className="text-app-text-faint ml-1.5">
+ <span className="font-bold text-app-foreground">{inv.invoiceNumber}</span>
+ <span className="text-app-muted-foreground ml-1.5">
  {inv.status === 'PARTIAL_PAID' ? '(partial)' : inv.status === 'OVERDUE' ? '(overdue!)' : ''}
  </span>
- {inv.dueDate && <span className="text-app-text-muted ml-1 text-[9px]">due {inv.dueDate}</span>}
+ {inv.dueDate && <span className="text-app-muted-foreground ml-1 text-[9px]">due {inv.dueDate}</span>}
  </div>
  <div className="text-right">
  <span className="font-black text-rose-600">{currency}{inv.balanceDue.toFixed(0)}</span>
  {inv.paidAmount > 0 && (
- <span className="text-[9px] text-app-text-faint block">
+ <span className="text-[9px] text-app-muted-foreground block">
  paid {currency}{inv.paidAmount.toFixed(0)} / {currency}{inv.totalAmount.toFixed(0)}
  </span>
  )}
@@ -890,7 +890,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  onClick={handleAdd}
  disabled={saving || !form.description.trim() || !form.amount}
  className={clsx(
- "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-app-text",
+ "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-app-foreground",
  selectedType.dir === 'IN'
  ? 'bg-app-primary hover:bg-app-primary shadow-emerald-100'
  : 'bg-rose-500 hover:bg-rose-600 shadow-rose-100',
@@ -905,12 +905,12 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="p-4">
  <button
  onClick={() => setShowAddForm(true)}
- className="w-full py-3 bg-app-warning text-app-text rounded-xl font-black text-sm hover:bg-app-warning transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
+ className="w-full py-3 bg-app-warning text-app-foreground rounded-xl font-black text-sm hover:bg-app-warning transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
  >
  <Plus size={14} />
  New Entry
  </button>
- <p className="text-center text-[9px] text-app-text-faint mt-2">
+ <p className="text-center text-[9px] text-app-muted-foreground mt-2">
  <AlertTriangle size={8} className="inline text-app-warning" /> Entries require manager approval • You are responsible for accuracy
  </p>
  </div>

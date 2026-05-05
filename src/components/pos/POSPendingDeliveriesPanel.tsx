@@ -102,9 +102,9 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
 
  <div className="relative w-full max-w-lg bg-app-surface rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
  {/* Header */}
- <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-app-text">
+ <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-app-foreground">
  <div className="flex items-center gap-2.5">
- <div className="w-8 h-8 rounded-xl bg-app-text/20 flex items-center justify-center">
+ <div className="w-8 h-8 rounded-xl bg-app-foreground/20 flex items-center justify-center">
  <Truck size={16} />
  </div>
  <div>
@@ -113,10 +113,10 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </div>
  </div>
  <div className="flex items-center gap-2">
- <button onClick={load} className="w-7 h-7 rounded-lg bg-app-text/20 hover:bg-app-text/30 flex items-center justify-center transition-all">
+ <button onClick={load} className="w-7 h-7 rounded-lg bg-app-foreground/20 hover:bg-app-foreground/30 flex items-center justify-center transition-all">
  <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
  </button>
- <button onClick={onClose} className="w-7 h-7 rounded-lg bg-app-text/20 hover:bg-app-text/30 flex items-center justify-center transition-all">
+ <button onClick={onClose} className="w-7 h-7 rounded-lg bg-app-foreground/20 hover:bg-app-foreground/30 flex items-center justify-center transition-all">
  <X size={12} />
  </button>
  </div>
@@ -125,7 +125,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  {/* Body */}
  <div className="max-h-[70vh] overflow-y-auto divide-y divide-app-border">
  {loading ? (
- <div className="flex items-center justify-center py-12 text-app-text-faint">
+ <div className="flex items-center justify-center py-12 text-app-muted-foreground">
  <RefreshCw className="animate-spin mr-2" size={16} />
  <span className="text-sm">Loading...</span>
  </div>
@@ -134,8 +134,8 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <div className="w-14 h-14 rounded-2xl bg-app-primary-light flex items-center justify-center mb-3">
  <CheckCircle className="text-app-primary" size={24} />
  </div>
- <p className="text-sm font-bold text-app-text">All clear!</p>
- <p className="text-xs text-app-text-faint mt-0.5">No pending deliveries for this session</p>
+ <p className="text-sm font-bold text-app-foreground">All clear!</p>
+ <p className="text-xs text-app-muted-foreground mt-0.5">No pending deliveries for this session</p>
  </div>
  ) : (
  deliveries.map(d => {
@@ -149,7 +149,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  {/* Left info */}
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-1">
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
  #{d.order?.id ?? d.id}
  </span>
  <span className={clsx(
@@ -161,12 +161,12 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  {d.status}
  </span>
  </div>
- <p className="text-sm font-bold text-app-text truncate">
+ <p className="text-sm font-bold text-app-foreground truncate">
  {d.recipient_name || 'Unknown Recipient'}
  </p>
- {d.phone && <p className="text-xs text-app-text-faint">{d.phone}</p>}
+ {d.phone && <p className="text-xs text-app-muted-foreground">{d.phone}</p>}
  {d.address_line1 && (
- <p className="text-xs text-app-text-faint truncate">
+ <p className="text-xs text-app-muted-foreground truncate">
  {d.address_line1}{d.zone ? ` — ${d.zone.name}` : ''}
  </p>
  )}
@@ -190,13 +190,13 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </span>
  </div>
  <div className="flex-1 min-w-0">
- <span className="text-[10px] text-app-text-muted font-medium">
+ <span className="text-[10px] text-app-muted-foreground font-medium">
  Client receipt code
  </span>
  </div>
  <button
  onClick={() => navigator.clipboard?.writeText(d.client_delivery_code!)}
- className="w-5 h-5 flex items-center justify-center text-app-text-faint hover:text-orange-500 transition-all"
+ className="w-5 h-5 flex items-center justify-center text-app-muted-foreground hover:text-orange-500 transition-all"
  title="Copy"
  >
  <Copy size={10} />
@@ -220,10 +220,10 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
 
  {/* Right: Amount */}
  <div className="text-right shrink-0">
- <p className="text-base font-black text-app-text">
+ <p className="text-base font-black text-app-foreground">
  {currency}{amountDue.toFixed(2)}
  </p>
- <p className="text-[10px] text-app-text-faint">due</p>
+ <p className="text-[10px] text-app-muted-foreground">due</p>
  </div>
  </div>
 
@@ -270,7 +270,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <button
  disabled={isConfirming || (needsReturnCode && (returnCodes[d.id] || '').length < 4)}
  onClick={() => handlePosConfirm(d)}
- className="w-full py-2 px-3 rounded-xl bg-app-primary text-app-text hover:bg-app-primary transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
+ className="w-full py-2 px-3 rounded-xl bg-app-primary text-app-foreground hover:bg-app-primary transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
  >
  <DollarSign size={12} />
  I Received the Cash ✓

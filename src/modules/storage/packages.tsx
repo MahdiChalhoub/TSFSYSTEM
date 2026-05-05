@@ -59,7 +59,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ComponentType<{
     applying: { color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: Zap, label: 'Applying' },
     applied: { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle2, label: 'Applied' },
     failed: { color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle, label: 'Failed' },
-    rolled_back: { color: 'bg-gray-500/20 text-app-text-faint border-gray-500/30', icon: RotateCcw, label: 'Rolled Back' },
+    rolled_back: { color: 'bg-gray-500/20 text-app-muted-foreground border-gray-500/30', icon: RotateCcw, label: 'Rolled Back' },
 };
 
 const TYPE_CONFIG: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>; color: string; label: string }> = {
@@ -265,7 +265,7 @@ export default function PackageManagerPage() {
                 <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border backdrop-blur-xl animate-in slide-in-from-right-5 ${toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
                     {toast.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                     <span className="text-sm font-medium">{toast.message}</span>
-                    <button onClick={() => setToast(null)} className="ml-2 text-app-text-faint hover:text-white"><X size={14} /></button>
+                    <button onClick={() => setToast(null)} className="ml-2 text-app-muted-foreground hover:text-white"><X size={14} /></button>
                 </div>
             )}
 
@@ -278,7 +278,7 @@ export default function PackageManagerPage() {
                         </div>
                         Package Manager
                     </h1>
-                    <p className="text-app-text-faint mt-1">Upload, deploy, and manage kernel, frontend &amp; module packages</p>
+                    <p className="text-app-muted-foreground mt-1">Upload, deploy, and manage kernel, frontend &amp; module packages</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button onClick={() => uploadInputRef.current?.click()} disabled={uploading}
@@ -313,7 +313,7 @@ export default function PackageManagerPage() {
                             <span className="text-sm text-white font-medium">Uploading package...</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {uploadSpeed && <span className="text-xs text-app-text-faint">{uploadSpeed}</span>}
+                            {uploadSpeed && <span className="text-xs text-app-muted-foreground">{uploadSpeed}</span>}
                             <span className="text-sm text-purple-400 font-mono">{uploadProgress}%</span>
                         </div>
                     </div>
@@ -335,13 +335,13 @@ export default function PackageManagerPage() {
                         const tc = TYPE_CONFIG[u.package_type] || TYPE_CONFIG.module;
                         return (
                             <div key={u.session_id} className="flex items-center gap-3 bg-gray-900/50 rounded-xl p-3 mt-2">
-                                <tc.icon size={16} className={tc.color.split(' ').find(c => c.startsWith('text-')) || 'text-app-text-faint'} />
+                                <tc.icon size={16} className={tc.color.split(' ').find(c => c.startsWith('text-')) || 'text-app-muted-foreground'} />
                                 <span className="text-sm text-gray-200 flex-1 truncate">{u.filename}</span>
                                 <div className="w-32 bg-gray-800 rounded-full h-1.5">
                                     <div className="bg-amber-500 h-full rounded-full" style={{ width: `${u.progress}%` }} />
                                 </div>
                                 <span className="text-xs text-amber-400 font-mono w-10 text-right">{u.progress}%</span>
-                                <span className="text-xs text-app-text-faint">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
+                                <span className="text-xs text-app-muted-foreground">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
                             </div>
                         );
                     })}
@@ -366,16 +366,16 @@ export default function PackageManagerPage() {
                     <option value="failed">Failed</option>
                     <option value="rolled_back">Rolled Back</option>
                 </select>
-                <span className="text-sm text-app-text-faint ml-auto">{packages.length} package{packages.length !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-app-muted-foreground ml-auto">{packages.length} package{packages.length !== 1 ? 's' : ''}</span>
             </div>
 
             {/* Package List */}
             <div className="space-y-3">
                 {packages.length === 0 ? (
                     <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-16 text-center backdrop-blur-xl">
-                        <Package size={48} className="mx-auto text-app-text-muted mb-4" />
-                        <p className="text-app-text-faint text-lg">No packages found</p>
-                        <p className="text-xs text-app-text-muted mt-2">Upload a .kernel.zip, .frontend.zip, or .module.zip to get started</p>
+                        <Package size={48} className="mx-auto text-app-muted-foreground mb-4" />
+                        <p className="text-app-muted-foreground text-lg">No packages found</p>
+                        <p className="text-xs text-app-muted-foreground mt-2">Upload a .kernel.zip, .frontend.zip, or .module.zip to get started</p>
                     </div>
                 ) : (
                     packages.map(pkg => {
@@ -400,9 +400,9 @@ export default function PackageManagerPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-semibold text-white truncate">{pkg.name}</span>
-                                            <span className="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-app-text-faint font-mono">v{pkg.version}</span>
+                                            <span className="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-app-muted-foreground font-mono">v{pkg.version}</span>
                                         </div>
-                                        {pkg.changelog && <p className="text-xs text-app-text-faint mt-0.5 truncate">{pkg.changelog}</p>}
+                                        {pkg.changelog && <p className="text-xs text-app-muted-foreground mt-0.5 truncate">{pkg.changelog}</p>}
                                     </div>
 
                                     {/* Upload Progress (if uploading) */}
@@ -425,8 +425,8 @@ export default function PackageManagerPage() {
 
                                     {/* Size + Time */}
                                     <div className="text-right shrink-0 w-24">
-                                        <p className="text-xs text-app-text-faint">{formatBytes(pkg.file_size)}</p>
-                                        <p className="text-xs text-app-text-muted">{pkg.uploaded_at ? timeAgo(pkg.uploaded_at) : '—'}</p>
+                                        <p className="text-xs text-app-muted-foreground">{formatBytes(pkg.file_size)}</p>
+                                        <p className="text-xs text-app-muted-foreground">{pkg.uploaded_at ? timeAgo(pkg.uploaded_at) : '—'}</p>
                                     </div>
 
                                     {/* Actions */}
@@ -468,7 +468,7 @@ export default function PackageManagerPage() {
                                         </div>
                                         {pkg.changelog && (
                                             <div className="mt-4 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
-                                                <p className="text-xs text-app-text-faint mb-1">Changelog</p>
+                                                <p className="text-xs text-app-muted-foreground mb-1">Changelog</p>
                                                 <p className="text-sm text-gray-300">{pkg.changelog}</p>
                                             </div>
                                         )}
@@ -480,8 +480,8 @@ export default function PackageManagerPage() {
                                         )}
                                         {pkg.manifest && Object.keys(pkg.manifest).length > 0 && (
                                             <div className="mt-4 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
-                                                <p className="text-xs text-app-text-faint mb-2">Manifest</p>
-                                                <pre className="text-xs text-app-text-faint overflow-x-auto">{JSON.stringify(pkg.manifest, null, 2)}</pre>
+                                                <p className="text-xs text-app-muted-foreground mb-2">Manifest</p>
+                                                <pre className="text-xs text-app-muted-foreground overflow-x-auto">{JSON.stringify(pkg.manifest, null, 2)}</pre>
                                             </div>
                                         )}
                                     </div>
@@ -503,11 +503,11 @@ function StatsCard({ label, value, icon: Icon, color }: {
         <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 backdrop-blur-xl">
             <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color.split(' ').find(c => c.startsWith('bg-')) || 'bg-gray-800'}`}>
-                    <Icon size={18} className={color.split(' ').find(c => c.startsWith('text-')) || 'text-app-text-faint'} />
+                    <Icon size={18} className={color.split(' ').find(c => c.startsWith('text-')) || 'text-app-muted-foreground'} />
                 </div>
                 <div>
                     <p className="text-2xl font-bold text-white">{value}</p>
-                    <p className="text-xs text-app-text-faint">{label}</p>
+                    <p className="text-xs text-app-muted-foreground">{label}</p>
                 </div>
             </div>
         </div>
@@ -517,7 +517,7 @@ function StatsCard({ label, value, icon: Icon, color }: {
 function DetailItem({ label, value }: { label: string; value: string }) {
     return (
         <div>
-            <p className="text-xs text-app-text-faint mb-1">{label}</p>
+            <p className="text-xs text-app-muted-foreground mb-1">{label}</p>
             <p className="text-sm text-gray-200 truncate" title={value}>{value}</p>
         </div>
     );

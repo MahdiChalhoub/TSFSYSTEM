@@ -17,6 +17,9 @@ import {
     Sigma,
     Landmark,
     Coins,
+    ArrowRightLeft,
+    Target,
+    Library,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -32,9 +35,9 @@ export const financeProduction: MenuItem = {
             title: 'Settings',
             icon: Settings,
             children: [
-                { title: 'COA Templates', path: '/finance/chart-of-accounts/templates', icon: FolderTree },
-                { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate', icon: Database },
-                { title: 'Posting Rules', path: '/finance/settings/posting-rules', icon: ListChecks },
+                { title: 'COA Templates', path: '/finance/chart-of-accounts/templates', icon: Library },
+                { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate', icon: ArrowRightLeft },
+                { title: 'Posting Rules', path: '/finance/settings/posting-rules', icon: Target },
             ],
         },
     ],

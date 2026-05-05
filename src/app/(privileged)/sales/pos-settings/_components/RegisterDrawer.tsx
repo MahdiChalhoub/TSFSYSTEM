@@ -112,7 +112,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
             <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
                 <Icon size={12} style={{ color }} />
             </div>
-            <span className="text-[11px] font-black text-app-text uppercase tracking-widest">{label}</span>
+            <span className="text-[11px] font-black text-app-foreground uppercase tracking-widest">{label}</span>
             {count !== undefined && (
                 <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                     style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>{count}</span>
@@ -171,8 +171,8 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                 <Monitor size={18} />
                             </div>
                             <div>
-                                <h2 className="text-sm font-black text-app-text tracking-tight">{form.name}</h2>
-                                <p className="text-[10px] text-app-text-muted">{reg.siteName} · #{reg.id}</p>
+                                <h2 className="text-sm font-black text-app-foreground tracking-tight">{form.name}</h2>
+                                <p className="text-[10px] text-app-muted-foreground">{reg.siteName} · #{reg.id}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -187,15 +187,15 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                 style={{ boxShadow: '0 2px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save
                             </button>
-                            <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl text-app-text-muted transition-colors"><X size={16} /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl text-app-muted-foreground transition-colors"><X size={16} /></button>
                         </div>
                     </div>
                     <div className="flex gap-0.5 -mb-[1px]">
                         {TABS.map(t => (
                             <button key={t.id} onClick={() => setTab(t.id)}
                                 className={`flex items-center gap-1.5 px-3.5 py-2.5 text-[10px] font-bold transition-all border-b-2 ${tab === t.id
-                                    ? 'text-app-text border-current'
-                                    : 'text-app-text-muted border-transparent hover:text-app-text'}`}
+                                    ? 'text-app-foreground border-current'
+                                    : 'text-app-muted-foreground border-transparent hover:text-app-foreground'}`}
                                 style={tab === t.id ? { borderColor: t.color, color: t.color } : {}}>
                                 <t.icon size={12} /> {t.label}
                             </button>
@@ -213,7 +213,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                     <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} className="shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-[11px] font-black" style={{ color: 'var(--app-error)' }}>Register not operational</p>
-                                        <p className="text-[10px] mt-0.5 text-app-text-muted">{reg.missingCashAccount && '⚠ Missing Cash Account. '}{reg.missingAccountBook && '⚠ Missing Account Book.'}</p>
+                                        <p className="text-[10px] mt-0.5 text-app-muted-foreground">{reg.missingCashAccount && '⚠ Missing Cash Account. '}{reg.missingAccountBook && '⚠ Missing Account Book.'}</p>
                                     </div>
                                 </div>
                             )}
@@ -221,38 +221,38 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                 <SectionLabel icon={Monitor} label="Register Info" color="var(--app-primary)" />
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Name</label>
+                                        <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Name</label>
                                         <input value={form.name} onChange={e => set('name', e.target.value)}
-                                            className="w-full text-[13px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none focus:border-app-primary/40 transition-colors" />
+                                            className="w-full text-[13px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary/40 transition-colors" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Cash Account *</label>
+                                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Cash Account *</label>
                                             <select value={form.cashAccountId} onChange={e => set('cashAccountId', +e.target.value)}
-                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                                 <option value={0}>⚠ Select…</option>
                                                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Opening Mode</label>
+                                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Opening Mode</label>
                                             <select value={form.openingMode} onChange={e => set('openingMode', e.target.value)}
-                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                                 <option value="standard">Standard</option>
                                                 <option value="advanced">Advanced</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Warehouse</label>
+                                        <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Warehouse</label>
                                         <select value={form.warehouseId} onChange={e => set('warehouseId', +e.target.value)}
-                                            className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                            className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                             <option value={0}>-- none --</option>
                                             {filteredWarehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({w.location_type || 'WH'})</option>)}
                                         </select>
                                     </div>
                                     <div className="flex items-center justify-between py-2.5 border-t border-app-border/20">
-                                        <div><p className="text-[11px] font-bold text-app-text">Account Book</p><p className="text-[9px] text-app-text-muted">{form.enableAccountBook ? 'Linked to cash account' : 'Disabled'}</p></div>
+                                        <div><p className="text-[11px] font-bold text-app-foreground">Account Book</p><p className="text-[9px] text-app-muted-foreground">{form.enableAccountBook ? 'Linked to cash account' : 'Disabled'}</p></div>
                                         <Toggle on={form.enableAccountBook} onChange={() => set('enableAccountBook', !form.enableAccountBook)} />
                                     </div>
                                 </div>
@@ -266,11 +266,11 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Banknote} label="Methods" color="var(--app-primary)" count={form.registerMethods.length} />
                                 {methodsLoading ? (
-                                    <div className="flex items-center gap-2 py-4 text-app-text-muted">
+                                    <div className="flex items-center gap-2 py-4 text-app-muted-foreground">
                                         <Loader2 size={14} className="animate-spin" /> <span className="text-[11px]">Loading methods…</span>
                                     </div>
                                 ) : globalMethods.length === 0 ? (
-                                    <p className="text-[10px] text-app-text-muted italic py-4">No payment methods configured. <a href="/finance/settings/payment-methods" className="text-app-primary underline">Create some →</a></p>
+                                    <p className="text-[10px] text-app-muted-foreground italic py-4">No payment methods configured. <a href="/finance/settings/payment-methods" className="text-app-primary underline">Create some →</a></p>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {globalMethods.filter(gm => gm.is_active).map(gm => {
@@ -309,8 +309,8 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                     </div>
                                                     {/* Name */}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className={`text-[11px] font-bold truncate ${isActive ? 'text-app-text' : 'text-app-text-muted'}`}>{gm.name}</p>
-                                                        <p className="text-[8px] text-app-text-faint uppercase tracking-widest">{gm.code}</p>
+                                                        <p className={`text-[11px] font-bold truncate ${isActive ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{gm.name}</p>
+                                                        <p className="text-[8px] text-app-muted-foreground uppercase tracking-widest">{gm.code}</p>
                                                     </div>
                                                     {/* Account Dropdown (only when active) */}
                                                     {isActive && (
@@ -323,7 +323,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                                     rm.methodId === gm.id ? { ...rm, accountId: accId || null, accountName: acc?.name || null } : rm
                                                                 ))
                                                             }}
-                                                            className="text-[10px] font-bold px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none max-w-[160px]"
+                                                            className="text-[10px] font-bold px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none max-w-[160px]"
                                                             title="Link financial account">
                                                             <option value={0}>— no account —</option>
                                                             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -338,12 +338,12 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={CreditCard} label="Allowed Accounts" color="var(--app-primary)" count={form.allowedAccountIds.length + (form.cashAccountId ? 1 : 0)} />
                                 <div className="space-y-1.5 max-h-52 overflow-y-auto custom-scrollbar">
-                                    {accounts.length === 0 && <p className="text-[10px] text-app-text-muted italic py-2">No financial accounts found</p>}
+                                    {accounts.length === 0 && <p className="text-[10px] text-app-muted-foreground italic py-2">No financial accounts found</p>}
                                     {accounts.map(a => {
                                         const isCash = a.id === form.cashAccountId; const on = isCash || form.allowedAccountIds.includes(a.id)
                                         return (
                                             <button key={a.id} onClick={() => { if (isCash) return; set('allowedAccountIds', toggleId(form.allowedAccountIds, a.id)) }}
-                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-text-muted hover:bg-app-surface'}`}
+                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-muted-foreground hover:bg-app-surface'}`}
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-emerald-500 border-emerald-400' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
@@ -362,7 +362,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Users} label="Authorized Cashiers" color="var(--app-info)" count={form.authorizedUserIds.length} />
-                                <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Toggle access and manage PINs per register. Users without a PIN cannot log in.</p>
+                                <p className="text-[9px] text-app-muted-foreground -mt-2 mb-3">Toggle access and manage PINs per register. Users without a PIN cannot log in.</p>
                                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
                                     {users.map(u => {
                                         const on = form.authorizedUserIds.includes(u.id)
@@ -383,7 +383,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                 </div>
                                                 {/* Name + role */}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`font-medium truncate ${on ? 'text-app-text' : 'text-app-text-muted'}`}>{name}</p>
+                                                    <p className={`font-medium truncate ${on ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{name}</p>
                                                     <p className="text-[9px] opacity-50">{u.role_name || 'Staff'}</p>
                                                 </div>
                                                 {/* PIN status */}
@@ -402,7 +402,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                             {/* Quick Links */}
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Zap} label="Quick Links" color="var(--app-primary)" />
-                                <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Jump to related settings and features</p>
+                                <p className="text-[9px] text-app-muted-foreground -mt-2 mb-3">Jump to related settings and features</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
                                         { label: 'Users & PINs', desc: 'Global PIN manager', icon: Key, color: 'var(--app-info)', href: '__users_pins__' },
@@ -422,10 +422,10 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                                 <link.icon size={13} />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[10px] font-bold text-app-text truncate">{link.label}</p>
-                                                <p className="text-[8px] text-app-text-faint">{link.desc}</p>
+                                                <p className="text-[10px] font-bold text-app-foreground truncate">{link.label}</p>
+                                                <p className="text-[8px] text-app-muted-foreground">{link.desc}</p>
                                             </div>
-                                            <ChevronRight size={11} className="text-app-text-faint shrink-0 ml-auto" />
+                                            <ChevronRight size={11} className="text-app-muted-foreground shrink-0 ml-auto" />
                                         </button>
                                     ))}
                                 </div>
@@ -438,16 +438,16 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Shield} label="Rules Override" color="var(--app-warning)" />
-                                <p className="text-[10px] text-app-text-muted mb-3 -mt-1">Override global rules for this register. Unset rules inherit from Global Settings.</p>
+                                <p className="text-[10px] text-app-muted-foreground mb-3 -mt-1">Override global rules for this register. Unset rules inherit from Global Settings.</p>
                                 <div className="space-y-0.5">
                                     {OVERRIDE_RULES.map(rule => {
                                         const val = form.rulesOverride[rule.key]; const isSet = val !== undefined
                                         return (
                                             <div key={rule.key} className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-app-surface/50 transition-colors border-b border-app-border/10 last:border-0">
-                                                <div className="flex-1 mr-3"><p className="text-[11px] font-bold text-app-text">{rule.label}</p><p className="text-[9px] text-app-text-muted">{rule.desc}</p></div>
+                                                <div className="flex-1 mr-3"><p className="text-[11px] font-bold text-app-foreground">{rule.label}</p><p className="text-[9px] text-app-muted-foreground">{rule.desc}</p></div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {isSet && <button onClick={() => { const r = { ...form.rulesOverride }; delete r[rule.key]; set('rulesOverride', r) }}
-                                                        className="text-[8px] text-app-text-muted hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
+                                                        className="text-[8px] text-app-muted-foreground hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
                                                     <button onClick={() => set('rulesOverride', { ...form.rulesOverride, [rule.key]: !val })}
                                                         className={`w-9 h-5 rounded-full relative transition-all ${isSet ? (val ? 'bg-amber-500' : 'bg-app-surface border border-app-border/50') : 'bg-app-surface border border-app-border/50 opacity-30'}`}>
                                                         <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${val && isSet ? 'left-[18px]' : 'left-[3px]'}`} />

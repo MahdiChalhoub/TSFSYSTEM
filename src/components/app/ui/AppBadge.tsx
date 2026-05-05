@@ -29,7 +29,7 @@ const VARIANT_STYLES: Record<BadgeVariant, React.CSSProperties> = {
     warning: { background: 'var(--app-warning-bg)', color: 'var(--app-warning)', borderColor: 'var(--app-warning)' },
     error: { background: 'var(--app-error-bg)', color: 'var(--app-error)', borderColor: 'var(--app-error)' },
     info: { background: 'var(--app-info-bg)', color: 'var(--app-info)', borderColor: 'var(--app-info)' },
-    neutral: { background: 'var(--app-surface-2)', color: 'var(--app-text-muted)', borderColor: 'var(--app-border)' },
+    neutral: { background: 'var(--app-surface-2)', color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' },
     // Tagging governance variants (sidebar tags)
     new: { background: 'rgba(59,130,246,0.12)', color: '#3B82F6', borderColor: '#3B82F6' },
     pending: { background: 'rgba(234,179,8,0.12)', color: '#CA8A04', borderColor: '#CA8A04' },

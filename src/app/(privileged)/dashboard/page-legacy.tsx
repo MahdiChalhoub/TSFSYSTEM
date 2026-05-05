@@ -230,7 +230,7 @@ export default function AdvancedIntelligenceDashboard() {
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">ECONOMIC EXPOSURE</p>
  <h2 className="text-4xl font-black text-app-foreground tracking-tighter mt-1">{fmt(economicExposure)}</h2>
- <div className="mt-6 pt-5 border-t border-app-text/5 flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
+ <div className="mt-6 pt-5 border-t border-app-foreground/5 flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
  <Clock size={14} className="text-app-primary" /> Review Priority: Alpha
  </div>
  </CardContent>

@@ -260,7 +260,7 @@ export default function ListViewSettingsPage() {
  <div className="p-6 max-w-3xl mx-auto animate-in fade-in duration-500">
  {/* Page header */}
  <div className="flex items-center gap-4 mb-6">
- <div className="w-14 h-14 rounded-2xl bg-app-gradient-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <div className="w-14 h-14 rounded-2xl bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
  <Settings className="h-7 w-7 text-app-foreground" />
  </div>
  <div>

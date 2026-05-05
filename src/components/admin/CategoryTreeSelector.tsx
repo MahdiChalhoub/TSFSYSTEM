@@ -172,7 +172,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                         onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
                         className="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded"
                         style={{
-                            color: 'var(--app-text-faint)',
+                            color: 'var(--app-muted-foreground)',
                             transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                             transition: 'transform 200ms cubic-bezier(.4,0,.2,1), color 150ms',
                         }}
@@ -210,7 +210,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     size={13}
                     className="flex-shrink-0"
                     style={{
-                        color: (isSelected || isIndeterminate) ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                        color: (isSelected || isIndeterminate) ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                         transition: 'color 180ms ease',
                     }} />
 
@@ -225,7 +225,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     <span className="text-tp-xxs font-mono font-bold flex-shrink-0 px-1.5 py-0.5 rounded"
                         style={{
                             background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
-                            color: 'var(--app-text-faint)',
+                            color: 'var(--app-muted-foreground)',
                         }}>
                         {category.code}
                     </span>

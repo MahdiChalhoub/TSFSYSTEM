@@ -185,7 +185,7 @@ export default function OrderHistoryPage() {
  </Button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end" className="w-56 rounded-xl border-app-border shadow-xl">
- <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-2">
+ <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 py-2">
  Management de Vente
  </DropdownMenuLabel>
  <DropdownMenuItem asChild className="focus:bg-app-info-bg focus:text-app-info cursor-pointer py-2.5">
@@ -203,7 +203,7 @@ export default function OrderHistoryPage() {
  <DropdownMenuSeparator />
 
  {/* ── Workflow Transitions ────────────────── */}
- <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-1">
+ <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 py-1">
  Workflow
  </DropdownMenuLabel>
 
@@ -279,7 +279,7 @@ export default function OrderHistoryPage() {
  <Link2 size={14} className="mr-2" /> Afficher l'URL de la facture
  </DropdownMenuItem>
 
- <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 pt-4 pb-2">
+ <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 pt-4 pb-2">
  Notifications
  </DropdownMenuLabel>
  <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
@@ -302,7 +302,7 @@ export default function OrderHistoryPage() {
  <span className="text-xs font-bold text-app-foreground">
  {order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}
  </span>
- <span className="text-[10px] text-app-text-faint font-medium tracking-tight">
+ <span className="text-[10px] text-app-muted-foreground font-medium tracking-tight">
  {order.created_at ? new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
  </span>
  </div>
@@ -313,7 +313,7 @@ export default function OrderHistoryPage() {
  label: 'Facture n°.',
  sortable: true,
  render: (order) => (
- <span className="font-black text-app-text leading-tight">#{order.invoice_number || order.ref_code || order.id}</span>
+ <span className="font-black text-app-foreground leading-tight">#{order.invoice_number || order.ref_code || order.id}</span>
  )
  },
  {
@@ -323,7 +323,7 @@ export default function OrderHistoryPage() {
  render: (order) => (
  <div className="flex flex-col">
  <span className="text-sm font-semibold text-app-foreground tracking-tight">{order.contact_name || 'Walking Customer'}</span>
- <span className="text-[10px] text-app-text-faint font-bold uppercase tracking-tighter">
+ <span className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">
  {order.contact_phone || ''}
  </span>
  </div>
@@ -333,14 +333,14 @@ export default function OrderHistoryPage() {
  key: 'contact_phone',
  label: 'Numéro de contact',
  render: (order) => (
- <span className="text-xs text-app-text-muted">{order.contact_phone || '—'}</span>
+ <span className="text-xs text-app-muted-foreground">{order.contact_phone || '—'}</span>
  )
  },
  {
  key: 'site_name',
  label: 'Emplacement',
  render: (order) => (
- <span className="text-xs font-medium text-app-text-muted">{order.site_name || 'Global'}</span>
+ <span className="text-xs font-medium text-app-muted-foreground">{order.site_name || 'Global'}</span>
  )
  },
  {
@@ -348,7 +348,7 @@ export default function OrderHistoryPage() {
  label: 'Order Status',
  render: (order) => {
  const cfg = ORDER_STATUS_CONFIG[order.order_status as OrderStatus]
- ?? { label: order.order_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
+ ?? { label: order.order_status ?? '—', color: 'bg-app-surface-2 text-app-muted-foreground' };
  return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
  }
  },
@@ -357,7 +357,7 @@ export default function OrderHistoryPage() {
  label: 'Delivery',
  render: (order) => {
  const cfg = DELIVERY_STATUS_CONFIG[order.delivery_status as DeliveryStatus]
- ?? { label: order.delivery_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
+ ?? { label: order.delivery_status ?? '—', color: 'bg-app-surface-2 text-app-muted-foreground' };
  return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
  }
  },
@@ -368,7 +368,7 @@ export default function OrderHistoryPage() {
  // Prefer new payment_status axis; fall back to derived value
  if (order.payment_status) {
  const cfg = PAYMENT_STATUS_CONFIG[order.payment_status as PaymentStatus]
- ?? { label: order.payment_status, color: 'bg-app-surface-2 text-app-text-muted' };
+ ?? { label: order.payment_status, color: 'bg-app-surface-2 text-app-muted-foreground' };
  return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
  }
  // Legacy fallback: derive from total_paid
@@ -384,7 +384,7 @@ export default function OrderHistoryPage() {
  label: 'Invoice',
  render: (order) => {
  const cfg = INVOICE_STATUS_CONFIG[order.invoice_status as InvoiceStatus]
- ?? { label: order.invoice_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
+ ?? { label: order.invoice_status ?? '—', color: 'bg-app-surface-2 text-app-muted-foreground' };
  return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
  }
  },
@@ -392,7 +392,7 @@ export default function OrderHistoryPage() {
  key: 'payment_method',
  label: 'Mode de paiement',
  render: (order) => (
- <Badge variant="secondary" className="bg-app-surface-2 text-app-text-muted border-0 text-[8px] font-black uppercase tracking-tighter">
+ <Badge variant="secondary" className="bg-app-surface-2 text-app-muted-foreground border-0 text-[8px] font-black uppercase tracking-tighter">
  {order.payment_method || 'CASH'}
  </Badge>
  )
@@ -403,7 +403,7 @@ export default function OrderHistoryPage() {
  align: 'right',
  sortable: true,
  render: (order) => (
- <span className="font-black text-app-text tracking-tighter">{fmt(parseFloat(String(order.total_amount ?? 0)))}</span>
+ <span className="font-black text-app-foreground tracking-tighter">{fmt(parseFloat(String(order.total_amount ?? 0)))}</span>
  )
  },
  {
@@ -428,14 +428,14 @@ export default function OrderHistoryPage() {
  label: 'Vente retour dû',
  align: 'right',
  render: (order) => (
- <span className="text-xs font-bold text-app-text-faint">{fmt(parseFloat(String(order.return_due || 0)))}</span>
+ <span className="text-xs font-bold text-app-muted-foreground">{fmt(parseFloat(String(order.return_due || 0)))}</span>
  )
  },
  {
  key: 'shipping_status',
  label: "Statut d'envoi",
  render: (order) => (
- <Badge className="bg-app-bg text-app-text-muted border border-app-border text-[9px] font-bold uppercase">
+ <Badge className="bg-app-bg text-app-muted-foreground border border-app-border text-[9px] font-bold uppercase">
  {order.shipping_status || '—'}
  </Badge>
  )
@@ -445,7 +445,7 @@ export default function OrderHistoryPage() {
  label: 'Articles au total',
  align: 'center',
  render: (order) => (
- <span className="text-xs font-bold text-app-text">{order.total_items || 0}</span>
+ <span className="text-xs font-bold text-app-foreground">{order.total_items || 0}</span>
  )
  },
  {
@@ -461,7 +461,7 @@ export default function OrderHistoryPage() {
  render: (order) => (
  <div className="flex items-center gap-1.5">
  <User size={12} className="text-stone-300" />
- <span className="text-xs text-app-text-muted font-medium">{order.user_name || 'System'}</span>
+ <span className="text-xs text-app-muted-foreground font-medium">{order.user_name || 'System'}</span>
  </div>
  )
  },
@@ -469,7 +469,7 @@ export default function OrderHistoryPage() {
  key: 'notes',
  label: 'Note de vente',
  render: (order) => (
- <p className="text-[10px] text-app-text-faint italic truncate max-w-[120px]" title={order.notes}>
+ <p className="text-[10px] text-app-muted-foreground italic truncate max-w-[120px]" title={order.notes}>
  {order.notes || '—'}
  </p>
  )
@@ -492,7 +492,7 @@ export default function OrderHistoryPage() {
  onClick={() => toggleLock(order.id, order.is_locked)}
  className="transition-transform active:scale-95"
  >
- {order.is_locked ? <Badge className="bg-stone-900 text-app-text border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
+ {order.is_locked ? <Badge className="bg-stone-900 text-app-foreground border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
  </button>
  )
  },
@@ -505,7 +505,7 @@ export default function OrderHistoryPage() {
  onClick={() => toggleVerify(order.id, order.is_verified)}
  className="transition-transform active:scale-95"
  >
- {order.is_verified ? <Badge className="bg-indigo-600 text-app-text border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
+ {order.is_verified ? <Badge className="bg-indigo-600 text-app-foreground border-0 text-[8px] h-4">YES</Badge> : <span className="text-[8px] text-stone-200">NO</span>}
  </button>
  )
  }
@@ -535,18 +535,18 @@ export default function OrderHistoryPage() {
  <Activity size={12} /> Transaction Stream
  </span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
- <History size={32} className="text-app-text" />
+ <History size={32} className="text-app-foreground" />
  </div>
  Transaction <span className="text-app-info">History</span>
  </h1>
  </div>
  <div className="flex items-center gap-3">
- <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-text-faint hover:text-app-info hover:bg-app-bg transition-all">
+ <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-muted-foreground hover:text-app-info hover:bg-app-bg transition-all">
  <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
  </Button>
- <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-text font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+ <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
  <Link href="/sales">
  <ArrowUpRight size={18} /> Terminal
  </Link>
@@ -594,10 +594,10 @@ export default function OrderHistoryPage() {
  onSort={settings.setSort}
  renderExpanded={(order) => (
  <div className="p-6 bg-stone-50/50 rounded-2xl mx-10 mb-4 border border-app-border animate-in slide-in-from-top-2 duration-300">
- <h4 className="text-[10px] font-black uppercase tracking-widest text-app-text-faint mb-4 px-2">Détails des Articles</h4>
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-4 px-2">Détails des Articles</h4>
  <div className="bg-app-surface rounded-xl border border-app-border overflow-hidden shadow-sm">
  <table className="w-full text-left text-xs">
- <thead className="bg-app-bg text-app-text-faint font-bold">
+ <thead className="bg-app-bg text-app-muted-foreground font-bold">
  <tr>
  <th className="px-4 py-3">Produit</th>
  <th className="px-4 py-3 text-center">Quantité</th>
@@ -609,9 +609,9 @@ export default function OrderHistoryPage() {
  {order.lines?.map((line: any, i: number) => (
  <tr key={i} className="hover:bg-stone-50/50 transition-colors">
  <td className="px-4 py-3 font-semibold text-stone-700">{line.product_name || `Produit #${line.product}`}</td>
- <td className="px-4 py-3 text-center font-bold text-app-text-muted">{line.quantity}</td>
- <td className="px-4 py-3 text-right text-app-text-muted">{fmt(parseFloat(line.unit_price))}</td>
- <td className="px-4 py-3 text-right font-black text-app-text">{fmt(parseFloat(line.subtotal))}</td>
+ <td className="px-4 py-3 text-center font-bold text-app-muted-foreground">{line.quantity}</td>
+ <td className="px-4 py-3 text-right text-app-muted-foreground">{fmt(parseFloat(line.unit_price))}</td>
+ <td className="px-4 py-3 text-right font-black text-app-foreground">{fmt(parseFloat(line.subtotal))}</td>
  </tr>
  ))}
  </tbody>
@@ -623,7 +623,7 @@ export default function OrderHistoryPage() {
  headerExtra={
  <div className="flex items-center gap-3">
  <div className="relative w-80">
- <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <Input
  placeholder="Rechercher par n° facture, client..."
  value={searchQuery}
@@ -631,7 +631,7 @@ export default function OrderHistoryPage() {
  className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-indigo-500/30 transition-all focus:bg-app-surface focus:shadow-sm"
  />
  </div>
- <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-text-muted gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">
+ <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-muted-foreground gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">
  <Filter size={14} /> Filtres Avancés
  </Button>
  </div>

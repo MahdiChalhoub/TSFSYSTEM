@@ -40,7 +40,7 @@ export function Launchpad() {
                 >
                     <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                     Quick Access
                 </h1>
             </div>
@@ -73,7 +73,7 @@ export function Launchpad() {
                             >
                                 <Icon size={16} />
                             </div>
-                            <span className="text-[11px] font-bold tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            <span className="text-[11px] font-bold tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                                 {item.title}
                             </span>
                         </button>

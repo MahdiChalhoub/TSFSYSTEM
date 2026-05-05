@@ -34,20 +34,20 @@ export const ContactCard = React.memo(function ContactCard({ contact, onRowClick
           <div className="flex justify-between items-start">
             <div style={{ minWidth: 0 }}>
               <h3 style={{
-                fontWeight: 700, fontSize: '0.875rem', color: 'var(--app-text)',
+                fontWeight: 700, fontSize: '0.875rem', color: 'var(--app-foreground)',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {contact.name}
               </h3>
               {contact.company_name && (
-                <p style={{ fontSize: '0.6875rem', color: 'var(--app-text-muted)', marginTop: '0.0625rem' }}>
+                <p style={{ fontSize: '0.6875rem', color: 'var(--app-muted-foreground)', marginTop: '0.0625rem' }}>
                   {contact.company_name}
                 </p>
               )}
             </div>
             <span style={{
               fontWeight: 700, fontSize: '0.8125rem', flexShrink: 0, marginLeft: '0.5rem',
-              color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-text-faint)',
+              color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-muted-foreground)',
             }}>
               {fmt(Math.abs(bal))}
             </span>
@@ -73,18 +73,18 @@ export const ContactCard = React.memo(function ContactCard({ contact, onRowClick
           </div>
           <div style={{ display: 'flex', gap: '0.625rem', marginTop: '0.3125rem', flexWrap: 'wrap' }}>
             {contact.phone && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.1875rem', fontSize: '0.6875rem', color: 'var(--app-text-muted)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.1875rem', fontSize: '0.6875rem', color: 'var(--app-muted-foreground)' }}>
                 <Phone size={9} /> {contact.phone}
               </span>
             )}
             {contact.email && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.1875rem', fontSize: '0.6875rem', color: 'var(--app-text-muted)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.1875rem', fontSize: '0.6875rem', color: 'var(--app-muted-foreground)' }}>
                 <Mail size={9} /> {contact.email}
               </span>
             )}
           </div>
         </div>
-        <ChevronRight size={14} style={{ color: 'var(--app-text-faint)', flexShrink: 0, marginTop: '0.5rem' }} />
+        <ChevronRight size={14} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0, marginTop: '0.5rem' }} />
       </div>
     </div>
   )

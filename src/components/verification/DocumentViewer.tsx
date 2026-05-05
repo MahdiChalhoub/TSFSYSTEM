@@ -75,11 +75,11 @@ export function DocumentViewer({
         <CardContent className="flex-1 flex items-center justify-center p-8">
           <div className="text-center space-y-4">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-app-surface-2 flex items-center justify-center">
-              <FileText size={40} className="text-app-text-muted opacity-30" />
+              <FileText size={40} className="text-app-muted-foreground opacity-30" />
             </div>
             <div>
-              <p className="text-sm font-bold text-app-text-muted mb-1">No Document Attached</p>
-              <p className="text-xs text-app-text-faint">Upload supplier invoice, delivery note, or scan</p>
+              <p className="text-sm font-bold text-app-muted-foreground mb-1">No Document Attached</p>
+              <p className="text-xs text-app-muted-foreground">Upload supplier invoice, delivery note, or scan</p>
             </div>
             {allowUpload && onUpload && (
               <div>
@@ -96,7 +96,7 @@ export function DocumentViewer({
                   className="hidden"
                   onChange={handleFileUpload}
                 />
-                <p className="text-xs text-app-text-faint mt-2">PDF, JPG, PNG supported</p>
+                <p className="text-xs text-app-muted-foreground mt-2">PDF, JPG, PNG supported</p>
               </div>
             )}
           </div>
@@ -127,7 +127,7 @@ export function DocumentViewer({
             >
               <ZoomOut size={14} />
             </Button>
-            <span className="text-xs font-bold text-app-text-muted min-w-[50px] text-center">
+            <span className="text-xs font-bold text-app-muted-foreground min-w-[50px] text-center">
               {zoom}%
             </span>
             <Button
@@ -212,7 +212,7 @@ export function DocumentViewer({
             <div className="text-center space-y-4">
               <ExternalLink size={48} className="mx-auto text-app-primary opacity-50" />
               <div>
-                <p className="text-sm font-bold text-app-text mb-2">External Document</p>
+                <p className="text-sm font-bold text-app-foreground mb-2">External Document</p>
                 <a
                   href={documentUrl}
                   target="_blank"

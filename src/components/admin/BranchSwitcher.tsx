@@ -77,7 +77,7 @@ export function BranchLocationSwitcher() {
                 <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
                     style={{
                         background: selectedBranch ? 'var(--app-primary-light)' : 'var(--app-surface-2)',
-                        color: selectedBranch ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                        color: selectedBranch ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                         border: '1px solid var(--app-border)',
                     }}>
                     <GitBranch size={11} />
@@ -85,7 +85,7 @@ export function BranchLocationSwitcher() {
 
                 {/* Label — branch [> location] */}
                 <span className="hidden sm:flex items-center gap-1 text-[13px] font-semibold leading-none"
-                    style={{ color: 'var(--app-text)' }}>
+                    style={{ color: 'var(--app-foreground)' }}>
                     <span className="truncate max-w-[90px]">{triggerLabel}</span>
                     {selectedLocation && (
                         <>
@@ -98,7 +98,7 @@ export function BranchLocationSwitcher() {
                 </span>
 
                 <ChevronDown size={12} className="flex-shrink-0 opacity-40 transition-transform duration-200"
-                    style={{ transform: isOpen ? 'rotate(180deg)' : 'none', color: 'var(--app-text)' }} />
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'none', color: 'var(--app-foreground)' }} />
             </button>
 
             {/* ── Dropdown ── */}
@@ -118,11 +118,11 @@ export function BranchLocationSwitcher() {
                             <>
                                 <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
                                     <GitBranch size={10} style={{ color: 'var(--app-primary)' }} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-faint)' }}>
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                         Branch
                                     </span>
                                     <span className="text-[8px] font-bold px-1 rounded ml-auto"
-                                        style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-faint)' }}>
+                                        style={{ background: 'var(--app-surface-2)', color: 'var(--app-muted-foreground)' }}>
                                         {branches.length}
                                     </span>
                                 </div>
@@ -139,13 +139,13 @@ export function BranchLocationSwitcher() {
                                         onMouseEnter={(e) => { if (selectedBranchId !== null) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                         onMouseLeave={(e) => { if (selectedBranchId !== null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                                         <Globe size={12} className="flex-shrink-0"
-                                            style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-text-faint)' }} />
+                                            style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
                                         <div className="flex-1 min-w-0 text-left">
                                             <p className="text-xs font-semibold truncate"
-                                                style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-text)' }}>
+                                                style={{ color: selectedBranchId === null ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
                                                 All Branches
                                             </p>
-                                            <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                                            <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 No filter — see data from every branch
                                             </p>
                                         </div>
@@ -164,14 +164,14 @@ export function BranchLocationSwitcher() {
                                                 onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                                 onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                                                 <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                    style={{ background: branch.is_active !== false ? 'var(--app-success)' : 'var(--app-text-faint)' }} />
+                                                    style={{ background: branch.is_active !== false ? 'var(--app-success)' : 'var(--app-muted-foreground)' }} />
                                                 <div className="flex-1 min-w-0 text-left">
                                                     <p className="text-xs font-semibold truncate"
-                                                        style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-text)' }}>
+                                                        style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
                                                         {branch.name}
                                                     </p>
                                                     {branch.code && (
-                                                        <p className="text-[9px] font-mono truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                                                        <p className="text-[9px] font-mono truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                                             {branch.code}
                                                         </p>
                                                     )}
@@ -189,11 +189,11 @@ export function BranchLocationSwitcher() {
                             <div style={{ borderTop: '1px solid var(--app-border)' }}>
                                 <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
                                     <Warehouse size={10} style={{ color: 'var(--app-primary)' }} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-faint)' }}>
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                         Location
                                     </span>
                                     <span className="text-[8px] font-bold px-1 rounded ml-auto"
-                                        style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-faint)' }}>
+                                        style={{ background: 'var(--app-surface-2)', color: 'var(--app-muted-foreground)' }}>
                                         {locations.length}
                                     </span>
                                 </div>
@@ -209,9 +209,9 @@ export function BranchLocationSwitcher() {
                                         onMouseEnter={(e) => { if (selectedLocationId !== null) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                         onMouseLeave={(e) => { if (selectedLocationId !== null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                                         <Building2 size={12} className="flex-shrink-0"
-                                            style={{ color: selectedLocationId === null ? 'var(--app-primary)' : 'var(--app-text-faint)' }} />
+                                            style={{ color: selectedLocationId === null ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
                                         <span className="flex-1 text-xs font-medium text-left truncate"
-                                            style={{ color: selectedLocationId === null ? 'var(--app-primary)' : 'var(--app-text-muted)' }}>
+                                            style={{ color: selectedLocationId === null ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }}>
                                             All in branch
                                         </span>
                                         {selectedLocationId === null && <Check size={13} className="flex-shrink-0" style={{ color: 'var(--app-primary)' }} />}
@@ -230,14 +230,14 @@ export function BranchLocationSwitcher() {
                                                 onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                                 onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                                                 <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                    style={{ background: loc.is_active !== false ? 'var(--app-success)' : 'var(--app-text-faint)' }} />
+                                                    style={{ background: loc.is_active !== false ? 'var(--app-success)' : 'var(--app-muted-foreground)' }} />
                                                 <div className="flex-1 min-w-0 text-left">
                                                     <p className="text-xs font-semibold truncate"
-                                                        style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-text)' }}>
+                                                        style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)' }}>
                                                         {loc.name}
                                                     </p>
                                                     {loc.code && (
-                                                        <p className="text-[9px] font-mono truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                                                        <p className="text-[9px] font-mono truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                                                             {loc.code}
                                                         </p>
                                                     )}
@@ -253,7 +253,7 @@ export function BranchLocationSwitcher() {
                         {/* Empty state */}
                         {!loading && branches.length === 0 && (
                             <div className="px-4 py-6 text-center">
-                                <p className="text-xs" style={{ color: 'var(--app-text-faint)' }}>No branches configured</p>
+                                <p className="text-xs" style={{ color: 'var(--app-muted-foreground)' }}>No branches configured</p>
                             </div>
                         )}
                     </div>

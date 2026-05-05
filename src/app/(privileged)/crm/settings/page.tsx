@@ -54,7 +54,7 @@ const SETTINGS_GROUPS = [
                 desc: "Conflict resolution strategies when merging duplicate contacts",
                 icon: Lock,
                 href: "/crm/settings/merge-rules",
-                color: "var(--app-text-muted)",
+                color: "var(--app-muted-foreground)",
             }
         ]
     }
@@ -79,7 +79,7 @@ export default function CrmSettingsPage() {
                             width: '2.25rem', height: '2.25rem', borderRadius: 'var(--app-radius-sm)',
                             background: 'var(--app-surface)', border: '1px solid var(--app-border)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer', color: 'var(--app-text-muted)', flexShrink: 0,
+                            cursor: 'pointer', color: 'var(--app-muted-foreground)', flexShrink: 0,
                         }}
                     >
                         <ArrowLeft size={16} />
@@ -97,11 +97,11 @@ export default function CrmSettingsPage() {
                     <div>
                         <h1 style={{
                             fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', fontWeight: 800,
-                            color: 'var(--app-text)', letterSpacing: '-0.03em',
+                            color: 'var(--app-foreground)', letterSpacing: '-0.03em',
                         }}>
                             CRM <span style={{ color: 'var(--app-primary)' }}>Settings</span>
                         </h1>
-                        <p style={{ fontSize: '0.8125rem', color: 'var(--app-text-muted)', marginTop: '0.0625rem' }}>
+                        <p style={{ fontSize: '0.8125rem', color: 'var(--app-muted-foreground)', marginTop: '0.0625rem' }}>
                             Configure business rules and third-party taxonomy
                         </p>
                     </div>
@@ -116,7 +116,7 @@ export default function CrmSettingsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
                             <h2 style={{
                                 fontSize: '0.5625rem', fontWeight: 800, textTransform: 'uppercase',
-                                letterSpacing: '0.12em', color: 'var(--app-text-faint)', whiteSpace: 'nowrap',
+                                letterSpacing: '0.12em', color: 'var(--app-muted-foreground)', whiteSpace: 'nowrap',
                             }}>
                                 {group.title}
                             </h2>
@@ -165,18 +165,18 @@ export default function CrmSettingsPage() {
                                             </div>
                                             <ChevronRight
                                                 size={16}
-                                                style={{ color: 'var(--app-text-faint)', transition: 'transform 0.2s' }}
+                                                style={{ color: 'var(--app-muted-foreground)', transition: 'transform 0.2s' }}
                                             />
                                         </div>
                                         <div>
                                             <h3 style={{
                                                 fontSize: '0.9375rem', fontWeight: 700,
-                                                color: 'var(--app-text)', marginBottom: '0.25rem',
+                                                color: 'var(--app-foreground)', marginBottom: '0.25rem',
                                             }}>
                                                 {item.title}
                                             </h3>
                                             <p style={{
-                                                fontSize: '0.75rem', color: 'var(--app-text-muted)',
+                                                fontSize: '0.75rem', color: 'var(--app-muted-foreground)',
                                                 lineHeight: 1.5,
                                             }}>
                                                 {item.desc}

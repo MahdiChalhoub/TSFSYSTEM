@@ -37,30 +37,30 @@ function MegaMenuDropdown({ item, onClose }: { item: MenuItem; onClose: () => vo
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)', width: `${colCount * 210}px`, maxWidth: '92vw' }}>
             <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
                 {item.icon && <item.icon size={13} style={{ color: 'var(--app-primary)' }} />}
-                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{item.title}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{item.title}</span>
             </div>
             <div className="grid p-2" style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}>
                 {cols.map((group) => (
                     <div key={group.title} className="p-1">
                         <div className="flex items-center gap-1.5 px-2 py-1.5">
                             {group.icon && <group.icon size={11} style={{ color: 'var(--app-primary)' }} />}
-                            <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-text-faint)' }}>{group.title}</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{group.title}</span>
                         </div>
                         {group.children?.map((page) => (
                             <button key={page.path} onClick={() => { openTab(page.title, page.path!); onClose(); }}
                                 className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors duration-100 text-xs font-medium"
-                                style={{ color: 'var(--app-text-muted)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                                 onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-primary-light)'; el.style.color = 'var(--app-primary)'; }}
-                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}>
                                 <ChevronRight size={9} className="flex-shrink-0 opacity-40" /><span className="truncate">{page.title}</span>
                             </button>
                         ))}
                         {!group.children && group.path && (
                             <button onClick={() => { openTab(group.title, group.path!); onClose(); }}
                                 className="w-full text-left px-2.5 py-1.5 rounded-lg transition-colors duration-100 text-xs font-medium truncate"
-                                style={{ color: 'var(--app-text-muted)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                                 onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-primary-light)'; el.style.color = 'var(--app-primary)'; }}
-                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}>
                                 {group.title}
                             </button>
                         )}
@@ -98,8 +98,8 @@ const TopNavItem = memo(function TopNavItem({ item, activeMenu, setActiveMenu }:
             <button onClick={() => { openTab(item.title, item.path!); setActiveMenu(null); }}
                 onMouseEnter={() => setActiveMenu(null)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
-                style={{ color: 'var(--app-text-muted)' }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                style={{ color: 'var(--app-muted-foreground)' }}
+                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}>
                 {item.icon && <item.icon size={13} />}{item.title}
             </button>
         );
@@ -110,7 +110,7 @@ const TopNavItem = memo(function TopNavItem({ item, activeMenu, setActiveMenu }:
             <button onClick={() => setActiveMenu(isOpen ? null : item.title)}
                 onMouseEnter={() => setActiveMenu(item.title)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
-                style={{ background: isOpen ? 'var(--app-surface-2)' : 'transparent', color: isOpen ? 'var(--app-text)' : 'var(--app-text-muted)' }}>
+                style={{ background: isOpen ? 'var(--app-surface-2)' : 'transparent', color: isOpen ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
                 {item.icon && <item.icon size={13} />}{item.title}
                 {hasChildren && <ChevronDown size={10} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--app-transition-fast)' }} />}
             </button>
@@ -132,7 +132,7 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <div className="flex items-center gap-2">
                     <Palette size={13} style={{ color: 'var(--app-primary)' }} />
-                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>Appearance</span>
+                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>Appearance</span>
                 </div>
                 {isLoading && <div className="w-3.5 h-3.5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--app-primary)', borderTopColor: 'transparent' }} />}
             </div>
@@ -140,7 +140,7 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
             {/* Theme list */}
             <div className="p-2 max-h-72 overflow-y-auto custom-scrollbar">
                 {allThemes.length === 0 && !isLoading && (
-                    <p className="text-xs text-center py-8" style={{ color: 'var(--app-text-faint)' }}>No themes available.</p>
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--app-muted-foreground)' }}>No themes available.</p>
                 )}
                 {allThemes.map((t) => {
                     const isActive = themeSlug === t.slug;
@@ -165,8 +165,8 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
                                 </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold truncate" style={{ color: 'var(--app-text)' }}>{t.name}</p>
-                                <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>{t.description || t.category || 'Theme'}</p>
+                                <p className="text-xs font-semibold truncate" style={{ color: 'var(--app-foreground)' }}>{t.name}</p>
+                                <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{t.description || t.category || 'Theme'}</p>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                 {!t.isSystem && (
@@ -190,7 +190,7 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: '1px solid var(--app-border)' }}>
-                <p className="text-[9px] font-medium" style={{ color: 'var(--app-text-faint)' }}>{allThemes.length} themes available</p>
+                <p className="text-[9px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>{allThemes.length} themes available</p>
                 <p className="text-[9px] font-medium" style={{ color: 'var(--app-primary)', opacity: 0.8 }}>Auto-saved</p>
             </div>
         </div>
@@ -219,10 +219,10 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
                         {initials}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold leading-tight truncate" style={{ color: 'var(--app-text)' }}>
+                        <p className="text-sm font-bold leading-tight truncate" style={{ color: 'var(--app-foreground)' }}>
                             {fullName}
                         </p>
-                        <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                        <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                             {user?.email || user?.username}
                         </p>
                     </div>
@@ -239,7 +239,7 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
                             style={{
                                 background: viewScope === 'OFFICIAL' ? 'var(--app-success-bg)' : 'var(--app-surface-2)',
-                                color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-text-faint)',
+                                color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-muted-foreground)',
                                 border: `1px solid ${viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-border)'}`,
                             }}>
                             {viewScope === 'OFFICIAL' ? <Eye size={8} /> : <EyeOff size={8} />}
@@ -258,9 +258,9 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
                     <button key={href}
                         onClick={() => { onClose(); window.location.href = href; }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
-                        style={{ color: 'var(--app-text-muted)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-foreground)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}>
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={{ background: 'var(--app-surface-2)' }}>
                             <Icon size={13} />
@@ -340,9 +340,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         onClick={toggleSidebar}
                         title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
                         className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                        style={{ color: 'var(--app-text-faint)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-foreground)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}
                     >
                         <Menu size={16} />
                     </button>
@@ -354,7 +354,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                                 style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
                                 T
                             </div>
-                            <span className="hidden md:block text-sm font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            <span className="hidden md:block text-sm font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                                 TSF
                             </span>
                         </div>
@@ -373,7 +373,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         <BranchLocationSwitcher />
                         {currentSlug !== 'saas' && activeOrg?.currency_code && (
                             <div className="hidden xl:flex items-center gap-1 px-2.5 h-7 rounded-lg text-[10px] font-bold flex-shrink-0"
-                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-text-muted)' }}>
+                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
                                 <Globe size={10} style={{ color: 'var(--app-primary)', opacity: 0.8 }} />
                                 {activeOrg.currency_code}
                             </div>
@@ -388,16 +388,16 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     style={{
                         background: 'var(--app-surface)',
                         border: '1px solid var(--app-border)',
-                        color: 'var(--app-text-faint)',
+                        color: 'var(--app-muted-foreground)',
                         maxWidth: '480px',
                     }}
-                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-text-muted)'; }}
-                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-text-faint)'; }}
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-muted-foreground)'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-muted-foreground)'; }}
                 >
                     <Search size={13} className="flex-shrink-0" />
                     <span className="flex-1 text-left text-xs">Search anything...</span>
                     <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-mono font-bold rounded flex-shrink-0"
-                        style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}>
+                        style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
                         ⌃K
                     </kbd>
                 </button>
@@ -412,9 +412,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     <button onClick={() => setNavLayout(navLayout === 'sidebar' ? 'topnav' : 'sidebar')}
                         title={navLayout === 'sidebar' ? 'Switch to Top Navigation' : 'Switch to Sidebar'}
                         className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                        style={{ color: 'var(--app-text-faint)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-foreground)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}
                     >
                         {navLayout === 'sidebar' ? <PanelTop size={15} /> : <PanelLeft size={15} />}
                     </button>
@@ -428,9 +428,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     <button onClick={toggleColorMode}
                         title={mounted ? (isDark ? 'Light mode' : 'Dark mode') : 'Toggle'}
                         className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                        style={{ color: 'var(--app-text-faint)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-foreground)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}
                         suppressHydrationWarning>
                         {mounted ? (isDark ? <Sun size={15} /> : <Moon size={15} />) : <Moon size={15} />}
                     </button>
@@ -440,9 +440,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         <button onClick={() => setThemeOpen(!themeOpen)}
                             title={mounted ? `Theme: ${currentTheme?.name}` : 'Theme'}
                             className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                            style={{ color: themeOpen ? 'var(--app-primary)' : 'var(--app-text-faint)', background: themeOpen ? 'var(--app-primary-light)' : 'transparent' }}
-                            onMouseEnter={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; } }}
-                            onMouseLeave={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; } }}
+                            style={{ color: themeOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)', background: themeOpen ? 'var(--app-primary-light)' : 'transparent' }}
+                            onMouseEnter={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-foreground)'; } }}
+                            onMouseLeave={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; } }}
                             suppressHydrationWarning>
                             <div className="w-3 h-3 rounded-full flex-shrink-0"
                                 style={{ background: mounted ? activeColors.primary : 'var(--app-primary)' }}
@@ -475,11 +475,11 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                             style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
                             {userInitials}
                         </div>
-                        <span className="hidden sm:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--app-text)' }}>
+                        <span className="hidden sm:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--app-foreground)' }}>
                             {userName}
                         </span>
                         <ChevronDown size={12} style={{
-                            color: 'var(--app-text-faint)',
+                            color: 'var(--app-muted-foreground)',
                             transform: profileOpen ? 'rotate(180deg)' : 'none',
                             transition: 'transform var(--app-transition-fast)',
                             flexShrink: 0,
@@ -496,10 +496,10 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
 
                 {/* Mobile search icon */}
                 <button className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors duration-150"
-                    style={{ color: 'var(--app-text-faint)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                     onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
-                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}>
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-foreground)'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-muted-foreground)'; }}>
                     <Search size={16} />
                 </button>
             </div>
@@ -530,7 +530,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                             </div>
                         )}
                         {currentSlug !== 'saas' && activeOrg?.business_type_name && (
-                            <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>{activeOrg.business_type_name}</span>
+                            <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-muted-foreground)' }}>{activeOrg.business_type_name}</span>
                         )}
                     </div>
                 </div>

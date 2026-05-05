@@ -87,7 +87,7 @@ export default function ReportBuilderPage() {
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-app-gradient-info flex items-center justify-center shadow-lg shadow-blue-900/40">
+                    <div className="w-12 h-12 rounded-2xl bg-app-info flex items-center justify-center shadow-lg shadow-blue-900/40">
                         <BarChart3 size={22} className="text-app-primary-foreground" />
                     </div>
                     <div>

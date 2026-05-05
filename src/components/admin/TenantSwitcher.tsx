@@ -74,7 +74,7 @@ export function TenantSwitcher({
                 {/* Name */}
                 <span
                     className="hidden sm:block text-[13px] font-semibold leading-none truncate max-w-[128px]"
-                    style={{ color: 'var(--app-text)' }}
+                    style={{ color: 'var(--app-foreground)' }}
                 >
                     {name}
                 </span>
@@ -86,7 +86,7 @@ export function TenantSwitcher({
                         className="flex-shrink-0 opacity-40 transition-transform duration-200"
                         style={{
                             transform: isOpen ? 'rotate(180deg)' : 'none',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }}
                     />
                 )}
@@ -111,7 +111,7 @@ export function TenantSwitcher({
                         >
                             <span
                                 className="text-[10px] font-black uppercase tracking-widest"
-                                style={{ color: 'var(--app-text-faint)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                             >
                                 Switch Workspace
                             </span>
@@ -130,7 +130,7 @@ export function TenantSwitcher({
                             {organizations.filter(o => o.slug !== 'saas').length === 0 && (
                                 <p
                                     className="text-xs text-center py-8"
-                                    style={{ color: 'var(--app-text-faint)' }}
+                                    style={{ color: 'var(--app-muted-foreground)' }}
                                 >
                                     No workspaces found
                                 </p>
@@ -167,7 +167,7 @@ export function TenantSwitcher({
                                                 className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
                                                 style={{
                                                     background: isActive ? 'var(--app-primary)' : 'var(--app-surface-2)',
-                                                    color: isActive ? 'var(--app-bg)' : 'var(--app-text-muted)',
+                                                    color: isActive ? 'var(--app-bg)' : 'var(--app-muted-foreground)',
                                                     border: '1px solid var(--app-border)',
                                                 }}
                                             >
@@ -178,13 +178,13 @@ export function TenantSwitcher({
                                         <div className="flex-1 min-w-0 text-left">
                                             <p
                                                 className="text-xs font-semibold truncate leading-tight"
-                                                style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-text)' }}
+                                                style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)' }}
                                             >
                                                 {org.name}
                                             </p>
                                             <p
                                                 className="text-[9px] font-mono truncate leading-tight mt-0.5"
-                                                style={{ color: 'var(--app-text-faint)' }}
+                                                style={{ color: 'var(--app-muted-foreground)' }}
                                             >
                                                 {org.slug}{branding.suffix}
                                             </p>
@@ -195,7 +195,7 @@ export function TenantSwitcher({
                                                 ? <Loader2 size={12} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
                                                 : isActive
                                                     ? <Check size={13} style={{ color: 'var(--app-primary)' }} />
-                                                    : <ExternalLink size={11} style={{ color: 'var(--app-text-faint)', opacity: 0.5 }} />
+                                                    : <ExternalLink size={11} style={{ color: 'var(--app-muted-foreground)', opacity: 0.5 }} />
                                             }
                                         </div>
                                     </button>
@@ -212,16 +212,16 @@ export function TenantSwitcher({
                                 <button
                                     onClick={() => window.location.href = `http://saas.${branding.domain}/dashboard`}
                                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors duration-100 text-xs"
-                                    style={{ color: 'var(--app-text-faint)' }}
+                                    style={{ color: 'var(--app-muted-foreground)' }}
                                     onMouseEnter={(e) => {
                                         const el = e.currentTarget as HTMLElement;
                                         el.style.background = 'var(--app-surface-2)';
-                                        el.style.color = 'var(--app-text)';
+                                        el.style.color = 'var(--app-foreground)';
                                     }}
                                     onMouseLeave={(e) => {
                                         const el = e.currentTarget as HTMLElement;
                                         el.style.background = 'transparent';
-                                        el.style.color = 'var(--app-text-faint)';
+                                        el.style.color = 'var(--app-muted-foreground)';
                                     }}
                                 >
                                     <DoorOpen size={13} className="flex-shrink-0" />

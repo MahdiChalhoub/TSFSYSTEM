@@ -207,8 +207,8 @@ export default function ApprovalCenterPage() {
             <ClipboardList size={24} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-app-text">Approval Center</h1>
-            <p className="text-sm text-app-text-muted">Unified dashboard for all pending approvals</p>
+            <h1 className="text-2xl font-black text-app-foreground">Approval Center</h1>
+            <p className="text-sm text-app-muted-foreground">Unified dashboard for all pending approvals</p>
           </div>
         </div>
       </div>
@@ -219,8 +219,8 @@ export default function ApprovalCenterPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-app-text-muted uppercase mb-1">Pending Items</p>
-                <p className="text-3xl font-black text-app-text">{stats.total}</p>
+                <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">Pending Items</p>
+                <p className="text-3xl font-black text-app-foreground">{stats.total}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Clock size={24} className="text-blue-600" />
@@ -233,7 +233,7 @@ export default function ApprovalCenterPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-app-text-muted uppercase mb-1">High Priority</p>
+                <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">High Priority</p>
                 <p className="text-3xl font-black text-red-600">{stats.high}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
@@ -247,7 +247,7 @@ export default function ApprovalCenterPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-app-text-muted uppercase mb-1">Total Amount</p>
+                <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">Total Amount</p>
                 <p className="text-3xl font-black text-emerald-600">{fmt(stats.amount)}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -261,8 +261,8 @@ export default function ApprovalCenterPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-app-text-muted uppercase mb-1">Categories</p>
-                <p className="text-3xl font-black text-app-text">{stats.byType.filter(t => t.count > 0).length}</p>
+                <p className="text-xs font-bold text-app-muted-foreground uppercase mb-1">Categories</p>
+                <p className="text-3xl font-black text-app-foreground">{stats.byType.filter(t => t.count > 0).length}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
                 <TrendingUp size={24} className="text-purple-600" />
@@ -276,7 +276,7 @@ export default function ApprovalCenterPage() {
       <Card className="border-app-border/30 mb-6">
         <CardContent className="p-4">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
             <Input
               placeholder="Search approvals by ID, title, or requester..."
               value={searchQuery}
@@ -304,8 +304,8 @@ export default function ApprovalCenterPage() {
               <Card className="border-app-border/30">
                 <CardContent className="p-12 text-center">
                   <CheckCircle2 size={48} className="mx-auto mb-4 text-emerald-500 opacity-30" />
-                  <p className="text-sm font-bold text-app-text-muted">No pending approvals</p>
-                  <p className="text-xs text-app-text-faint mt-1">All caught up! 🎉</p>
+                  <p className="text-sm font-bold text-app-muted-foreground">No pending approvals</p>
+                  <p className="text-xs text-app-muted-foreground mt-1">All caught up! 🎉</p>
                 </CardContent>
               </Card>
             ) : (
@@ -336,8 +336,8 @@ export default function ApprovalCenterPage() {
                                 {config.label}
                               </Badge>
                             </div>
-                            <h3 className="text-base font-bold text-app-text mb-1">{item.title}</h3>
-                            <div className="flex items-center gap-4 text-xs text-app-text-muted">
+                            <h3 className="text-base font-bold text-app-foreground mb-1">{item.title}</h3>
+                            <div className="flex items-center gap-4 text-xs text-app-muted-foreground">
                               <span>👤 {item.requester}</span>
                               <span>📅 {new Date(item.date).toLocaleDateString()}</span>
                               {item.amount && <span className="font-bold text-emerald-600">{fmt(item.amount)}</span>}

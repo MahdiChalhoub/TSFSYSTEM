@@ -14,7 +14,7 @@ export default function LoginPageRoute() {
  }
 
  const LoginPage = components.LoginPage
- if (!LoginPage) return <div className="p-20 text-app-text text-center">Login component not implemented in this theme.</div>
+ if (!LoginPage) return <div className="p-20 text-app-foreground text-center">Login component not implemented in this theme.</div>
 
  return <LoginPage />
 }

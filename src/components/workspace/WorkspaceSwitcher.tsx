@@ -76,7 +76,7 @@ export function WorkspaceSwitcher({ className = '' }: { className?: string }) {
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Current Tier Indicator */}
       <div className="flex items-center gap-2">
-        <Monitor size={14} className="text-app-text-muted" />
+        <Monitor size={14} className="text-app-muted-foreground" />
         <Badge variant="outline" className="text-xs font-bold">
           {state.currentTier.toUpperCase()}
         </Badge>
@@ -99,7 +99,7 @@ export function WorkspaceSwitcher({ className = '' }: { className?: string }) {
                 text-xs font-bold transition-all
                 ${isActive
                   ? 'bg-app-primary text-white shadow-sm'
-                  : 'text-app-text-muted hover:text-app-text hover:bg-app-surface'
+                  : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'
                 }
               `}
               title={`${config.desc}${isUserOverride ? ' (override)' : ''}`}
@@ -130,7 +130,7 @@ export function WorkspaceSwitcher({ className = '' }: { className?: string }) {
 
       {/* Debug Info (remove in production) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-app-text-faint ml-2">
+        <div className="text-xs text-app-muted-foreground ml-2">
           {state.screenWidth}px | {state.activePanels.length} panels
         </div>
       )}

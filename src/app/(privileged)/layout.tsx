@@ -69,8 +69,8 @@ export default async function AdminLayout({
                 <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-6 animate-pulse" style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
                     <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--app-primary)', borderTopColor: 'transparent' }} />
                 </div>
-                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>Reconnecting...</h2>
-                <p className="mt-2 font-medium max-w-sm mx-auto" style={{ color: 'var(--app-text-muted)' }}>
+                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>Reconnecting...</h2>
+                <p className="mt-2 font-medium max-w-sm mx-auto" style={{ color: 'var(--app-muted-foreground)' }}>
                     The platform backend is applying updates. Your session is safe.
                     Checking link status...
                 </p>

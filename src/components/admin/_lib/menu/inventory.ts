@@ -12,6 +12,7 @@ import {
     Award,
     Tags,
     Globe,
+    Ruler,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -22,6 +23,7 @@ export const inventoryProduction: MenuItem = {
     stage: 'production',
     children: [
         { title: 'Categories', path: '/inventory/categories', icon: FolderTree },
+        { title: 'Units of Measure', path: '/inventory/units', icon: Ruler },
     ],
 };
 
@@ -36,7 +38,6 @@ export const inventoryInProgress: MenuItem = {
         { title: 'Brands', path: '/inventory/brands', icon: Award },
         { title: 'Attributes', path: '/inventory/attributes', icon: Tags },
         { title: 'Sourcing Countries', path: '/inventory/countries', icon: Globe },
-        { title: 'Units of Measure', path: '/inventory/units', icon: Warehouse },
         { title: 'Packages', path: '/inventory/packages', icon: Box },
         { title: 'Packaging Rules', path: '/inventory/packaging-suggestions', icon: Sparkles },
     ],

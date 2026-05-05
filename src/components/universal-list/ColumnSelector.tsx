@@ -51,7 +51,7 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  onClick={() => setOpen(!open)}
  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${open
  ? 'bg-app-info-bg border-app-info text-app-info'
- : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  }`}
  >
  <Columns3 size={13} />
@@ -76,15 +76,15 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  key={col.key}
  onClick={() => toggle(col.key)}
  className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-all ${isActive
- ? 'text-app-text font-medium'
- : 'text-app-text-faint'
+ ? 'text-app-foreground font-medium'
+ : 'text-app-muted-foreground'
  } hover:bg-app-bg`}
  >
  <div className={`w-4 h-4 rounded border flex items-center justify-center ${isActive
  ? 'bg-blue-600 border-blue-600'
  : 'border-app-border'
  }`}>
- {isActive && <Check size={10} className="text-app-text" />}
+ {isActive && <Check size={10} className="text-app-foreground" />}
  </div>
  {col.label}
  </button>

@@ -83,7 +83,7 @@ export function COATreePicker({ coaList, selectedId, onSelect }: {
 
                 return (
                     <div key={`level-${idx}-${level.parentId}`} className="animate-in fade-in slide-in-from-top-1 duration-150">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-app-text-faint block mb-1 flex items-center gap-1.5">
+                        <label className="text-[9px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1 flex items-center gap-1.5">
                             {idx > 0 && (
                                 <span className="flex items-center gap-0.5">
                                     {'→'.repeat(idx)}
@@ -120,7 +120,7 @@ export function COATreePicker({ coaList, selectedId, onSelect }: {
                                                     {item.type}
                                                 </span>
                                                 {hasChildren && (
-                                                    <span className="text-[8px] text-app-text-faint">▸ {children.length}</span>
+                                                    <span className="text-[8px] text-app-muted-foreground">▸ {children.length}</span>
                                                 )}
                                             </span>
                                         </SelectItem>

@@ -270,7 +270,7 @@ export default function MigrationImportHub() {
                                         </div>
                                         <h3 className="text-lg font-black text-app-foreground">{source.label}</h3>
                                         <p className="text-xs text-app-muted-foreground mt-1">{source.description}</p>
-                                        <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-app-surface theme-text-muted bg-app-surface dark:theme-text-muted uppercase">
+                                        <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-app-surface text-app-muted-foreground bg-app-surface dark:text-app-muted-foreground uppercase">
                                             Coming Soon
                                         </span>
                                     </div>

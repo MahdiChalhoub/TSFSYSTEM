@@ -24,7 +24,7 @@ export function AddContactDropdown({ menuPos, onClose, onSelect }: {
           minWidth: '13rem', zIndex: 100, padding: '0.25rem',
         }}
       >
-        <div style={{ padding: '0.375rem 0.625rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ padding: '0.375rem 0.625rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           Choose Contact Type
         </div>
         {TYPES.filter(t => t.key !== 'ALL').map(cfg => (
@@ -36,7 +36,7 @@ export function AddContactDropdown({ menuPos, onClose, onSelect }: {
               width: '100%', padding: '0.4375rem 0.625rem',
               borderRadius: 'calc(var(--app-radius) - 0.375rem)',
               fontSize: '0.75rem', fontWeight: 600,
-              background: 'transparent', color: 'var(--app-text)',
+              background: 'transparent', color: 'var(--app-foreground)',
               border: 'none', cursor: 'pointer', textAlign: 'left',
               transition: 'background 0.1s',
             }}

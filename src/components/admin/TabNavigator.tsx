@@ -172,7 +172,7 @@ export function TabNavigator() {
 
                 {/* New tab */}
                 <div className="w-full px-1">
-                    <IconBtn title="New tab" onClick={openHome} style={{ color: 'var(--app-text-faint)' }}>
+                    <IconBtn title="New tab" onClick={openHome} style={{ color: 'var(--app-muted-foreground)' }}>
                         <Plus size={13} strokeWidth={2.5} />
                     </IconBtn>
                 </div>
@@ -180,7 +180,7 @@ export function TabNavigator() {
                 {/* Clear all */}
                 {openTabs.length > 1 && (
                     <div className="w-full px-1">
-                        <IconBtn title="Clear all tabs" onClick={clearTabs} style={{ color: 'var(--app-text-faint)' }}>
+                        <IconBtn title="Clear all tabs" onClick={clearTabs} style={{ color: 'var(--app-muted-foreground)' }}>
                             <Trash2 size={13} />
                         </IconBtn>
                     </div>
@@ -226,7 +226,7 @@ export function TabNavigator() {
                         onClick={() => setMenuOpen(v => !v)}
                         className="flex items-center justify-center w-8 h-full transition-colors relative"
                         style={{
-                            color: menuOpen ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                            color: menuOpen ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                             background: menuOpen ? 'var(--app-primary-light)' : 'transparent',
                         }}
                     >
@@ -257,7 +257,7 @@ export function TabNavigator() {
                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}
                             >
                                 <div className="flex items-center justify-between px-3 py-1.5" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-faint)' }}>
+                                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                         {hidden.length} more
                                     </span>
                                     <button onClick={() => { clearTabs(); setMenuOpen(false); }} className="text-[9px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>
@@ -299,7 +299,7 @@ export function TabNavigator() {
                                                 className="group relative flex items-center gap-2 px-3 py-1.5 cursor-pointer"
                                                 style={{
                                                     background: isActive ? 'var(--app-primary-light)' : 'transparent',
-                                                    color: isActive ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                                    color: isActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                                     opacity: isOverflowDragging ? 0.4 : 1,
                                                 }}
                                                 onClick={() => { openTab(tab.title, tab.path); setMenuOpen(false); }}
@@ -324,9 +324,9 @@ export function TabNavigator() {
                                                 <button
                                                     className="opacity-0 group-hover:opacity-100 p-0.5 rounded"
                                                     onClick={e => { e.stopPropagation(); closeTab(tab.id); }}
-                                                    style={{ color: 'var(--app-text-faint)' }}
+                                                    style={{ color: 'var(--app-muted-foreground)' }}
                                                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-error, #ef4444)'; }}
-                                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}
+                                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; }}
                                                 >
                                                     <X size={10} />
                                                 </button>
@@ -345,9 +345,9 @@ export function TabNavigator() {
                 onClick={openHome}
                 title="New tab"
                 className="flex items-center justify-center w-8 flex-shrink-0 transition-colors"
-                style={{ color: 'var(--app-text-faint)', borderLeft: '1px solid var(--app-border)' }}
+                style={{ color: 'var(--app-muted-foreground)', borderLeft: '1px solid var(--app-border)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)'; (e.currentTarget as HTMLElement).style.background = 'var(--app-primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
                 <Plus size={13} strokeWidth={2.5} />
             </button>
@@ -358,9 +358,9 @@ export function TabNavigator() {
                     onClick={clearTabs}
                     title="Clear all tabs"
                     className="flex items-center justify-center w-8 flex-shrink-0 transition-colors"
-                    style={{ color: 'var(--app-text-faint)', borderLeft: '1px solid var(--app-border)' }}
+                    style={{ color: 'var(--app-muted-foreground)', borderLeft: '1px solid var(--app-border)' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-error, #ef4444)'; (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.07)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
                     <Trash2 size={12} />
                 </button>
@@ -371,9 +371,9 @@ export function TabNavigator() {
                 onClick={() => setTabLayout('vertical')}
                 title="Switch to vertical tab rail"
                 className="flex items-center justify-center w-8 flex-shrink-0 transition-colors"
-                style={{ color: 'var(--app-text-faint)', borderLeft: '1px solid var(--app-border)' }}
+                style={{ color: 'var(--app-muted-foreground)', borderLeft: '1px solid var(--app-border)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)'; (e.currentTarget as HTMLElement).style.background = 'var(--app-primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
                 <PanelLeft size={13} />
             </button>
@@ -430,7 +430,7 @@ const HTab = React.memo(({ tab, active, onOpen, onClose, isDragging, dropPositio
                 width: TAB_W,
                 background: active ? 'var(--app-surface)' : 'transparent',
                 borderRight: '1px solid var(--app-border)',
-                color: active ? 'var(--app-text)' : 'var(--app-text-faint)',
+                color: active ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
                 opacity: isDragging ? 0.4 : 1,
             }}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; }}
@@ -459,9 +459,9 @@ const HTab = React.memo(({ tab, active, onOpen, onClose, isDragging, dropPositio
             <button
                 onClick={e => { e.stopPropagation(); onClose(tab.id); }}
                 className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all"
-                style={{ color: 'var(--app-text-faint)' }}
+                style={{ color: 'var(--app-muted-foreground)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-error, #ef4444)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)'; }}
             >
                 <X size={10} strokeWidth={2.5} />
             </button>
@@ -582,7 +582,7 @@ const VerticalTab = React.memo(({ tab, active, color, icon: Icon, label, onOpen,
                     style={{
                         background: 'var(--app-surface)',
                         border: '1px solid var(--app-border)',
-                        color: 'var(--app-text)',
+                        color: 'var(--app-foreground)',
                     }}
                 >
                     <div className="flex items-center gap-1.5">

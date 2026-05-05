@@ -93,7 +93,7 @@ export function TypicalFilter({
  <SelectValue placeholder={f.label} />
  </SelectTrigger>
  <SelectContent className="rounded-xl border-app-border shadow-2xl">
- <SelectItem value="__all__" className="text-[11px] font-black uppercase tracking-widest text-app-text-faint">{f.label}</SelectItem>
+ <SelectItem value="__all__" className="text-[11px] font-black uppercase tracking-widest text-app-muted-foreground">{f.label}</SelectItem>
  {f.options?.map(o => (
  <SelectItem key={o.value} value={o.value} className="text-[11px] font-bold uppercase tracking-tight">{o.label}</SelectItem>
  ))}
@@ -125,7 +125,7 @@ export function TypicalFilter({
  <Checkbox checked={typeof val === 'boolean' ? val : false}
  className="bg-app-surface border-2 border-app-border data-[state=checked]:bg-app-primary data-[state=checked]:border-app-primary transition-all"
  onCheckedChange={v => onChange?.(f.key, !!v)} />
- <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-app-text-muted font-black uppercase tracking-widest group-hover/check:text-app-text transition-colors`}>{f.label}</span>
+ <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-app-muted-foreground font-black uppercase tracking-widest group-hover/check:text-app-foreground transition-colors`}>{f.label}</span>
  </label>
  )
 
@@ -141,7 +141,7 @@ export function TypicalFilter({
  {/* Search */}
  {search && (
  <div className="relative w-72 group/search">
- <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-app-text-muted group-hover/search:text-app-primary transition-colors duration-500`} />
+ <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-app-muted-foreground group-hover/search:text-app-primary transition-colors duration-500`} />
  <Input
  placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
  value={search.value}
@@ -149,7 +149,7 @@ export function TypicalFilter({
  className={`pl-11 pr-10 bg-app-surface border-app-border focus:bg-app-surface focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
  {search.value && (
  <button onClick={() => search.onChange('')}
- className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-app-text-muted hover:text-app-error hover:bg-app-error-bg transition-all">
+ className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg transition-all">
  <X className="h-3.5 w-3.5" />
  </button>
  )}
@@ -166,13 +166,13 @@ export function TypicalFilter({
  <button
  onClick={() => setShowAdvanced(!showAdvanced)}
  className={`flex items-center gap-3 px-4 rounded-xl border transition-all duration-500 group/adv relative overflow-hidden ${showAdvanced
- ? 'border-app-primary bg-app-primary text-app-text shadow-lg shadow-app-primary/20'
- : 'border-app-border bg-app-surface text-app-text-muted hover:text-app-text hover:border-app-border hover:shadow-lg'
+ ? 'border-app-primary bg-app-primary text-app-foreground shadow-lg shadow-app-primary/20'
+ : 'border-app-border bg-app-surface text-app-muted-foreground hover:text-app-foreground hover:border-app-border hover:shadow-lg'
  } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
- <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-app-text' : 'text-app-text-muted group-hover/adv:text-app-primary'} transition-colors duration-500`} />
+ <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-app-foreground' : 'text-app-muted-foreground group-hover/adv:text-app-primary'} transition-colors duration-500`} />
  Advanced
  {activeCount > 0 && (
- <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-app-success shadow-inner' : 'bg-app-primary text-app-text shadow-lg shadow-app-primary/20'}`}>
+ <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-app-success shadow-inner' : 'bg-app-primary text-app-foreground shadow-lg shadow-app-primary/20'}`}>
  {activeCount}
  </span>
  )}
@@ -184,7 +184,7 @@ export function TypicalFilter({
  {onReset && (
  <button
  onClick={onReset}
- className={`flex items-center gap-2 px-3 h-10 rounded-xl text-app-text-muted hover:text-app-error hover:bg-app-error-bg transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
+ className={`flex items-center gap-2 px-3 h-10 rounded-xl text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
  <RotateCcw className="h-3.5 w-3.5 group-hover/reset:rotate-[-180deg] transition-transform duration-500" /> Reset
  </button>
  )}
@@ -196,7 +196,7 @@ export function TypicalFilter({
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-app-surface-2 backdrop-blur-sm p-6 rounded-[2rem] border border-app-border shadow-inner">
  {allAdvanced.map(f => (
  <div key={f.key} className="space-y-2">
- <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest px-1">{f.label}</Label>
+ <Label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest px-1">{f.label}</Label>
  {renderFilterItem(f, true)}
  </div>
  ))}

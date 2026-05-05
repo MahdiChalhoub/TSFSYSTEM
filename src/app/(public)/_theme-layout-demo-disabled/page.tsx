@@ -27,8 +27,8 @@ function DemoContent() {
     <div
       className="min-h-screen"
       style={{
-        background: 'var(--theme-bg)',
-        color: 'var(--theme-text)',
+        background: 'var(--bg-app-bg)',
+        color: 'var(--text-app-foreground)',
       }}
     >
       {/* Header */}
@@ -41,10 +41,10 @@ function DemoContent() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-app-foreground)' }}>
               Theme & Layout System Demo
             </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--theme-text-muted)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-app-muted-foreground)' }}>
               Live demonstration of the new dual-system architecture
             </p>
           </div>
@@ -75,11 +75,11 @@ function DemoContent() {
               className="h-8 w-8"
               style={{ color: 'var(--theme-primary)' }}
             />
-            <h2 className="text-3xl font-bold" style={{ color: 'var(--theme-text)' }}>
+            <h2 className="text-3xl font-bold" style={{ color: 'var(--text-app-foreground)' }}>
               50 Visual Combinations
             </h2>
           </div>
-          <p className="text-lg" style={{ color: 'var(--theme-text-muted)' }}>
+          <p className="text-lg" style={{ color: 'var(--text-app-muted-foreground)' }}>
             Mix any of 10 color themes with any of 5 layout structures. Try switching themes and
             layouts using the buttons above to see instant changes without page reload.
           </p>
@@ -192,10 +192,10 @@ function DemoContent() {
             border: '1px solid var(--theme-border)',
           }}
         >
-          <h3 className="font-semibold mb-2" style={{ color: 'var(--theme-text)' }}>
+          <h3 className="font-semibold mb-2" style={{ color: 'var(--text-app-foreground)' }}>
             How It Works
           </h3>
-          <ul className="space-y-1 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+          <ul className="space-y-1 text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>
             <li>• Themes control colors (primary, background, text, borders)</li>
             <li>• Layouts control structure (spacing, density, card styles)</li>
             <li>• Both use CSS variables for instant switching</li>
@@ -229,10 +229,10 @@ function FeatureCard({
       <div className="mb-3" style={{ color: 'var(--theme-primary)' }}>
         {icon}
       </div>
-      <h3 className="font-semibold mb-1" style={{ color: 'var(--theme-text)' }}>
+      <h3 className="font-semibold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
         {title}
       </h3>
-      <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+      <p className="text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>
         {description}
       </p>
     </div>
@@ -258,12 +258,12 @@ function MetricCard({
       }}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+        <span className="text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>
           {label}
         </span>
         <DollarSign className="h-4 w-4" style={{ color: 'var(--theme-primary)' }} />
       </div>
-      <div className="text-2xl font-bold mb-1" style={{ color: 'var(--theme-text)' }}>
+      <div className="text-2xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
         {value}
       </div>
       <div className="text-sm" style={{ color: 'var(--theme-primary)' }}>
@@ -289,10 +289,10 @@ function ActivityItem({
         style={{ background: color }}
       />
       <div className="flex-1">
-        <p className="text-sm" style={{ color: 'var(--theme-text)' }}>
+        <p className="text-sm" style={{ color: 'var(--text-app-foreground)' }}>
           {title}
         </p>
-        <p className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>
+        <p className="text-xs" style={{ color: 'var(--text-app-muted-foreground)' }}>
           {time}
         </p>
       </div>

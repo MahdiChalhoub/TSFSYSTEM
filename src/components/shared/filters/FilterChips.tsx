@@ -81,8 +81,8 @@ export function FilterChips({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 theme-bg rounded-lg border theme-border">
-      <span className="text-sm font-bold theme-text-muted">
+    <div className="flex flex-wrap items-center gap-2 p-3 bg-app-bg rounded-lg border theme-border">
+      <span className="text-sm font-bold text-app-muted-foreground">
         Active Filters:
       </span>
 
@@ -98,7 +98,7 @@ export function FilterChips({
             onClick={() => onRemoveCondition(condition.id)}
           >
             <span className="font-semibold">{field.label}</span>
-            <span className="theme-text-muted">{getOperatorLabel(condition.operator)}</span>
+            <span className="text-app-muted-foreground">{getOperatorLabel(condition.operator)}</span>
             {value && <span className="text-blue-600 dark:text-blue-400">{value}</span>}
             <X className="w-3 h-3 opacity-50 group-hover:opacity-100 group-hover:text-red-600 dark:group-hover:text-red-400" />
           </Badge>

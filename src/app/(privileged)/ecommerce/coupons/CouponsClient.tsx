@@ -79,8 +79,8 @@ export default function CouponsClient({ initialCoupons }: Props) {
                             <Icon size={18} style={{ color }} />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[var(--app-text)]">{value}</p>
-                            <p className="text-xs text-[var(--app-text-muted)]">{label}</p>
+                            <p className="text-2xl font-bold text-[var(--app-foreground)]">{value}</p>
+                            <p className="text-xs text-[var(--app-muted-foreground)]">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -89,7 +89,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
             {/* Table */}
             <div className="app-card p-0 overflow-hidden">
                 <div className="px-5 py-3 border-b border-[var(--app-border)] flex items-center justify-between">
-                    <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">
+                    <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">
                         {coupons.length} coupon{coupons.length !== 1 ? 's' : ''}
                     </p>
                 </div>
@@ -97,7 +97,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
                     <thead>
                         <tr className="border-b border-[var(--app-border)]">
                             {['Code', 'Type', 'Value', 'Min Order', 'Uses', 'Expires', 'Active', ''].map(h => (
-                                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">{h}</th>
+                                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">{h}</th>
                             ))}
                         </tr>
                     </thead>
@@ -108,15 +108,15 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'var(--app-accent)15' }}>
                                         <Tag size={22} style={{ color: 'var(--app-accent)' }} />
                                     </div>
-                                    <p className="font-semibold text-[var(--app-text)]">No coupons yet</p>
-                                    <p className="text-xs text-[var(--app-text-muted)]">Create your first discount code</p>
+                                    <p className="font-semibold text-[var(--app-foreground)]">No coupons yet</p>
+                                    <p className="text-xs text-[var(--app-muted-foreground)]">Create your first discount code</p>
                                 </div>
                             </td></tr>
                         )}
                         {coupons.map(c => (
                             <tr key={c.id} className="border-b border-[var(--app-border)] hover:bg-[var(--app-surface-hover)] transition-colors">
                                 <td className="px-4 py-3">
-                                    <span className="font-mono font-bold text-[var(--app-text)] bg-[var(--app-accent)]/10 text-[var(--app-accent)] px-2 py-0.5 rounded text-xs tracking-widest">
+                                    <span className="font-mono font-bold text-[var(--app-foreground)] bg-[var(--app-accent)]/10 text-[var(--app-accent)] px-2 py-0.5 rounded text-xs tracking-widest">
                                         {c.code}
                                     </span>
                                 </td>
@@ -127,16 +127,16 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                         {c.discount_type}
                                     </span>
                                 </td>
-                                <td className="px-4 py-3 font-semibold text-[var(--app-text)]">
+                                <td className="px-4 py-3 font-semibold text-[var(--app-foreground)]">
                                     {c.discount_type === 'PERCENT' ? `${c.value}%` : c.value}
                                 </td>
-                                <td className="px-4 py-3 text-[var(--app-text-muted)]">{c.min_order_amount}</td>
-                                <td className="px-4 py-3 text-[var(--app-text-muted)]">
+                                <td className="px-4 py-3 text-[var(--app-muted-foreground)]">{c.min_order_amount}</td>
+                                <td className="px-4 py-3 text-[var(--app-muted-foreground)]">
                                     <span className={c.max_uses && c.used_count >= c.max_uses ? 'text-app-error' : ''}>
                                         {c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}
                                     </span>
                                 </td>
-                                <td className="px-4 py-3 text-[var(--app-text-muted)]">
+                                <td className="px-4 py-3 text-[var(--app-muted-foreground)]">
                                     {c.valid_until ? new Date(c.valid_until).toLocaleDateString() : '—'}
                                 </td>
                                 <td className="px-4 py-3">
@@ -145,12 +145,12 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                         className="transition-opacity hover:opacity-80">
                                         {c.is_active
                                             ? <ToggleRight size={22} className="text-app-success" />
-                                            : <ToggleLeft size={22} className="text-[var(--app-text-muted)]" />}
+                                            : <ToggleLeft size={22} className="text-[var(--app-muted-foreground)]" />}
                                     </button>
                                 </td>
                                 <td className="px-4 py-3">
                                     <button onClick={() => handleDelete(c.id)} id={`delete-coupon-${c.id}`}
-                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                        className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                         <Trash2 size={14} />
                                     </button>
                                 </td>
@@ -170,8 +170,8 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                 <Percent size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-text)]">New Coupon</h2>
-                                <p className="text-xs text-[var(--app-text-muted)]">Create a discount code</p>
+                                <h2 className="text-base font-bold text-[var(--app-foreground)]">New Coupon</h2>
+                                <p className="text-xs text-[var(--app-muted-foreground)]">Create a discount code</p>
                             </div>
                         </div>
                         {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}

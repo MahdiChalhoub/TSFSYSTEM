@@ -49,18 +49,18 @@ export function AppPageHeader({
     const renderTitle = () => {
         if (!accentWord) {
             return (
-                <span style={{ color: 'var(--app-text)' }}>{title}</span>
+                <span style={{ color: 'var(--app-foreground)' }}>{title}</span>
             );
         }
         const idx = title.indexOf(accentWord);
-        if (idx === -1) return <span style={{ color: 'var(--app-text)' }}>{title}</span>;
+        if (idx === -1) return <span style={{ color: 'var(--app-foreground)' }}>{title}</span>;
         const before = title.slice(0, idx);
         const after = title.slice(idx + accentWord.length);
         return (
             <>
-                {before && <span style={{ color: 'var(--app-text)' }}>{before}</span>}
+                {before && <span style={{ color: 'var(--app-foreground)' }}>{before}</span>}
                 <span style={{ color: 'var(--app-primary)' }}>{accentWord}</span>
-                {after && <span style={{ color: 'var(--app-text)' }}>{after}</span>}
+                {after && <span style={{ color: 'var(--app-foreground)' }}>{after}</span>}
             </>
         );
     };
@@ -72,7 +72,7 @@ export function AppPageHeader({
                 <Link
                     href={backHref}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold mb-4 transition-opacity hover:opacity-70"
-                    style={{ color: 'var(--app-text-muted)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                 >
                     <ArrowLeft size={14} />
                     Back
@@ -108,7 +108,7 @@ export function AppPageHeader({
                         {subtitle && (
                             <p
                                 className="text-[11px] font-black uppercase tracking-widest mt-1.5"
-                                style={{ color: 'var(--app-text-muted)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                             >
                                 {subtitle}
                             </p>

@@ -14,8 +14,8 @@ export const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Sit
                     <MapPin size={12} className="text-[var(--app-primary)]" />
                     <span className="text-[11px] font-black text-[var(--app-primary)] uppercase tracking-widest">Select Location</span>
                 </div>
-                <h2 className="text-3xl font-black text-[var(--app-text)] mb-1">Where are you working?</h2>
-                <p className="text-[var(--app-text-muted)] text-sm">Choose the site for this session</p>
+                <h2 className="text-3xl font-black text-[var(--app-foreground)] mb-1">Where are you working?</h2>
+                <p className="text-[var(--app-muted-foreground)] text-sm">Choose the site for this session</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -37,17 +37,17 @@ export const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Sit
                             <div className="relative">
                                 <div className={clsx(
                                     'w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-all',
-                                    hasRegs ? 'bg-[var(--app-primary-light)] text-[var(--app-primary)] group-hover:bg-[var(--app-primary)] group-hover:text-white' : 'bg-[var(--app-surface-hover)] text-[var(--app-text-faint)]'
+                                    hasRegs ? 'bg-[var(--app-primary-light)] text-[var(--app-primary)] group-hover:bg-[var(--app-primary)] group-hover:text-white' : 'bg-[var(--app-surface-hover)] text-[var(--app-muted-foreground)]'
                                 )}>
                                     <Building2 size={20} />
                                 </div>
-                                <h3 className="font-black text-[var(--app-text)] text-base leading-tight">{site.name}</h3>
-                                {site.code && <p className="text-[var(--app-text-faint)] text-xs font-mono mt-0.5">{site.code}</p>}
-                                {site.address && <p className="text-[var(--app-text-faint)] text-xs mt-1 line-clamp-1">{site.address}</p>}
+                                <h3 className="font-black text-[var(--app-foreground)] text-base leading-tight">{site.name}</h3>
+                                {site.code && <p className="text-[var(--app-muted-foreground)] text-xs font-mono mt-0.5">{site.code}</p>}
+                                {site.address && <p className="text-[var(--app-muted-foreground)] text-xs mt-1 line-clamp-1">{site.address}</p>}
                                 <div className="flex items-center gap-2 mt-3">
                                     {hasRegs ? (
                                         <>
-                                            <span className="px-2 py-0.5 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] text-[10px] font-bold">
+                                            <span className="px-2 py-0.5 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-muted-foreground)] text-[10px] font-bold">
                                                 {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
                                             </span>
                                             {hasActive && (
@@ -68,9 +68,9 @@ export const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Sit
 
             {sites.length === 0 && (
                 <div className="text-center py-16 border border-[var(--app-border)]/50 rounded-2xl bg-[var(--app-surface-2)]">
-                    <AlertCircle size={40} className="text-[var(--app-text-faint)]/50 mx-auto mb-3" />
-                    <p className="text-[var(--app-text-muted)] font-bold">No sites configured</p>
-                    <p className="text-[var(--app-text-faint)] text-sm mt-1">Create sites in POS Settings</p>
+                    <AlertCircle size={40} className="text-[var(--app-muted-foreground)]/50 mx-auto mb-3" />
+                    <p className="text-[var(--app-muted-foreground)] font-bold">No sites configured</p>
+                    <p className="text-[var(--app-muted-foreground)] text-sm mt-1">Create sites in POS Settings</p>
                 </div>
             )}
         </div>

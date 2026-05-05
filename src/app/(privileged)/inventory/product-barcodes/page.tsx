@@ -50,7 +50,7 @@ export default function ProductBarcodesPage() {
     )
 
     return (
-        <div className="min-h-screen layout-container-padding theme-bg">
+        <div className="min-h-screen layout-container-padding bg-app-bg">
             <div className="mb-6 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
                     style={{ background: 'linear-gradient(135deg, var(--app-info), var(--app-primary))', boxShadow: '0 4px 15px color-mix(in srgb, var(--app-info) 30%, transparent)' }}>

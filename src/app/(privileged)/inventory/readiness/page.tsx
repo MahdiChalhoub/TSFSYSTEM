@@ -93,7 +93,7 @@ export default function ProductReadinessPage() {
     }
 
     return (
-        <div className="min-h-screen layout-container-padding theme-bg">
+        <div className="min-h-screen layout-container-padding bg-app-bg">
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">

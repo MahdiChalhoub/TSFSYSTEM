@@ -101,7 +101,7 @@ export function AppThemeSelector({ onClose }: { onClose?: () => void }) {
  </div>
  <span
  className="text-sm font-black tracking-tight"
- style={{ color: 'var(--app-text)' }}
+ style={{ color: 'var(--app-foreground)' }}
  >
  UI Theme
  </span>
@@ -112,7 +112,7 @@ export function AppThemeSelector({ onClose }: { onClose?: () => void }) {
  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
  style={{
  background: 'var(--app-surface-2)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  }}
  >
  <X size={12} />
@@ -135,7 +135,7 @@ export function AppThemeSelector({ onClose }: { onClose?: () => void }) {
  {/* Footer hint */}
  <p
  className="text-[10px] font-medium text-center mt-3"
- style={{ color: 'var(--app-text-faint)' }}
+ style={{ color: 'var(--app-muted-foreground)' }}
  >
  Theme is saved automatically
  </p>

@@ -139,7 +139,7 @@ export const AccountNode = ({
                     </span>
                     <span
                         className={`truncate text-tp-lg ${isRoot ? 'font-bold' : 'font-medium'}`}
-                        style={{ color: 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
+                        style={{ color: 'var(--app-foreground, var(--app-foreground, #F1F5F9))' }}
                     >
                         {node.name}
                     </span>
@@ -250,7 +250,7 @@ export const AccountNode = ({
                     return (
                         <div className="w-28 text-right flex-shrink-0 flex flex-col items-end leading-tight">
                             <span className="font-mono text-tp-md font-bold tabular-nums"
-                                style={{ color: balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}>
+                                style={{ color: balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-foreground, #F1F5F9))' }}>
                                 {fmt(balance)}
                             </span>
                             {showTwin && (

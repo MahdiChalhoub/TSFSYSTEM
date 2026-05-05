@@ -273,6 +273,65 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
     setProfiles(updated)
   }, [profiles])
 
+  /* ── Row-prop memoization ─────────────────────────────────────────────
+   *
+   *  DajingoListView's row component is wrapped in React.memo. Any inline
+   *  arrow passed as a prop (renderRowIcon / renderRowTitle / onView / etc.)
+   *  re-creates a new function reference on every manager render, which
+   *  defeats the memoization — every keystroke or state tick rerenders
+   *  every row. Stabilize them with useCallback so memo'd rows can bail.
+   */
+  const getRowId = useCallback((r: Product) => r.id, [])
+
+  const renderRowIcon = useCallback((product: Product) => {
+    const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
+    return (
+      <ProductThumbnail
+        image={product.image}
+        productType={product.product_type}
+        name={product.name}
+        size={28}
+        className="rounded-lg"
+        color={tc.color}
+      />
+    )
+  }, [])
+
+  const renderRowTitle = useCallback((product: Product) => (
+    <div className="flex-1 min-w-0">
+      <div className="truncate text-[12px] font-bold text-app-foreground">{product.name}</div>
+      <div className="text-[10px] font-mono text-app-muted-foreground">
+        {product.sku}
+        {product.barcode && <span className="ml-2 opacity-60">⎸ {product.barcode}</span>}
+      </div>
+    </div>
+  ), [])
+
+  const handleViewProduct = useCallback((product: Product) => {
+    router.push(`/inventory/products/${product.id}`)
+  }, [router])
+
+  const renderExpanded = useCallback((product: Product) => {
+    const sellHt = parseFloat(product.selling_price_ht) || 0
+    const costP = parseFloat(product.cost_price) || 0
+    const marginPct = sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—'
+    return (
+      <ProductDetailCards
+        product={product}
+        marginPct={marginPct}
+        onView={id => router.push(`/inventory/products/${id}`)}
+      />
+    )
+  }, [router])
+
+  const buildMenuActions = useCallback((product: Product) => [
+    { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => triggerRequest('PURCHASE', [toRequestable(product)]) },
+    { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => triggerRequest('TRANSFER', [toRequestable(product)]) },
+    { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
+  ], [triggerRequest])
+
+  const handleToggleSelect = useCallback((id: number | string) => toggleSelect(Number(id)), [toggleSelect])
+
   /* ═══════════════════════════════════════════════════════════
    *  RENDER
    * ═══════════════════════════════════════════════════════════ */
@@ -486,7 +545,7 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           data={paginated}
           allData={filtered}
           loading={loading}
-          getRowId={r => r.id}
+          getRowId={getRowId}
           columns={ALL_COLUMNS}
           visibleColumns={effectiveVisibleColumns}
           columnWidths={COLUMN_WIDTHS}
@@ -513,38 +572,14 @@ export default function ProductMasterManager({ initialProducts = [], totalProduc
           activeFilterCount={activeFilterCount}
           onToggleCustomize={() => setShowCustomize(true)}
           /* ── Row rendering ── */
-          renderRowIcon={product => {
-            const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
-            return (
-              <ProductThumbnail
-                image={product.image}
-                productType={product.product_type}
-                name={product.name}
-                size={28}
-                className="rounded-lg"
-                color={tc.color}
-              />
-            )
-          }}
-          renderRowTitle={product => (
-            <div className="flex-1 min-w-0">
-              <div className="truncate text-[12px] font-bold text-app-foreground">{product.name}</div>
-              <div className="text-[10px] font-mono text-app-muted-foreground">
-                {product.sku}
-                {product.barcode && <span className="ml-2 opacity-60">⎸ {product.barcode}</span>}
-              </div>
-            </div>
-          )}
-          renderColumnCell={(key, product) => renderProductCell(key, product)}
-          renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
-          onView={product => router.push(`/inventory/products/${product.id}`)}
-          menuActions={product => [
-            { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => triggerRequest('PURCHASE', [toRequestable(product)]) },
-            { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => triggerRequest('TRANSFER', [toRequestable(product)]) },
-            { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
-          ]}
+          renderRowIcon={renderRowIcon}
+          renderRowTitle={renderRowTitle}
+          renderColumnCell={renderProductCell}
+          renderExpanded={renderExpanded}
+          onView={handleViewProduct}
+          menuActions={buildMenuActions}
           selectedIds={selectedIds}
-          onToggleSelect={(id) => toggleSelect(Number(id))}
+          onToggleSelect={handleToggleSelect}
           isAllPageSelected={isAllPageSelected}
           onToggleSelectAll={toggleSelectAll}
           bulkActions={

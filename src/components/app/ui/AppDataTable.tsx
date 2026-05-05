@@ -123,7 +123,7 @@ export function AppDataTable<T extends Record<string, unknown>>({
                                         <span
                                             className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-widest"
                                             style={{
-                                                color: isSorted ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                                color: isSorted ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                             }}
                                         >
                                             {col.label}
@@ -158,13 +158,13 @@ export function AppDataTable<T extends Record<string, unknown>>({
                                         <td colSpan={columns.length}>
                                             <div className="flex flex-col items-center justify-center py-16 gap-3">
                                                 {emptyIcon && (
-                                                    <div style={{ color: 'var(--app-text-faint)' }}>
+                                                    <div style={{ color: 'var(--app-muted-foreground)' }}>
                                                         {emptyIcon}
                                                     </div>
                                                 )}
                                                 <p
                                                     className="text-sm font-semibold"
-                                                    style={{ color: 'var(--app-text-muted)' }}
+                                                    style={{ color: 'var(--app-muted-foreground)' }}
                                                 >
                                                     {emptyMessage}
                                                 </p>
@@ -191,7 +191,7 @@ export function AppDataTable<T extends Record<string, unknown>>({
                                                     className="px-4 py-3 text-sm"
                                                     style={{
                                                         textAlign: col.align ?? 'left',
-                                                        color: 'var(--app-text)',
+                                                        color: 'var(--app-foreground)',
                                                         fontFamily: 'var(--app-font)',
                                                         whiteSpace: 'nowrap',
                                                     }}

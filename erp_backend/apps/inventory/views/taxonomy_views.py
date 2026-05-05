@@ -452,6 +452,13 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
             product_ids: list[int]
             target_unit_id: int
             preview: bool (default False) — if True, returns analysis without moving
+            packaging_action: 'detach' | 'keep' (default unset)
+                - When the move crosses unit families AND any moved product
+                  has ProductPackaging rows, the request is rejected unless
+                  the operator explicitly picks one. 'detach' deletes the
+                  packaging rows (their ratio was tied to the old base unit
+                  and would silently misreport stock); 'keep' force-orphans
+                  them (legacy behavior, surfaces the conflict to logs).
         """
         organization, err = _get_org_or_400()
         if err:
@@ -460,6 +467,7 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
         product_ids = request.data.get('product_ids', [])
         target_unit_id = request.data.get('target_unit_id')
         preview = request.data.get('preview', False)
+        packaging_action = (request.data.get('packaging_action') or '').strip().lower()
         # Bulk shortcut: migrate every product with unit=source_unit_id
         source_unit_id = request.data.get('source_unit_id')
         if source_unit_id and not product_ids:
@@ -482,24 +490,111 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
         products = Product.objects.filter(
             id__in=product_ids, organization=organization
-        )
+        ).select_related('unit')
 
         if not products.exists():
             return Response({"error": "No valid products found"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # ── Packaging impact analysis ───────────────────────────────
+        # ProductPackaging.ratio is "how many BASE units this level
+        # contains" — its meaning depends on which unit family the
+        # product belongs to. A move within the same base-unit chain
+        # keeps that meaning; a cross-family move breaks it.
+        from apps.inventory.models import ProductPackaging
+
+        def _walk_to_base(unit):
+            seen: set[int] = set()
+            cur = unit
+            while cur is not None and cur.base_unit_id is not None and cur.id not in seen:
+                seen.add(cur.id)
+                try:
+                    cur = Unit.objects.get(id=cur.base_unit_id)
+                except Unit.DoesNotExist:
+                    return cur
+            return cur
+
+        def _same_family(unit_a, unit_b) -> bool:
+            if unit_a is None or unit_b is None:
+                return unit_a is None and unit_b is None
+            base_a = _walk_to_base(unit_a)
+            base_b = _walk_to_base(unit_b)
+            return bool(base_a and base_b and base_a.id == base_b.id)
+
+        target_base_unit = _walk_to_base(target_unit)
+        # Aggregate packaging counts per source product to avoid an N+1.
+        pkg_counts: dict[int, int] = {
+            row['product_id']: row['c']
+            for row in ProductPackaging.objects.filter(
+                product_id__in=product_ids, organization=organization,
+            ).values('product_id').annotate(c=models.Count('id'))
+        }
+
+        packaging_impact = []
+        cross_family = []
+        for p in products:
+            cnt = pkg_counts.get(p.id, 0)
+            if cnt == 0:
+                continue
+            same_fam = _same_family(p.unit, target_unit) if p.unit_id else True
+            row = {
+                'product_id': p.id,
+                'product_name': p.name,
+                'product_sku': p.sku,
+                'packaging_count': cnt,
+                'source_unit_id': p.unit_id,
+                'source_unit_name': p.unit.name if p.unit_id else None,
+                'same_family': same_fam,
+            }
+            packaging_impact.append(row)
+            if not same_fam:
+                cross_family.append(row)
+
         if preview:
             return Response({
-                "has_conflicts": False,
-                "target_unit": {"id": target_unit.id, "name": target_unit.name},
+                "has_conflicts": len(cross_family) > 0,
+                "target_unit": {
+                    "id": target_unit.id,
+                    "name": target_unit.name,
+                    "base_unit_id": target_base_unit.id if target_base_unit else None,
+                    "base_unit_name": target_base_unit.name if target_base_unit else None,
+                },
                 "product_count": products.count(),
+                "packaging_impact": packaging_impact,
+                "cross_family_count": len(cross_family),
             })
 
+        # ── Cross-family safeguard ──────────────────────────────────
+        if cross_family and packaging_action not in ('detach', 'keep'):
+            return Response({
+                'code': 'packaging_conflict',
+                'message': (
+                    f'{len(cross_family)} product(s) carry packaging that '
+                    f'reference a different unit family than "{target_unit.name}". '
+                    f'Pass packaging_action="detach" to drop those packaging rows '
+                    f'(their ratios would otherwise silently misreport stock) or '
+                    f'packaging_action="keep" to force the move and orphan them.'
+                ),
+                'cross_family_count': len(cross_family),
+                'packaging_impact': cross_family,
+            }, status=status.HTTP_409_CONFLICT)
+
         with transaction.atomic():
+            detached = 0
+            if packaging_action == 'detach':
+                # Drop only the rows tied to a different family. Same-family
+                # ones survive — their ratio still resolves through the
+                # shared base unit chain.
+                detach_ids = [r['product_id'] for r in cross_family]
+                if detach_ids:
+                    detached, _ = ProductPackaging.objects.filter(
+                        product_id__in=detach_ids, organization=organization,
+                    ).delete()
             moved = products.update(unit=target_unit)
 
         return Response({
             "success": True,
             "moved_count": moved,
+            "packaging_detached": detached,
             "target_unit": {"id": target_unit.id, "name": target_unit.name},
         })
 

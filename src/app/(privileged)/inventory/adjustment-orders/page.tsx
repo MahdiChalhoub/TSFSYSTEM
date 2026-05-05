@@ -219,7 +219,7 @@ export default function AdjustmentOrdersPage() {
 
             {/* ─── Summary Cards ──────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-app-gradient-info-soft/50 border-app-info/60">
+                <Card className="bg-app-info-soft/50 border-app-info/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -230,7 +230,7 @@ export default function AdjustmentOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-app-gradient-warning-soft/50 border-app-warning/60">
+                <Card className="bg-app-warning-soft/50 border-app-warning/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -241,7 +241,7 @@ export default function AdjustmentOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-app-gradient-warning-soft/50 border-app-warning/60">
+                <Card className="bg-app-warning-soft/50 border-app-warning/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -252,7 +252,7 @@ export default function AdjustmentOrdersPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-app-gradient-primary-soft/50 border-app-success/60">
+                <Card className="bg-app-primary-soft/50 border-app-success/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>

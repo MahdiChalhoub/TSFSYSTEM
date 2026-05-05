@@ -44,7 +44,7 @@ export function POSLayoutSelector({
                         className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200"
                         style={{
                             background: isActive ? 'var(--app-primary)' : 'transparent',
-                            color: isActive ? '#fff' : 'var(--app-text-muted)',
+                            color: isActive ? '#fff' : 'var(--app-muted-foreground)',
                             fontFamily: 'var(--app-font-display, inherit)',
                         }}
                     >

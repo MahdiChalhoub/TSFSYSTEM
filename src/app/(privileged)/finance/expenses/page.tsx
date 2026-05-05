@@ -143,7 +143,7 @@ export default function ExpenseTrackerPage() {
                                     <span className="text-sm w-48 truncate">{a.name}</span>
                                     <div className="flex-1 h-5 bg-app-surface-2 rounded-full overflow-hidden relative">
                                         <div
-                                            className="h-full bg-app-gradient-error rounded-full transition-all"
+                                            className="h-full bg-app-error rounded-full transition-all"
                                             style={{ width: `${pct}%` }}
                                         />
                                         {pct > 10 && (

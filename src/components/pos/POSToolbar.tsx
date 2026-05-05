@@ -89,7 +89,7 @@ export function POSToolbar({
  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 group hover:rotate-6 transition-transform"
  style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}
  >
- <ShoppingCart size={18} className="text-app-text" />
+ <ShoppingCart size={18} className="text-app-foreground" />
  </div>
 
  {/* Session Tabs */}
@@ -109,7 +109,7 @@ export function POSToolbar({
  } : {
  background: 'var(--app-surface-2)',
  borderColor: 'var(--app-border)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  }}
  >
  <ShoppingCart size={11} />
@@ -119,7 +119,7 @@ export function POSToolbar({
  className="px-2 py-0.5 rounded-full text-[9px] font-black flex items-center justify-center"
  style={{
  background: activeSessionId === s.id ? 'rgba(255,255,255,0.2)' : 'var(--app-surface)',
- color: activeSessionId === s.id ? '#fff' : 'var(--app-text-muted)',
+ color: activeSessionId === s.id ? '#fff' : 'var(--app-muted-foreground)',
  }}
  >
  {s.cart.length}
@@ -129,7 +129,7 @@ export function POSToolbar({
  <button
  onClick={() => onRemoveSession(s.id)}
  className="ml-[-8px] p-1 transition-all opacity-0 group-hover:opacity-100 rounded-full border"
- style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text-muted)' }}
+ style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}
  >
  <X size={8} />
  </button>
@@ -141,7 +141,7 @@ export function POSToolbar({
  style={{
  background: 'var(--app-surface-2)',
  border: '1px solid var(--app-border)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  }}
  onMouseEnter={e => {
  (e.currentTarget as HTMLElement).style.background = 'var(--app-primary-light)';
@@ -149,7 +149,7 @@ export function POSToolbar({
  }}
  onMouseLeave={e => {
  (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)';
- (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)';
+ (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)';
  }}
  >
  <Plus size={16} />
@@ -172,14 +172,14 @@ export function POSToolbar({
  </span>
  </div>
  <div className="flex items-center gap-2 mt-0.5">
- <User size={10} className="shrink-0" style={{ color: 'var(--app-text-muted)' }} />
- <span className="text-[9px] font-bold truncate uppercase tracking-tighter" style={{ color: 'var(--app-text-muted)' }}>
+ <User size={10} className="shrink-0" style={{ color: 'var(--app-muted-foreground)' }} />
+ <span className="text-[9px] font-bold truncate uppercase tracking-tighter" style={{ color: 'var(--app-muted-foreground)' }}>
  {registerConfig.cashierName}
  </span>
  </div>
  </div>
  <div className="h-6 w-px hidden lg:block" style={{ background: 'var(--app-border)' }} />
- <span className="text-[10px] font-black uppercase tracking-widest truncate hidden lg:inline" style={{ color: 'var(--app-text-muted)' }}>
+ <span className="text-[10px] font-black uppercase tracking-widest truncate hidden lg:inline" style={{ color: 'var(--app-muted-foreground)' }}>
  {registerConfig.siteName}
  </span>
  </div>
@@ -211,7 +211,7 @@ export function POSToolbar({
  <button
  onClick={onSync}
  className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
- style={{ color: 'var(--app-text-muted)' }}
+ style={{ color: 'var(--app-muted-foreground)' }}
  >
  <RefreshCw size={10} className={isProcessing ? 'animate-spin' : ''} style={isProcessing ? { color: 'var(--app-primary)' } : {}} />
  </button>
@@ -232,14 +232,14 @@ export function POSToolbar({
  borderColor: '#f59e0b44',
  } : {
  background: 'var(--app-surface)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  borderColor: 'var(--app-border)',
  }}
  title="Pending Deliveries"
  >
  <Truck size={12} />
  {pendingDeliveriesCount > 0 && (
- <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-app-warning text-app-text text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
+ <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-app-warning text-app-foreground text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
  {pendingDeliveriesCount}
  </span>
  )}
@@ -256,7 +256,7 @@ export function POSToolbar({
  <div className="flex items-center gap-1.5 ml-1">
  <Link
  href="/dashboard"
- className="h-8 px-4 rounded-xl text-app-text text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-[1.05] active:scale-95 border"
+ className="h-8 px-4 rounded-xl text-app-foreground text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-[1.05] active:scale-95 border"
  style={{
  background: 'var(--app-primary)',
  borderColor: 'var(--app-primary)',
@@ -298,13 +298,13 @@ function TBtn({ icon: Icon, onClick, title }: { icon: any; onClick: () => void; 
  <button
  onClick={onClick}
  className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
- style={{ color: 'var(--app-text-muted)', background: 'transparent' }}
+ style={{ color: 'var(--app-muted-foreground)', background: 'transparent' }}
  onMouseEnter={e => {
  (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)';
  (e.currentTarget as HTMLElement).style.background = 'var(--app-primary-light)';
  }}
  onMouseLeave={e => {
- (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)';
+ (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)';
  (e.currentTarget as HTMLElement).style.background = 'transparent';
  }}
  title={title}

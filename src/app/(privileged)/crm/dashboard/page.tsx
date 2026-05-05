@@ -162,7 +162,7 @@ export default function RelationshipDashboard() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                        <h4 className="font-bold text-app-text truncate">{task.title || task.subject}</h4>
+                                                        <h4 className="font-bold text-app-foreground truncate">{task.title || task.subject}</h4>
                                                         <Badge variant="outline" className="bg-app-surface-2 border-none text-[8px] font-bold uppercase tracking-widest text-app-muted-foreground px-2 h-4">
                                                             {task.action_type_display || task.action_type}
                                                         </Badge>

@@ -14,10 +14,10 @@
 
 :root {
   /* Map new theme variables to old app variables for backward compatibility */
-  --app-bg-from-theme: var(--theme-bg);
+  --app-bg-from-theme: var(--bg-app-bg);
   --app-surface-from-theme: var(--theme-surface);
-  --app-text-from-theme: var(--theme-text);
-  --app-text-muted-from-theme: var(--theme-text-muted);
+  --app-text-from-theme: var(--text-app-foreground);
+  --app-muted-foreground-from-theme: var(--text-app-muted-foreground);
   --app-primary-from-theme: var(--theme-primary);
   --app-border-from-theme: var(--theme-border);
 }
@@ -27,8 +27,8 @@
    ======================================== */
 
 /* Background utilities */
-.theme-bg {
-  background: var(--theme-bg);
+.bg-app-bg {
+  background: var(--bg-app-bg);
 }
 
 .theme-surface {
@@ -40,12 +40,12 @@
 }
 
 /* Text utilities */
-.theme-text {
-  color: var(--theme-text);
+.text-app-foreground {
+  color: var(--text-app-foreground);
 }
 
-.theme-text-muted {
-  color: var(--theme-text-muted);
+.text-app-muted-foreground {
+  color: var(--text-app-muted-foreground);
 }
 
 .theme-primary {
@@ -100,7 +100,7 @@
 .card {
   background: var(--theme-surface);
   border-color: var(--theme-border);
-  color: var(--theme-text);
+  color: var(--text-app-foreground);
 }
 
 .card-header {
@@ -119,7 +119,7 @@
 
 .btn-outline {
   border-color: var(--theme-border);
-  color: var(--theme-text);
+  color: var(--text-app-foreground);
 }
 
 .btn-outline:hover {
@@ -221,10 +221,10 @@ body,
 
   /* Force light theme for printing */
   :root {
-    --theme-bg: #ffffff;
+    --bg-app-bg: #ffffff;
     --theme-surface: #ffffff;
-    --theme-text: #000000;
-    --theme-text-muted: #666666;
+    --text-app-foreground: #000000;
+    --text-app-muted-foreground: #666666;
     --theme-border: #cccccc;
     --app-background: #ffffff;
     --app-surface: #ffffff;
@@ -366,7 +366,7 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--theme-bg);
+  background: var(--bg-app-bg);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -375,7 +375,7 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-text-muted);
+  background: var(--text-app-muted-foreground);
 }
 
 /* ========================================
@@ -384,10 +384,10 @@ textarea:focus-visible {
 
 ::selection {
   background: color-mix(in srgb, var(--app-primary, var(--theme-primary)) 25%, transparent);
-  color: var(--app-foreground, var(--theme-text));
+  color: var(--app-foreground, var(--text-app-foreground));
 }
 
 ::-moz-selection {
   background: color-mix(in srgb, var(--app-primary, var(--theme-primary)) 25%, transparent);
-  color: var(--app-foreground, var(--theme-text));
+  color: var(--app-foreground, var(--text-app-foreground));
 }

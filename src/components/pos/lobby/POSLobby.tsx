@@ -78,7 +78,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     </div>
                 </div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.3em]"
-                    style={{ color: 'color-mix(in srgb, var(--app-primary) 60%, var(--app-text, var(--app-foreground)))' }}>
+                    style={{ color: 'color-mix(in srgb, var(--app-primary) 60%, var(--app-foreground, var(--app-foreground)))' }}>
                     Initializing Terminal…
                 </p>
             </div>
@@ -101,7 +101,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     <a href="/sales/pos-settings"
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold transition-all"
                         style={{
-                            color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 40%, transparent)',
+                            color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 40%, transparent)',
                             background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
                             backdropFilter: 'blur(8px)',
@@ -126,7 +126,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                                 ? 'hover:bg-app-surface'
                                 : 'invisible'
                         )}
-                        style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 50%, transparent)' }}
+                        style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 50%, transparent)' }}
                     >
                         <ArrowLeft size={14} /> Back
                     </button>
@@ -134,11 +134,11 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     {/* Center: step title */}
                     <div className="text-center">
                         <h2 className="text-[14px] font-black tracking-tight"
-                            style={{ color: 'var(--app-text, var(--app-foreground))' }}>
+                            style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>
                             {meta.title}
                         </h2>
                         <p className="text-[10px] font-medium"
-                            style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 40%, transparent)' }}>
+                            style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 40%, transparent)' }}>
                             {meta.subtitle}
                         </p>
                     </div>
@@ -181,14 +181,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                         <div className="w-1.5 h-1.5 rounded-full"
                             style={{ background: 'var(--app-success)', boxShadow: '0 0 4px var(--app-success)' }} />
                         <span className="text-[9px] font-bold uppercase tracking-wider"
-                            style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 30%, transparent)' }}>
+                            style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 30%, transparent)' }}>
                             Online
                         </span>
                     </div>
                     <a href="/sales/pos-settings"
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all lg:hidden"
                         style={{
-                            color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 35%, transparent)',
+                            color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 35%, transparent)',
                             background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                             border: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
                         }}>
@@ -196,14 +196,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     </a>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
-                            <Shield size={9} style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 25%, transparent)' }} />
+                            <Shield size={9} style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 25%, transparent)' }} />
                             <span className="text-[9px] font-mono"
-                                style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 25%, transparent)' }}>
+                                style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 25%, transparent)' }}>
                                 v3.2
                             </span>
                         </div>
                         <span className="text-[9px]"
-                            style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 20%, transparent)' }}>
+                            style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 20%, transparent)' }}>
                             {new Date().toLocaleDateString()}
                         </span>
                     </div>

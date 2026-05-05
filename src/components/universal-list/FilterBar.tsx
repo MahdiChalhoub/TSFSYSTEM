@@ -34,7 +34,7 @@ export default function FilterBar({
  <div className="flex flex-wrap items-center gap-3">
  {/* Search */}
  <div className="relative flex-shrink-0" style={{ minWidth: 200 }}>
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input
  type="text"
  value={search}
@@ -45,7 +45,7 @@ export default function FilterBar({
  {search && (
  <button
  onClick={() => onSearchChange('')}
- className="absolute right-2 top-1/2 -translate-y-1/2 text-app-text-faint hover:text-app-text-muted"
+ className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground"
  >
  <X size={14} />
  </button>
@@ -68,13 +68,13 @@ export default function FilterBar({
  onClick={() => setShowAdvanced(!showAdvanced)}
  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-lg transition-all ${showAdvanced
  ? 'bg-app-info-bg border-app-info text-app-info'
- : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  }`}
  >
  <Filter size={13} />
  More Filters
  {activeCount > 0 && (
- <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-app-text text-[10px] rounded-full">
+ <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-app-foreground text-[10px] rounded-full">
  {activeCount}
  </span>
  )}
@@ -88,7 +88,7 @@ export default function FilterBar({
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
  {advancedFilters.map(filter => (
  <div key={filter.key}>
- <label className="block text-[10px] font-bold text-app-text-muted uppercase tracking-wider mb-1">
+ <label className="block text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">
  {filter.label}
  </label>
  {filter.type === 'select' || filter.type === 'multiselect' ? (
@@ -110,7 +110,7 @@ export default function FilterBar({
  onChange={e => onFilterChange(filter.key, e.target.checked)}
  className="w-4 h-4 text-app-info rounded border-app-border"
  />
- <span className="text-sm text-app-text-muted">{filter.placeholder || filter.label}</span>
+ <span className="text-sm text-app-muted-foreground">{filter.placeholder || filter.label}</span>
  </label>
  ) : (
  <input
@@ -127,7 +127,7 @@ export default function FilterBar({
  <div className="flex justify-end mt-3">
  <button
  onClick={onReset}
- className="px-4 py-1.5 text-xs font-semibold text-app-text-muted border border-app-border rounded-lg hover:bg-app-surface transition-all"
+ className="px-4 py-1.5 text-xs font-semibold text-app-muted-foreground border border-app-border rounded-lg hover:bg-app-surface transition-all"
  >
  Reset Filter
  </button>
@@ -156,7 +156,7 @@ function FilterDropdown({
  onChange={e => onChange(e.target.value)}
  className={`appearance-none px-3 pr-8 py-2 text-xs font-semibold border rounded-lg cursor-pointer transition-all ${value
  ? 'bg-app-info-bg border-app-info text-app-info'
- : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  }`}
  >
  <option value="">⧫ {filter.label}</option>
@@ -164,7 +164,7 @@ function FilterDropdown({
  <option key={opt.value} value={opt.value}>{opt.label}</option>
  ))}
  </select>
- <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-app-text-faint pointer-events-none" />
+ <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" />
  </div>
  );
  }
@@ -177,7 +177,7 @@ function FilterDropdown({
  onChange={e => onChange(e.target.value)}
  className={`px-3 py-2 text-xs font-semibold border rounded-lg transition-all ${value
  ? 'bg-app-info-bg border-app-info text-app-info'
- : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-app-border'
  }`}
  />
  );

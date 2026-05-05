@@ -106,7 +106,7 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  className={`h-12 px-6 rounded-xl font-bold text-sm flex items-center gap-2 transition-all 
  ${saved ? 'bg-app-primary text-app-foreground' : 'bg-app-surface text-app-foreground hover:bg-app-surface-2'}`}
  >
- {saving ? <div className="w-4 h-4 border-2 border-app-text/20 border-t-white rounded-full animate-spin" /> : (saved ? <Sparkles size={16} /> : <Save size={16} />)}
+ {saving ? <div className="w-4 h-4 border-2 border-app-foreground/20 border-t-white rounded-full animate-spin" /> : (saved ? <Sparkles size={16} /> : <Save size={16} />)}
  {saved ? 'Changes Applied' : (saving ? 'Saving...' : 'Save Layout')}
  </button>
  </div>

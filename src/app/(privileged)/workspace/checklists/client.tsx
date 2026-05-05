@@ -104,7 +104,7 @@ export default function ChecklistsClient({ checklists: initial, templates, users
                     ))}
                 </div>
                 <button onClick={() => setShowAssign(true)}
-                    className="px-6 py-2.5 bg-app-gradient-primary text-white text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2 shrink-0 ml-4">
+                    className="px-6 py-2.5 bg-app-primary text-white text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2 shrink-0 ml-4">
                     <Plus size={16} /> Assign Checklist
                 </button>
             </div>

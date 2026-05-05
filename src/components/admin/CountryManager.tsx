@@ -58,13 +58,13 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                         <Globe2 size={26} style={{ color: 'var(--app-primary)' }} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Inventory / Taxonomy
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                             Countries
                         </h1>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                             Manage manufacturing origins and product provenance.
                         </p>
                     </div>
@@ -94,8 +94,8 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                         background: 'var(--app-surface)',
                         border: '1px solid var(--app-border)',
                     }}>
-                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{kpi.label}</p>
-                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-text)' }}>{kpi.value}</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{kpi.label}</p>
+                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-foreground)' }}>{kpi.value}</p>
                     </div>
                 ))}
             </div>
@@ -109,7 +109,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-5 pb-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex flex-1 items-center gap-3 w-full">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-muted-foreground)' }} />
                             <input
                                 type="text"
                                 placeholder="Search countries..."
@@ -119,7 +119,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                                 style={{
                                     background: 'var(--app-bg)',
                                     border: '1px solid var(--app-border)',
-                                    color: 'var(--app-text)',
+                                    color: 'var(--app-foreground)',
                                 }}
                             />
                         </div>
@@ -132,17 +132,17 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                                 style={{
                                     background: 'var(--app-bg)',
                                     border: '1px solid var(--app-border)',
-                                    color: 'var(--app-text)',
+                                    color: 'var(--app-foreground)',
                                 }}
                             >
                                 <option value="all">All Categories</option>
                                 {categories?.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
-                            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-text-muted)' }} />
+                            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-muted-foreground)' }} />
                         </div>
 
                         {(searchTerm || selectedCategory !== 'all') && (
-                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-text-muted)' }}>
+                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <X size={16} />
                             </button>
                         )}
@@ -155,7 +155,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                         {(['list', 'grid'] as const).map(m => (
                             <button key={m} onClick={() => setViewMode(m)} className="p-2 rounded-lg transition-all" style={{
                                 background: viewMode === m ? 'var(--app-surface)' : 'transparent',
-                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                 boxShadow: viewMode === m ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
                             }}>
                                 {m === 'list' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
@@ -174,7 +174,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                         )
                     ))}
                     {filteredCountries.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-[13px]" style={{ color: 'var(--app-text-muted)' }}>
+                        <div className="col-span-full py-12 text-center text-[13px]" style={{ color: 'var(--app-muted-foreground)' }}>
                             No countries found.
                         </div>
                     )}
@@ -204,14 +204,14 @@ function CountryCard({ country, onEdit }: Record<string, any>) {
                     {country.code}
                 </div>
                 <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg" style={{
-                    background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
-                    color: 'var(--app-text-muted)',
+                    background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)',
+                    color: 'var(--app-muted-foreground)',
                 }}>
                     <Package size={10} />
                     {country.product_count || country._count?.products || 0} products
                 </span>
             </div>
-            <h3 className="text-[14px] font-bold" style={{ color: 'var(--app-text)' }}>{country.name}</h3>
+            <h3 className="text-[14px] font-bold" style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
         </div>
     );
 }
@@ -243,7 +243,7 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
                 <div className="flex items-center gap-3 flex-1">
                     <button className="p-1 rounded-lg transition-colors" style={{
                         background: isExpanded ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
-                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                     }}>
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                     </button>
@@ -253,16 +253,16 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
                         border: '1px solid color-mix(in srgb, var(--app-info, #6366f1) 15%, transparent)',
                     }}>{country.code}</div>
                     <div>
-                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-text)' }}>{country.name}</h3>
-                        <span className="text-[11px] font-mono" style={{ color: 'var(--app-text-muted)' }}>{country.product_count || country._count?.products || 0} products</span>
+                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
+                        <span className="text-[11px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{country.product_count || country._count?.products || 0} products</span>
                     </div>
                 </div>
                 <button
                     onClick={e => { e.stopPropagation(); onEdit(country) }}
                     className="p-1.5 rounded-lg transition-colors"
-                    style={{ color: 'var(--app-text-muted)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
                 >
                     <Edit2 size={14} />
                 </button>
@@ -288,7 +288,7 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
                                     <div className="px-4 py-2 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
                                         <div className="flex items-center gap-2">
                                             <Factory size={13} style={{ color: 'var(--app-info, #8b5cf6)' }} />
-                                            <span className="font-bold text-[12px]" style={{ color: 'var(--app-text)' }}>{brand.name}</span>
+                                            <span className="font-bold text-[12px]" style={{ color: 'var(--app-foreground)' }}>{brand.name}</span>
                                         </div>
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
                                             background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
@@ -304,17 +304,17 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-border)' }}></div>
                                                     <div className="flex flex-col">
-                                                        <span className="font-medium" style={{ color: 'var(--app-text)' }}>{p.name} {p.size && `- ${p.size}${p.unit ? p.unit.name : ''}`}</span>
-                                                        {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-text-muted)' }}>{p.sku}</span>}
+                                                        <span className="font-medium" style={{ color: 'var(--app-foreground)' }}>{p.name} {p.size && `- ${p.size}${p.unit ? p.unit.name : ''}`}</span>
+                                                        {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{p.sku}</span>}
                                                     </div>
                                                 </div>
-                                                <span className="font-mono font-bold" style={{ color: p.stock > 0 ? 'var(--app-text)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
+                                                <span className="font-mono font-bold" style={{ color: p.stock > 0 ? 'var(--app-foreground)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             ))}
-                            {data.length === 0 && <p className="italic text-[12px] p-2" style={{ color: 'var(--app-text-muted)' }}>No inventory found.</p>}
+                            {data.length === 0 && <p className="italic text-[12px] p-2" style={{ color: 'var(--app-muted-foreground)' }}>No inventory found.</p>}
                         </div>
                     )}
                 </div>
@@ -343,10 +343,10 @@ function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClo
                 border: '1px solid var(--app-border)',
             }}>
                 <div className="px-6 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
-                    <h3 className="font-bold text-[16px]" style={{ color: 'var(--app-text)' }}>
+                    <h3 className="font-bold text-[16px]" style={{ color: 'var(--app-foreground)' }}>
                         {country ? 'Edit Country' : 'Add New Country'}
                     </h3>
-                    <button onClick={onClose} className="p-1 rounded-full transition-colors" style={{ color: 'var(--app-text-muted)' }}>
+                    <button onClick={onClose} className="p-1 rounded-full transition-colors" style={{ color: 'var(--app-muted-foreground)' }}>
                         <X size={18} />
                     </button>
                 </div>
@@ -363,26 +363,26 @@ function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClo
                     )}
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Name</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Name</label>
                         <input name="name" defaultValue={country?.name} className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none" style={{
                             background: 'var(--app-bg)',
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }} placeholder="Turkey" required />
                     </div>
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Code</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Code</label>
                         <input name="code" defaultValue={country?.code} className="w-full px-4 py-2.5 rounded-xl text-[13px] uppercase outline-none" style={{
                             background: 'var(--app-bg)',
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }} placeholder="TR" required maxLength={3} />
                     </div>
 
                     <div className="pt-2 flex gap-3">
                         <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl font-bold text-[12px]" style={{
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text-muted)',
+                            color: 'var(--app-muted-foreground)',
                         }}>Cancel</button>
                         <button type="submit" disabled={pending} className="flex-1 py-2.5 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2" style={{
                             background: 'var(--app-primary)',

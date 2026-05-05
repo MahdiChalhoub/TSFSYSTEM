@@ -29,7 +29,7 @@ export function LanguageSwitcher({ className, showLabel = true }: LanguageSwitch
                 className="gap-2 px-3 h-9 rounded-lg border-app-border bg-app-surface hover:bg-app-surface-2 transition-all"
             >
                 <Languages className="h-4 w-4 text-app-primary" />
-                {showLabel && <span className="text-xs font-bold text-app-text">{currentLang.name}</span>}
+                {showLabel && <span className="text-xs font-bold text-app-foreground">{currentLang.name}</span>}
             </Button>
 
             {isOpen && (
@@ -44,7 +44,7 @@ export function LanguageSwitcher({ className, showLabel = true }: LanguageSwitch
                     <div className="absolute right-0 mt-2 w-48 rounded-xl border border-app-border bg-app-surface shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                         {/* Header */}
                         <div className="px-4 py-3 border-b border-app-border bg-app-surface-2/50">
-                            <h3 className="text-xs font-black text-app-text-faint uppercase tracking-tighter">
+                            <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-tighter">
                                 Language / Langue
                             </h3>
                         </div>
@@ -68,7 +68,7 @@ export function LanguageSwitcher({ className, showLabel = true }: LanguageSwitch
                                         <span className="text-lg">{lang.flag}</span>
                                         <span className={cn(
                                             "text-sm font-medium",
-                                            locale === lang.id ? "text-app-primary font-bold" : "text-app-text-muted"
+                                            locale === lang.id ? "text-app-primary font-bold" : "text-app-muted-foreground"
                                         )}>
                                             {lang.name}
                                         </span>

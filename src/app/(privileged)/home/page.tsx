@@ -122,10 +122,10 @@ export default function QuickAccessPage() {
                         <Zap size={18} style={{ color: 'var(--app-primary)' }} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             {mounted ? getGreeting() : 'Welcome'}
                         </p>
-                        <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                        <h1 className="text-lg font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                             Quick Access
                         </h1>
                     </div>
@@ -140,23 +140,23 @@ export default function QuickAccessPage() {
                             border: '1px solid var(--app-border)',
                         }}
                     >
-                        <Search size={14} style={{ color: 'var(--app-text-muted)', flexShrink: 0 }} />
+                        <Search size={14} style={{ color: 'var(--app-muted-foreground)', flexShrink: 0 }} />
                         <input
                             type="text"
                             placeholder="Search pages..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="flex-1 bg-transparent outline-none text-sm font-medium"
-                            style={{ color: 'var(--app-text)' }}
+                            style={{ color: 'var(--app-foreground)' }}
                         />
                         {search ? (
                             <button onClick={() => setSearch('')} className="p-0.5 rounded hover:opacity-80">
-                                <X size={12} style={{ color: 'var(--app-text-muted)' }} />
+                                <X size={12} style={{ color: 'var(--app-muted-foreground)' }} />
                             </button>
                         ) : (
                             <div
                                 className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold"
-                                style={{ border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}
+                                style={{ border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}
                             >
                                 <Command size={8} />K
                             </div>
@@ -180,10 +180,10 @@ export default function QuickAccessPage() {
                                 >
                                     <Zap size={10} style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold truncate" style={{ color: 'var(--app-text)' }}>{p.title}</p>
-                                        <p className="text-[9px] truncate" style={{ color: 'var(--app-text-faint)' }}>{p.parent}</p>
+                                        <p className="text-xs font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{p.title}</p>
+                                        <p className="text-[9px] truncate" style={{ color: 'var(--app-muted-foreground)' }}>{p.parent}</p>
                                     </div>
-                                    <ArrowRight size={10} style={{ color: 'var(--app-text-faint)' }} />
+                                    <ArrowRight size={10} style={{ color: 'var(--app-muted-foreground)' }} />
                                 </button>
                             ))}
                         </div>
@@ -193,18 +193,18 @@ export default function QuickAccessPage() {
                 {/* Compact stats */}
                 <div className="hidden lg:flex items-center gap-4 shrink-0">
                     <div className="text-center px-3">
-                        <p className="text-xl font-black" style={{ color: 'var(--app-text)' }}>{pinned.length}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>Favorites</p>
+                        <p className="text-xl font-black" style={{ color: 'var(--app-foreground)' }}>{pinned.length}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Favorites</p>
                     </div>
                     <div style={{ width: 1, height: 28, background: 'var(--app-border)' }} />
                     <div className="text-center px-3">
-                        <p className="text-xl font-black" style={{ color: 'var(--app-text)' }}>{recent.length}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>Recent</p>
+                        <p className="text-xl font-black" style={{ color: 'var(--app-foreground)' }}>{recent.length}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Recent</p>
                     </div>
                     <div style={{ width: 1, height: 28, background: 'var(--app-border)' }} />
                     <div className="text-center px-3">
                         <p className="text-xl font-black" style={{ color: 'var(--app-primary)' }}>{allPages.length}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>Pages</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>Pages</p>
                     </div>
                 </div>
             </div>
@@ -223,12 +223,12 @@ export default function QuickAccessPage() {
                     <div className="px-4 pt-4 pb-2">
                         <div className="flex items-center gap-1.5 mb-2.5">
                             <Star size={11} style={{ color: 'var(--app-primary)' }} />
-                            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Favorites
                             </span>
                         </div>
                         {pinned.length === 0 ? (
-                            <p className="text-[10px] italic px-2 py-3" style={{ color: 'var(--app-text-faint)' }}>
+                            <p className="text-[10px] italic px-2 py-3" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Star pages from modules to add favorites
                             </p>
                         ) : (
@@ -242,12 +242,12 @@ export default function QuickAccessPage() {
                                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                                     >
                                         <Star size={10} fill="currentColor" style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
-                                        <span className="text-xs font-semibold truncate" style={{ color: 'var(--app-text)' }}>{p.title}</span>
+                                        <span className="text-xs font-semibold truncate" style={{ color: 'var(--app-foreground)' }}>{p.title}</span>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); togglePin(p.title, p.path); }}
                                             className="ml-auto opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
                                         >
-                                            <X size={10} style={{ color: 'var(--app-text-faint)' }} />
+                                            <X size={10} style={{ color: 'var(--app-muted-foreground)' }} />
                                         </button>
                                     </div>
                                 ))}
@@ -260,13 +260,13 @@ export default function QuickAccessPage() {
                     {/* Recent Section */}
                     <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-2 pb-4">
                         <div className="flex items-center gap-1.5 mb-2.5">
-                            <Clock size={11} style={{ color: 'var(--app-text-faint)' }} />
-                            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            <Clock size={11} style={{ color: 'var(--app-muted-foreground)' }} />
+                            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Recent
                             </span>
                         </div>
                         {recent.length === 0 ? (
-                            <p className="text-[10px] italic px-2 py-3" style={{ color: 'var(--app-text-faint)' }}>
+                            <p className="text-[10px] italic px-2 py-3" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Pages you visit will appear here
                             </p>
                         ) : (
@@ -285,17 +285,17 @@ export default function QuickAccessPage() {
                                                 className="w-5 h-5 rounded flex items-center justify-center shrink-0"
                                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}
                                             >
-                                                <Clock size={8} style={{ color: 'var(--app-text-faint)' }} />
+                                                <Clock size={8} style={{ color: 'var(--app-muted-foreground)' }} />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-medium truncate" style={{ color: 'var(--app-text)' }}>{r.title}</p>
-                                                <p className="text-[9px]" style={{ color: 'var(--app-text-faint)' }}>{timeAgo(r.visitedAt)}</p>
+                                                <p className="text-xs font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{r.title}</p>
+                                                <p className="text-[9px]" style={{ color: 'var(--app-muted-foreground)' }}>{timeAgo(r.visitedAt)}</p>
                                             </div>
                                             <button
                                                 title={isPinned ? 'Remove from favorites' : 'Add to favorites'}
                                                 onClick={(e) => { e.stopPropagation(); togglePin(r.title, r.path); }}
                                                 className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
-                                                style={{ color: isPinned ? 'var(--app-primary)' : 'var(--app-text-faint)' }}
+                                                style={{ color: isPinned ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }}
                                             >
                                                 <Star size={10} fill={isPinned ? 'currentColor' : 'none'} />
                                             </button>
@@ -311,8 +311,8 @@ export default function QuickAccessPage() {
                         className="shrink-0 px-4 py-2.5 flex items-center justify-center gap-1.5"
                         style={{ borderTop: '1px solid var(--app-border)' }}
                     >
-                        <Command size={9} style={{ color: 'var(--app-text-faint)' }} />
-                        <span className="text-[9px] font-medium" style={{ color: 'var(--app-text-faint)' }}>
+                        <Command size={9} style={{ color: 'var(--app-muted-foreground)' }} />
+                        <span className="text-[9px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>
                             Ctrl+K for command palette
                         </span>
                     </div>
@@ -341,11 +341,11 @@ export default function QuickAccessPage() {
 
                     {/* Modules Grid */}
                     <div className="flex items-center gap-1.5 mb-3">
-                        <LayoutDashboard size={11} style={{ color: 'var(--app-text-faint)' }} />
-                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <LayoutDashboard size={11} style={{ color: 'var(--app-muted-foreground)' }} />
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Modules
                         </span>
-                        <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-text-faint)' }}>
+                        <span className="text-[9px] font-bold ml-auto" style={{ color: 'var(--app-muted-foreground)' }}>
                             {modules.length} available
                         </span>
                     </div>
@@ -393,8 +393,8 @@ export default function QuickAccessPage() {
                                             {Icon && <Icon size={15} />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-black truncate" style={{ color: 'var(--app-text)' }}>{mod.title}</p>
-                                            <p className="text-[9px]" style={{ color: 'var(--app-text-faint)' }}>
+                                            <p className="text-xs font-black truncate" style={{ color: 'var(--app-foreground)' }}>{mod.title}</p>
+                                            <p className="text-[9px]" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 {mod.children?.length || 0} sections
                                             </p>
                                         </div>
@@ -419,7 +419,7 @@ export default function QuickAccessPage() {
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); navigate(link.title, link.path); }}
                                                             className="flex-1 flex items-center gap-1.5 text-left min-w-0"
-                                                            style={{ color: 'var(--app-text-muted)' }}
+                                                            style={{ color: 'var(--app-muted-foreground)' }}
                                                         >
                                                             <ChevronRight size={9} className="shrink-0" />
                                                             <span className="text-[11px] font-medium truncate">{link.title}</span>
@@ -428,7 +428,7 @@ export default function QuickAccessPage() {
                                                             title={isFav ? 'Remove from favorites' : 'Add to favorites'}
                                                             onClick={(e) => { e.stopPropagation(); togglePin(link.title, link.path); }}
                                                             className="opacity-0 group-hover:opacity-100 p-0.5 rounded shrink-0 transition-opacity"
-                                                            style={{ color: isFav ? 'var(--app-primary)' : 'var(--app-text-faint)' }}
+                                                            style={{ color: isFav ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }}
                                                         >
                                                             <Star size={9} fill={isFav ? 'currentColor' : 'none'} />
                                                         </button>

@@ -225,7 +225,7 @@
 .page-header-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--app-text);
+  color: var(--app-foreground);
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -275,7 +275,7 @@
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--app-text);
+  color: var(--app-foreground);
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -318,7 +318,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.875rem;
-  color: var(--app-text);
+  color: var(--app-foreground);
 }
 
 .sidebar-item-badge {
@@ -377,7 +377,7 @@
 .card-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--app-text);
+  color: var(--app-foreground);
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -415,7 +415,7 @@
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--app-text-muted);
+  color: var(--app-muted-foreground);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
@@ -423,7 +423,7 @@
 }
 
 .tab-item:hover {
-  color: var(--app-text);
+  color: var(--app-foreground);
 }
 
 .tab-item-active {
@@ -537,13 +537,13 @@
 .step-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--app-text);
+  color: var(--app-foreground);
   min-width: 0;
 }
 
 .step-description {
   font-size: 0.875rem;
-  color: var(--app-text-muted);
+  color: var(--app-muted-foreground);
   min-width: 0;
 }
 
@@ -566,19 +566,19 @@
 .empty-state-icon {
   width: 64px;
   height: 64px;
-  color: var(--app-text-muted);
+  color: var(--app-muted-foreground);
   opacity: 0.5;
 }
 
 .empty-state-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--app-text);
+  color: var(--app-foreground);
 }
 
 .empty-state-description {
   font-size: 0.875rem;
-  color: var(--app-text-muted);
+  color: var(--app-muted-foreground);
   max-width: 400px;
 }
 

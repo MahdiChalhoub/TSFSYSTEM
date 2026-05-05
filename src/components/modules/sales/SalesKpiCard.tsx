@@ -66,14 +66,14 @@ export function SalesKpiCard({ icon, badge, label, value, variant = 'default' }:
  {/* Label */}
  <p
  className="text-[11px] font-black uppercase tracking-widest"
- style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--app-text-muted)' }}
+ style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--app-muted-foreground)' }}
  >
  {label}
  </p>
  {/* Value */}
  <h2
  className="text-3xl font-black mt-1"
- style={{ color: isDark ? '#fff' : 'var(--app-text)' }}
+ style={{ color: isDark ? '#fff' : 'var(--app-foreground)' }}
  >
  {value}
  </h2>

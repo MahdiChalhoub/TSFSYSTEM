@@ -103,7 +103,7 @@ export function ReportAccountNode({
                         {node.code}
                     </span>
                     <span className={`truncate text-tp-lg ${isRoot ? 'font-bold' : 'font-medium'}`}
-                        style={{ color: 'var(--app-foreground, var(--app-text, #F1F5F9))' }}>
+                        style={{ color: 'var(--app-foreground, var(--app-foreground, #F1F5F9))' }}>
                         {node.name}
                     </span>
                 </div>

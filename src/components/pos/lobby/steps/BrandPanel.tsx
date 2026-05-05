@@ -139,7 +139,7 @@ export function BrandPanel() {
                 {/* Org name */}
                 {orgName && (
                     <h1 className="text-lg font-black tracking-tight mb-8"
-                        style={{ color: 'var(--app-text, var(--app-foreground))' }}>{orgName}</h1>
+                        style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{orgName}</h1>
                 )}
 
                 {/* ── Hero Clock ── */}
@@ -152,7 +152,7 @@ export function BrandPanel() {
                         style={{ fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif" }}>
                         {/* Hours */}
                         <span className="text-[80px] sm:text-[96px] font-[900] leading-none tracking-tighter"
-                            style={{ color: 'var(--app-text, var(--app-foreground))' }}>{hh}</span>
+                            style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{hh}</span>
 
                         {/* Colon — animated pulse */}
                         <span className="text-[60px] sm:text-[72px] font-[200] leading-none mx-0.5"
@@ -163,7 +163,7 @@ export function BrandPanel() {
 
                         {/* Minutes */}
                         <span className="text-[80px] sm:text-[96px] font-[900] leading-none tracking-tighter"
-                            style={{ color: 'var(--app-text, var(--app-foreground))' }}>{mm}</span>
+                            style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{mm}</span>
 
                         {/* Seconds — smaller, primary colored */}
                         <div className="flex flex-col items-start ml-1 self-end mb-3 sm:mb-4">
@@ -178,7 +178,7 @@ export function BrandPanel() {
                     <div className="h-px w-8 sm:w-12"
                         style={{ background: 'linear-gradient(to right, transparent, color-mix(in srgb, var(--app-primary) 25%, transparent))' }} />
                     <p className="text-[13px] sm:text-[14px] font-semibold tracking-wide"
-                        style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 50%, transparent)' }}>
+                        style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 50%, transparent)' }}>
                         {dateStr}, {yearStr}
                     </p>
                     <div className="h-px w-8 sm:w-12"
@@ -196,18 +196,18 @@ export function BrandPanel() {
                                 }} />
                         </div>
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                            style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 35%, transparent)' }}>
+                            style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 35%, transparent)' }}>
                             System Online
                         </span>
                     </div>
 
                     <div className="w-px h-3"
-                        style={{ background: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 12%, transparent)' }} />
+                        style={{ background: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 12%, transparent)' }} />
 
                     <div className="flex items-center gap-1.5">
-                        <Wifi size={11} style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 30%, transparent)' }} />
+                        <Wifi size={11} style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 30%, transparent)' }} />
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                            style={{ color: 'color-mix(in srgb, var(--app-text, var(--app-foreground)) 35%, transparent)' }}>
+                            style={{ color: 'color-mix(in srgb, var(--app-foreground, var(--app-foreground)) 35%, transparent)' }}>
                             Connected
                         </span>
                     </div>
@@ -220,7 +220,7 @@ export function BrandPanel() {
                         border: '1px solid color-mix(in srgb, var(--app-primary) 10%, transparent)',
                     }}>
                     <span className="text-[9px] font-black uppercase tracking-[0.35em]"
-                        style={{ color: 'color-mix(in srgb, var(--app-primary) 50%, var(--app-text, var(--app-foreground)))' }}>
+                        style={{ color: 'color-mix(in srgb, var(--app-primary) 50%, var(--app-foreground, var(--app-foreground)))' }}>
                         POS Terminal
                     </span>
                 </div>

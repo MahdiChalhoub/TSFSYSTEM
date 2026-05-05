@@ -24,9 +24,9 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
     return (
       <div className="app-card p-10 flex flex-col items-center justify-center text-center opacity-60 border-dashed border-2 bg-app-surface-2/30 h-64">
         <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center mb-4">
-          <Users size={32} className="text-app-text-muted" />
+          <Users size={32} className="text-app-muted-foreground" />
         </div>
-        <p className="text-sm font-bold text-app-text">Select a contact</p>
+        <p className="text-sm font-bold text-app-foreground">Select a contact</p>
         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mt-1 px-4">
           to view intelligence summary & quick actions
         </p>
@@ -55,7 +55,7 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
             {React.createElement(cfg.icon, { size: 24, style: { color: cfg.color } })}
           </div>
           <div style={{ minWidth: 0 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--app-text)', lineHeight: 1.1 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--app-foreground)', lineHeight: 1.1 }}>
               {contact.name}
             </h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', marginTop: '0.25rem' }}>
@@ -69,14 +69,14 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
             <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Balance</p>
             <p style={{
               fontSize: '1rem', fontWeight: 800,
-              color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-text)',
+              color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-foreground)',
             }}>
               {fmt(Math.abs(bal))}
             </p>
           </div>
           <div className="bg-app-surface-2/50 p-3 rounded-xl border border-app-border/30 text-center">
             <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Orders</p>
-            <p style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--app-text)' }}>
+            <p style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--app-foreground)' }}>
               {getActivityInfo(contact).orders}
             </p>
           </div>
@@ -85,7 +85,7 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-app-surface-2 flex items-center justify-center shrink-0">
-              <Phone size={14} className="text-app-text-muted" />
+              <Phone size={14} className="text-app-muted-foreground" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase text-app-muted-foreground">Phone</p>
@@ -94,7 +94,7 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
           </div>
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-app-surface-2 flex items-center justify-center shrink-0">
-              <Mail size={14} className="text-app-text-muted" />
+              <Mail size={14} className="text-app-muted-foreground" />
             </div>
             <div style={{ minWidth: 0 }}>
               <p className="text-[10px] font-black uppercase text-app-muted-foreground">Email</p>
@@ -103,7 +103,7 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
           </div>
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-app-surface-2 flex items-center justify-center shrink-0">
-              <MapPin size={14} className="text-app-text-muted" />
+              <MapPin size={14} className="text-app-muted-foreground" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase text-app-muted-foreground">Location</p>
@@ -124,7 +124,7 @@ export function ContactPreviewPanel({ contact, onClose, fmt, deliveryZones }: {
           </button>
           <button
             onClick={onClose}
-            className="w-full h-10 bg-app-surface-2 text-app-text-muted font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-app-border/30 transition-all"
+            className="w-full h-10 bg-app-surface-2 text-app-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-app-border/30 transition-all"
           >
             Close Preview
           </button>

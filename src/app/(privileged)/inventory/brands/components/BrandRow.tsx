@@ -254,7 +254,7 @@ export function BrandRow({
                                 size={14}
                                 className="transition-transform duration-200"
                                 style={{
-                                    color: 'var(--app-text-faint)',
+                                    color: 'var(--app-muted-foreground)',
                                     transform: isOpen ? 'rotate(90deg)' : 'none'
                                 }} />
                         )}
@@ -451,7 +451,7 @@ export function BrandRow({
                                     size={14}
                                     className="flex-shrink-0 transition-transform duration-200"
                                     style={{
-                                        color: 'var(--app-text-faint)',
+                                        color: 'var(--app-muted-foreground)',
                                         transform: isCountryOpen ? 'rotate(90deg)' : 'none'
                                     }} />
 
@@ -468,7 +468,7 @@ export function BrandRow({
                                             ).join('')}
                                         </span>
                                     ) : (
-                                        <Flag size={14} style={{ color: 'var(--app-text-faint)' }} />
+                                        <Flag size={14} style={{ color: 'var(--app-muted-foreground)' }} />
                                     )}
                                     <span className="text-tp-sm font-semibold"
                                         style={{ color: country.id === null ? 'var(--app-info)' : 'var(--app-foreground)' }}>
@@ -550,8 +550,8 @@ export function BrandRow({
                                             {product.attribute_value_names.length > 2 && (
                                                 <span className="text-tp-xxs px-2 py-1 rounded-full flex-shrink-0"
                                                     style={{
-                                                        background: 'color-mix(in srgb, var(--app-text-faint) 15%, transparent)',
-                                                        color: 'var(--app-text-faint)'
+                                                        background: 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)',
+                                                        color: 'var(--app-muted-foreground)'
                                                     }}>
                                                     +{product.attribute_value_names.length - 2}
                                                 </span>
@@ -654,7 +654,7 @@ function StatChip({
                 background: isEmpty
                     ? 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)'
                     : `color-mix(in srgb, ${color} 10%, transparent)`,
-                color: isEmpty ? 'var(--app-text-faint)' : color,
+                color: isEmpty ? 'var(--app-muted-foreground)' : color,
                 border: `1px solid color-mix(in srgb, ${isEmpty ? 'var(--app-muted-foreground)' : color} 18%, transparent)`,
             }}>
             {icon}
@@ -778,7 +778,7 @@ function FacetValueRow({
                 </div>
                 <div className="flex-1 min-w-0">
                     <span className={`text-tp-sm font-semibold truncate ${isMuted ? 'italic' : ''}`}
-                        style={{ color: isMuted ? 'var(--app-text-faint)' : 'var(--app-muted-foreground)' }}>
+                        style={{ color: isMuted ? 'var(--app-muted-foreground)' : 'var(--app-muted-foreground)' }}>
                         {label}
                     </span>
                 </div>
@@ -843,8 +843,8 @@ function ProductLeaf({
                         {product.attribute_value_names.length > 2 && (
                             <span className="text-tp-xxs px-2 py-1 rounded-full flex-shrink-0"
                                 style={{
-                                    background: 'color-mix(in srgb, var(--app-text-faint) 15%, transparent)',
-                                    color: 'var(--app-text-faint)'
+                                    background: 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)',
+                                    color: 'var(--app-muted-foreground)'
                                 }}>
                                 +{product.attribute_value_names.length - 2}
                             </span>

@@ -5,7 +5,7 @@ export const PROVIDER_OPTIONS = [
     { value: 'R2', label: 'Cloudflare R2', icon: Cloud, color: 'text-orange-500' },
     { value: 'S3', label: 'AWS S3', icon: Cloud, color: 'text-yellow-600' },
     { value: 'MINIO', label: 'MinIO', icon: Database, color: 'text-purple-500' },
-    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-app-text-faint' },
+    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-app-muted-foreground' },
 ];
 
 export const CATEGORY_OPTIONS = [
@@ -53,8 +53,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
     PRODUCT_IMAGE: 'bg-pink-50 text-pink-600 border-pink-200',
     PAYMENT_RECEIPT: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     LOGO: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-    USER_ATTACHMENT: 'bg-app-bg text-app-text-muted border-app-border',
-    OTHER: 'bg-app-bg text-app-text-muted border-app-border',
+    USER_ATTACHMENT: 'bg-app-bg text-app-muted-foreground border-app-border',
+    OTHER: 'bg-app-bg text-app-muted-foreground border-app-border',
 };
 
 export function getFileIcon(mime: string) {

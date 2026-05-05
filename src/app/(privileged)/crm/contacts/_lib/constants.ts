@@ -10,7 +10,7 @@ import type { Contact } from './types'
 
 /* ─── Type chips ─────────────────────────────────── */
 export const TYPES = [
-  { key: 'ALL', label: 'All', shortLabel: 'All', icon: Users, color: 'var(--app-text)', bg: 'var(--app-surface-2)' },
+  { key: 'ALL', label: 'All', shortLabel: 'All', icon: Users, color: 'var(--app-foreground)', bg: 'var(--app-surface-2)' },
   { key: 'CUSTOMER', label: 'Customers', shortLabel: 'Clients', icon: User, color: 'var(--app-info)', bg: 'var(--app-info-bg)' },
   { key: 'SUPPLIER', label: 'Suppliers', shortLabel: 'Suppliers', icon: Briefcase, color: 'var(--app-warning)', bg: 'var(--app-warning-bg)' },
   { key: 'BOTH', label: 'Client + Supplier', shortLabel: 'Both', icon: RefreshCw, color: '#D946EF', bg: 'rgba(217,70,239,0.08)' },
@@ -45,7 +45,7 @@ export function getActivityInfo(c: Contact) {
   const orders = Number(c.total_orders || 0) + Number(c.supplier_total_orders || 0)
   const lastDate = c.last_purchase_date
   const hasActivity = orders > 0 || !!lastDate
-  let recency = 'never'; let recencyColor = 'var(--app-text-faint)'
+  let recency = 'never'; let recencyColor = 'var(--app-muted-foreground)'
   if (lastDate) {
     const days = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000)
     if (days <= 7) { recency = 'this week'; recencyColor = 'var(--app-success)' }

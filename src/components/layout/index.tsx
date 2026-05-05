@@ -46,7 +46,7 @@ export function PageHeader({
   return (
     <div className={cn('page-header', className)}>
       {breadcrumbs && (
-        <div className="text-sm text-[var(--app-text-muted)]">
+        <div className="text-sm text-[var(--app-muted-foreground)]">
           {breadcrumbs}
         </div>
       )}
@@ -56,7 +56,7 @@ export function PageHeader({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-[var(--app-text-muted)] mt-1 text-truncate">
+            <p className="text-sm text-[var(--app-muted-foreground)] mt-1 text-truncate">
               {subtitle}
             </p>
           )}
@@ -465,7 +465,7 @@ export function StatusIndicator({ status, label, className }: StatusIndicatorPro
     <div className={cn('status-indicator', className)}>
       <span className={cn('status-dot', colors[status])} />
       {label && (
-        <span className="text-sm text-[var(--app-text)]">
+        <span className="text-sm text-[var(--app-foreground)]">
           {label}
         </span>
       )}

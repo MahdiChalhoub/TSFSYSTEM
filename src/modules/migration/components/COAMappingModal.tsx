@@ -103,15 +103,15 @@ export function COAMappingModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] bg-app-surface border-app-border shadow-2xl text-app-text overflow-hidden flex flex-col p-0">
+            <DialogContent className="max-w-4xl max-h-[90vh] bg-app-surface border-app-border shadow-2xl text-app-foreground overflow-hidden flex flex-col p-0">
                 <DialogHeader className="p-6 bg-app-bg border-b border-app-border">
                     <div className="flex items-center justify-between">
                         <div>
-                            <DialogTitle className="flex items-center gap-2 text-xl font-black text-app-text">
+                            <DialogTitle className="flex items-center gap-2 text-xl font-black text-app-foreground">
                                 <Banknote className="w-6 h-6 text-emerald-600" />
                                 FINANCIAL ACCOUNT MAPPING
                             </DialogTitle>
-                            <DialogDescription className="text-app-text-faint font-medium mt-1">
+                            <DialogDescription className="text-app-muted-foreground font-medium mt-1">
                                 Associate imported accounts with your Chart of Accounts.
                             </DialogDescription>
                         </div>
@@ -143,24 +143,24 @@ export function COAMappingModal({
                                             <div>TSF Chart of Account (Target)</div>
                                         </div>
                                         {unmapped.length === 0 ? (
-                                            <div className="px-4 py-8 text-center text-sm font-bold text-app-text-faint border border-dashed border-app-border rounded-xl bg-gray-50/50">
+                                            <div className="px-4 py-8 text-center text-sm font-bold text-app-muted-foreground border border-dashed border-app-border rounded-xl bg-gray-50/50">
                                                 All accounts are mapped.
                                             </div>
                                         ) : (
                                             unmapped.map((acc: any) => (
                                                 <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-amber-50/30 p-4 rounded-xl border border-amber-200/50 hover:border-amber-400 hover:shadow-md transition-all group">
                                                     <div className="pl-1">
-                                                        <p className="text-sm font-bold text-app-text group-hover:text-amber-800 transition-colors uppercase tracking-tight">{acc.name}</p>
+                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-amber-800 transition-colors uppercase tracking-tight">{acc.name}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             {acc.source_name ? (
                                                                 <>
                                                                     <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-surface border-amber-200 text-amber-600 flex items-center gap-1">
                                                                         IMPORTED
                                                                     </Badge>
-                                                                    <p className="text-[10px] text-app-text-faint font-mono truncate max-w-[150px]">{acc.source_name}</p>
+                                                                    <p className="text-[10px] text-app-muted-foreground font-mono truncate max-w-[150px]">{acc.source_name}</p>
                                                                 </>
                                                             ) : (
-                                                                <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-surface border-app-border text-app-text-faint">
+                                                                <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-surface border-app-border text-app-muted-foreground">
                                                                     SYSTEM ACCOUNT
                                                                 </Badge>
                                                             )}
@@ -171,16 +171,16 @@ export function COAMappingModal({
                                                             value={localMappings[acc.id]?.toString()}
                                                             onValueChange={(val) => handleSelect(acc.id, val)}
                                                         >
-                                                            <SelectTrigger className="bg-app-surface border-amber-300 text-[11px] h-10 hover:border-amber-400 transition-all font-semibold shadow-sm text-app-text-muted">
+                                                            <SelectTrigger className="bg-app-surface border-amber-300 text-[11px] h-10 hover:border-amber-400 transition-all font-semibold shadow-sm text-app-muted-foreground">
                                                                 <SelectValue placeholder="Associate Target COA..." />
                                                             </SelectTrigger>
-                                                            <SelectContent className="bg-app-surface border-app-border text-app-text max-h-[300px]">
+                                                            <SelectContent className="bg-app-surface border-app-border text-app-foreground max-h-[300px]">
                                                                 {data?.coa_options?.map((coa: any) => (
                                                                     <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-emerald-50 focus:text-emerald-700">
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="font-mono text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
-                                                                            <span className="font-bold text-app-text-muted">{coa.name}</span>
-                                                                            <span className="text-[9px] text-app-text-faint font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
+                                                                            <span className="font-bold text-app-muted-foreground">{coa.name}</span>
+                                                                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
                                                                         </div>
                                                                     </SelectItem>
                                                                 ))}
@@ -202,17 +202,17 @@ export function COAMappingModal({
                                             {mapped.map((acc: any) => (
                                                 <div key={acc.id} className="grid grid-cols-[1fr,1.5fr] gap-4 items-center bg-app-surface p-4 rounded-xl border border-app-border hover:border-emerald-300 hover:shadow-md transition-all group">
                                                     <div className="pl-1">
-                                                        <p className="text-sm font-bold text-app-text group-hover:text-emerald-700 transition-colors uppercase tracking-tight">{acc.name}</p>
+                                                        <p className="text-sm font-bold text-app-foreground group-hover:text-emerald-700 transition-colors uppercase tracking-tight">{acc.name}</p>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             {acc.source_name ? (
                                                                 <>
-                                                                    <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-bg border-app-border text-app-text-faint flex items-center gap-1">
+                                                                    <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-bg border-app-border text-app-muted-foreground flex items-center gap-1">
                                                                         IMPORTED
                                                                     </Badge>
-                                                                    <p className="text-[10px] text-app-text-faint font-mono truncate max-w-[150px]">{acc.source_name}</p>
+                                                                    <p className="text-[10px] text-app-muted-foreground font-mono truncate max-w-[150px]">{acc.source_name}</p>
                                                                 </>
                                                             ) : (
-                                                                <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-bg border-app-border text-app-text-faint">
+                                                                <Badge variant="outline" className="text-[9px] font-bold py-0 leading-tight bg-app-bg border-app-border text-app-muted-foreground">
                                                                     SYSTEM ACCOUNT
                                                                 </Badge>
                                                             )}
@@ -226,13 +226,13 @@ export function COAMappingModal({
                                                             <SelectTrigger className="bg-emerald-50/50 border-emerald-200 text-[11px] h-10 hover:border-emerald-400 transition-all font-semibold shadow-sm text-emerald-900">
                                                                 <SelectValue placeholder="Associate Target COA..." />
                                                             </SelectTrigger>
-                                                            <SelectContent className="bg-app-surface border-app-border text-app-text max-h-[300px]">
+                                                            <SelectContent className="bg-app-surface border-app-border text-app-foreground max-h-[300px]">
                                                                 {data?.coa_options?.map((coa: any) => (
                                                                     <SelectItem key={coa.id} value={coa.id.toString()} className="text-[11px] focus:bg-emerald-50 focus:text-emerald-700">
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="font-mono text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">{coa.code}</span>
-                                                                            <span className="font-bold text-app-text-muted">{coa.name}</span>
-                                                                            <span className="text-[9px] text-app-text-faint font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
+                                                                            <span className="font-bold text-app-muted-foreground">{coa.name}</span>
+                                                                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-tighter ml-auto">({coa.type})</span>
                                                                         </div>
                                                                     </SelectItem>
                                                                 ))}
@@ -250,7 +250,7 @@ export function COAMappingModal({
                 </ScrollArea>
 
                 <div className="p-6 border-t border-app-border bg-app-bg flex justify-end gap-3 rounded-b-lg">
-                    <Button variant="ghost" className="text-app-text-faint font-bold hover:bg-app-border" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
+                    <Button variant="ghost" className="text-app-muted-foreground font-bold hover:bg-app-border" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
                     <Button
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-10 shadow-lg shadow-emerald-600/20 rounded-xl"
                         onClick={handleSave}

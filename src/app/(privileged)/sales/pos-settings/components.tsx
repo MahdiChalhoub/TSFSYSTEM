@@ -48,7 +48,7 @@ function SectionLabel({ icon: Icon, label, color, count }: { icon: any; label: s
             <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
                 <Icon size={12} style={{ color }} />
             </div>
-            <span className="text-[11px] font-black text-app-text uppercase tracking-widest">{label}</span>
+            <span className="text-[11px] font-black text-app-foreground uppercase tracking-widest">{label}</span>
             {count !== undefined && (
                 <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                     style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>{count}</span>
@@ -183,8 +183,8 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 <Monitor size={18} />
                             </div>
                             <div>
-                                <h2 className="text-sm font-black text-app-text tracking-tight">{reg.name}</h2>
-                                <p className="text-[10px] text-app-text-muted">{reg.siteName} · #{reg.id}</p>
+                                <h2 className="text-sm font-black text-app-foreground tracking-tight">{reg.name}</h2>
+                                <p className="text-[10px] text-app-muted-foreground">{reg.siteName} · #{reg.id}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -199,15 +199,15 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 style={{ boxShadow: '0 2px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
                                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save
                             </button>
-                            <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl text-app-text-muted transition-colors"><X size={16} /></button>
+                            <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl text-app-muted-foreground transition-colors"><X size={16} /></button>
                         </div>
                     </div>
                     <div className="flex gap-0.5 -mb-[1px]">
                         {TABS.map(t => (
                             <button key={t.id} onClick={() => setTab(t.id)}
                                 className={`flex items-center gap-1.5 px-3.5 py-2.5 text-[10px] font-bold transition-all border-b-2 ${tab === t.id
-                                    ? 'text-app-text border-current'
-                                    : 'text-app-text-muted border-transparent hover:text-app-text'}`}
+                                    ? 'text-app-foreground border-current'
+                                    : 'text-app-muted-foreground border-transparent hover:text-app-foreground'}`}
                                 style={tab === t.id ? { borderColor: t.color, color: t.color } : {}}>
                                 <t.icon size={12} /> {t.label}
                             </button>
@@ -225,7 +225,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                     <AlertTriangle size={14} style={{ color: 'var(--app-error)' }} className="shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-[11px] font-black" style={{ color: 'var(--app-error)' }}>Register not operational</p>
-                                        <p className="text-[10px] mt-0.5 text-app-text-muted">{reg.missingCashAccount && '⚠ Missing Cash Account. '}{reg.missingAccountBook && '⚠ Missing Account Book.'}</p>
+                                        <p className="text-[10px] mt-0.5 text-app-muted-foreground">{reg.missingCashAccount && '⚠ Missing Cash Account. '}{reg.missingAccountBook && '⚠ Missing Account Book.'}</p>
                                     </div>
                                 </div>
                             )}
@@ -233,38 +233,38 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 <SectionLabel icon={Monitor} label="Register Info" color="var(--app-primary)" />
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Name</label>
+                                        <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Name</label>
                                         <input value={form.name} onChange={e => set('name', e.target.value)}
-                                            className="w-full text-[13px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none focus:border-app-primary/40 transition-colors" />
+                                            className="w-full text-[13px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none focus:border-app-primary/40 transition-colors" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Cash Account *</label>
+                                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Cash Account *</label>
                                             <select value={form.cashAccountId} onChange={e => set('cashAccountId', +e.target.value)}
-                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                                 <option value={0}>⚠ Select…</option>
                                                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Opening Mode</label>
+                                            <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Opening Mode</label>
                                             <select value={form.openingMode} onChange={e => set('openingMode', e.target.value)}
-                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                                className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                                 <option value="standard">Standard</option>
                                                 <option value="advanced">Advanced</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">Warehouse</label>
+                                        <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">Warehouse</label>
                                         <select value={form.warehouseId} onChange={e => set('warehouseId', +e.target.value)}
-                                            className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text outline-none">
+                                            className="w-full text-[12px] font-bold px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground outline-none">
                                             <option value={0}>-- none --</option>
                                             {filteredWarehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({w.location_type || 'WH'})</option>)}
                                         </select>
                                     </div>
                                     <div className="flex items-center justify-between py-2.5 border-t border-app-border/20">
-                                        <div><p className="text-[11px] font-bold text-app-text">Account Book</p><p className="text-[9px] text-app-text-muted">{form.enableAccountBook ? 'Linked to cash account' : 'Disabled'}</p></div>
+                                        <div><p className="text-[11px] font-bold text-app-foreground">Account Book</p><p className="text-[9px] text-app-muted-foreground">{form.enableAccountBook ? 'Linked to cash account' : 'Disabled'}</p></div>
                                         <Toggle on={form.enableAccountBook} onChange={() => set('enableAccountBook', !form.enableAccountBook)} />
                                     </div>
                                 </div>
@@ -278,11 +278,11 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Banknote} label="Methods" color="var(--app-primary)" count={form.registerMethods.length} />
                                 {methodsLoading ? (
-                                    <div className="flex items-center gap-2 py-4 text-app-text-muted">
+                                    <div className="flex items-center gap-2 py-4 text-app-muted-foreground">
                                         <Loader2 size={14} className="animate-spin" /> <span className="text-[11px]">Loading methods…</span>
                                     </div>
                                 ) : globalMethods.length === 0 ? (
-                                    <p className="text-[10px] text-app-text-muted italic py-4">No payment methods configured. <a href="/finance/settings/payment-methods" className="text-app-primary underline">Create some →</a></p>
+                                    <p className="text-[10px] text-app-muted-foreground italic py-4">No payment methods configured. <a href="/finance/settings/payment-methods" className="text-app-primary underline">Create some →</a></p>
                                 ) : (
                                     <div className="space-y-1.5">
                                         {globalMethods.filter(gm => gm.is_active).map(gm => {
@@ -321,8 +321,8 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                     </div>
                                                     {/* Name */}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className={`text-[11px] font-bold truncate ${isActive ? 'text-app-text' : 'text-app-text-muted'}`}>{gm.name}</p>
-                                                        <p className="text-[8px] text-app-text-faint uppercase tracking-widest">{gm.code}</p>
+                                                        <p className={`text-[11px] font-bold truncate ${isActive ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{gm.name}</p>
+                                                        <p className="text-[8px] text-app-muted-foreground uppercase tracking-widest">{gm.code}</p>
                                                     </div>
                                                     {/* Account Dropdown (only when active) */}
                                                     {isActive && (
@@ -335,7 +335,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                                     rm.methodId === gm.id ? { ...rm, accountId: accId || null, accountName: acc?.name || null } : rm
                                                                 ))
                                                             }}
-                                                            className="text-[10px] font-bold px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none max-w-[160px]"
+                                                            className="text-[10px] font-bold px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none max-w-[160px]"
                                                             title="Link financial account">
                                                             <option value={0}>— no account —</option>
                                                             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -350,12 +350,12 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={CreditCard} label="Allowed Accounts" color="var(--app-primary)" count={form.allowedAccountIds.length + (form.cashAccountId ? 1 : 0)} />
                                 <div className="space-y-1.5 max-h-52 overflow-y-auto custom-scrollbar">
-                                    {accounts.length === 0 && <p className="text-[10px] text-app-text-muted italic py-2">No financial accounts found</p>}
+                                    {accounts.length === 0 && <p className="text-[10px] text-app-muted-foreground italic py-2">No financial accounts found</p>}
                                     {accounts.map(a => {
                                         const isCash = a.id === form.cashAccountId; const on = isCash || form.allowedAccountIds.includes(a.id)
                                         return (
                                             <button key={a.id} onClick={() => { if (isCash) return; set('allowedAccountIds', toggleId(form.allowedAccountIds, a.id)) }}
-                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-text-muted hover:bg-app-surface'}`}
+                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all text-[11px] ${isCash ? 'border-emerald-500/25 text-emerald-400 cursor-default' : on ? 'border-emerald-500/15 text-emerald-400' : 'border-app-border/30 text-app-muted-foreground hover:bg-app-surface'}`}
                                                 style={on ? { background: 'color-mix(in srgb, var(--app-primary) 4%, transparent)' } : {}}>
                                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${on ? 'bg-emerald-500 border-emerald-400' : 'border-app-border'}`}>{on && <Check size={10} className="text-white" />}</div>
                                                 <span className="flex-1 truncate font-medium">{a.name}</span>
@@ -374,7 +374,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Users} label="Authorized Cashiers" color="var(--app-info)" count={form.authorizedUserIds.length} />
-                                <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Toggle access and manage PINs per register. Users without a PIN cannot log in.</p>
+                                <p className="text-[9px] text-app-muted-foreground -mt-2 mb-3">Toggle access and manage PINs per register. Users without a PIN cannot log in.</p>
                                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
                                     {users.map(u => {
                                         const on = form.authorizedUserIds.includes(u.id)
@@ -395,7 +395,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 </div>
                                                 {/* Name + role */}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`font-medium truncate ${on ? 'text-app-text' : 'text-app-text-muted'}`}>{name}</p>
+                                                    <p className={`font-medium truncate ${on ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{name}</p>
                                                     <p className="text-[9px] opacity-50">{u.role_name || 'Staff'}</p>
                                                 </div>
                                                 {/* PIN status + actions */}
@@ -435,7 +435,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                             {/* Quick Links — easy access to related features */}
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Zap} label="Quick Links" color="var(--app-primary)" />
-                                <p className="text-[9px] text-app-text-muted -mt-2 mb-3">Jump to related settings and features</p>
+                                <p className="text-[9px] text-app-muted-foreground -mt-2 mb-3">Jump to related settings and features</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
                                         { label: 'Users & PINs', desc: 'Global PIN manager', icon: Key, color: 'var(--app-info)', href: '__users_pins__' },
@@ -459,10 +459,10 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                 <link.icon size={13} />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[10px] font-bold text-app-text truncate">{link.label}</p>
-                                                <p className="text-[8px] text-app-text-faint">{link.desc}</p>
+                                                <p className="text-[10px] font-bold text-app-foreground truncate">{link.label}</p>
+                                                <p className="text-[8px] text-app-muted-foreground">{link.desc}</p>
                                             </div>
-                                            <ChevronRight size={11} className="text-app-text-faint shrink-0 ml-auto" />
+                                            <ChevronRight size={11} className="text-app-muted-foreground shrink-0 ml-auto" />
                                         </button>
                                     ))}
                                 </div>
@@ -475,16 +475,16 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                         <div className="space-y-4 animate-in fade-in duration-150">
                             <div className="p-4 rounded-xl border border-app-border/30" style={{ background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)' }}>
                                 <SectionLabel icon={Shield} label="Rules Override" color="var(--app-warning)" />
-                                <p className="text-[10px] text-app-text-muted mb-3 -mt-1">Override global rules for this register. Unset rules inherit from Global Settings.</p>
+                                <p className="text-[10px] text-app-muted-foreground mb-3 -mt-1">Override global rules for this register. Unset rules inherit from Global Settings.</p>
                                 <div className="space-y-0.5">
                                     {OVERRIDE_RULES.map(rule => {
                                         const val = form.rulesOverride[rule.key]; const isSet = val !== undefined
                                         return (
                                             <div key={rule.key} className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-app-surface/50 transition-colors border-b border-app-border/10 last:border-0">
-                                                <div className="flex-1 mr-3"><p className="text-[11px] font-bold text-app-text">{rule.label}</p><p className="text-[9px] text-app-text-muted">{rule.desc}</p></div>
+                                                <div className="flex-1 mr-3"><p className="text-[11px] font-bold text-app-foreground">{rule.label}</p><p className="text-[9px] text-app-muted-foreground">{rule.desc}</p></div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {isSet && <button onClick={() => { const r = { ...form.rulesOverride }; delete r[rule.key]; set('rulesOverride', r) }}
-                                                        className="text-[8px] text-app-text-muted hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
+                                                        className="text-[8px] text-app-muted-foreground hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
                                                     <button onClick={() => set('rulesOverride', { ...form.rulesOverride, [rule.key]: !val })}
                                                         className={`w-9 h-5 rounded-full relative transition-all ${isSet ? (val ? 'bg-amber-500' : 'bg-app-surface border border-app-border/50') : 'bg-app-surface border border-app-border/50 opacity-30'}`}>
                                                         <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${val && isSet ? 'left-[18px]' : 'left-[3px]'}`} />
@@ -540,7 +540,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     function TRow({ label, desc, k }: { label: string; desc: string; k: string }) {
         return (
             <div className="flex items-center justify-between py-2 border-b border-app-border/20 last:border-0">
-                <div><p className="text-[11px] font-bold text-app-text">{label}</p><p className="text-[9px] text-app-text-faint">{desc}</p></div>
+                <div><p className="text-[11px] font-bold text-app-foreground">{label}</p><p className="text-[9px] text-app-muted-foreground">{desc}</p></div>
                 <button onClick={() => set(k, !rules[k])} className={`w-9 h-5 rounded-full relative transition-all ml-3 shrink-0 ${rules[k] ? 'bg-app-primary' : 'bg-app-surface'}`}>
                     <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${rules[k] ? 'left-[18px]' : 'left-[3px]'}`} />
                 </button>
@@ -550,11 +550,11 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     function NRow({ label, k, suffix }: { label: string; k: string; suffix: string }) {
         return (
             <div className="flex items-center justify-between py-2 border-b border-app-border/20 last:border-0">
-                <p className="text-[11px] font-bold text-app-text">{label}</p>
+                <p className="text-[11px] font-bold text-app-foreground">{label}</p>
                 <div className="flex items-center gap-1 ml-3 shrink-0">
                     <input type="number" value={rules[k] || 0} onChange={e => set(k, +e.target.value)}
-                        className="w-14 px-2 py-1 bg-app-bg border border-app-border rounded-lg text-app-text text-[11px] font-bold text-center outline-none" />
-                    <span className="text-[9px] text-app-text-muted font-bold">{suffix}</span>
+                        className="w-14 px-2 py-1 bg-app-bg border border-app-border rounded-lg text-app-foreground text-[11px] font-bold text-center outline-none" />
+                    <span className="text-[9px] text-app-muted-foreground font-bold">{suffix}</span>
                 </div>
             </div>
         )
@@ -565,7 +565,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     const [dLoading, setDLoading] = useState(true)
     useEffect(() => { erpFetch('pos-settings/').then((d: any) => { if (d) setDs(x => ({ ...x, ...d })) }).catch(() => { }).finally(() => setDLoading(false)) }, [])
 
-    if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-text-muted" /></div>
+    if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-muted-foreground" /></div>
 
     const SECTIONS = [
         { id: 'security' as const, label: 'Security', icon: Shield, color: 'var(--app-warning)' },
@@ -616,15 +616,15 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
         <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-app-bg border-l border-app-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
                 <div className="flex items-center gap-2">
-                    <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
+                    <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all shrink-0" title="Return">
                         <ArrowLeft size={14} />
                     </button>
                     <div className="w-8 h-8 rounded-lg bg-app-primary flex items-center justify-center">
                         <Shield size={14} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-app-text">Global Settings</h2>
-                        <p className="text-[9px] text-app-text-faint">Applies to all registers</p>
+                        <h2 className="text-sm font-black text-app-foreground">Global Settings</h2>
+                        <p className="text-[9px] text-app-muted-foreground">Applies to all registers</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -632,7 +632,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
                         className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50">
                         {saving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />} Save
                     </button>
-                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted"><X size={14} /></button>
+                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground"><X size={14} /></button>
                 </div>
             </div>
 
@@ -641,8 +641,8 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
                 {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => setSection(s.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${section === s.id
-                            ? 'bg-app-surface border border-app-border text-app-text'
-                            : 'text-app-text-muted hover:text-app-text'}`}>
+                            ? 'bg-app-surface border border-app-border text-app-foreground'
+                            : 'text-app-muted-foreground hover:text-app-foreground'}`}>
                         <s.icon size={12} style={section === s.id ? { color: s.color } : { opacity: 0.5 }} /> {s.label}
                     </button>
                 ))}
@@ -652,7 +652,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
             <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3 custom-scrollbar">
                 {section === 'security' && RULE_GROUPS.map(g => (
                     <div key={g.title} className="p-3 bg-app-surface/30 border border-app-border/50 rounded-xl">
-                        <p className="text-[9px] text-app-text-muted uppercase tracking-widest font-black flex items-center gap-1.5 mb-1">
+                        <p className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-black flex items-center gap-1.5 mb-1">
                             <g.icon size={9} style={{ color: g.color }} /> {g.title}
                         </p>
                         {g.rows}
@@ -661,28 +661,28 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
                 {section === 'delivery' && (
                     <div className="space-y-3">
                         <div className="p-3 bg-app-surface/30 border border-app-border/50 rounded-xl">
-                            <p className="text-[9px] text-app-text-muted uppercase tracking-widest font-black flex items-center gap-1.5 mb-2">
+                            <p className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-black flex items-center gap-1.5 mb-2">
                                 <Hash size={9} style={{ color: 'var(--app-primary)' }} /> Delivery Codes
                             </p>
                             <div className="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Mode</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Mode</label>
                                     <select value={ds.delivery_code_mode} onChange={e => setDs(x => ({ ...x, delivery_code_mode: e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none">
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none">
                                         <option value="auto">Auto</option><option value="manual">Manual</option><option value="disabled">Off</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Digits</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Digits</label>
                                     <input type="number" min={4} max={8} value={ds.delivery_code_digits}
                                         onChange={e => setDs(x => ({ ...x, delivery_code_digits: +e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none text-center" />
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none text-center" />
                                 </div>
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Expiry (h)</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Expiry (h)</label>
                                     <input type="number" value={ds.delivery_code_expiry_hours}
                                         onChange={e => setDs(x => ({ ...x, delivery_code_expiry_hours: +e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none text-center" />
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none text-center" />
                                 </div>
                             </div>
                         </div>
@@ -776,18 +776,18 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
                     <div className="flex items-center gap-2">
-                        <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
+                        <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all shrink-0" title="Return">
                             <ArrowLeft size={14} />
                         </button>
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
                             <Key size={14} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-app-text">Users & PINs</h2>
-                            <p className="text-[9px] text-app-text-faint">{withPin} with PIN · {withoutPin} without</p>
+                            <h2 className="text-sm font-black text-app-foreground">Users & PINs</h2>
+                            <p className="text-[9px] text-app-muted-foreground">{withPin} with PIN · {withoutPin} without</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted"><X size={14} /></button>
+                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground"><X size={14} /></button>
                 </div>
 
                 {/* Stats strip */}
@@ -807,7 +807,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                 {/* Search */}
                 <div className="px-5 py-3">
                     <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search users…"
-                        className="w-full text-[12px] pl-3 pr-3 py-2 bg-app-surface/50 border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint outline-none" />
+                        className="w-full text-[12px] pl-3 pr-3 py-2 bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none" />
                 </div>
 
                 {/* User list */}
@@ -842,7 +842,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                     {/* Name + role */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <p className="text-[11px] font-bold text-app-text truncate">{name}</p>
+                                            <p className="text-[11px] font-bold text-app-foreground truncate">{name}</p>
                                             {isSelf && (
                                                 <span className="text-[7px] font-black px-1 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
@@ -850,7 +850,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-[9px] text-app-text-faint">{u.role_name || 'Staff'}</p>
+                                        <p className="text-[9px] text-app-muted-foreground">{u.role_name || 'Staff'}</p>
                                     </div>
 
                                     {/* PIN status */}
@@ -909,10 +909,10 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         {pinModal.mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                                     </div>
                                     <div>
-                                        <h3 className="text-[14px] font-black text-app-text">
+                                        <h3 className="text-[14px] font-black text-app-foreground">
                                             {pinModal.mode === 'self' ? 'Change Your PIN' : `Reset PIN`}
                                         </h3>
-                                        <p className="text-[10px] text-app-text-faint">
+                                        <p className="text-[10px] text-app-muted-foreground">
                                             {pinModal.mode === 'self'
                                                 ? 'Confirm your identity with your password'
                                                 : `Setting new PIN for ${pinModal.userName}`}
@@ -926,14 +926,14 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                 <div className="flex items-start gap-2 p-2.5 rounded-xl"
                                     style={{ background: 'color-mix(in srgb, var(--app-info) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 12%, transparent)' }}>
                                     <Lock size={12} className="shrink-0 mt-0.5" style={{ color: 'var(--app-info)' }} />
-                                    <p className="text-[10px] text-app-text-muted leading-relaxed">
+                                    <p className="text-[10px] text-app-muted-foreground leading-relaxed">
                                         Enter your <strong>login password</strong> to verify your identity before changing the PIN.
                                     </p>
                                 </div>
 
                                 {/* Password field */}
                                 <div>
-                                    <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                         Your Password *
                                     </label>
                                     <input
@@ -942,7 +942,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         onChange={e => { setPassword(e.target.value); setPasswordError('') }}
                                         placeholder="Enter your login password"
                                         autoFocus
-                                        className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-text placeholder:text-app-text-faint outline-none transition-colors ${passwordError ? 'border-red-500/50 bg-red-500/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                        className={`w-full text-[12px] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors ${passwordError ? 'border-red-500/50 bg-red-500/5' : 'border-app-border/50 focus:border-app-primary/40'}`}
                                     />
                                     {passwordError && (
                                         <p className="text-[9px] text-red-400 mt-1 flex items-center gap-1">
@@ -953,7 +953,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
 
                                 {/* New PIN */}
                                 <div>
-                                    <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                         New PIN (4-6 digits) *
                                     </label>
                                     <div className="relative">
@@ -962,10 +962,10 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                             value={newPin}
                                             onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                             placeholder="● ● ● ●"
-                                            className="w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint outline-none focus:border-app-primary/40 transition-colors text-center"
+                                            className="w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/40 transition-colors text-center"
                                         />
                                         <button onClick={() => setShowPin(v => !v)}
-                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-app-text-muted hover:text-app-text transition-colors">
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-app-muted-foreground hover:text-app-foreground transition-colors">
                                             {showPin ? <EyeOff size={13} /> : <Eye size={13} />}
                                         </button>
                                     </div>
@@ -973,7 +973,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
 
                                 {/* Confirm PIN */}
                                 <div>
-                                    <label className="text-[9px] font-black text-app-text-muted uppercase tracking-widest mb-1.5 block">
+                                    <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1.5 block">
                                         Confirm PIN *
                                     </label>
                                     <input
@@ -981,7 +981,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         value={confirmPin}
                                         onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         placeholder="● ● ● ●"
-                                        className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-text placeholder:text-app-text-faint outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-red-500/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
+                                        className={`w-full text-[14px] font-mono tracking-[0.3em] px-3 py-2.5 bg-app-bg border rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none transition-colors text-center ${confirmPin && confirmPin !== newPin ? 'border-red-500/50' : 'border-app-border/50 focus:border-app-primary/40'}`}
                                     />
                                     {confirmPin && confirmPin !== newPin && (
                                         <p className="text-[9px] text-red-400 mt-1">PINs do not match</p>
@@ -991,7 +991,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1">
                                     <button onClick={resetModal}
-                                        className="flex-1 text-[11px] font-bold py-2.5 rounded-xl border border-app-border text-app-text-muted hover:bg-app-surface transition-all">
+                                        className="flex-1 text-[11px] font-bold py-2.5 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-surface transition-all">
                                         Cancel
                                     </button>
                                     <button
@@ -1051,7 +1051,7 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
                     {authorized && <Check size={9} className="text-white" />}
                 </button>
                 <span className="flex-1 truncate text-[11px] font-medium"
-                    style={{ color: authorized ? 'var(--app-info)' : 'var(--app-text-muted)' }}>{name}</span>
+                    style={{ color: authorized ? 'var(--app-info)' : 'var(--app-muted-foreground)' }}>{name}</span>
                 {/* PIN status */}
                 <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md`}
                     style={{
@@ -1063,7 +1063,7 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
                 {/* Set PIN button */}
                 <button onClick={() => { setPinOpen(!pinOpen); setPinVal('') }}
                     className="p-1 rounded transition-all hover:bg-blue-500/10"
-                    style={{ color: pinOpen ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-text-muted) 50%, transparent)' }}>
+                    style={{ color: pinOpen ? 'var(--app-info)' : 'color-mix(in srgb, var(--app-muted-foreground) 50%, transparent)' }}>
                     <Key size={10} />
                 </button>
             </div>
@@ -1071,8 +1071,8 @@ function CashierRow({ user, name, authorized, onToggle, onRefresh }: {
                 <div className="flex items-center gap-1.5 px-2.5 pb-2 animate-in fade-in duration-100">
                     <input type={show ? 'text' : 'password'} placeholder="PIN (4-6)" value={pinVal}
                         onChange={e => setPinVal(e.target.value.replace(/\D/g, '').slice(0, 6))} autoFocus
-                        className="flex-1 text-[10px] font-mono px-2 py-1 bg-app-bg border border-app-border/50 rounded-md text-app-text outline-none" />
-                    <button onClick={() => setShow(v => !v)} className="p-0.5 text-app-text-muted"><Eye size={10} /></button>
+                        className="flex-1 text-[10px] font-mono px-2 py-1 bg-app-bg border border-app-border/50 rounded-md text-app-foreground outline-none" />
+                    <button onClick={() => setShow(v => !v)} className="p-0.5 text-app-muted-foreground"><Eye size={10} /></button>
                     <button onClick={setPin} disabled={saving || pinVal.length < 4}
                         className="text-[8px] font-bold bg-app-primary text-white px-2 py-1 rounded-md disabled:opacity-40">
                         {saving ? <Loader2 size={9} className="animate-spin" /> : 'Set'}

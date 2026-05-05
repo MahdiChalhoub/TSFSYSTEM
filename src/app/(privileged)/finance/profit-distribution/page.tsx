@@ -243,7 +243,7 @@ export default function ProfitDistributionPage() {
                         {/* Step 2: Preview */}
                         {wizardStep === 2 && preview && (
                             <div className="space-y-5 pt-2">
-                                <div className="bg-app-gradient-primary-soft/30 rounded-2xl p-5 border">
+                                <div className="bg-app-primary-soft/30 rounded-2xl p-5 border">
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year</p>
                                     <p className="text-lg font-bold text-app-foreground">{String(preview.fiscal_year)}</p>
                                     <p className="text-xs font-bold text-app-muted-foreground uppercase mt-3">Net Profit</p>
@@ -290,7 +290,7 @@ export default function ProfitDistributionPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-warning-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -303,7 +303,7 @@ export default function ProfitDistributionPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>

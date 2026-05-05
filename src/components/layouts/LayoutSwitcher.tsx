@@ -105,7 +105,7 @@ export function LayoutSwitcher({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Monitor size={14} className="text-app-text-muted" />
+      <Monitor size={14} className="text-app-muted-foreground" />
       <div className="flex items-center gap-1 bg-app-surface/50 rounded-xl p-1 border border-app-border/30">
         {availableLayouts.map(layout => {
           const Icon = layout.icon
@@ -120,7 +120,7 @@ export function LayoutSwitcher({
                 text-[11px] font-bold transition-all
                 ${isActive
                   ? 'bg-app-primary text-white shadow-sm'
-                  : 'text-app-text-muted hover:text-app-text hover:bg-app-surface'
+                  : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'
                 }
               `}
               title={layout.desc}

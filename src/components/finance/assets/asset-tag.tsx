@@ -35,16 +35,16 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  <div className="p-1 bg-indigo-50 rounded-lg">
  <ShieldCheck size={14} className="text-indigo-600" />
  </div>
- <span className="text-[10px] font-black text-app-text uppercase tracking-tighter truncate">
+ <span className="text-[10px] font-black text-app-foreground uppercase tracking-tighter truncate">
  {asset.category || 'ASSET'} ID: {asset.id}
  </span>
  </div>
 
  <div className="flex-1 min-w-0 flex flex-col justify-center">
- <h4 className="text-xs font-black text-app-text leading-tight uppercase line-clamp-2">
+ <h4 className="text-xs font-black text-app-foreground leading-tight uppercase line-clamp-2">
  {asset.name}
  </h4>
- <p className="text-[9px] text-app-text-muted font-bold mt-1 tracking-tight">
+ <p className="text-[9px] text-app-muted-foreground font-bold mt-1 tracking-tight">
  Purchased: {asset.purchase_date}
  </p>
  </div>
@@ -52,7 +52,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  <div className="flex items-end justify-between mt-1">
  <div className="flex items-center gap-1">
  <Package size={10} className="text-stone-300" />
- <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest">TSFSYSTEM</span>
+ <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest">TSFSYSTEM</span>
  </div>
  </div>
  </div>
@@ -68,7 +68,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  fgColor="#1c1917" // stone-900
  />
  </div>
- <div className="mt-2 flex items-center gap-1 bg-app-surface text-app-text px-1.5 py-0.5 rounded-full">
+ <div className="mt-2 flex items-center gap-1 bg-app-surface text-app-foreground px-1.5 py-0.5 rounded-full">
  <QrIcon size={8} />
  <span className="text-[7px] font-black uppercase tracking-tighter">Scan to Audit</span>
  </div>

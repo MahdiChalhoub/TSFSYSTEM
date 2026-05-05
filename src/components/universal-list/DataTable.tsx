@@ -100,7 +100,7 @@ export default function DataTable<T = any>({
  {activeColumns.map(col => (
  <th
  key={col.key}
- className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-text-muted whitespace-nowrap ${col.sortable ? 'cursor-pointer select-none hover:text-app-text-muted' : ''
+ className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground whitespace-nowrap ${col.sortable ? 'cursor-pointer select-none hover:text-app-muted-foreground' : ''
  } text-${col.align || 'left'}`}
  style={col.minWidth ? { minWidth: col.minWidth } : undefined}
  onClick={() => col.sortable && onSort(col.key)}
@@ -116,7 +116,7 @@ export default function DataTable<T = any>({
  </th>
  ))}
  {actions && actions.length > 0 && (
- <th className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-text-muted text-right">
+ <th className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground text-right">
  Action
  </th>
  )}
@@ -132,7 +132,7 @@ export default function DataTable<T = any>({
  (expandable ? 1 : 0) +
  (actions?.length ? 1 : 0)
  }
- className="px-4 py-12 text-center text-app-text-faint"
+ className="px-4 py-12 text-center text-app-muted-foreground"
  >
  No data found
  </td>
@@ -168,7 +168,7 @@ export default function DataTable<T = any>({
  >
  <ChevronRight
  size={14}
- className={`text-app-text-faint transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+ className={`text-app-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`}
  />
  </button>
  </td>
@@ -198,7 +198,7 @@ export default function DataTable<T = any>({
  ? 'text-app-primary hover:bg-app-primary-light'
  : action.variant === 'warning'
  ? 'text-app-warning hover:bg-app-warning-bg'
- : 'text-app-text-muted hover:bg-app-surface-2';
+ : 'text-app-muted-foreground hover:bg-app-surface-2';
  return (
  <button
  key={ai}

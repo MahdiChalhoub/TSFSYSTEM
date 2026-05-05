@@ -162,7 +162,7 @@ export default function PolicyEditorPage() {
 
     if (loadingPolicy) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--app-text-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--app-muted-foreground)' }}>
                 <Loader2 size={24} className="animate-spin" />
             </div>
         )
@@ -180,7 +180,7 @@ export default function PolicyEditorPage() {
                         display: 'flex', alignItems: 'center', gap: '0.3rem',
                         padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
                         border: '1px solid var(--app-border)', background: 'var(--app-surface)',
-                        color: 'var(--app-text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+                        color: 'var(--app-muted-foreground)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
                     }}>
                         <ArrowLeft size={16} /> Back
                     </button>
@@ -192,11 +192,11 @@ export default function PolicyEditorPage() {
                         <Shield size={16} style={{ color: '#fff' }} />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--app-text)', margin: 0 }}>
+                        <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--app-foreground)', margin: 0 }}>
                             {editId ? 'Edit Policy' : 'New Policy'}
                         </h1>
                         {viewKey && (
-                            <p style={{ fontSize: '0.75rem', color: 'var(--app-text-muted)', margin: 0 }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)', margin: 0 }}>
                                 {viewKey === '*' ? '🌐 Global (all views)' : viewLabel}
                             </p>
                         )}
@@ -257,7 +257,7 @@ export default function PolicyEditorPage() {
             {!viewKey && (
                 <div style={{
                     textAlign: 'center', padding: '4rem 2rem', borderRadius: '0.75rem',
-                    border: '2px dashed var(--app-border)', color: 'var(--app-text-muted)',
+                    border: '2px dashed var(--app-border)', color: 'var(--app-muted-foreground)',
                 }}>
                     <Columns3 size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
                     <p style={{ fontWeight: 700, fontSize: '1rem' }}>Select a list view above</p>
@@ -275,9 +275,9 @@ export default function PolicyEditorPage() {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                         <Globe size={20} style={{ color: 'var(--app-primary)' }} />
-                        <h3 style={{ fontWeight: 700, color: 'var(--app-text)', margin: 0 }}>Global Policy</h3>
+                        <h3 style={{ fontWeight: 700, color: 'var(--app-foreground)', margin: 0 }}>Global Policy</h3>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--app-text-muted)', marginBottom: '1rem' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--app-muted-foreground)', marginBottom: '1rem' }}>
                         This applies to ALL list views as a base. Type column/filter keys manually.
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -301,7 +301,7 @@ export default function PolicyEditorPage() {
 
             {/* ── Loading fields ─── */}
             {viewKey && viewKey !== '*' && fieldsLoading && (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-text-muted)' }}>
+                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>
                     <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem' }} />
                     Loading model fields...
                 </div>
@@ -317,7 +317,7 @@ export default function PolicyEditorPage() {
                         background: 'var(--app-surface)', border: '1px solid var(--app-border)',
                         fontSize: '0.8rem', alignItems: 'center', flexWrap: 'wrap',
                     }}>
-                        <span style={{ color: 'var(--app-text)', fontWeight: 700 }}>
+                        <span style={{ color: 'var(--app-foreground)', fontWeight: 700 }}>
                             {fields.length} fields
                         </span>
                         <span style={{ color: 'var(--app-success)', fontWeight: 700 }}>
@@ -353,7 +353,7 @@ export default function PolicyEditorPage() {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Columns3 size={16} style={{ color: 'var(--app-primary)' }} />
-                                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--app-text)' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--app-foreground)' }}>
                                         Columns
                                     </span>
                                 </div>
@@ -367,7 +367,7 @@ export default function PolicyEditorPage() {
                                 <div style={{ position: 'relative' }}>
                                     <Search size={13} style={{
                                         position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)',
-                                        color: 'var(--app-text-muted)'
+                                        color: 'var(--app-muted-foreground)'
                                     }} />
                                     <input placeholder="Search columns..."
                                         value={colSearch} onChange={e => setColSearch(e.target.value)}
@@ -390,13 +390,13 @@ export default function PolicyEditorPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{
                                                     fontWeight: 600, fontSize: '0.8rem',
-                                                    color: isHidden ? 'var(--app-error)' : 'var(--app-text)',
+                                                    color: isHidden ? 'var(--app-error)' : 'var(--app-foreground)',
                                                     textDecoration: isHidden ? 'line-through' : 'none',
                                                 }}>
                                                     {field.label}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '0.62rem', color: 'var(--app-text-muted)',
+                                                    fontSize: '0.62rem', color: 'var(--app-muted-foreground)',
                                                     fontFamily: 'monospace',
                                                 }}>
                                                     {field.key} · {field.type}
@@ -435,7 +435,7 @@ export default function PolicyEditorPage() {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Filter size={16} style={{ color: 'var(--app-warning)' }} />
-                                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--app-text)' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--app-foreground)' }}>
                                         Filters
                                     </span>
                                 </div>
@@ -449,7 +449,7 @@ export default function PolicyEditorPage() {
                                 <div style={{ position: 'relative' }}>
                                     <Search size={13} style={{
                                         position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)',
-                                        color: 'var(--app-text-muted)'
+                                        color: 'var(--app-muted-foreground)'
                                     }} />
                                     <input placeholder="Search filters..."
                                         value={filterSearch} onChange={e => setFilterSearch(e.target.value)}
@@ -471,13 +471,13 @@ export default function PolicyEditorPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{
                                                     fontWeight: 600, fontSize: '0.8rem',
-                                                    color: isBlocked ? 'var(--app-error)' : 'var(--app-text)',
+                                                    color: isBlocked ? 'var(--app-error)' : 'var(--app-foreground)',
                                                     textDecoration: isBlocked ? 'line-through' : 'none',
                                                 }}>
                                                     {field.label}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '0.62rem', color: 'var(--app-text-muted)',
+                                                    fontSize: '0.62rem', color: 'var(--app-muted-foreground)',
                                                     fontFamily: 'monospace',
                                                 }}>
                                                     {field.key} · {field.type}
@@ -503,7 +503,7 @@ export default function PolicyEditorPage() {
             {viewKey && viewKey !== '*' && !fieldsLoading && fields.length === 0 && (
                 <div style={{
                     textAlign: 'center', padding: '3rem', borderRadius: '0.75rem',
-                    border: '1px dashed var(--app-border)', color: 'var(--app-text-muted)',
+                    border: '1px dashed var(--app-border)', color: 'var(--app-muted-foreground)',
                 }}>
                     <Info size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.3 }} />
                     <p style={{ fontWeight: 600 }}>No field metadata available</p>
@@ -518,7 +518,7 @@ export default function PolicyEditorPage() {
                     marginTop: '1.5rem', padding: '1rem', borderRadius: '0.75rem',
                     border: '1px solid var(--app-border)', background: 'var(--app-surface)',
                 }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--app-text-muted)' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--app-muted-foreground)' }}>
                         {hiddenColumns.size > 0 || hiddenFilters.size > 0 || forcedColumns.size > 0 ? (
                             <span>
                                 <strong style={{ color: 'var(--app-error)' }}>{hiddenColumns.size}</strong> hidden columns,{' '}
@@ -533,7 +533,7 @@ export default function PolicyEditorPage() {
                         <button onClick={() => router.push('/listview-policies')} style={{
                             padding: '0.5rem 1rem', borderRadius: '0.5rem',
                             border: '1px solid var(--app-border)', background: 'transparent',
-                            color: 'var(--app-text-muted)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+                            color: 'var(--app-muted-foreground)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
                         }}>Cancel</button>
                         <button onClick={handleSave} disabled={saving} style={{
                             padding: '0.5rem 1.25rem', borderRadius: '0.5rem', border: 'none',
@@ -568,7 +568,7 @@ function ToggleBtn({ active, onClick, activeLabel, inactiveLabel, activeColor, a
             cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
             background: active ? `${activeColor}18` : 'transparent',
             borderColor: active ? activeColor : 'var(--app-border)',
-            color: active ? activeColor : 'var(--app-text-muted)',
+            color: active ? activeColor : 'var(--app-muted-foreground)',
         }}>
             {active ? activeIcon : inactiveIcon}
             {active ? activeLabel : inactiveLabel}
@@ -582,18 +582,18 @@ function SmallBtn({ onClick, label, danger }: { onClick: () => void, label: stri
             padding: '0.2rem 0.5rem', borderRadius: '0.3rem',
             border: '1px solid var(--app-border)', fontSize: '0.65rem',
             fontWeight: 600, cursor: 'pointer', background: 'transparent',
-            color: danger ? 'var(--app-error)' : 'var(--app-text-muted)',
+            color: danger ? 'var(--app-error)' : 'var(--app-muted-foreground)',
         }}>{label}</button>
     )
 }
 
 const labelStyle: React.CSSProperties = {
-    fontSize: '0.68rem', fontWeight: 700, color: 'var(--app-text-muted)',
+    fontSize: '0.68rem', fontWeight: 700, color: 'var(--app-muted-foreground)',
     marginBottom: '0.3rem', display: 'block', textTransform: 'uppercase',
     letterSpacing: '0.05em',
 }
 const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
     border: '1px solid var(--app-border)', background: 'var(--app-surface)',
-    color: 'var(--app-text)', fontSize: '0.85rem', outline: 'none',
+    color: 'var(--app-foreground)', fontSize: '0.85rem', outline: 'none',
 }

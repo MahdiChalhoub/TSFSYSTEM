@@ -49,7 +49,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
     function TRow({ label, desc, k }: { label: string; desc: string; k: string }) {
         return (
             <div className="flex items-center justify-between py-2 border-b border-app-border/20 last:border-0">
-                <div><p className="text-[11px] font-bold text-app-text">{label}</p><p className="text-[9px] text-app-text-faint">{desc}</p></div>
+                <div><p className="text-[11px] font-bold text-app-foreground">{label}</p><p className="text-[9px] text-app-muted-foreground">{desc}</p></div>
                 <button onClick={() => set(k, !rules[k])} className={`w-9 h-5 rounded-full relative transition-all ml-3 shrink-0 ${rules[k] ? 'bg-app-primary' : 'bg-app-surface'}`}>
                     <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${rules[k] ? 'left-[18px]' : 'left-[3px]'}`} />
                 </button>
@@ -60,11 +60,11 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
     function NRow({ label, k, suffix }: { label: string; k: string; suffix: string }) {
         return (
             <div className="flex items-center justify-between py-2 border-b border-app-border/20 last:border-0">
-                <p className="text-[11px] font-bold text-app-text">{label}</p>
+                <p className="text-[11px] font-bold text-app-foreground">{label}</p>
                 <div className="flex items-center gap-1 ml-3 shrink-0">
                     <input type="number" value={rules[k] || 0} onChange={e => set(k, +e.target.value)}
-                        className="w-14 px-2 py-1 bg-app-bg border border-app-border rounded-lg text-app-text text-[11px] font-bold text-center outline-none" />
-                    <span className="text-[9px] text-app-text-muted font-bold">{suffix}</span>
+                        className="w-14 px-2 py-1 bg-app-bg border border-app-border rounded-lg text-app-foreground text-[11px] font-bold text-center outline-none" />
+                    <span className="text-[9px] text-app-muted-foreground font-bold">{suffix}</span>
                 </div>
             </div>
         )
@@ -80,7 +80,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
         }
     }, [section])
 
-    if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-text-muted" /></div>
+    if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-muted-foreground" /></div>
 
     const SECTIONS = [
         { id: 'security' as const, label: 'Security', icon: Shield, color: 'var(--app-warning)' },
@@ -131,15 +131,15 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
         <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-app-bg border-l border-app-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
                 <div className="flex items-center gap-2">
-                    <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
+                    <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all shrink-0" title="Return">
                         <ArrowLeft size={14} />
                     </button>
                     <div className="w-8 h-8 rounded-lg bg-app-primary flex items-center justify-center">
                         <Shield size={14} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-app-text">Global Settings</h2>
-                        <p className="text-[9px] text-app-text-faint">Applies to all registers</p>
+                        <h2 className="text-sm font-black text-app-foreground">Global Settings</h2>
+                        <p className="text-[9px] text-app-muted-foreground">Applies to all registers</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
                         className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50 hover:brightness-110 active:scale-95">
                         {saving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />} Save
                     </button>
-                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted transition-colors"><X size={14} /></button>
+                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground transition-colors"><X size={14} /></button>
                 </div>
             </div>
 
@@ -156,8 +156,8 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
                 {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => setSection(s.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${section === s.id
-                            ? 'bg-app-surface border border-app-border text-app-text'
-                            : 'text-app-text-muted hover:text-app-text'}`}>
+                            ? 'bg-app-surface border border-app-border text-app-foreground'
+                            : 'text-app-muted-foreground hover:text-app-foreground'}`}>
                         <s.icon size={12} style={section === s.id ? { color: s.color } : { opacity: 0.5 }} /> {s.label}
                     </button>
                 ))}
@@ -167,7 +167,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
             <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-3 custom-scrollbar">
                 {section === 'security' && RULE_GROUPS.map(g => (
                     <div key={g.title} className="p-3 bg-app-surface/30 border border-app-border/50 rounded-xl">
-                        <p className="text-[9px] text-app-text-muted uppercase tracking-widest font-black flex items-center gap-1.5 mb-1">
+                        <p className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-black flex items-center gap-1.5 mb-1">
                             <g.icon size={9} style={{ color: g.color }} /> {g.title}
                         </p>
                         {g.rows}
@@ -176,28 +176,28 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
                 {section === 'delivery' && (
                     <div className="space-y-3">
                         <div className="p-3 bg-app-surface/30 border border-app-border/50 rounded-xl">
-                            <p className="text-[9px] text-app-text-muted uppercase tracking-widest font-black flex items-center gap-1.5 mb-2">
+                            <p className="text-[9px] text-app-muted-foreground uppercase tracking-widest font-black flex items-center gap-1.5 mb-2">
                                 <Hash size={9} style={{ color: 'var(--app-primary)' }} /> Delivery Codes
                             </p>
                             <div className="grid grid-cols-3 gap-2">
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Mode</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Mode</label>
                                     <select value={ds.delivery_code_mode} onChange={e => setDs(x => ({ ...x, delivery_code_mode: e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none">
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none">
                                         <option value="auto">Auto</option><option value="manual">Manual</option><option value="disabled">Off</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Digits</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Digits</label>
                                     <input type="number" min={4} max={8} value={ds.delivery_code_digits}
                                         onChange={e => setDs(x => ({ ...x, delivery_code_digits: +e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none text-center" />
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none text-center" />
                                 </div>
                                 <div>
-                                    <label className="text-[8px] font-black text-app-text-faint uppercase mb-1 block">Expiry (h)</label>
+                                    <label className="text-[8px] font-black text-app-muted-foreground uppercase mb-1 block">Expiry (h)</label>
                                     <input type="number" value={ds.delivery_code_expiry_hours}
                                         onChange={e => setDs(x => ({ ...x, delivery_code_expiry_hours: +e.target.value }))}
-                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-text outline-none text-center" />
+                                        className="w-full text-[11px] px-2 py-1.5 bg-app-bg border border-app-border/50 rounded-lg text-app-foreground outline-none text-center" />
                                 </div>
                             </div>
                         </div>

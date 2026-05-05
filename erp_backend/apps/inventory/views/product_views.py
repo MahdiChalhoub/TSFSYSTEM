@@ -56,8 +56,17 @@ class ProductPagePagination(PageNumberPagination):
 class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin, ProductStorefrontMixin, UDLEViewSetMixin, TenantModelViewSet):
     permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
     pagination_class = ProductPagePagination
+    # ── Query plan ────────────────────────────────────────────────────
+    # `select_related` covers FK fields the serializer reads inline.
+    # `prefetch_related('packaging_levels__unit')` collapses what was
+    # previously a per-row "SELECT … FROM product_packaging WHERE product_id=X"
+    # cascade — 100-row pages were doing 50+ queries just for the nested
+    # ProductPackagingSerializer. Same pattern for variants. With the
+    # prefetch, list endpoint runs O(1) queries regardless of page size.
     queryset = Product.objects.select_related(
         'brand', 'country', 'category', 'unit', 'parfum', 'size_unit', 'product_group'
+    ).prefetch_related(
+        'packaging_levels__unit',
     ).all()
 
     serializer_class = ProductSerializer

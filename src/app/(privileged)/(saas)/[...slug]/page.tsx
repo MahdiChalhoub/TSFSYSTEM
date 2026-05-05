@@ -23,7 +23,7 @@ export default function CatchAllPage() {
         <div className="flex items-center justify-center min-h-[80vh] p-8">
             <div className="max-w-lg w-full text-center">
                 {/* Icon */}
-                <div className="mx-auto w-20 h-20 rounded-2xl bg-app-gradient-accent-soft 
+                <div className="mx-auto w-20 h-20 rounded-2xl bg-app-primary-soft 
                     border border-app-accent flex items-center justify-center mb-8
                     shadow-lg shadow-indigo-100/50">
                     <Package className="w-10 h-10 text-app-accent" />

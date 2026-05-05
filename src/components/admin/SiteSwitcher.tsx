@@ -60,7 +60,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                     className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
                     style={{
                         background: isGlobal ? 'var(--app-surface-2)' : 'var(--app-primary-light)',
-                        color: isGlobal ? 'var(--app-text-faint)' : 'var(--app-primary)',
+                        color: isGlobal ? 'var(--app-muted-foreground)' : 'var(--app-primary)',
                         border: '1px solid var(--app-border)',
                     }}
                 >
@@ -70,7 +70,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                 {/* Name */}
                 <span
                     className="hidden sm:block text-[13px] font-semibold leading-none truncate max-w-[110px]"
-                    style={{ color: 'var(--app-text)' }}
+                    style={{ color: 'var(--app-foreground)' }}
                 >
                     {displayName}
                 </span>
@@ -81,7 +81,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                     className="flex-shrink-0 opacity-40 transition-transform duration-200"
                     style={{
                         transform: isOpen ? 'rotate(180deg)' : 'none',
-                        color: 'var(--app-text)',
+                        color: 'var(--app-foreground)',
                     }}
                 />
             </button>
@@ -103,13 +103,13 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                         <div className="flex items-center justify-between px-3 pt-3 pb-2">
                             <span
                                 className="text-[10px] font-black uppercase tracking-widest"
-                                style={{ color: 'var(--app-text-faint)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                             >
                                 Switch Site
                             </span>
                             <span
                                 className="text-[8px] font-bold px-1.5 py-0.5 rounded"
-                                style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-faint)' }}
+                                style={{ background: 'var(--app-surface-2)', color: 'var(--app-muted-foreground)' }}
                             >
                                 {sites.length}
                             </span>
@@ -139,19 +139,19 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                                         {/* Status dot */}
                                         <div
                                             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                            style={{ background: site.isActive ? 'var(--app-success)' : 'var(--app-text-faint)' }}
+                                            style={{ background: site.isActive ? 'var(--app-success)' : 'var(--app-muted-foreground)' }}
                                         />
 
                                         <div className="flex-1 min-w-0 text-left">
                                             <p
                                                 className="text-xs font-semibold truncate leading-tight"
-                                                style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-text)' }}
+                                                style={{ color: isActive ? 'var(--app-primary)' : 'var(--app-foreground)' }}
                                             >
                                                 {site.name}
                                             </p>
                                             <p
                                                 className="text-[9px] font-mono truncate leading-tight mt-0.5"
-                                                style={{ color: 'var(--app-text-faint)' }}
+                                                style={{ color: 'var(--app-muted-foreground)' }}
                                             >
                                                 {site.code || `SITE-${site.id}`}
                                             </p>
@@ -182,20 +182,20 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                                 style={{
                                     background: isGlobal ? 'var(--app-primary-light)' : 'transparent',
                                     borderLeft: isGlobal ? '2px solid var(--app-primary)' : '2px solid transparent',
-                                    color: isGlobal ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                                    color: isGlobal ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!isGlobal) {
                                         const el = e.currentTarget as HTMLElement;
                                         el.style.background = 'var(--app-surface-2)';
-                                        el.style.color = 'var(--app-text)';
+                                        el.style.color = 'var(--app-foreground)';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!isGlobal) {
                                         const el = e.currentTarget as HTMLElement;
                                         el.style.background = 'transparent';
-                                        el.style.color = 'var(--app-text-faint)';
+                                        el.style.color = 'var(--app-muted-foreground)';
                                     }
                                 }}
                             >

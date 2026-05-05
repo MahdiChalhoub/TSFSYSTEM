@@ -96,7 +96,7 @@ export default function PackagingTree({ levels, onChange, units, basePrice = 0, 
         <div className="space-y-3">
             {/* Base Level (always present) */}
             <div className="flex items-center gap-3 p-3 bg-app-background rounded-xl border border-app-border">
-                <div className="w-8 h-8 rounded-lg bg-app-gradient-info flex items-center justify-center shadow-sm shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-app-info flex items-center justify-center shadow-sm shrink-0">
                     <Lock className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">

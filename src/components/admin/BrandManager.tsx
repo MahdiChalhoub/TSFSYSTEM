@@ -52,13 +52,13 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                         <Award size={26} style={{ color: 'var(--app-primary)' }} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Inventory / Taxonomy
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                             Brands
                         </h1>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                             Manage manufacturers and product brands.
                         </p>
                     </div>
@@ -71,7 +71,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                         style={{
                             background: 'var(--app-surface)',
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }}
                     >
                         <Settings2 size={16} />
@@ -103,8 +103,8 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                         background: 'var(--app-surface)',
                         border: '1px solid var(--app-border)',
                     }}>
-                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{kpi.label}</p>
-                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-text)' }}>{kpi.value}</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{kpi.label}</p>
+                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-foreground)' }}>{kpi.value}</p>
                     </div>
                 ))}
             </div>
@@ -118,14 +118,14 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-5 pb-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex flex-1 items-center gap-3 w-full">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-muted-foreground)' }} />
                             <input
                                 type="text"
                                 placeholder="Search brands..."
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                                 className="pl-9 pr-4 py-2 rounded-xl text-[12px] w-full transition-all outline-none"
-                                style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                                style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                             />
                         </div>
 
@@ -133,28 +133,28 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                             <div className="relative">
                                 <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
                                     className="appearance-none pl-8 pr-8 py-2 rounded-xl text-[12px] cursor-pointer min-w-[140px] outline-none"
-                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                                 >
                                     <option value="all">All Categories</option>
                                     {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
-                                <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-text-muted)' }} />
+                                <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-muted-foreground)' }} />
                             </div>
 
                             <div className="relative">
                                 <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)}
                                     className="appearance-none pl-8 pr-8 py-2 rounded-xl text-[12px] cursor-pointer min-w-[140px] outline-none"
-                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                                    style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                                 >
                                     <option value="all">All Origins</option>
                                     {countries.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
-                                <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-text-muted)' }} />
+                                <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-muted-foreground)' }} />
                             </div>
                         </div>
 
                         {hasActiveFilters && (
-                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-text-muted)' }}>
+                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <X size={16} />
                             </button>
                         )}
@@ -164,7 +164,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                         {(['list', 'grid'] as const).map(m => (
                             <button key={m} onClick={() => setViewMode(m)} className="p-2 rounded-lg transition-all" style={{
                                 background: viewMode === m ? 'var(--app-surface)' : 'transparent',
-                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                                 boxShadow: viewMode === m ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
                             }} title={m === 'list' ? 'List View' : 'Grid View'}>
                                 {m === 'list' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
@@ -176,7 +176,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                 {/* Items */}
                 <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                     {filteredBrands.length === 0 ? (
-                        <div className="col-span-full py-12 text-center rounded-xl border border-dashed" style={{ borderColor: 'var(--app-border)', color: 'var(--app-text-muted)' }}>
+                        <div className="col-span-full py-12 text-center rounded-xl border border-dashed" style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
                             <p className="text-[13px]">No brands found matching your filters.</p>
                             <button onClick={clearFilters} className="mt-2 font-bold text-[12px]" style={{ color: 'var(--app-primary)' }}>Clear Filters</button>
                         </div>
@@ -213,7 +213,7 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
             <button
                 onClick={e => { e.stopPropagation(); onEdit(brand); }}
                 className="absolute top-2 right-2 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                style={{ background: 'var(--app-bg)', color: 'var(--app-text-muted)' }}
+                style={{ background: 'var(--app-bg)', color: 'var(--app-muted-foreground)' }}
             >
                 <Edit2 size={13} />
             </button>
@@ -221,8 +221,8 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
             <div>
                 <div className="flex justify-between items-start mb-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[14px] font-black uppercase" style={{
-                        background: 'color-mix(in srgb, var(--app-text-muted) 6%, transparent)',
-                        color: 'var(--app-text)',
+                        background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                        color: 'var(--app-foreground)',
                         border: '1px solid var(--app-border)',
                     }}>
                         {brand.logo ? (
@@ -240,13 +240,13 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
                     </span>
                 </div>
 
-                <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--app-text)' }}>
+                <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>
                     <Link href={`/inventory/brands/${brand.id}`} className="block transition-colors"
                         onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-foreground)'; }}
                     >
                         {brand.name}
-                        {brand.short_name && <span className="ml-2 text-[12px] font-normal" style={{ color: 'var(--app-text-muted)' }}>({brand.short_name})</span>}
+                        {brand.short_name && <span className="ml-2 text-[12px] font-normal" style={{ color: 'var(--app-muted-foreground)' }}>({brand.short_name})</span>}
                     </Link>
                 </h3>
 
@@ -254,15 +254,15 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
                     {(brand.countries && brand.countries.length > 0) ? (
                         brand.countries.map((c: Record<string, any>) => (
                             <div key={c.id} className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded" style={{
-                                background: 'color-mix(in srgb, var(--app-text-muted) 6%, transparent)',
-                                color: 'var(--app-text-muted)',
+                                background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                                color: 'var(--app-muted-foreground)',
                                 border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
                             }}>
                                 <Globe size={9} /> {c.code}
                             </div>
                         ))
                     ) : (
-                        <span className="text-[10px] italic" style={{ color: 'var(--app-text-muted)' }}>No Origin</span>
+                        <span className="text-[10px] italic" style={{ color: 'var(--app-muted-foreground)' }}>No Origin</span>
                     )}
                 </div>
             </div>
@@ -280,9 +280,9 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
                             </span>
                         ))
                     ) : (
-                        <span className="text-[9px] italic" style={{ color: 'var(--app-text-muted)' }}>Universal</span>
+                        <span className="text-[9px] italic" style={{ color: 'var(--app-muted-foreground)' }}>Universal</span>
                     )}
-                    {brand.categories && brand.categories.length > 3 && <span className="text-[9px]" style={{ color: 'var(--app-text-muted)' }}>+{brand.categories.length - 3}</span>}
+                    {brand.categories && brand.categories.length > 3 && <span className="text-[9px]" style={{ color: 'var(--app-muted-foreground)' }}>+{brand.categories.length - 3}</span>}
                 </div>
             </div>
         </div>
@@ -316,14 +316,14 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                 <div className="flex items-center gap-3 flex-1">
                     <button className="p-1 rounded-lg transition-colors" style={{
                         background: isExpanded ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
-                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
                     }}>
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                     </button>
 
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-black uppercase" style={{
-                        background: 'color-mix(in srgb, var(--app-text-muted) 6%, transparent)',
-                        color: 'var(--app-text)',
+                        background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                        color: 'var(--app-foreground)',
                         border: '1px solid var(--app-border)',
                     }}>
                         {brand.logo ? <img src={brand.logo} className="w-full h-full object-cover rounded-lg" /> : brand.name.substring(0, 2)}
@@ -331,14 +331,14 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
 
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-text)' }}>{brand.name}</h3>
-                            <span className="text-[10px] font-mono" style={{ color: 'var(--app-text-muted)' }}>({brand.product_count || 0})</span>
+                            <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-foreground)' }}>{brand.name}</h3>
+                            <span className="text-[10px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>({brand.product_count || 0})</span>
                         </div>
                         <div className="flex gap-1 mt-0.5">
                             {brand.countries?.map((c: Record<string, any>) => (
                                 <span key={c.id} className="text-[9px] px-1.5 py-0.5 rounded" style={{
-                                    background: 'color-mix(in srgb, var(--app-text-muted) 6%, transparent)',
-                                    color: 'var(--app-text-muted)',
+                                    background: 'color-mix(in srgb, var(--app-muted-foreground) 6%, transparent)',
+                                    color: 'var(--app-muted-foreground)',
                                 }}>{c.code}</span>
                             ))}
                         </div>
@@ -348,9 +348,9 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                 <button
                     onClick={e => { e.stopPropagation(); onEdit(brand); }}
                     className="p-1.5 rounded-lg transition-colors"
-                    style={{ color: 'var(--app-text-muted)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; e.currentTarget.style.background = 'transparent'; }}
                 >
                     <Edit2 size={14} />
                 </button>
@@ -378,18 +378,18 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                                                 <Layers size={14} />
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-bold text-[12px]" style={{ color: 'var(--app-text)' }}>{group.name}</span>
+                                                <span className="font-bold text-[12px]" style={{ color: 'var(--app-foreground)' }}>{group.name}</span>
                                                 {group.products.length > 0 && (
                                                     <span className="text-[9px] font-bold px-1.5 rounded-full" style={{
                                                         background: 'var(--app-surface)',
-                                                        color: 'var(--app-text-muted)',
+                                                        color: 'var(--app-muted-foreground)',
                                                         border: '1px solid var(--app-border)',
                                                     }}>{group.products.length} VARS</span>
                                                 )}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <span className="block text-[8px] uppercase font-black tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Total Stock</span>
+                                            <span className="block text-[8px] uppercase font-black tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Total Stock</span>
                                             <span className="font-mono font-bold text-[13px]" style={{ color: 'var(--app-primary)' }}>{group.totalStock}</span>
                                         </div>
                                     </div>
@@ -410,12 +410,12 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                                                     <div className="flex items-center gap-3">
                                                         <div className="absolute left-0 top-1/2 w-4 h-px" style={{ background: 'var(--app-border)' }}></div>
                                                         <div className="flex items-center gap-1.5 min-w-[90px]">
-                                                            <Globe size={12} style={{ color: 'var(--app-text-muted)' }} />
-                                                            <span className="text-[11px] font-semibold" style={{ color: 'var(--app-text)' }}>{p.countryName}</span>
+                                                            <Globe size={12} style={{ color: 'var(--app-muted-foreground)' }} />
+                                                            <span className="text-[11px] font-semibold" style={{ color: 'var(--app-foreground)' }}>{p.countryName}</span>
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[12px] font-medium" style={{ color: 'var(--app-text)' }}>{p.name} {p.size && `- ${p.size}${p.unitName}`}</span>
-                                                            {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-text-muted)' }}>SKU: {p.sku}</span>}
+                                                            <span className="text-[12px] font-medium" style={{ color: 'var(--app-foreground)' }}>{p.name} {p.size && `- ${p.size}${p.unitName}`}</span>
+                                                            {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>SKU: {p.sku}</span>}
                                                         </div>
                                                     </div>
                                                     <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{
@@ -447,8 +447,8 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                             {data.looseProducts.length > 0 && (
                                 <div className="rounded-xl overflow-hidden border mt-3" style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}>
                                     <div className="px-4 py-2 flex items-center gap-2" style={{ background: 'var(--app-bg)', borderBottom: '1px solid var(--app-border)' }}>
-                                        <Package size={13} style={{ color: 'var(--app-text-muted)' }} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Ungrouped Items</span>
+                                        <Package size={13} style={{ color: 'var(--app-muted-foreground)' }} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Ungrouped Items</span>
                                     </div>
                                     <div>
                                         {data.looseProducts.map((p: Record<string, any>) => (
@@ -457,13 +457,13 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <Globe size={12} style={{ color: 'var(--app-text-muted)' }} />
+                                                    <Globe size={12} style={{ color: 'var(--app-muted-foreground)' }} />
                                                     <div className="flex flex-col">
-                                                        <span className="text-[12px] font-medium" style={{ color: 'var(--app-text)' }}>{p.name}</span>
-                                                        {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-text-muted)' }}>{p.sku} · {p.countryName}</span>}
+                                                        <span className="text-[12px] font-medium" style={{ color: 'var(--app-foreground)' }}>{p.name}</span>
+                                                        {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{p.sku} · {p.countryName}</span>}
                                                     </div>
                                                 </div>
-                                                <span className="font-mono font-bold text-[12px]" style={{ color: p.stock > 0 ? 'var(--app-text)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
+                                                <span className="font-mono font-bold text-[12px]" style={{ color: p.stock > 0 ? 'var(--app-foreground)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -473,7 +473,7 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
                             {data.groups.length === 0 && data.looseProducts.length === 0 && (
                                 <div className="text-center py-8">
                                     <Package size={28} className="mx-auto mb-2" style={{ color: 'var(--app-border)' }} />
-                                    <p className="text-[12px]" style={{ color: 'var(--app-text-muted)' }}>No products found for this brand.</p>
+                                    <p className="text-[12px]" style={{ color: 'var(--app-muted-foreground)' }}>No products found for this brand.</p>
                                 </div>
                             )}
                         </div>

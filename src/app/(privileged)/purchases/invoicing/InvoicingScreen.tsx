@@ -125,7 +125,7 @@ export default function InvoicingScreen() {
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
-            <p className="text-sm font-black uppercase tracking-widest theme-text-muted">Loading PO Context...</p>
+            <p className="text-sm font-black uppercase tracking-widest text-app-muted-foreground">Loading PO Context...</p>
         </div>
     )
 
@@ -161,14 +161,14 @@ export default function InvoicingScreen() {
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <button onClick={() => router.back()} className="w-12 h-12 rounded-2xl bg-app-surface border border-app-border flex items-center justify-center hover:bg-app-primary/10 transition-all">
-                            <ChevronLeft size={24} className="theme-text" />
+                            <ChevronLeft size={24} className="text-app-foreground" />
                         </button>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">Supplier Billing</p>
-                            <h1 className="text-3xl md:text-5xl font-black tracking-tight theme-text">
+                            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-app-foreground">
                                 Record <span className="text-purple-500">Invoice</span>
                             </h1>
-                            <p className="text-sm font-medium theme-text-muted mt-1 flex items-center gap-2">
+                            <p className="text-sm font-medium text-app-muted-foreground mt-1 flex items-center gap-2">
                                 <FileText size={14} /> Link invoice to PO: <span className="text-app-foreground font-black">{po.po_number || `PO-${po.id}`}</span>
                             </p>
                         </div>
@@ -305,18 +305,18 @@ export default function InvoicingScreen() {
                             <CardContent className="p-8 space-y-8">
 
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-sm font-bold theme-text-muted uppercase tracking-widest">
+                                    <div className="flex justify-between items-center text-sm font-bold text-app-muted-foreground uppercase tracking-widest">
                                         <span>Supplier</span>
                                         <span className="text-app-foreground font-black">{po.supplier?.name || po.supplier_display}</span>
                                     </div>
-                                    <div className="flex justify-between items-center text-sm font-bold theme-text-muted uppercase tracking-widest">
+                                    <div className="flex justify-between items-center text-sm font-bold text-app-muted-foreground uppercase tracking-widest">
                                         <span>Total PO Value</span>
                                         <span className="text-app-foreground font-black">{fmt(po.total_amount)}</span>
                                     </div>
                                     <div className="h-px bg-app-border/50" />
                                     <div className="flex justify-between items-center">
                                         <div className="space-y-0.5">
-                                            <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">Currently Invoicing</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Currently Invoicing</p>
                                             <p className="text-3xl font-black text-purple-600 tracking-tighter">{fmt(totalInvoicing)}</p>
                                         </div>
                                         <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-500 border border-purple-100">

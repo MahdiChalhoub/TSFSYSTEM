@@ -216,7 +216,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -229,7 +229,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -242,7 +242,7 @@ export default function AssetsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-warning-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-warning-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -355,7 +355,7 @@ export default function AssetsPage() {
             {/* Depreciation Schedule Panel */}
             {selectedAsset && (
                 <Card className="rounded-2xl shadow-sm overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-                    <div className="px-5 py-4 border-b flex justify-between items-center bg-app-gradient-warning-soft/30">
+                    <div className="px-5 py-4 border-b flex justify-between items-center bg-app-warning-soft/30">
                         <div>
                             <h2 className="font-semibold text-app-foreground flex items-center gap-2">
                                 <Calendar size={16} /> Depreciation Schedule: {selectedAsset.name}

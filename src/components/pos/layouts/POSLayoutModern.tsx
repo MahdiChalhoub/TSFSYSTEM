@@ -231,18 +231,18 @@ export function POSLayoutModern(props: POSLayoutProps) {
             <div className="flex-1 flex overflow-hidden relative">
                 {/* ── Security Overlay for Cart when in Payment Mode ── */}
                 {isMultiPayMode && (
-                    <div className="absolute top-0 right-0 w-[42%] h-full bg-app-text/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
-                        <div className="bg-app-text/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+                    <div className="absolute top-0 right-0 w-[42%] h-full bg-app-foreground/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
+                        <div className="bg-app-foreground/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
                             <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
                                 <Lock size={32} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-app-text">Cart Locked</h3>
-                                <p className="text-xs text-app-text-faint max-w-[200px] mt-1">Exit Payment Mode to modify items or quantities.</p>
+                                <h3 className="text-lg font-black text-app-foreground">Cart Locked</h3>
+                                <p className="text-xs text-app-muted-foreground max-w-[200px] mt-1">Exit Payment Mode to modify items or quantities.</p>
                             </div>
                             <button
                                 onClick={() => setIsMultiPayMode(false)}
-                                className="px-6 py-2 bg-app-surface text-app-text rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all"
+                                className="px-6 py-2 bg-app-surface text-app-foreground rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all"
                             >
                                 Unlock Cart
                             </button>
@@ -285,7 +285,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     {/* Avatar — click to toggle search */}
                                     <button
                                         onClick={() => setShowClientPanel(p => !p)}
-                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-app-text text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-indigo-300 transition-all"
+                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-app-foreground text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-indigo-300 transition-all"
                                     >
                                         {showClientPanel
                                             ? <Search size={12} />
@@ -329,7 +329,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 {clientDropdownOpen && (
                                                     <div className="absolute top-full left-0 w-72 mt-1 bg-app-surface border border-app-border rounded-xl shadow-2xl z-[300] max-h-64 overflow-y-auto">
                                                         {filteredClients.length === 0 ? (
-                                                            <div className="px-4 py-3 text-[10px] text-app-text-faint text-center font-bold">No clients found</div>
+                                                            <div className="px-4 py-3 text-[10px] text-app-muted-foreground text-center font-bold">No clients found</div>
                                                         ) : filteredClients.map(c => (
                                                             <button
                                                                 key={c.id}
@@ -348,9 +348,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                                         {c.name?.charAt(0) || 'C'}
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <p className="text-[11px] font-black text-app-text truncate group-hover:text-indigo-700">{c.name}</p>
-                                                                        {c.phone && <p className="text-[9px] text-app-text-faint font-mono">{c.phone}</p>}
-                                                                        {(c as any).address && (c as any).address !== 'N/A' && <p className="text-[9px] text-app-text-faint truncate">{(c as any).address}</p>}
+                                                                        <p className="text-[11px] font-black text-app-foreground truncate group-hover:text-indigo-700">{c.name}</p>
+                                                                        {c.phone && <p className="text-[9px] text-app-muted-foreground font-mono">{c.phone}</p>}
+                                                                        {(c as any).address && (c as any).address !== 'N/A' && <p className="text-[9px] text-app-muted-foreground truncate">{(c as any).address}</p>}
                                                                         {(c as any).customer_tier && (c as any).customer_tier !== 'STANDARD' && <p className="text-[9px] font-bold text-indigo-500 uppercase">{(c as any).customer_tier}</p>}
                                                                     </div>
                                                                 </div>
@@ -369,11 +369,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 onClick={() => setShowClientPanel(true)}
                                                 className="w-full text-left truncate group"
                                             >
-                                                <p className="text-[12px] font-black text-app-text truncate leading-none group-hover:text-indigo-600 transition-colors">
+                                                <p className="text-[12px] font-black text-app-foreground truncate leading-none group-hover:text-indigo-600 transition-colors">
                                                     {selectedClient?.name || 'Walk-in'}
                                                 </p>
                                                 {selectedClient?.phone && (
-                                                    <p className="text-[9px] text-app-text-faint font-mono leading-none mt-0.5 truncate">{selectedClient.phone}</p>
+                                                    <p className="text-[9px] text-app-muted-foreground font-mono leading-none mt-0.5 truncate">{selectedClient.phone}</p>
                                                 )}
                                             </button>
                                         )}
@@ -417,7 +417,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
 
                                     {/* Zone selector */}
                                     <div className="relative shrink-0">
-                                        <MapPin className="absolute left-1.5 top-1/2 -translate-y-1/2 text-app-text-faint pointer-events-none" size={9} />
+                                        <MapPin className="absolute left-1.5 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" size={9} />
                                         <select
                                             value={deliveryZone}
                                             onChange={(e) => onSetDeliveryZone(e.target.value)}
@@ -428,15 +428,15 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             ))}
                                             {deliveryZones.length === 0 && <option value="">Zone</option>}
                                         </select>
-                                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 text-app-text-faint pointer-events-none" size={8} />
+                                        <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" size={8} />
                                     </div>
                                 </div>
 
                                 {/* ROW 2: Address (if present) */}
                                 {selectedClient?.address && selectedClient.address !== 'N/A' && selectedClient.address !== 'n/a' && (
                                     <div className="flex items-center gap-1 pl-10">
-                                        <Globe size={9} className="text-app-text-faint shrink-0" />
-                                        <p className="text-[9px] text-app-text-muted font-medium truncate leading-none">
+                                        <Globe size={9} className="text-app-muted-foreground shrink-0" />
+                                        <p className="text-[9px] text-app-muted-foreground font-medium truncate leading-none">
                                             {selectedClient.address}
                                         </p>
                                     </div>
@@ -447,7 +447,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             <div className="px-3 py-2 border-b border-app-border space-y-1.5 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-text-faint" size={14} />
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={14} />
                                         <input
                                             id="pos-product-search"
                                             type="text"
@@ -459,7 +459,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         {searchQuery && (
                                             <button
                                                 onClick={() => onSetSearchQuery('')}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-app-text-faint hover:text-rose-500 transition-colors"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-app-muted-foreground hover:text-rose-500 transition-colors"
                                             >
                                                 <X size={12} />
                                             </button>
@@ -472,7 +472,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             "p-1.5 rounded-lg border transition-all shrink-0 active:scale-95 shadow-sm",
                                             showNumpad
                                                 ? "bg-amber-100 border-amber-300 text-amber-700 ring-2 ring-amber-50"
-                                                : "bg-app-surface border-app-border text-app-text-faint hover:border-amber-300 hover:text-amber-600"
+                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-amber-300 hover:text-amber-600"
                                         )}
                                     >
                                         <Calculator size={18} />
@@ -489,7 +489,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 }}
                                                 className={clsx(
                                                     "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
-                                                    (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-app-text shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-text-muted hover:border-indigo-300 hover:text-indigo-600'
+                                                    (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-app-foreground shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-indigo-300 hover:text-indigo-600'
                                                 )}
                                             >ALL</button>
                                             {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
@@ -503,8 +503,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     className={clsx(
                                                         "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
                                                         (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                            ? 'bg-emerald-600 border-emerald-600 text-app-text shadow-lg shadow-emerald-200'
-                                                            : 'bg-app-surface border-app-border text-app-text-muted hover:border-emerald-300 hover:text-emerald-600'
+                                                            ? 'bg-emerald-600 border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
+                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
                                                     )}
                                                 >{cat.name}</button>
                                             ))}
@@ -519,7 +519,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     onSetActiveCategoryId(grandParentId);
                                                     setLeftExpanded(true);
                                                 }}
-                                                className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-app-text rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                                className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-app-foreground rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
                                             >
                                                 <ArrowLeft size={14} />
                                                 {currentParentName}
@@ -535,8 +535,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     className={clsx(
                                                         "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
                                                         activeCategoryId === cat.id
-                                                            ? 'bg-emerald-600 border-emerald-600 text-app-text shadow-lg shadow-emerald-200'
-                                                            : 'bg-app-surface border-app-border text-app-text-muted hover:border-emerald-300 hover:text-emerald-600'
+                                                            ? 'bg-emerald-600 border-emerald-600 text-app-foreground shadow-lg shadow-emerald-200'
+                                                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
                                                     )}
                                                 >{cat.name}</button>
                                             ))}
@@ -546,7 +546,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             </div>
                             {/* Toggle View Mode */}
                             <div className="px-3 py-1 border-b border-gray-50 flex items-center justify-between shrink-0 bg-app-bg/50">
-                                <span className="text-[10px] font-semibold text-app-text-muted flex items-center gap-1">
+                                <span className="text-[10px] font-semibold text-app-muted-foreground flex items-center gap-1">
                                     <span className="w-1 h-1 bg-emerald-500 rounded-full" />
                                     {leftExpanded ? 'Products' : 'Categories'}
                                 </span>
@@ -610,7 +610,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             ) : (
                                                 <button
                                                     onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
-                                                    className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-app-text text-center group hover:shadow-xl transition-all border-none"
+                                                    className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-app-foreground text-center group hover:shadow-xl transition-all border-none"
                                                 >
                                                     <Package size={20} className="mx-auto mb-1.5" />
                                                     <span className="text-[12px] font-black uppercase tracking-wider">All Products</span>
@@ -637,16 +637,16 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     >
                                                         <div className={clsx(
                                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-app-text rotate-12' : 'bg-app-bg text-app-text-faint group-hover:bg-emerald-50 group-hover:text-emerald-500'
+                                                            (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-app-foreground rotate-12' : 'bg-app-bg text-app-muted-foreground group-hover:bg-emerald-50 group-hover:text-emerald-500'
                                                         )}>
                                                             <Tag size={20} />
                                                         </div>
                                                         <div className="flex flex-col items-center">
                                                             <span className={clsx(
                                                                 "text-[13px] font-black uppercase tracking-wider transition-colors line-clamp-2",
-                                                                (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-700' : 'text-app-text'
+                                                                (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-700' : 'text-app-foreground'
                                                             )}>{cat.name}</span>
-                                                            {hasChildren && <span className="text-[9px] font-bold text-app-text-faint uppercase tracking-tighter">Browse Sub-items</span>}
+                                                            {hasChildren && <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tighter">Browse Sub-items</span>}
                                                         </div>
                                                     </button>
                                                 );
@@ -666,7 +666,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             willChange: 'transform'
                                         }}
                                         className={clsx(
-                                            "z-[50] w-[280px] p-2 bg-app-text/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
+                                            "z-[50] w-[280px] p-2 bg-app-foreground/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
                                             !isDragging && "transition-transform duration-200 ease-out"
                                         )}
                                     >
@@ -680,7 +680,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     {isMultiPayMode ? 'Multi Pay' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
                                                 </span>
                                             </div>
-                                            <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-app-text transition-all">
+                                            <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-app-foreground transition-all">
                                                 <X size={12} />
                                             </button>
                                         </div>
@@ -717,7 +717,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
 
                 {/* ════ VERTICAL PAYMENT COLUMN (72px) ════ */}
                 <div className="w-[72px] bg-app-surface border-r border-gray-200/80 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)]">
-                    <span className="text-[9px] font-black text-app-text-faint uppercase tracking-tighter mb-1">Pay</span>
+                    <span className="text-[9px] font-black text-app-muted-foreground uppercase tracking-tighter mb-1">Pay</span>
                     {paymentMethods.filter((m: any) => {
                         const key = typeof m === 'string' ? m : m.key;
                         return key !== 'DELIVERY'; // Excluded to put at bottom
@@ -755,10 +755,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 className={clsx(
                                     "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
                                     !isLinked
-                                        ? "bg-app-bg border-app-border text-app-text-muted cursor-not-allowed opacity-50"
+                                        ? "bg-app-bg border-app-border text-app-muted-foreground cursor-not-allowed opacity-50"
                                         : isActive || (isMultiPayMode && key.includes('MULTI'))
                                             ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
-                                            : "bg-app-surface border-transparent text-app-text-faint hover:bg-app-bg hover:text-app-text-muted"
+                                            : "bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                                 )}
                             >
                                 <Icon size={20} className={clsx("transition-transform", isActive ? "scale-110" : "group-hover:scale-110")} />
@@ -768,7 +768,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                                 {!isLinked && (
                                     <div className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center">
-                                        <span className="text-[6px] text-app-text font-black">!</span>
+                                        <span className="text-[6px] text-app-foreground font-black">!</span>
                                     </div>
                                 )}
                             </button>
@@ -784,7 +784,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
                                     paymentMethod === 'DELIVERY'
                                         ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
-                                        : "bg-app-surface border-transparent text-app-text-faint hover:bg-app-bg hover:text-app-text-muted"
+                                        : "bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                                 )}
                             >
                                 <MapPin size={20} className={clsx("transition-transform", paymentMethod === 'DELIVERY' ? "scale-110" : "group-hover:scale-110")} />
@@ -797,7 +797,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
 
                         <button
                             onClick={() => setIsHistoryOpen(true)}
-                            className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-app-surface border-transparent text-app-text-faint hover:bg-app-bg hover:text-app-text-muted"
+                            className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                         >
                             <HistoryIcon size={20} className="transition-transform group-hover:scale-110" />
                             <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">History</span>
@@ -805,7 +805,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
 
                         <button
                             onClick={() => setIsAccountBookOpen(true)}
-                            className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-app-surface border-transparent text-app-text-faint hover:bg-app-bg hover:text-app-text-muted"
+                            className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-app-surface border-transparent text-app-muted-foreground hover:bg-app-bg hover:text-app-muted-foreground"
                         >
                             <BookOpen size={20} className="transition-transform group-hover:scale-110" />
                             <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">Acct Book</span>
@@ -820,21 +820,21 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         <div className="px-3 py-1.5 border-b border-gray-200/80 bg-app-surface flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <h2 className="text-xs font-bold text-app-text">Order</h2>
-                                <span className="text-[10px] text-app-text-faint font-medium">{uniqueItems} lines · {totalPieces} pcs</span>
+                                <h2 className="text-xs font-bold text-app-foreground">Order</h2>
+                                <span className="text-[10px] text-app-muted-foreground font-medium">{uniqueItems} lines · {totalPieces} pcs</span>
                             </div>
                             {cart.length > 0 && (
                                 <button onClick={() => {
                                     props.onSetPendingOverrideAction({ label: 'Clear entire cart', execute: () => onClearCart(true) });
                                     onSetOverrideOpen(true);
-                                }} className="text-[10px] text-app-text-faint hover:text-rose-500 font-medium transition-colors">Clear</button>
+                                }} className="text-[10px] text-app-muted-foreground hover:text-rose-500 font-medium transition-colors">Clear</button>
                             )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                             {cart.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-app-text-muted gap-2">
-                                    <ShoppingCart size={36} strokeWidth={1} className="text-app-text" />
-                                    <p className="text-xs text-app-text-faint">No items yet</p>
+                                <div className="flex flex-col items-center justify-center h-full text-app-muted-foreground gap-2">
+                                    <ShoppingCart size={36} strokeWidth={1} className="text-app-foreground" />
+                                    <p className="text-xs text-app-muted-foreground">No items yet</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-50">
@@ -883,34 +883,34 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     );
                                                 })()}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[14px] font-black text-app-text truncate leading-tight group-hover:text-emerald-600">{item.name}</p>
+                                                    <p className="text-[14px] font-black text-app-foreground truncate leading-tight group-hover:text-emerald-600">{item.name}</p>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        {item.barcode && <span className="text-[10px] font-bold text-app-text-faint uppercase tracking-tighter">#{item.barcode}</span>}
+                                                        {item.barcode && <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-tighter">#{item.barcode}</span>}
                                                         <span className="bg-emerald-50 text-emerald-700 px-1 rounded text-[10px] font-black">Stock: {item.stock || 0}</span>
                                                     </div>
                                                 </div>
                                                 <span
                                                     onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
-                                                    className="text-[12px] font-black text-app-text-faint shrink-0 hover:text-emerald-600 transition-colors"
+                                                    className="text-[12px] font-black text-app-muted-foreground shrink-0 hover:text-emerald-600 transition-colors"
                                                 >
                                                     {currency}{Number(item.price).toFixed(2)}
                                                 </span>
                                                 <div className="flex items-center gap-px shrink-0">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -1); }}
-                                                        className="w-6 h-6 rounded-lg bg-app-surface-2 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-app-text-faint transition-all border border-transparent"
+                                                        className="w-6 h-6 rounded-lg bg-app-surface-2 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-app-muted-foreground transition-all border border-transparent"
                                                     >
                                                         <Minus size={12} />
                                                     </button>
                                                     <span
                                                         onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
-                                                        className="w-7 text-center text-[13px] font-black tabular-nums text-app-text hover:text-emerald-600 transition-colors"
+                                                        className="w-7 text-center text-[13px] font-black tabular-nums text-app-foreground hover:text-emerald-600 transition-colors"
                                                     >
                                                         {item.quantity}
                                                     </span>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
-                                                        className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-app-text text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
+                                                        className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-app-foreground text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
                                                     >
                                                         <Plus size={12} />
                                                     </button>
@@ -920,7 +920,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 </p>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -item.quantity); }}
-                                                    className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-text transition-all shrink-0 flex items-center justify-center border border-rose-100"
+                                                    className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-foreground transition-all shrink-0 flex items-center justify-center border border-rose-100"
                                                     title="Delete product from cart"
                                                 >
                                                     <Trash2 size={14} />
@@ -934,7 +934,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                         type="text"
                                                         placeholder="Add note (gift, customization)..."
                                                         defaultValue={item.note || ''}
-                                                        className="w-full text-[11px] bg-app-surface border border-app-border rounded px-2 py-1 outline-none text-app-text placeholder:text-app-text-muted focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition-all font-medium shadow-sm"
+                                                        className="w-full text-[11px] bg-app-surface border border-app-border rounded px-2 py-1 outline-none text-app-foreground placeholder:text-app-muted-foreground focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition-all font-medium shadow-sm"
                                                         onBlur={(e) => { (props as any).onUpdateLineNote?.(item.productId, e.target.value); }}
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
@@ -953,8 +953,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             {/* ── Summary Row ── */}
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-app-bg rounded-xl p-2 text-center">
-                                    <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Subtotal</span>
-                                    <span className="text-sm font-black text-app-text tabular-nums">{currency}{formatNumber(total)}</span>
+                                    <span className="text-[8px] font-black text-app-muted-foreground uppercase tracking-widest block">Subtotal</span>
+                                    <span className="text-sm font-black text-app-foreground tabular-nums">{currency}{formatNumber(total)}</span>
                                 </div>
                                 <div
                                     onClick={() => { setNumpadMode('disc'); setShowNumpad(true); }}
@@ -962,32 +962,32 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 >
                                     <div className="flex items-center justify-center gap-1">
                                         <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Discount</span>
-                                        <div className="flex items-center bg-app-text/80 rounded px-1 py-px">
+                                        <div className="flex items-center bg-app-foreground/80 rounded px-1 py-px">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
-                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-app-text-muted")}
+                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-app-muted-foreground")}
                                             >{currency}</button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onSetDiscountType('percentage'); }}
-                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-amber-700 bg-amber-100" : "text-app-text-muted")}
+                                                className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-amber-700 bg-amber-100" : "text-app-muted-foreground")}
                                             >%</button>
                                         </div>
                                     </div>
                                     <span className={clsx(
                                         "text-sm font-black tabular-nums",
-                                        discount > 0 ? "text-amber-600" : "text-app-text-muted"
+                                        discount > 0 ? "text-amber-600" : "text-app-muted-foreground"
                                     )}>{discount > 0 ? `-${formatNumber(discountType === 'percentage' ? total * discount / 100 : discount)}` : '0'}</span>
                                 </div>
                                 <div className="bg-emerald-50 rounded-xl p-2 text-center">
                                     <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest block">Total</span>
-                                    <span className="text-lg font-black text-app-text tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
+                                    <span className="text-lg font-black text-app-foreground tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
                                 </div>
                             </div>
 
                             {/* ── Received + Charge ── */}
                             <div className="flex items-stretch gap-2">
                                 <div className="flex-1 relative">
-                                    <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-app-text-faint uppercase tracking-widest">Received</span>
+                                    <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-app-muted-foreground uppercase tracking-widest">Received</span>
                                     <div className="flex items-stretch">
                                         <input
                                             type="text"
@@ -1017,11 +1017,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
                                         cart.length > 0 && !isProcessing
                                             ? deficit > 0
-                                                ? "bg-gradient-to-br from-rose-500 to-red-600 text-app-text shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                ? "bg-gradient-to-br from-rose-500 to-red-600 text-app-foreground shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                                 : changeDue > 0
-                                                    ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-app-text shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
-                                                    : "bg-gradient-to-br from-emerald-500 to-teal-600 text-app-text shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
-                                            : "bg-app-surface-3 text-app-text-faint"
+                                                    ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-app-foreground shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                    : "bg-gradient-to-br from-emerald-500 to-teal-600 text-app-foreground shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                            : "bg-app-surface-3 text-app-muted-foreground"
                                     )}
                                 >
                                     {cart.length > 0 && !isProcessing && (
@@ -1039,8 +1039,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         className={clsx(
                                             "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border-2 transition-all",
                                             storeChangeInWallet
-                                                ? "bg-blue-500 border-blue-500 text-app-text shadow-md shadow-blue-100"
-                                                : "bg-app-surface border-app-border text-app-text-muted hover:border-blue-300 hover:bg-blue-50"
+                                                ? "bg-blue-500 border-blue-500 text-app-foreground shadow-md shadow-blue-100"
+                                                : "bg-app-surface border-app-border text-app-muted-foreground hover:border-blue-300 hover:bg-blue-50"
                                         )}
                                     >
                                         <Wallet size={14} />

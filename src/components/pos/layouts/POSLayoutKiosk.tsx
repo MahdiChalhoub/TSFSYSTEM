@@ -158,10 +158,10 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                         <ShoppingBag size={20} style={{ color: 'var(--app-primary)' }} />
                     </div>
                     <div className="text-center">
-                        <p className="text-lg font-black" style={{ color: 'var(--app-text)' }}>
+                        <p className="text-lg font-black" style={{ color: 'var(--app-foreground)' }}>
                             {registerConfig?.siteName || 'POS'}
                         </p>
-                        <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Self-Checkout Kiosk
                         </p>
                     </div>
@@ -176,11 +176,11 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
 
                     {/* Scan bar */}
                     <div>
-                        <p className="text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-2" style={{ color: 'var(--app-muted-foreground)' }}>
                             <Scan size={14} /> Scan or Search Product
                         </p>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-muted-foreground)' }} />
                             <input
                                 type="text"
                                 autoFocus
@@ -191,7 +191,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                 style={{
                                     background: 'var(--app-surface)',
                                     border: '2px solid var(--app-border)',
-                                    color: 'var(--app-text)',
+                                    color: 'var(--app-foreground)',
                                 }}
                                 onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--app-primary)'; }}
                                 onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}
@@ -200,7 +200,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                 <button
                                     onClick={() => onSetSearchQuery('')}
                                     className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    style={{ color: 'var(--app-text-muted)' }}
+                                    style={{ color: 'var(--app-muted-foreground)' }}
                                 >
                                     <X size={16} />
                                 </button>
@@ -235,7 +235,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
 
                     {/* Numpad for quantity */}
                     <div className="shrink-0">
-                        <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
                             Quick Quantity
                         </p>
                         <div className="grid grid-cols-5 gap-2">
@@ -246,7 +246,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                     className="py-3 rounded-xl text-sm font-black transition-all active:scale-95"
                                     style={{
                                         background: numpadValue === n ? 'var(--app-primary)' : 'var(--app-surface)',
-                                        color: numpadValue === n ? '#fff' : 'var(--app-text)',
+                                        color: numpadValue === n ? '#fff' : 'var(--app-foreground)',
                                         border: `1px solid ${numpadValue === n ? 'var(--app-primary)' : 'var(--app-border)'}`,
                                     }}
                                 >
@@ -268,8 +268,8 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                     >
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} />
-                            <h2 className="text-sm font-black" style={{ color: 'var(--app-text)' }}>Order</h2>
-                            <span className="text-xs font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                            <h2 className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>Order</h2>
+                            <span className="text-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {uniqueItems} lines · {totalPieces} pcs
                             </span>
                         </div>
@@ -280,9 +280,9 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                     onSetOverrideOpen(true);
                                 }}
                                 className="text-xs font-bold transition-colors"
-                                style={{ color: 'var(--app-text-muted)' }}
+                                style={{ color: 'var(--app-muted-foreground)' }}
                                 onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--app-text-muted)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--app-muted-foreground)'; }}
                             >
                                 Clear
                             </button>
@@ -292,7 +292,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                     {/* Cart items */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                         {cart.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: 'var(--app-text-muted)' }}>
+                            <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <ShoppingCart size={40} strokeWidth={1} />
                                 <p className="text-xs font-bold">Scan items to begin</p>
                             </div>
@@ -309,8 +309,8 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                     >
                                         {/* Name + price */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-black truncate" style={{ color: 'var(--app-text)' }}>{item.name}</p>
-                                            <p className="text-xs font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                                            <p className="text-sm font-black truncate" style={{ color: 'var(--app-foreground)' }}>{item.name}</p>
+                                            <p className="text-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                                 {currency}{Number(item.price).toFixed(2)}
                                             </p>
                                         </div>
@@ -320,11 +320,11 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                             <button
                                                 onClick={() => handleProtectedQuantity(item.productId, -1)}
                                                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                                                style={{ background: 'var(--app-surface-2, var(--app-bg))', color: 'var(--app-text-muted)' }}
+                                                style={{ background: 'var(--app-surface-2, var(--app-bg))', color: 'var(--app-muted-foreground)' }}
                                             >
                                                 <Minus size={12} />
                                             </button>
-                                            <span className="w-8 text-center text-sm font-black tabular-nums" style={{ color: 'var(--app-text)' }}>
+                                            <span className="w-8 text-center text-sm font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
                                                 {item.quantity}
                                             </span>
                                             <button
@@ -359,15 +359,15 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                     <div className="shrink-0 p-4 space-y-3" style={{ borderTop: '2px solid var(--app-border)' }}>
                         {/* Summary */}
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Total</span>
-                            <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--app-text)' }}>
+                            <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Total</span>
+                            <span className="text-2xl font-black tabular-nums" style={{ color: 'var(--app-foreground)' }}>
                                 {currency}{formatNumber(totalAmount)}
                             </span>
                         </div>
 
                         {/* Received */}
                         <div className="relative">
-                            <span className="absolute left-3 top-1.5 text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            <span className="absolute left-3 top-1.5 text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Received
                             </span>
                             <input
@@ -382,7 +382,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                                 style={{
                                     background: 'var(--app-bg)',
                                     border: '2px solid var(--app-border)',
-                                    color: 'var(--app-text)',
+                                    color: 'var(--app-foreground)',
                                 }}
                                 onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--app-primary)'; }}
                                 onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--app-border)'; }}
@@ -396,7 +396,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                             className="w-full py-4 rounded-xl font-black text-lg uppercase tracking-wider transition-all active:scale-[0.98]"
                             style={{
                                 background: cart.length > 0 && !isProcessing ? 'var(--app-primary)' : 'var(--app-surface-2, var(--app-bg))',
-                                color: cart.length > 0 && !isProcessing ? '#fff' : 'var(--app-text-muted)',
+                                color: cart.length > 0 && !isProcessing ? '#fff' : 'var(--app-muted-foreground)',
                                 boxShadow: cart.length > 0 && !isProcessing ? '0 8px 24px var(--app-primary-glow, rgba(99,102,241,0.3))' : 'none',
                             }}
                         >

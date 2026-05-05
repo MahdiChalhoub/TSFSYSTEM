@@ -102,8 +102,8 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                             <Icon size={18} style={{ color }} />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[var(--app-text)]">{value}</p>
-                            <p className="text-xs text-[var(--app-text-muted)]">{label}</p>
+                            <p className="text-2xl font-bold text-[var(--app-foreground)]">{value}</p>
+                            <p className="text-xs text-[var(--app-muted-foreground)]">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -112,7 +112,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
             {/* List */}
             <div className="app-card p-0 overflow-hidden">
                 <div className="px-5 py-3 border-b border-[var(--app-border)]">
-                    <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">
+                    <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">
                         {promos.length} promotion{promos.length !== 1 ? 's' : ''}
                     </p>
                 </div>
@@ -121,8 +121,8 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#f59e0b18' }}>
                             <Zap size={22} style={{ color: 'var(--app-warning)' }} />
                         </div>
-                        <p className="font-semibold text-[var(--app-text)]">No promotions yet</p>
-                        <p className="text-xs text-[var(--app-text-muted)]">Create automatic cart discount rules</p>
+                        <p className="font-semibold text-[var(--app-foreground)]">No promotions yet</p>
+                        <p className="text-xs text-[var(--app-muted-foreground)]">Create automatic cart discount rules</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-[var(--app-border)]">
@@ -136,18 +136,18 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="font-semibold text-sm text-[var(--app-text)]">{p.name}</span>
+                                            <span className="font-semibold text-sm text-[var(--app-foreground)]">{p.name}</span>
                                             <span className="px-2 py-0.5 rounded-full text-xs font-medium border"
                                                 style={{ background: `${color}18`, color, borderColor: `${color}30` }}>
                                                 {RULE_TYPE_LABELS[p.rule_type]}
                                             </span>
                                             {p.stackable && (
-                                                <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--app-surface)] text-[var(--app-text-muted)] border border-[var(--app-border)]">
+                                                <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--app-surface)] text-[var(--app-muted-foreground)] border border-[var(--app-border)]">
                                                     Stackable
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-[var(--app-text-muted)] mt-0.5">
+                                        <p className="text-xs text-[var(--app-muted-foreground)] mt-0.5">
                                             Priority: {p.priority} · Uses: {p.used_count}{p.max_uses ? `/${p.max_uses}` : ''}
                                         </p>
                                     </div>
@@ -156,10 +156,10 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                             className="transition-opacity hover:opacity-80">
                                             {p.is_active
                                                 ? <ToggleRight size={22} className="text-app-success" />
-                                                : <ToggleLeft size={22} className="text-[var(--app-text-muted)]" />}
+                                                : <ToggleLeft size={22} className="text-[var(--app-muted-foreground)]" />}
                                         </button>
                                         <button onClick={() => handleDelete(p.id)} id={`delete-promo-${p.id}`}
-                                            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -179,8 +179,8 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                 <Zap size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-text)]">New Promotion</h2>
-                                <p className="text-xs text-[var(--app-text-muted)]">Automatic cart discount rule</p>
+                                <h2 className="text-base font-bold text-[var(--app-foreground)]">New Promotion</h2>
+                                <p className="text-xs text-[var(--app-muted-foreground)]">Automatic cart discount rule</p>
                             </div>
                         </div>
                         {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
@@ -215,7 +215,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                 <div className="flex items-center gap-3 pt-6">
                                     <input id="promo-stackable" type="checkbox" checked={form.stackable}
                                         onChange={e => setForm(p => ({ ...p, stackable: e.target.checked }))} />
-                                    <label htmlFor="promo-stackable" className="text-sm text-[var(--app-text)]">Stackable with other rules</label>
+                                    <label htmlFor="promo-stackable" className="text-sm text-[var(--app-foreground)]">Stackable with other rules</label>
                                 </div>
                             </div>
                             <JsonField label="Conditions (JSON)" id="promo-conditions" value={form.conditions}

@@ -22,13 +22,13 @@ export default async function BrandingSettingsPage() {
                         <Paintbrush size={26} style={{ color: 'var(--app-primary)' }} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Settings / Appearance
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                             Login Page Branding
                         </h1>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
                             Customize how your login page appears to your team and clients.
                         </p>
                     </div>

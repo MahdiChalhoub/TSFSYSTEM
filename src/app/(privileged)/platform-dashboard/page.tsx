@@ -84,15 +84,15 @@ function KPICard({ label, value, sub, icon: Icon, accent, delay = 0 }: {
                     style={{ background: `${accent}18`, color: accent }}>
                     <Icon size={20} />
                 </div>
-                <ArrowUpRight size={14} style={{ color: 'var(--app-text-muted)' }} />
+                <ArrowUpRight size={14} style={{ color: 'var(--app-muted-foreground)' }} />
             </div>
-            <div className="text-3xl font-black tracking-tight mb-1" style={{ color: 'var(--app-text)' }}>
+            <div className="text-3xl font-black tracking-tight mb-1" style={{ color: 'var(--app-foreground)' }}>
                 {value}
             </div>
             <div className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: accent }}>
                 {label}
             </div>
-            <div className="text-[11px]" style={{ color: 'var(--app-text-muted)' }}>{sub}</div>
+            <div className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>{sub}</div>
         </div>
     );
 }
@@ -168,11 +168,11 @@ export default function SaaSPlatformDashboard() {
                             style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}>
                             <Globe size={20} style={{ color: '#fff' }} />
                         </div>
-                        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
                             Platform Control Center
                         </h1>
                     </div>
-                    <p className="text-sm ml-[52px]" style={{ color: 'var(--app-text-muted)' }}>
+                    <p className="text-sm ml-[52px]" style={{ color: 'var(--app-muted-foreground)' }}>
                         Multi-tenant infrastructure overview · SaaS administration
                     </p>
                 </div>
@@ -228,7 +228,7 @@ export default function SaaSPlatformDashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <Building2 size={16} style={{ color: 'var(--app-primary)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>
+                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
                                 Organizations
                             </h2>
                         </div>
@@ -239,7 +239,7 @@ export default function SaaSPlatformDashboard() {
                     </div>
 
                     {(stats?.recentOrgs?.length ?? 0) === 0 ? (
-                        <div className="text-center py-12" style={{ color: 'var(--app-text-muted)' }}>
+                        <div className="text-center py-12" style={{ color: 'var(--app-muted-foreground)' }}>
                             <Building2 size={40} className="mx-auto mb-3 opacity-30" />
                             <p className="text-sm">No organizations found</p>
                         </div>
@@ -263,10 +263,10 @@ export default function SaaSPlatformDashboard() {
                                         {org.name?.charAt(0)?.toUpperCase() || '?'}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold truncate" style={{ color: 'var(--app-text)' }}>
+                                        <div className="text-sm font-semibold truncate" style={{ color: 'var(--app-foreground)' }}>
                                             {org.name}
                                         </div>
-                                        <div className="text-[11px]" style={{ color: 'var(--app-text-muted)' }}>
+                                        <div className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {org.slug} · Created {new Date(org.created_at).toLocaleDateString()}
                                         </div>
                                     </div>
@@ -291,7 +291,7 @@ export default function SaaSPlatformDashboard() {
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="flex items-center gap-2 mb-4">
                             <Server size={16} style={{ color: 'var(--app-primary)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>
+                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
                                 Infrastructure
                             </h2>
                         </div>
@@ -305,8 +305,8 @@ export default function SaaSPlatformDashboard() {
                             ].map(svc => (
                                 <div key={svc.name} className="flex items-center justify-between py-1.5">
                                     <div className="flex items-center gap-2.5">
-                                        <svc.icon size={14} style={{ color: 'var(--app-text-muted)' }} />
-                                        <span className="text-xs font-medium" style={{ color: 'var(--app-text)' }}>
+                                        <svc.icon size={14} style={{ color: 'var(--app-muted-foreground)' }} />
+                                        <span className="text-xs font-medium" style={{ color: 'var(--app-foreground)' }}>
                                             {svc.name}
                                         </span>
                                     </div>
@@ -327,12 +327,12 @@ export default function SaaSPlatformDashboard() {
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="flex items-center gap-2 mb-4">
                             <Package size={16} style={{ color: 'var(--app-accent)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>
+                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
                                 Modules
                             </h2>
                         </div>
                         {(stats?.modules?.length ?? 0) === 0 ? (
-                            <p className="text-xs text-center py-4" style={{ color: 'var(--app-text-muted)' }}>
+                            <p className="text-xs text-center py-4" style={{ color: 'var(--app-muted-foreground)' }}>
                                 No modules registered
                             </p>
                         ) : (
@@ -342,11 +342,11 @@ export default function SaaSPlatformDashboard() {
                                         <div className="flex items-center gap-2">
                                             <div className="w-2 h-2 rounded-full"
                                                 style={{ background: mod.status === 'INSTALLED' ? 'var(--app-success)' : 'var(--app-warning)' }} />
-                                            <span className="text-xs font-medium" style={{ color: 'var(--app-text)' }}>
+                                            <span className="text-xs font-medium" style={{ color: 'var(--app-foreground)' }}>
                                                 {mod.name || mod.code}
                                             </span>
                                         </div>
-                                        <span className="text-[10px] font-mono" style={{ color: 'var(--app-text-muted)' }}>
+                                        <span className="text-[10px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>
                                             {mod.version || mod.status}
                                         </span>
                                     </div>

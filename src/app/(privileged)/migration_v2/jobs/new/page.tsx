@@ -316,10 +316,10 @@ export default function MigrationWizardPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-black text-app-text tracking-tight">
+                        <h1 className="text-3xl font-black text-app-foreground tracking-tight">
                             Migration Wizard <span className="text-app-success">v2.0</span>
                         </h1>
-                        <p className="text-sm text-app-text-faint font-medium">
+                        <p className="text-sm text-app-muted-foreground font-medium">
                             {scopeInfo.label} from {sourceInfo.label}
                         </p>
                     </div>
@@ -343,21 +343,21 @@ export default function MigrationWizardPage() {
                         <div className="space-y-6">
                             <div className="text-center">
                                 <div className="text-6xl mb-4">{sourceInfo.icon}</div>
-                                <h2 className="text-2xl font-black text-app-text">Confirm Migration Settings</h2>
-                                <p className="text-app-text-faint mt-2">Review your import configuration</p>
+                                <h2 className="text-2xl font-black text-app-foreground">Confirm Migration Settings</h2>
+                                <p className="text-app-muted-foreground mt-2">Review your import configuration</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="p-6 bg-app-surface rounded-2xl border border-app-border">
-                                    <h3 className="font-black text-app-text mb-2">Import Scope</h3>
+                                    <h3 className="font-black text-app-foreground mb-2">Import Scope</h3>
                                     <p className="text-xl font-black text-app-success">{scopeInfo.label}</p>
-                                    <p className="text-sm text-app-text-faint mt-1">{scopeInfo.desc}</p>
+                                    <p className="text-sm text-app-muted-foreground mt-1">{scopeInfo.desc}</p>
                                 </div>
 
                                 <div className="p-6 bg-app-surface rounded-2xl border border-app-border">
-                                    <h3 className="font-black text-app-text mb-2">Source Application</h3>
+                                    <h3 className="font-black text-app-foreground mb-2">Source Application</h3>
                                     <p className="text-xl font-black text-app-info">{sourceInfo.label}</p>
-                                    <p className="text-sm text-app-text-faint mt-1">{sourceInfo.desc}</p>
+                                    <p className="text-sm text-app-muted-foreground mt-1">{sourceInfo.desc}</p>
                                 </div>
                             </div>
 
@@ -375,14 +375,14 @@ export default function MigrationWizardPage() {
                         <div className="space-y-6">
                             <div className="text-center">
                                 <Building2 className="w-16 h-16 text-app-success mx-auto mb-4" />
-                                <h2 className="text-2xl font-black text-app-text">Select Target Organization</h2>
-                                <p className="text-app-text-faint mt-2">Choose which organization to import data INTO</p>
+                                <h2 className="text-2xl font-black text-app-foreground">Select Target Organization</h2>
+                                <p className="text-app-muted-foreground mt-2">Choose which organization to import data INTO</p>
                             </div>
 
                             {userLoading || organizations.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <Loader2 className="w-8 h-8 animate-spin text-app-text-faint mx-auto mb-4" />
-                                    <p className="text-app-text-faint">
+                                    <Loader2 className="w-8 h-8 animate-spin text-app-muted-foreground mx-auto mb-4" />
+                                    <p className="text-app-muted-foreground">
                                         {userLoading ? 'Loading user information...' : 'Loading organizations...'}
                                     </p>
                                 </div>
@@ -396,8 +396,8 @@ export default function MigrationWizardPage() {
                                             className="text-left p-6 rounded-2xl bg-app-surface border border-app-border hover:border-app-success/50 hover:shadow-lg transition-all disabled:opacity-50"
                                         >
                                             <Building2 className="w-8 h-8 text-app-success mb-3" />
-                                            <h3 className="text-lg font-black text-app-text">{org.name}</h3>
-                                            <p className="text-xs text-app-text-faint mt-1">{org.slug}</p>
+                                            <h3 className="text-lg font-black text-app-foreground">{org.name}</h3>
+                                            <p className="text-xs text-app-muted-foreground mt-1">{org.slug}</p>
                                         </button>
                                     ))}
                                 </div>
@@ -410,8 +410,8 @@ export default function MigrationWizardPage() {
                         <div className="space-y-6">
                             <div className="text-center">
                                 <Database className="w-16 h-16 text-app-success mx-auto mb-4" />
-                                <h2 className="text-2xl font-black text-app-text">Select Data Source</h2>
-                                <p className="text-app-text-faint mt-2">
+                                <h2 className="text-2xl font-black text-app-foreground">Select Data Source</h2>
+                                <p className="text-app-muted-foreground mt-2">
                                     Upload SQL dump from your computer or pick from cloud storage
                                 </p>
                             </div>
@@ -424,8 +424,8 @@ export default function MigrationWizardPage() {
                                         className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-app-success/50 hover:shadow-lg transition-all text-center"
                                     >
                                         <HardDrive className="w-12 h-12 text-app-info mx-auto mb-4" />
-                                        <h3 className="text-xl font-black text-app-text mb-2">Upload from PC</h3>
-                                        <p className="text-sm text-app-text-faint">
+                                        <h3 className="text-xl font-black text-app-foreground mb-2">Upload from PC</h3>
+                                        <p className="text-sm text-app-muted-foreground">
                                             Select a .sql file from your local computer
                                         </p>
                                     </button>
@@ -435,8 +435,8 @@ export default function MigrationWizardPage() {
                                         className="p-8 rounded-2xl bg-app-surface border-2 border-app-border hover:border-app-success/50 hover:shadow-lg transition-all text-center"
                                     >
                                         <Cloud className="w-12 h-12 text-app-success mx-auto mb-4" />
-                                        <h3 className="text-xl font-black text-app-text mb-2">Pick from Cloud Storage</h3>
-                                        <p className="text-sm text-app-text-faint">
+                                        <h3 className="text-xl font-black text-app-foreground mb-2">Pick from Cloud Storage</h3>
+                                        <p className="text-sm text-app-muted-foreground">
                                             Choose a file already uploaded to TSF Cloud
                                         </p>
                                     </button>
@@ -452,8 +452,8 @@ export default function MigrationWizardPage() {
                                     </Button>
 
                                     <div className="border-2 border-dashed border-app-border rounded-2xl p-16 text-center">
-                                        <FileUp className="w-16 h-16 text-app-text-faint mx-auto mb-4" />
-                                        <p className="text-app-text-faint mb-6">Drag & drop or click to browse</p>
+                                        <FileUp className="w-16 h-16 text-app-muted-foreground mx-auto mb-4" />
+                                        <p className="text-app-muted-foreground mb-6">Drag & drop or click to browse</p>
                                         <input
                                             type="file"
                                             accept=".sql"
@@ -506,13 +506,13 @@ export default function MigrationWizardPage() {
 
                                     {loading ? (
                                         <div className="text-center py-12">
-                                            <Loader2 className="w-8 h-8 animate-spin text-app-text-faint mx-auto mb-4" />
-                                            <p className="text-app-text-faint">Loading cloud files...</p>
+                                            <Loader2 className="w-8 h-8 animate-spin text-app-muted-foreground mx-auto mb-4" />
+                                            <p className="text-app-muted-foreground">Loading cloud files...</p>
                                         </div>
                                     ) : cloudFiles.length === 0 ? (
                                         <div className="text-center py-12 border border-dashed border-app-border rounded-2xl">
-                                            <Cloud className="w-12 h-12 text-app-text-faint mx-auto mb-4" />
-                                            <p className="text-app-text-faint">No .sql files found in cloud storage</p>
+                                            <Cloud className="w-12 h-12 text-app-muted-foreground mx-auto mb-4" />
+                                            <p className="text-app-muted-foreground">No .sql files found in cloud storage</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -524,10 +524,10 @@ export default function MigrationWizardPage() {
                                                 >
                                                     <Database className="w-8 h-8 text-app-success shrink-0" />
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-bold text-app-text truncate">
+                                                        <p className="font-bold text-app-foreground truncate">
                                                             {file.original_filename || file.filename}
                                                         </p>
-                                                        <p className="text-xs text-app-text-faint">
+                                                        <p className="text-xs text-app-muted-foreground">
                                                             {(file.file_size / 1024 / 1024).toFixed(2)} MB •
                                                             {new Date(file.uploaded_at || file.created_at).toLocaleDateString()}
                                                         </p>
@@ -547,8 +547,8 @@ export default function MigrationWizardPage() {
                         <div className="space-y-6">
                             <div className="text-center">
                                 <CheckCircle2 className="w-16 h-16 text-app-success mx-auto mb-4" />
-                                <h2 className="text-2xl font-black text-app-text">Pre-Flight Validation</h2>
-                                <p className="text-app-text-faint mt-2">Checking COA and posting rules</p>
+                                <h2 className="text-2xl font-black text-app-foreground">Pre-Flight Validation</h2>
+                                <p className="text-app-muted-foreground mt-2">Checking COA and posting rules</p>
                             </div>
 
                             {validation ? (
@@ -622,12 +622,12 @@ export default function MigrationWizardPage() {
                                 {currentStep === 'MASTER_DATA' ? (
                                     <>
                                         <Package className="w-16 h-16 text-app-success mx-auto mb-4" />
-                                        <h2 className="text-2xl font-black text-app-text">Import Master Data</h2>
+                                        <h2 className="text-2xl font-black text-app-foreground">Import Master Data</h2>
                                     </>
                                 ) : (
                                     <>
                                         <Users className="w-16 h-16 text-app-success mx-auto mb-4" />
-                                        <h2 className="text-2xl font-black text-app-text">Import Customers & Suppliers</h2>
+                                        <h2 className="text-2xl font-black text-app-foreground">Import Customers & Suppliers</h2>
                                     </>
                                 )}
                             </div>
@@ -635,7 +635,7 @@ export default function MigrationWizardPage() {
                             {job && job.status === 'RUNNING' ? (
                                 <div className="text-center py-12">
                                     <Loader2 className="w-12 h-12 animate-spin text-app-success mx-auto mb-4" />
-                                    <p className="text-app-text font-bold">{job.current_step}</p>
+                                    <p className="text-app-foreground font-bold">{job.current_step}</p>
                                     <div className="mt-6 max-w-md mx-auto">
                                         <div className="w-full h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                             <div
@@ -672,8 +672,8 @@ export default function MigrationWizardPage() {
                     {currentStep === 'COMPLETE' && (
                         <div className="space-y-6 text-center py-12">
                             <CheckCircle2 className="w-24 h-24 text-app-success mx-auto" />
-                            <h2 className="text-3xl font-black text-app-text">Migration Complete!</h2>
-                            <p className="text-app-text-faint max-w-md mx-auto">
+                            <h2 className="text-3xl font-black text-app-foreground">Migration Complete!</h2>
+                            <p className="text-app-muted-foreground max-w-md mx-auto">
                                 Your data has been successfully migrated.
                             </p>
 
@@ -681,25 +681,25 @@ export default function MigrationWizardPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mt-8">
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
                                         <Package className="w-6 h-6 text-app-info mx-auto mb-2" />
-                                        <p className="text-2xl font-black text-app-text">{job.imported_products}</p>
-                                        <p className="text-xs text-app-text-faint">Products</p>
+                                        <p className="text-2xl font-black text-app-foreground">{job.imported_products}</p>
+                                        <p className="text-xs text-app-muted-foreground">Products</p>
                                     </div>
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
                                         <Users className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                                        <p className="text-2xl font-black text-app-text">
+                                        <p className="text-2xl font-black text-app-foreground">
                                             {job.imported_customers + job.imported_suppliers}
                                         </p>
-                                        <p className="text-xs text-app-text-faint">Contacts</p>
+                                        <p className="text-xs text-app-muted-foreground">Contacts</p>
                                     </div>
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
                                         <ShoppingCart className="w-6 h-6 text-app-warning mx-auto mb-2" />
-                                        <p className="text-2xl font-black text-app-text">{job.imported_sales}</p>
-                                        <p className="text-xs text-app-text-faint">Sales</p>
+                                        <p className="text-2xl font-black text-app-foreground">{job.imported_sales}</p>
+                                        <p className="text-xs text-app-muted-foreground">Sales</p>
                                     </div>
                                     <div className="p-4 bg-app-surface rounded-xl border border-app-border">
                                         <CheckSquare className="w-6 h-6 text-app-success mx-auto mb-2" />
-                                        <p className="text-2xl font-black text-app-text">{job.total_verified}</p>
-                                        <p className="text-xs text-app-text-faint">Verified</p>
+                                        <p className="text-2xl font-black text-app-foreground">{job.total_verified}</p>
+                                        <p className="text-xs text-app-muted-foreground">Verified</p>
                                     </div>
                                 </div>
                             )}

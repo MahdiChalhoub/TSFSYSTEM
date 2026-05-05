@@ -100,7 +100,7 @@ export default function ConsignmentManager({
         <div className="space-y-6">
             {/* KPI Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-app-gradient-accent text-white border-none shadow-lg">
+                <Card className="bg-app-primary text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
@@ -118,7 +118,7 @@ export default function ConsignmentManager({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-app-gradient-warning text-white border-none shadow-lg">
+                <Card className="bg-app-warning text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>
@@ -136,7 +136,7 @@ export default function ConsignmentManager({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-app-gradient-primary text-white border-none shadow-lg">
+                <Card className="bg-app-primary text-white border-none shadow-lg">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
                             <div>

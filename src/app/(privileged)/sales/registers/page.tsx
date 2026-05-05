@@ -99,18 +99,18 @@ export default function RegistersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-app-text tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-black text-app-foreground tracking-tight flex items-center gap-3">
             <Monitor className="text-app-primary" size={24} />
             POS Registers
           </h1>
-          <p className="text-app-text/40 text-sm mt-1">
+          <p className="text-app-foreground/40 text-sm mt-1">
             Manage your point-of-sale registers and their configurations
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={load}
-            className="p-2.5 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/50 hover:text-app-text transition-all"
+            className="p-2.5 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/50 hover:text-app-foreground transition-all"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -125,14 +125,14 @@ export default function RegistersPage() {
 
       {/* Register list */}
       {loading && registers.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-app-text/30">
+        <div className="flex items-center justify-center py-20 text-app-foreground/30">
           <Loader2 className="animate-spin mr-2" size={20} /> Loading registers…
         </div>
       ) : registers.length === 0 ? (
         <div className="text-center py-20">
-          <Monitor size={48} className="mx-auto text-app-text/10 mb-4" />
-          <p className="text-app-text/40 text-lg font-bold">No registers yet</p>
-          <p className="text-app-text/30 text-sm mt-1">Create your first register to get started with POS</p>
+          <Monitor size={48} className="mx-auto text-app-foreground/10 mb-4" />
+          <p className="text-app-foreground/40 text-lg font-bold">No registers yet</p>
+          <p className="text-app-foreground/30 text-sm mt-1">Create your first register to get started with POS</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-6 px-6 py-3 rounded-2xl bg-app-primary text-white font-bold hover:opacity-90 transition-all"
@@ -148,36 +148,36 @@ export default function RegistersPage() {
               className={`p-5 rounded-2xl border transition-all ${
                 reg.is_active
                   ? 'bg-app-surface border-app-border hover:border-app-primary/30'
-                  : 'bg-app-text/3 border-app-border/50 opacity-60'
+                  : 'bg-app-foreground/3 border-app-border/50 opacity-60'
               }`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-black text-app-text text-base">{reg.name}</h3>
-                  <p className="text-app-text/40 text-xs mt-0.5">
+                  <h3 className="font-black text-app-foreground text-base">{reg.name}</h3>
+                  <p className="text-app-foreground/40 text-xs mt-0.5">
                     {reg.branch_name || reg.branch?.name || 'No branch'} · ID #{reg.id}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    reg.is_active ? 'bg-green-500/15 text-green-400' : 'bg-app-text/10 text-app-text/30'
+                    reg.is_active ? 'bg-green-500/15 text-green-400' : 'bg-app-foreground/10 text-app-foreground/30'
                   }`}>
                     {reg.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-1.5 text-xs text-app-text/50 mb-4">
+              <div className="space-y-1.5 text-xs text-app-foreground/50 mb-4">
                 {(reg.cash_account_name || reg.cash_account) && (
                   <div className="flex justify-between">
                     <span>Cash Account</span>
-                    <span className="font-bold text-app-text/70">{reg.cash_account_name || reg.cash_account}</span>
+                    <span className="font-bold text-app-foreground/70">{reg.cash_account_name || reg.cash_account}</span>
                   </div>
                 )}
                 {(reg.warehouse_name || reg.warehouse) && (
                   <div className="flex justify-between">
                     <span>Stock Warehouse</span>
-                    <span className="font-bold text-app-text/70">{reg.warehouse_name || reg.warehouse}</span>
+                    <span className="font-bold text-app-foreground/70">{reg.warehouse_name || reg.warehouse}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -191,7 +191,7 @@ export default function RegistersPage() {
               <div className="flex gap-2">
                 <Link
                   href="/sales/pos-settings"
-                  className="flex-1 py-2 text-center rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/60 hover:text-app-text text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 text-center rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/60 hover:text-app-foreground text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                 >
                   <Settings size={13} /> Configure
                 </Link>
@@ -217,12 +217,12 @@ export default function RegistersPage() {
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowCreate(false)}
         >
-          <div className="w-full max-w-md bg-app-surface rounded-3xl border border-app-text/10 shadow-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-app-text/5 flex items-center justify-between">
-              <h2 className="text-app-text font-black text-lg">New Register</h2>
+          <div className="w-full max-w-md bg-app-surface rounded-3xl border border-app-foreground/10 shadow-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-app-foreground/5 flex items-center justify-between">
+              <h2 className="text-app-foreground font-black text-lg">New Register</h2>
               <button
                 onClick={() => setShowCreate(false)}
-                className="w-8 h-8 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 flex items-center justify-center"
+                className="w-8 h-8 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/40 flex items-center justify-center"
               >
                 <X size={15} />
               </button>
@@ -231,26 +231,26 @@ export default function RegistersPage() {
             <div className="p-6 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-1.5">
+                <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-1.5">
                   Register Name *
                 </label>
                 <input
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Caisse 1, Register A"
-                  className="w-full px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
+                  className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-xl text-app-foreground text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
                 />
               </div>
 
               {/* Branch */}
               <div>
-                <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-1.5">
+                <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-1.5">
                   Branch (Site) *
                 </label>
                 <select
                   value={form.branch}
                   onChange={e => setForm(f => ({ ...f, branch: e.target.value, warehouse: '' }))}
-                  className="w-full px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
+                  className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-xl text-app-foreground text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
                 >
                   <option value="">Select branch…</option>
                   {branches.map(w => (
@@ -264,13 +264,13 @@ export default function RegistersPage() {
 
               {/* Warehouse */}
               <div>
-                <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-1.5">
+                <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-1.5">
                   Stock Warehouse
                 </label>
                 <select
                   value={form.warehouse}
                   onChange={e => setForm(f => ({ ...f, warehouse: e.target.value }))}
-                  className="w-full px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
+                  className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-xl text-app-foreground text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
                 >
                   <option value="">Same as branch</option>
                   {(filteredChildWarehouses.length > 0 ? filteredChildWarehouses : warehouses).map(w => (
@@ -281,13 +281,13 @@ export default function RegistersPage() {
 
               {/* Cash Account */}
               <div>
-                <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-1.5">
+                <label className="block text-xs font-black text-app-foreground/40 uppercase tracking-widest mb-1.5">
                   Cash Account
                 </label>
                 <select
                   value={form.cash_account}
                   onChange={e => setForm(f => ({ ...f, cash_account: e.target.value }))}
-                  className="w-full px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
+                  className="w-full px-4 py-3 bg-app-foreground/5 border border-app-foreground/10 rounded-xl text-app-foreground text-sm outline-none focus:ring-2 focus:ring-app-primary/40"
                 >
                   <option value="">Select account…</option>
                   {accounts.map(a => (
@@ -298,10 +298,10 @@ export default function RegistersPage() {
 
               {/* Active toggle */}
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm font-bold text-app-text/60">Active on creation</span>
+                <span className="text-sm font-bold text-app-foreground/60">Active on creation</span>
                 <button
                   onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
-                  className={`w-10 h-6 rounded-full relative transition-all ${form.is_active ? 'bg-app-primary' : 'bg-app-text/20'}`}
+                  className={`w-10 h-6 rounded-full relative transition-all ${form.is_active ? 'bg-app-primary' : 'bg-app-foreground/20'}`}
                 >
                   <span className={`w-4 h-4 rounded-full bg-app-surface shadow absolute top-1 transition-all ${form.is_active ? 'left-5' : 'left-1'}`} />
                 </button>
@@ -311,7 +311,7 @@ export default function RegistersPage() {
             <div className="px-6 pb-6 flex gap-3">
               <button
                 onClick={() => setShowCreate(false)}
-                className="flex-1 py-3 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/50 font-bold text-sm"
+                className="flex-1 py-3 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/50 font-bold text-sm"
               >
                 Cancel
               </button>

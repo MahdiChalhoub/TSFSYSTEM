@@ -9,10 +9,10 @@ export function LandingHomePage({ org }: { org: any }) {
  <Badge className="mb-6 bg-app-accent-bg text-app-accent border-app-accent/30 font-bold uppercase tracking-widest px-4 py-1">
  Welcome to {org.name}
  </Badge>
- <h1 className="text-6xl md:text-8xl font-black text-app-text tracking-tighter leading-[1.1] mb-8">
- Elevating your <br /><span className="text-transparent bg-clip-text bg-app-gradient-accent">business standards.</span>
+ <h1 className="text-6xl md:text-8xl font-black text-app-foreground tracking-tighter leading-[1.1] mb-8">
+ Elevating your <br /><span className="text-transparent bg-clip-text bg-app-primary">business standards.</span>
  </h1>
- <p className="text-xl text-app-text-muted max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+ <p className="text-xl text-app-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
  We provide top-tier industry solutions backed by robust technology and a dedicated team of experts.
  </p>
  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -32,28 +32,28 @@ export function LandingHomePage({ org }: { org: any }) {
  <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-app-accent flex items-center justify-center mb-6">
  <ShieldCheck size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-text mb-3">Enterprise Security</h3>
- <p className="text-app-text-muted font-medium leading-relaxed">Your data and daily operations are protected by military-grade encryption and compliance standards.</p>
+ <h3 className="text-xl font-bold text-app-foreground mb-3">Enterprise Security</h3>
+ <p className="text-app-muted-foreground font-medium leading-relaxed">Your data and daily operations are protected by military-grade encryption and compliance standards.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
  <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-app-accent flex items-center justify-center mb-6">
  <Zap size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-text mb-3">Lightning Fast</h3>
- <p className="text-app-text-muted font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
+ <h3 className="text-xl font-bold text-app-foreground mb-3">Lightning Fast</h3>
+ <p className="text-app-muted-foreground font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
  <div className="w-14 h-14 rounded-2xl bg-app-success-bg text-app-success flex items-center justify-center mb-6">
  <Globe size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-text mb-3">Global Reach</h3>
- <p className="text-app-text-muted font-medium leading-relaxed">Scale your localized business seamlessly to international markets with our robust network.</p>
+ <h3 className="text-xl font-bold text-app-foreground mb-3">Global Reach</h3>
+ <p className="text-app-muted-foreground font-medium leading-relaxed">Scale your localized business seamlessly to international markets with our robust network.</p>
  </div>
  </div>
  </div>
  </section>
  {/* Footer */}
- <footer className="border-t border-app-border py-12 text-center text-app-text-muted font-medium">
+ <footer className="border-t border-app-border py-12 text-center text-app-muted-foreground font-medium">
  <p>&copy; {new Date().getFullYear()} {org.name}. All rights reserved.</p>
  </footer>
  </div>

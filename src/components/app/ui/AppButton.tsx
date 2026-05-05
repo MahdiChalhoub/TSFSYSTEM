@@ -47,7 +47,7 @@ const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
     },
     ghost: {
         background: 'transparent',
-        color: 'var(--app-text-muted)',
+        color: 'var(--app-muted-foreground)',
         border: '1px solid var(--app-border)',
     },
     danger: {

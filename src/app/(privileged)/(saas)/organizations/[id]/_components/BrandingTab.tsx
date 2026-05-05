@@ -65,7 +65,7 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                 >
                     <div className="flex items-center gap-2">
                         <Palette size={18} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>Brand Color</Label>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Brand Color</Label>
                     </div>
                     <div className="flex items-center gap-3">
                         <input
@@ -77,7 +77,7 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                         />
                         <Input value={brandColor} onChange={e => update('brand_color', e.target.value)}
                             className="h-10 rounded-lg font-mono text-xs flex-1"
-                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                         />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -100,12 +100,12 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                 >
                     <div className="flex items-center gap-2">
                         <Type size={18} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>Tagline</Label>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Tagline</Label>
                     </div>
                     <Input value={tagline} onChange={e => update('tagline', e.target.value)}
                         placeholder="Custom login page tagline..."
                         className="h-10 rounded-lg text-sm"
-                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                         maxLength={120}
                     />
                 </div>
@@ -116,12 +116,12 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                 >
                     <div className="flex items-center gap-2">
                         <ImageIcon size={18} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>Background Image</Label>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Background Image</Label>
                     </div>
                     <Input value={bgImage} onChange={e => update('bg_image', e.target.value)}
                         placeholder="https://..."
                         className="h-10 rounded-lg text-sm"
-                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text)' }}
+                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
                     />
                     {bgImage && (
                         <div className="rounded-lg overflow-hidden h-24"
@@ -145,7 +145,7 @@ export function BrandingTab({ orgId, orgSettings, onSave }: BrandingTabProps) {
                     </Button>
                     <Button onClick={() => setBranding({})} variant="outline"
                         className="h-10 px-4 rounded-xl"
-                        style={{ border: '1px solid var(--app-border)', color: 'var(--app-text-muted)' }}
+                        style={{ border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}
                     >
                         <RotateCcw size={14} />
                     </Button>

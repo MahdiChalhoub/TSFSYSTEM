@@ -12,25 +12,25 @@ export function BlogHomePage({ org }: { org: any }) {
  {/* Main Content */}
  <main className="max-w-5xl mx-auto px-6 py-16">
  <div className="mb-16">
- <h1 className="text-4xl md:text-5xl font-black text-app-text tracking-tighter mb-4">Latest Insights</h1>
- <p className="text-xl text-app-text-muted font-medium">Thoughts, stories and ideas from the team at {org.name}.</p>
+ <h1 className="text-4xl md:text-5xl font-black text-app-foreground tracking-tighter mb-4">Latest Insights</h1>
+ <p className="text-xl text-app-muted-foreground font-medium">Thoughts, stories and ideas from the team at {org.name}.</p>
  </div>
 
  <div className="grid gap-10">
  {dummyPosts.map((post, i) => (
  <article key={i} className="group cursor-pointer">
- <div className="flex items-center gap-4 text-xs font-bold text-app-text-faint uppercase tracking-widest mb-3">
+ <div className="flex items-center gap-4 text-xs font-bold text-app-muted-foreground uppercase tracking-widest mb-3">
  <span className="text-app-accent">{post.category}</span>
  <span>&bull;</span>
  <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime} read</span>
  </div>
- <h2 className="text-2xl font-black text-app-text mb-3 group-hover:text-app-accent transition-colors">
+ <h2 className="text-2xl font-black text-app-foreground mb-3 group-hover:text-app-accent transition-colors">
  {post.title}
  </h2>
- <p className="text-app-text-muted font-medium leading-relaxed mb-4 max-w-2xl">
+ <p className="text-app-muted-foreground font-medium leading-relaxed mb-4 max-w-2xl">
  Aliquam erat volutpat. Phasellus cursus felis vitae dictum facilisis. Nunc mattis sit amet justo pretium facilisis. Aenean ut sem mattis, egestas elit ac.
  </p>
- <div className="text-sm font-bold text-app-text-faint">
+ <div className="text-sm font-bold text-app-muted-foreground">
  {post.date}
  </div>
  </article>
@@ -38,7 +38,7 @@ export function BlogHomePage({ org }: { org: any }) {
  </div>
 
  <div className="mt-16 pt-16 border-t border-app-border text-center">
- <button className="h-12 px-8 rounded-full border-2 border-app-border text-sm font-bold text-app-text-muted hover:border-app-foreground hover:text-app-text transition-colors flex items-center gap-2 mx-auto">
+ <button className="h-12 px-8 rounded-full border-2 border-app-border text-sm font-bold text-app-muted-foreground hover:border-app-foreground hover:text-app-foreground transition-colors flex items-center gap-2 mx-auto">
  <Rss size={16} /> Subscribe to RSS
  </button>
  </div>

@@ -332,7 +332,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
                   <span className="text-xs font-bold text-app-foreground">{r.name}</span>
                   <div className="flex gap-1 mt-1">
                     <div className="h-1.5 w-6 bg-app-primary" style={{ borderRadius: r.id }} />
-                    <div className="h-1.5 w-3 bg-app-text-muted opacity-30" style={{ borderRadius: r.id }} />
+                    <div className="h-1.5 w-3 bg-app-muted-foreground opacity-30" style={{ borderRadius: r.id }} />
                   </div>
                 </button>
               ))}

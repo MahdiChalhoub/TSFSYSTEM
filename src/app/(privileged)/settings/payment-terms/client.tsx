@@ -151,55 +151,55 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                 <Card className="border-2 border-app-success dark:border-emerald-800 shadow-lg">
                     <CardContent className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-black theme-text">
+                            <h3 className="text-sm font-black text-app-foreground">
                                 {editingId ? 'Edit Payment Term' : 'New Payment Term'}
                             </h3>
-                            <button onClick={resetForm} className="theme-text-muted hover:theme-text">
+                            <button onClick={resetForm} className="text-app-muted-foreground hover:text-app-foreground">
                                 <X size={16} />
                             </button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Name *</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Name *</Label>
                                 <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                                     placeholder="e.g. Net 30 Days" className="text-sm" />
                             </div>
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Code *</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Code *</Label>
                                 <Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                                     placeholder="e.g. NET_30" className="text-sm" />
                             </div>
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Days Until Due</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Days Until Due</Label>
                                 <Input type="number" value={form.days} onChange={e => setForm(f => ({ ...f, days: Number(e.target.value) }))}
                                     className="text-sm" />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="text-[10px] font-bold theme-text-muted">Description</Label>
+                            <Label className="text-[10px] font-bold text-app-muted-foreground">Description</Label>
                             <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                className="w-full rounded-xl p-3 text-sm theme-text theme-surface resize-none"
+                                className="w-full rounded-xl p-3 text-sm text-app-foreground theme-surface resize-none"
                                 style={{ border: '1px solid var(--theme-border)' }}
                                 rows={2} placeholder="Detailed terms description..." />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Early Discount %</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Early Discount %</Label>
                                 <Input type="number" step="0.01" value={form.discount_percent}
                                     onChange={e => setForm(f => ({ ...f, discount_percent: Number(e.target.value) }))}
                                     className="text-sm" />
                             </div>
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Discount Valid (days)</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Discount Valid (days)</Label>
                                 <Input type="number" value={form.discount_days}
                                     onChange={e => setForm(f => ({ ...f, discount_days: Number(e.target.value) }))}
                                     className="text-sm" />
                             </div>
                             <div>
-                                <Label className="text-[10px] font-bold theme-text-muted">Sort Order</Label>
+                                <Label className="text-[10px] font-bold text-app-muted-foreground">Sort Order</Label>
                                 <Input type="number" value={form.sort_order}
                                     onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))}
                                     className="text-sm" />
@@ -207,7 +207,7 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 text-sm theme-text cursor-pointer">
+                            <label className="flex items-center gap-2 text-sm text-app-foreground cursor-pointer">
                                 <input type="checkbox" checked={form.is_default}
                                     onChange={e => setForm(f => ({ ...f, is_default: e.target.checked }))}
                                     className="rounded" />
@@ -226,8 +226,8 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
             {terms.length === 0 ? (
                 <Card className="border shadow-sm">
                     <CardContent className="p-8 text-center">
-                        <p className="theme-text-muted text-sm">No payment terms configured yet.</p>
-                        <p className="theme-text-muted text-xs mt-1">Click "Seed Default Terms" to add standard payment conditions.</p>
+                        <p className="text-app-muted-foreground text-sm">No payment terms configured yet.</p>
+                        <p className="text-app-muted-foreground text-xs mt-1">Click "Seed Default Terms" to add standard payment conditions.</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -237,15 +237,15 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                             <CardContent className="p-4 flex items-center gap-4">
                                 {/* Default star */}
                                 <button onClick={() => handleSetDefault(t.id)} title={t.is_default ? 'Default' : 'Set as default'}
-                                    className={`shrink-0 ${t.is_default ? 'text-app-warning' : 'theme-text-muted hover:text-app-warning'}`}>
+                                    className={`shrink-0 ${t.is_default ? 'text-app-warning' : 'text-app-muted-foreground hover:text-app-warning'}`}>
                                     <Star size={16} fill={t.is_default ? 'currentColor' : 'none'} />
                                 </button>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-sm theme-text">{t.name}</span>
-                                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded theme-surface-alt theme-text-muted">{t.code}</span>
+                                        <span className="font-bold text-sm text-app-foreground">{t.name}</span>
+                                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded theme-surface-alt text-app-muted-foreground">{t.code}</span>
                                         {t.is_default && (
                                             <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success">DEFAULT</span>
                                         )}
@@ -254,24 +254,24 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3 mt-0.5">
-                                        {t.days > 0 && <span className="text-[10px] theme-text-muted">{t.days} days</span>}
+                                        {t.days > 0 && <span className="text-[10px] text-app-muted-foreground">{t.days} days</span>}
                                         {t.discount_percent > 0 && (
-                                            <span className="text-[10px] theme-text-muted">
+                                            <span className="text-[10px] text-app-muted-foreground">
                                                 {t.discount_percent}% discount within {t.discount_days} days
                                             </span>
                                         )}
-                                        {t.description && <span className="text-[10px] theme-text-muted truncate">{t.description}</span>}
+                                        {t.description && <span className="text-[10px] text-app-muted-foreground truncate">{t.description}</span>}
                                     </div>
                                 </div>
 
                                 {/* Actions */}
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button onClick={() => handleEdit(t)}
-                                        className="p-2 rounded-lg hover:bg-app-info-bg dark:hover:bg-indigo-900/20 theme-text-muted hover:text-app-info transition-colors">
+                                        className="p-2 rounded-lg hover:bg-app-info-bg dark:hover:bg-indigo-900/20 text-app-muted-foreground hover:text-app-info transition-colors">
                                         <Pencil size={14} />
                                     </button>
                                     <button onClick={() => handleDelete(t.id)}
-                                        className="p-2 rounded-lg hover:bg-app-error-bg dark:hover:bg-rose-900/20 theme-text-muted hover:text-app-error transition-colors">
+                                        className="p-2 rounded-lg hover:bg-app-error-bg dark:hover:bg-rose-900/20 text-app-muted-foreground hover:text-app-error transition-colors">
                                         <Trash2 size={14} />
                                     </button>
                                 </div>

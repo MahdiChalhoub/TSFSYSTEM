@@ -60,7 +60,7 @@ export default function ConsignmentPage() {
  <div className="min-h-screen bg-[#070D1B] text-app-foreground p-6 flex flex-col gap-6 bg-app-background">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-app-gradient-warning flex items-center justify-center shadow-lg shadow-rose-900/40">
+ <div className="w-12 h-12 rounded-2xl bg-app-warning flex items-center justify-center shadow-lg shadow-rose-900/40">
  <Truck size={22} className="text-app-foreground" />
  </div>
  <div>

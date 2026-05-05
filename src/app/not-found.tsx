@@ -19,10 +19,10 @@ export default function GlobalNotFound() {
 
                 {/* Title */}
                 <div>
-                    <h1 className="text-3xl font-black text-app-text tracking-tight">
+                    <h1 className="text-3xl font-black text-app-foreground tracking-tight">
                         Page Not Found
                     </h1>
-                    <p className="mt-2 text-app-text-faint text-sm">
+                    <p className="mt-2 text-app-muted-foreground text-sm">
                         The page you're looking for doesn't exist or has been moved.
                     </p>
                 </div>
@@ -32,14 +32,14 @@ export default function GlobalNotFound() {
                     <Link
                         href="/dashboard"
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
- bg-app-surface text-app-text text-sm font-bold hover:bg-app-surface-2 transition-all shadow-md shadow-gray-900/20"
+ bg-app-surface text-app-foreground text-sm font-bold hover:bg-app-surface-2 transition-all shadow-md shadow-gray-900/20"
                     >
                         ← Dashboard
                     </Link>
                     <Link
                         href="/"
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
- bg-app-surface text-app-text-muted text-sm font-bold
+ bg-app-surface text-app-muted-foreground text-sm font-bold
  border border-app-border hover:border-app-border  hover:bg-app-bg transition-all"
                     >
                         Home

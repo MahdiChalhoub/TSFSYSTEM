@@ -8,6 +8,8 @@
     "postbuild": "cp -r public .next/standalone/ 2>/dev/null; cp -r .next/static .next/standalone/.next/ 2>/dev/null; echo '✅ Standalone assets copied'",
     "start": "next start",
     "lint": "eslint",
+    "lint:design": "node scripts/lint/check_design_language.mjs",
+    "lint:design:all": "node scripts/lint/check_design_language.mjs --all",
     "kernel-check": "node scripts/check-kernel-integrity.js",
     "e2e": "playwright test",
     "e2e:auth": "playwright test --project=auth-setup",

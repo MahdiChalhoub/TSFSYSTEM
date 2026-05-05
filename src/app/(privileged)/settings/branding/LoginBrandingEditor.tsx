@@ -77,7 +77,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                 >
                     <div className="flex items-center gap-3">
                         <Palette size={20} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                             Brand Color
                         </Label>
                     </div>
@@ -98,7 +98,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                             style={{
                                 background: 'var(--app-bg)',
                                 border: '1px solid var(--app-border)',
-                                color: 'var(--app-text)',
+                                color: 'var(--app-foreground)',
                             }}
                         />
                     </div>
@@ -130,7 +130,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                 >
                     <div className="flex items-center gap-3">
                         <Type size={20} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                             Custom Tagline
                         </Label>
                     </div>
@@ -142,11 +142,11 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                         style={{
                             background: 'var(--app-bg)',
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }}
                         maxLength={120}
                     />
-                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                         {tagline.length}/120 characters · Leave blank for default
                     </p>
                 </div>
@@ -160,7 +160,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                 >
                     <div className="flex items-center gap-3">
                         <ImageIcon size={20} style={{ color: brandColor }} />
-                        <Label className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>
+                        <Label className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
                             Background Image
                         </Label>
                     </div>
@@ -172,10 +172,10 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                         style={{
                             background: 'var(--app-bg)',
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text)',
+                            color: 'var(--app-foreground)',
                         }}
                     />
-                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                         Paste a URL or use your cloud storage. Recommended: 1920×1080, dark tone.
                     </p>
 
@@ -215,7 +215,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                         className="h-12 px-6 rounded-xl font-bold text-sm"
                         style={{
                             border: '1px solid var(--app-border)',
-                            color: 'var(--app-text-muted)',
+                            color: 'var(--app-muted-foreground)',
                         }}
                     >
                         <RotateCcw className="mr-2" size={16} />
@@ -230,7 +230,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                     <div className="flex items-center gap-2">
                         <Eye size={16} style={{ color: brandColor }} />
                         <span className="text-xs font-black uppercase tracking-widest"
-                            style={{ color: 'var(--app-text-muted)' }}
+                            style={{ color: 'var(--app-muted-foreground)' }}
                         >
                             Live Preview
                         </span>
@@ -360,7 +360,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
 
                 {/* Preview info */}
                 <div className="text-center">
-                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                    <p className="text-[10px] font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                         This is a simplified preview. The actual login page may appear slightly different.
                     </p>
                 </div>

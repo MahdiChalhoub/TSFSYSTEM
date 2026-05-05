@@ -20,8 +20,8 @@ export default function PurchaseApprovalsPage() {
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-app-info-bg flex items-center justify-center">
               <ShoppingCart size={40} className="text-app-info" />
             </div>
-            <h1 className="text-2xl font-black text-app-text mb-2">Purchase Order Approvals</h1>
-            <p className="text-sm text-app-text-muted mb-8">
+            <h1 className="text-2xl font-black text-app-foreground mb-2">Purchase Order Approvals</h1>
+            <p className="text-sm text-app-muted-foreground mb-8">
               Multi-level PO approval with budget checks
             </p>
             <div className="space-y-4">

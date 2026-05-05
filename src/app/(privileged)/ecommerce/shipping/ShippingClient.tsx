@@ -87,8 +87,8 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                             <Icon size={18} style={{ color }} />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[var(--app-text)]">{value}</p>
-                            <p className="text-xs text-[var(--app-text-muted)]">{label}</p>
+                            <p className="text-2xl font-bold text-[var(--app-foreground)]">{value}</p>
+                            <p className="text-xs text-[var(--app-muted-foreground)]">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -99,10 +99,10 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                 {/* Zone sidebar */}
                 <div className="w-56 shrink-0 app-card p-0 overflow-hidden self-start">
                     <div className="px-4 py-3 border-b border-[var(--app-border)]">
-                        <p className="text-xs font-bold text-[var(--app-text-muted)] uppercase tracking-wider">Zones</p>
+                        <p className="text-xs font-bold text-[var(--app-muted-foreground)] uppercase tracking-wider">Zones</p>
                     </div>
                     {initialZones.length === 0 ? (
-                        <p className="p-4 text-xs text-[var(--app-text-muted)]">No zones configured</p>
+                        <p className="p-4 text-xs text-[var(--app-muted-foreground)]">No zones configured</p>
                     ) : (
                         <div className="divide-y divide-[var(--app-border)]">
                             {initialZones.map(zone => (
@@ -111,12 +111,12 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                         ? 'bg-[var(--app-accent)]/10 border-l-2 border-[var(--app-accent)]'
                                         : 'hover:bg-[var(--app-surface-hover)]'}`}>
                                     <div className="flex items-center gap-2">
-                                        <MapPin size={12} className={zone.id === selectedZoneId ? 'text-[var(--app-accent)]' : 'text-[var(--app-text-muted)]'} />
-                                        <p className={`text-sm font-medium ${zone.id === selectedZoneId ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'}`}>
+                                        <MapPin size={12} className={zone.id === selectedZoneId ? 'text-[var(--app-accent)]' : 'text-[var(--app-muted-foreground)]'} />
+                                        <p className={`text-sm font-medium ${zone.id === selectedZoneId ? 'text-[var(--app-accent)]' : 'text-[var(--app-foreground)]'}`}>
                                             {zone.name}
                                         </p>
                                     </div>
-                                    <p className="text-xs text-[var(--app-text-muted)] mt-1 pl-5">
+                                    <p className="text-xs text-[var(--app-muted-foreground)] mt-1 pl-5">
                                         Base: {parseFloat(zone.base_fee).toLocaleString()} · {zone.estimated_days}d
                                     </p>
                                 </button>
@@ -129,10 +129,10 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                 <div className="flex-1 app-card p-0 overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--app-border)]">
                         <div>
-                            <p className="text-sm font-semibold text-[var(--app-text)]">
+                            <p className="text-sm font-semibold text-[var(--app-foreground)]">
                                 {selectedZone?.name ?? 'Select a zone'} — Rate Tiers
                             </p>
-                            <p className="text-xs text-[var(--app-text-muted)]">
+                            <p className="text-xs text-[var(--app-muted-foreground)]">
                                 First match wins · fallback to zone base fee
                             </p>
                         </div>
@@ -146,7 +146,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                         <thead>
                             <tr className="border-b border-[var(--app-border)]">
                                 {['Order Range', 'Weight Range', 'Fee', 'Days', '#', 'Active', ''].map(h => (
-                                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">{h}</th>
+                                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -157,10 +157,10 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                         <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#06b6d418' }}>
                                             <Truck size={20} style={{ color: 'var(--app-accent-cyan)' }} />
                                         </div>
-                                        <p className="font-semibold text-[var(--app-text)] text-sm">
+                                        <p className="font-semibold text-[var(--app-foreground)] text-sm">
                                             {selectedZoneId ? 'No tiers yet' : 'Select a zone'}
                                         </p>
-                                        <p className="text-xs text-[var(--app-text-muted)]">
+                                        <p className="text-xs text-[var(--app-muted-foreground)]">
                                             {selectedZoneId ? 'Add your first shipping tier' : 'Choose a zone to manage its rates'}
                                         </p>
                                     </div>
@@ -168,24 +168,24 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                             )}
                             {zoneRates.map(r => (
                                 <tr key={r.id} className="border-b border-[var(--app-border)] hover:bg-[var(--app-surface-hover)] transition-colors">
-                                    <td className="px-4 py-3 font-mono text-xs text-[var(--app-text)]">
+                                    <td className="px-4 py-3 font-mono text-xs text-[var(--app-foreground)]">
                                         ≥{parseFloat(r.min_order_value).toLocaleString()}
                                         {r.max_order_value ? ` → ${parseFloat(r.max_order_value).toLocaleString()}` : '+'}
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-xs text-[var(--app-text-muted)]">
+                                    <td className="px-4 py-3 font-mono text-xs text-[var(--app-muted-foreground)]">
                                         ≥{r.min_weight_kg}kg{r.max_weight_kg ? ` → ${r.max_weight_kg}kg` : '+'}
                                     </td>
-                                    <td className="px-4 py-3 font-semibold text-[var(--app-text)]">{fFee(r.fee)}</td>
-                                    <td className="px-4 py-3 text-[var(--app-text-muted)]">
+                                    <td className="px-4 py-3 font-semibold text-[var(--app-foreground)]">{fFee(r.fee)}</td>
+                                    <td className="px-4 py-3 text-[var(--app-muted-foreground)]">
                                         {r.estimated_days ?? selectedZone?.estimated_days}d
                                     </td>
-                                    <td className="px-4 py-3 text-[var(--app-text-muted)]">{r.sort_order}</td>
+                                    <td className="px-4 py-3 text-[var(--app-muted-foreground)]">{r.sort_order}</td>
                                     <td className="px-4 py-3">
                                         <span className={`w-2 h-2 rounded-full inline-block ${r.is_active ? 'bg-app-success' : 'bg-[var(--app-border)]'}`} />
                                     </td>
                                     <td className="px-4 py-3">
                                         <button onClick={() => handleDelete(r.id)} id={`delete-rate-${r.id}`}
-                                            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                            className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </td>
@@ -205,13 +205,13 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                 <Plus size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-text)]">Add Rate Tier</h2>
-                                <p className="text-xs text-[var(--app-text-muted)]">{selectedZone?.name}</p>
+                                <h2 className="text-base font-bold text-[var(--app-foreground)]">Add Rate Tier</h2>
+                                <p className="text-xs text-[var(--app-muted-foreground)]">{selectedZone?.name}</p>
                             </div>
                         </div>
                         {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}
                         <div className="space-y-3">
-                            <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">Order Value Range</p>
+                            <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">Order Value Range</p>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="app-label">Min Value</label>
@@ -224,7 +224,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                                         onChange={e => setForm(p => ({ ...p, max_order_value: e.target.value || null }))} />
                                 </div>
                             </div>
-                            <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider pt-1">Weight Range (kg)</p>
+                            <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider pt-1">Weight Range (kg)</p>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="app-label">Min Weight</label>

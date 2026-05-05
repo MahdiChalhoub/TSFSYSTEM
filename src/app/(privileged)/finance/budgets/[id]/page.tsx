@@ -171,7 +171,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Performance KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-info-soft/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-info-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-app-primary/20 flex items-center justify-center">
@@ -185,7 +185,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-app-success/20 flex items-center justify-center">
@@ -199,7 +199,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-accent-soft/50">
+        <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft/50">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-purple-200/60 flex items-center justify-center">
@@ -215,7 +215,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
           </CardContent>
         </Card>
 
-        <Card className={`rounded-2xl border-0 shadow-sm ${isOverBudget ? 'bg-app-gradient-error-soft/50' : 'bg-app-gradient-primary/50'}`}>
+        <Card className={`rounded-2xl border-0 shadow-sm ${isOverBudget ? 'bg-app-error-soft/50' : 'bg-app-primary/50'}`}>
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-2xl ${isOverBudget ? 'bg-app-error/20' : 'bg-emerald-200/60'} flex items-center justify-center`}>

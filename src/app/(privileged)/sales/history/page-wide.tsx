@@ -208,7 +208,7 @@ export default function OrderHistoryPageWide() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl border-app-border shadow-xl">
-              <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-2">
+              <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-muted-foreground px-3 py-2">
                 Sales Management
               </DropdownMenuLabel>
               <DropdownMenuItem asChild className="focus:bg-app-info-bg focus:text-app-info cursor-pointer py-2.5">
@@ -243,7 +243,7 @@ export default function OrderHistoryPageWide() {
       label: 'Date',
       sortable: true,
       render: (order) => (
-        <div className="text-xs text-app-text-muted">
+        <div className="text-xs text-app-muted-foreground">
           {new Date(order.created_at).toLocaleDateString()}
         </div>
       )
@@ -255,7 +255,7 @@ export default function OrderHistoryPageWide() {
       render: (order) => (
         <div className="flex items-center gap-2">
           <Hash size={12} className="text-app-primary" />
-          <span className="text-xs font-bold text-app-text">
+          <span className="text-xs font-bold text-app-foreground">
             {order.invoice_number || order.ref_code || `#${order.id}`}
           </span>
         </div>
@@ -267,8 +267,8 @@ export default function OrderHistoryPageWide() {
       sortable: true,
       render: (order) => (
         <div className="flex items-center gap-2">
-          <User size={12} className="text-app-text-muted" />
-          <span className="text-xs font-semibold text-app-text">
+          <User size={12} className="text-app-muted-foreground" />
+          <span className="text-xs font-semibold text-app-foreground">
             {order.contact_name || 'Walk-In'}
           </span>
         </div>
@@ -304,7 +304,7 @@ export default function OrderHistoryPageWide() {
       sortable: true,
       align: 'right',
       render: (order) => (
-        <span className="text-sm font-black text-app-text tabular-nums">
+        <span className="text-sm font-black text-app-foreground tabular-nums">
           {fmt(parseFloat(String(order.total_amount || 0)))}
         </span>
       )
@@ -327,7 +327,7 @@ export default function OrderHistoryPageWide() {
       render: (order) => {
         const due = parseFloat(String(order.amount_due || 0))
         return (
-          <span className={`text-sm font-bold tabular-nums ${due > 0 ? 'text-app-error' : 'text-app-text-muted'}`}>
+          <span className={`text-sm font-bold tabular-nums ${due > 0 ? 'text-app-error' : 'text-app-muted-foreground'}`}>
             {fmt(due)}
           </span>
         )
@@ -380,19 +380,19 @@ export default function OrderHistoryPageWide() {
               <Activity size={12} /> Transaction Stream
             </span>
           </div>
-          <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
+          <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
             <div className="w-16 h-16 rounded-[1.8rem] bg-app-bg flex items-center justify-center shadow-2xl shadow-stone-200">
-              <History size={32} className="text-app-text" />
+              <History size={32} className="text-app-foreground" />
             </div>
             Transaction <span className="text-app-info">History</span>
           </h1>
         </div>
         <div className="flex items-center gap-3">
           <LayoutSwitcher storageKey="sales-history-layout" />
-          <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-text-faint hover:text-app-info hover:bg-app-bg transition-all">
+          <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-muted-foreground hover:text-app-info hover:bg-app-bg transition-all">
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </Button>
-          <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-text font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+          <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-foreground font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
             <Link href="/sales">
               <ArrowUpRight size={18} /> Terminal
             </Link>
@@ -475,7 +475,7 @@ export default function OrderHistoryPageWide() {
             headerExtra={
               <div className="flex items-center gap-3">
                 <div className="relative w-80">
-                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
+                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                   <Input
                     placeholder="Rechercher par n° facture, client..."
                     value={searchQuery}
@@ -483,7 +483,7 @@ export default function OrderHistoryPageWide() {
                     className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-indigo-500/30 transition-all focus:bg-app-surface focus:shadow-sm"
                   />
                 </div>
-                <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-text-muted gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">
+                <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-muted-foreground gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">
                   <Filter size={14} /> Filtres
                 </Button>
               </div>
@@ -505,18 +505,18 @@ export default function OrderHistoryPageWide() {
         {layoutMode === 'quad' && (
           <div className="space-y-4 sticky top-8">
             <div className="bg-app-surface rounded-2xl p-6 border border-app-border/30">
-              <h3 className="text-sm font-bold mb-4 text-app-text">Quick Stats</h3>
+              <h3 className="text-sm font-bold mb-4 text-app-foreground">Quick Stats</h3>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-app-text-muted">Today's Sales</span>
+                  <span className="text-app-muted-foreground">Today's Sales</span>
                   <span className="font-bold">--</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-app-text-muted">This Week</span>
+                  <span className="text-app-muted-foreground">This Week</span>
                   <span className="font-bold">--</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-app-text-muted">This Month</span>
+                  <span className="text-app-muted-foreground">This Month</span>
                   <span className="font-bold">--</span>
                 </div>
               </div>

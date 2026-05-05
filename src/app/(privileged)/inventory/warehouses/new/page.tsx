@@ -37,7 +37,7 @@ export default function CreateWarehousesPage() {
   }
 
   return (
-    <div className="min-h-screen layout-container-padding theme-bg">
+    <div className="min-h-screen layout-container-padding bg-app-bg">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -53,10 +53,10 @@ export default function CreateWarehousesPage() {
         </div>
 
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold theme-text">
+          <h1 className="text-3xl md:text-4xl font-bold text-app-foreground">
             Create Warehouses
           </h1>
-          <p className="theme-text-muted mt-1">
+          <p className="text-app-muted-foreground mt-1">
             Add a new warehouses to the system
           </p>
         </div>

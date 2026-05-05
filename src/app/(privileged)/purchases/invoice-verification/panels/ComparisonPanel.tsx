@@ -52,9 +52,9 @@ export function ComparisonPanel({
     return (
       <Card className="h-full flex items-center justify-center border-app-border/30">
         <div className="text-center p-8">
-          <FileCheck size={48} className="mx-auto mb-4 text-app-text-muted opacity-30" />
-          <p className="text-sm font-bold text-app-text-muted">Select an invoice to compare</p>
-          <p className="text-xs text-app-text-faint mt-1">Choose from the list to start verification</p>
+          <FileCheck size={48} className="mx-auto mb-4 text-app-muted-foreground opacity-30" />
+          <p className="text-sm font-bold text-app-muted-foreground">Select an invoice to compare</p>
+          <p className="text-xs text-app-muted-foreground mt-1">Choose from the list to start verification</p>
         </div>
       </Card>
     )
@@ -158,9 +158,9 @@ export function ComparisonPanel({
         <div className="bg-app-surface/50 rounded-xl p-4 border border-app-border/30">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs text-app-text-faint uppercase tracking-wider mb-1">Invoice</p>
-              <p className="text-lg font-black text-app-text">{invoice.invoice_number}</p>
-              <p className="text-sm text-app-text-muted mt-1">{invoice.supplier_name}</p>
+              <p className="text-xs text-app-muted-foreground uppercase tracking-wider mb-1">Invoice</p>
+              <p className="text-lg font-black text-app-foreground">{invoice.invoice_number}</p>
+              <p className="text-sm text-app-muted-foreground mt-1">{invoice.supplier_name}</p>
             </div>
             <Badge className={invoice.status === 'DISCREPANCY' ? 'bg-app-warning-bg text-app-warning' : 'bg-app-info-bg text-app-info'}>
               {invoice.status}
@@ -172,13 +172,13 @@ export function ComparisonPanel({
         <div className="space-y-1">
           {/* Header */}
           <div className="grid grid-cols-3 gap-4 pb-2 border-b border-app-border/30">
-            <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+            <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
               Purchase Order
             </div>
-            <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+            <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
               {invoice.receipt_number ? 'Goods Receipt' : 'Expected'}
             </div>
-            <div className="text-xs font-black text-app-text-faint uppercase tracking-wider">
+            <div className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">
               Supplier Invoice
             </div>
           </div>
@@ -204,7 +204,7 @@ export function ComparisonPanel({
                 {/* PO Value */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-app-text-muted uppercase">{field.label}</p>
+                    <p className="text-[10px] font-bold text-app-muted-foreground uppercase">{field.label}</p>
                     {/* Confidence Badge */}
                     {fieldConfidence && (
                       <Badge className={`confidence-${fieldConfidence} text-[9px] px-1.5 py-0 h-4`}>
@@ -221,7 +221,7 @@ export function ComparisonPanel({
                     />
                   ) : (
                     <div
-                      className="text-sm font-bold text-app-text field-linkable flex items-center gap-2 cursor-pointer hover:text-app-primary transition-colors"
+                      className="text-sm font-bold text-app-foreground field-linkable flex items-center gap-2 cursor-pointer hover:text-app-primary transition-colors"
                       onClick={() => handleFieldClick(field)}
                       title="Click to highlight in document"
                     >
@@ -233,7 +233,7 @@ export function ComparisonPanel({
 
                 {/* Receipt Value */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
+                  <p className="text-[10px] font-bold text-app-muted-foreground uppercase opacity-0">{field.label}</p>
                   <p className="text-sm font-semibold text-app-info">
                     {invoice.receipt_number
                       ? (field.type === 'currency' ? fmt(Number(poValue) * 0.95) : '—')
@@ -244,7 +244,7 @@ export function ComparisonPanel({
 
                 {/* Invoice Value */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-app-text-muted uppercase opacity-0">{field.label}</p>
+                  <p className="text-[10px] font-bold text-app-muted-foreground uppercase opacity-0">{field.label}</p>
                   <div className="flex items-center gap-2">
                     <p className={`text-sm font-bold ${mismatch ? 'text-app-warning' : 'text-app-success'}`}>
                       {field.type === 'currency' ? fmt(Number(invValue)) : invValue as string}
@@ -305,10 +305,10 @@ export function ComparisonPanel({
             <div className="space-y-2">
               {invoice.invoice_items?.map((item: any, i: number) => (
                 <div key={i} className="flex justify-between text-sm py-2 border-b border-app-border/10 last:border-0">
-                  <span className="font-medium text-app-text">{item.product_name}</span>
+                  <span className="font-medium text-app-foreground">{item.product_name}</span>
                   <div className="text-right">
-                    <span className="text-app-text-muted">{item.quantity} × {fmt(item.unit_price)}</span>
-                    <span className="font-bold text-app-text ml-3">{fmt(item.subtotal)}</span>
+                    <span className="text-app-muted-foreground">{item.quantity} × {fmt(item.unit_price)}</span>
+                    <span className="font-bold text-app-foreground ml-3">{fmt(item.subtotal)}</span>
                   </div>
                 </div>
               ))}

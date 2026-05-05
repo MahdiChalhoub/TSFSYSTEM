@@ -78,8 +78,8 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                             <Icon size={18} style={{ color }} />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-[var(--app-text)]">{value}</p>
-                            <p className="text-xs text-[var(--app-text-muted)]">{label}</p>
+                            <p className="text-2xl font-bold text-[var(--app-foreground)]">{value}</p>
+                            <p className="text-xs text-[var(--app-muted-foreground)]">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -88,7 +88,7 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
             {/* List */}
             <div className="app-card p-0 overflow-hidden">
                 <div className="px-5 py-3 border-b border-[var(--app-border)]">
-                    <p className="text-xs font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">
+                    <p className="text-xs font-semibold text-[var(--app-muted-foreground)] uppercase tracking-wider">
                         {hooks.length} endpoint{hooks.length !== 1 ? 's' : ''}
                     </p>
                 </div>
@@ -97,8 +97,8 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#64748b18' }}>
                             <WebhookIcon size={22} style={{ color: 'var(--app-muted-foreground)' }} />
                         </div>
-                        <p className="font-semibold text-[var(--app-text)]">No webhooks configured</p>
-                        <p className="text-xs text-[var(--app-text-muted)]">Add an endpoint to receive storefront events</p>
+                        <p className="font-semibold text-[var(--app-foreground)]">No webhooks configured</p>
+                        <p className="text-xs text-[var(--app-muted-foreground)]">Add an endpoint to receive storefront events</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-[var(--app-border)]">
@@ -106,17 +106,17 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                             <div key={h.id} className="flex items-start gap-4 px-5 py-4 hover:bg-[var(--app-surface-hover)] transition-colors">
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
                                     style={{ background: h.is_active ? '#10b98118' : 'var(--app-surface)' }}>
-                                    <Globe size={14} style={{ color: h.is_active ? 'var(--app-primary)' : 'var(--app-text-muted)' }} />
+                                    <Globe size={14} style={{ color: h.is_active ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-mono text-sm text-[var(--app-text)] truncate">{h.target_url}</p>
+                                    <p className="font-mono text-sm text-[var(--app-foreground)] truncate">{h.target_url}</p>
                                     <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                        <span className="px-1.5 py-0.5 rounded text-xs bg-[var(--app-surface)] text-[var(--app-text-muted)] border border-[var(--app-border)] font-mono">
+                                        <span className="px-1.5 py-0.5 rounded text-xs bg-[var(--app-surface)] text-[var(--app-muted-foreground)] border border-[var(--app-border)] font-mono">
                                             {h.event_type_display || h.event_type}
                                         </span>
                                     </div>
                                     {h.description && (
-                                        <p className="text-xs text-[var(--app-text-muted)] mt-1">{h.description}</p>
+                                        <p className="text-xs text-[var(--app-muted-foreground)] mt-1">{h.description}</p>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
@@ -124,10 +124,10 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                                         className="transition-opacity hover:opacity-80">
                                         {h.is_active
                                             ? <ToggleRight size={22} className="text-app-success" />
-                                            : <ToggleLeft size={22} className="text-[var(--app-text-muted)]" />}
+                                            : <ToggleLeft size={22} className="text-[var(--app-muted-foreground)]" />}
                                     </button>
                                     <button onClick={() => handleDelete(h.id)} id={`delete-hook-${h.id}`}
-                                        className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-app-error hover:bg-rose-500/10 transition-all">
+                                        className="p-1.5 rounded-lg text-[var(--app-muted-foreground)] hover:text-app-error hover:bg-rose-500/10 transition-all">
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
@@ -146,8 +146,8 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                                 <Plus size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-text)]">Add Webhook</h2>
-                                <p className="text-xs text-[var(--app-text-muted)]">HTTP callback endpoint</p>
+                                <h2 className="text-base font-bold text-[var(--app-foreground)]">Add Webhook</h2>
+                                <p className="text-xs text-[var(--app-muted-foreground)]">HTTP callback endpoint</p>
                             </div>
                         </div>
                         {error && <p className="text-app-error text-sm bg-rose-500/10 px-3 py-2 rounded-lg">{error}</p>}

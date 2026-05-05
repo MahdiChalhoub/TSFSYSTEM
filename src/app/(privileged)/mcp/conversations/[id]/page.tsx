@@ -134,7 +134,7 @@ export default function ConversationsDetailPage() {
   }
 
   return (
-    <div className="min-h-screen layout-container-padding theme-bg flex flex-col">
+    <div className="min-h-screen layout-container-padding bg-app-bg flex flex-col">
       {/* Header */}
       <div className="mb-6 md:mb-8 flex-shrink-0">
         <div className="flex items-center gap-4 mb-4">
@@ -151,10 +151,10 @@ export default function ConversationsDetailPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black theme-text">
+            <h1 className="text-3xl md:text-4xl font-black text-app-foreground">
               {item.title || item.name || `Conversation #${item.id}`}
             </h1>
-            <p className="theme-text-muted mt-1 flex items-center gap-2">
+            <p className="text-app-muted-foreground mt-1 flex items-center gap-2">
                Provider: <span className="font-semibold">{item.provider_name || 'AI'}</span> &bull; Messages: {item.message_count || 0}
             </p>
           </div>

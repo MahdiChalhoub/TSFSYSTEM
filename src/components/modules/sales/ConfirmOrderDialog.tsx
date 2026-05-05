@@ -80,12 +80,12 @@ export function ConfirmOrderDialog({ open, onOpenChange, onConfirm, title = "Con
  </DialogDescription>
  </DialogHeader>
  <div className="py-4">
- <label className="text-xs font-bold text-app-text-faint uppercase mb-2 block">
+ <label className="text-xs font-bold text-app-muted-foreground uppercase mb-2 block">
  Fulfillment Warehouse
  </label>
  {loading ? (
  <div className="h-12 bg-app-surface border border-app-border rounded-xl animate-pulse flex items-center justify-center">
- <Loader2 size={16} className="animate-spin text-app-text-faint" />
+ <Loader2 size={16} className="animate-spin text-app-muted-foreground" />
  </div>
  ) : (
  <div className="relative">
@@ -104,13 +104,13 @@ export function ConfirmOrderDialog({ open, onOpenChange, onConfirm, title = "Con
  </select>
 
  {!canChangeWarehouse && (
- <div className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-faint flex items-center gap-2">
+ <div className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted-foreground flex items-center gap-2">
  <Lock size={14} />
  <span className="text-[10px] font-bold uppercase">Locked to Terminal</span>
  </div>
  )}
  {canChangeWarehouse && (
- <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-app-text-faint">
+ <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-app-muted-foreground">
  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
  <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
  </svg>
@@ -123,7 +123,7 @@ export function ConfirmOrderDialog({ open, onOpenChange, onConfirm, title = "Con
  <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
  Cancel
  </Button>
- <Button onClick={handleConfirm} disabled={submitting || loading} className="bg-app-primary hover:bg-emerald-700 text-app-text shadow-lg shadow-emerald-200">
+ <Button onClick={handleConfirm} disabled={submitting || loading} className="bg-app-primary hover:bg-emerald-700 text-app-foreground shadow-lg shadow-emerald-200">
  {submitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
  {submitting ? 'Confirming...' : 'Confirm Order'}
  </Button>

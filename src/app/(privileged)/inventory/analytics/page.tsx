@@ -233,7 +233,7 @@ export default function ProductAnalyticsPage() {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-app-gradient-accent flex items-center justify-center shadow-lg shadow-violet-500/25">
+                        <div className="w-10 h-10 rounded-2xl bg-app-primary flex items-center justify-center shadow-lg shadow-violet-500/25">
                             <Activity size={22} className="text-white" />
                         </div>
                         Product Analytics

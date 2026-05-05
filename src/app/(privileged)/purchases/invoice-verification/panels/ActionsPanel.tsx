@@ -46,9 +46,9 @@ export function ActionsPanel({
     return (
       <Card className="h-full flex items-center justify-center border-app-border/30">
         <div className="text-center p-8">
-          <MessageSquare size={48} className="mx-auto mb-4 text-app-text-muted opacity-30" />
-          <p className="text-sm font-bold text-app-text-muted">No invoice selected</p>
-          <p className="text-xs text-app-text-faint mt-1">Select to see actions</p>
+          <MessageSquare size={48} className="mx-auto mb-4 text-app-muted-foreground opacity-30" />
+          <p className="text-sm font-bold text-app-muted-foreground">No invoice selected</p>
+          <p className="text-xs text-app-muted-foreground mt-1">Select to see actions</p>
         </div>
       </Card>
     )
@@ -91,7 +91,7 @@ export function ActionsPanel({
         <Card className={`${verificationScore === 100 ? 'bg-app-success-bg border-app-success' : 'bg-app-info-bg border-app-info'}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-black text-app-text-muted uppercase tracking-wider">Verification Score</p>
+              <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Verification Score</p>
               <Badge className={verificationScore === 100 ? 'bg-app-primary text-white' : 'bg-app-info text-white'}>
                 {verificationScore}%
               </Badge>
@@ -102,7 +102,7 @@ export function ActionsPanel({
                 style={{ width: `${verificationScore}%` }}
               />
             </div>
-            <p className="text-[10px] text-app-text-muted mt-2">
+            <p className="text-[10px] text-app-muted-foreground mt-2">
               {validatedFields} of {totalFields} fields verified
             </p>
           </CardContent>
@@ -110,7 +110,7 @@ export function ActionsPanel({
 
         {/* Status Section */}
         <div className="space-y-2">
-          <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Current Status</p>
+          <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Current Status</p>
           <Badge className={
             invoice.status === 'VERIFIED' ? 'bg-app-success-bg text-app-success border-app-success' :
             invoice.status === 'DISCREPANCY' ? 'bg-app-warning-bg text-app-warning border-app-warning' :
@@ -148,7 +148,7 @@ export function ActionsPanel({
 
         {/* Quick Actions */}
         <div className="space-y-2">
-          <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Quick Actions</p>
+          <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Quick Actions</p>
           <div className="space-y-2">
             <Button
               onClick={() => onApprove?.(invoice.id)}
@@ -178,7 +178,7 @@ export function ActionsPanel({
 
         {/* Notes Section */}
         <div className="space-y-2">
-          <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Internal Notes</p>
+          <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Internal Notes</p>
           <div className="space-y-2">
             <Textarea
               value={note}
@@ -201,13 +201,13 @@ export function ActionsPanel({
         {/* Notes List */}
         {notes.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">History</p>
+            <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">History</p>
             <div className="space-y-2">
               {notes.map(n => (
                 <Card key={n.id} className="bg-app-surface/50 border-app-border/30">
                   <CardContent className="p-3">
-                    <p className="text-xs text-app-text mb-1">{n.text}</p>
-                    <div className="flex justify-between text-[10px] text-app-text-faint">
+                    <p className="text-xs text-app-foreground mb-1">{n.text}</p>
+                    <div className="flex justify-between text-[10px] text-app-muted-foreground">
                       <span>{n.author}</span>
                       <span>{new Date(n.timestamp).toLocaleTimeString()}</span>
                     </div>
@@ -220,7 +220,7 @@ export function ActionsPanel({
 
         {/* Related Documents */}
         <div className="space-y-2">
-          <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Related</p>
+          <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Related</p>
           <div className="space-y-2">
             <Button variant="outline" size="sm" className="w-full justify-start text-xs h-9">
               📄 PO #{invoice.po_number}
@@ -239,7 +239,7 @@ export function ActionsPanel({
         {/* Audit Trail */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Audit Trail</p>
+            <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Audit Trail</p>
             <Badge variant="outline" className="text-[9px] h-4">
               <History size={8} className="mr-1" />
               {auditTrail.length} events
@@ -257,15 +257,15 @@ export function ActionsPanel({
                     'bg-gray-400'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-app-text truncate">
+                    <p className="font-bold text-app-foreground truncate">
                       {entry.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       {entry.fieldKey && ` - ${entry.fieldKey}`}
                     </p>
-                    <p className="text-[10px] text-app-text-faint">
+                    <p className="text-[10px] text-app-muted-foreground">
                       {new Date(entry.timestamp).toLocaleTimeString()} by {entry.user}
                     </p>
                     {entry.note && (
-                      <p className="text-[10px] text-app-text-muted italic mt-0.5">{entry.note}</p>
+                      <p className="text-[10px] text-app-muted-foreground italic mt-0.5">{entry.note}</p>
                     )}
                   </div>
                 </div>
@@ -278,36 +278,36 @@ export function ActionsPanel({
             </div>
           ) : (
             <div className="text-center py-4">
-              <History size={24} className="mx-auto mb-2 text-app-text-muted opacity-30" />
-              <p className="text-[10px] text-app-text-faint">No audit events yet</p>
+              <History size={24} className="mx-auto mb-2 text-app-muted-foreground opacity-30" />
+              <p className="text-[10px] text-app-muted-foreground">No audit events yet</p>
             </div>
           )}
         </div>
 
         {/* Document Timeline */}
         <div className="space-y-2">
-          <p className="text-xs font-black text-app-text-faint uppercase tracking-wider">Document Timeline</p>
+          <p className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Document Timeline</p>
           <div className="space-y-2 text-xs">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 rounded-full bg-app-info mt-1.5" />
               <div>
-                <p className="font-bold text-app-text">Invoice Received</p>
-                <p className="text-app-text-faint">{new Date(invoice.invoice_date).toLocaleDateString()}</p>
+                <p className="font-bold text-app-foreground">Invoice Received</p>
+                <p className="text-app-muted-foreground">{new Date(invoice.invoice_date).toLocaleDateString()}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 rounded-full bg-app-primary mt-1.5" />
               <div>
-                <p className="font-bold text-app-text">PO Created</p>
-                <p className="text-app-text-faint">2 days ago</p>
+                <p className="font-bold text-app-foreground">PO Created</p>
+                <p className="text-app-muted-foreground">2 days ago</p>
               </div>
             </div>
             {invoice.receipt_number && (
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5" />
                 <div>
-                  <p className="font-bold text-app-text">Goods Received</p>
-                  <p className="text-app-text-faint">{invoice.received_date ? new Date(invoice.received_date).toLocaleDateString() : '—'}</p>
+                  <p className="font-bold text-app-foreground">Goods Received</p>
+                  <p className="text-app-muted-foreground">{invoice.received_date ? new Date(invoice.received_date).toLocaleDateString() : '—'}</p>
                 </div>
               </div>
             )}

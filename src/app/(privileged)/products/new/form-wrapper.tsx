@@ -173,7 +173,7 @@ export default function ProductFormWrapper(props: any) {
                     <div className="bg-app-surface rounded-2xl border border-app-border shadow-xl p-6 space-y-5">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-app-gradient-warning flex items-center justify-center shadow-sm">
+                                <div className="w-8 h-8 rounded-lg bg-app-warning flex items-center justify-center shadow-sm">
                                     <Zap className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
@@ -242,7 +242,7 @@ export default function ProductFormWrapper(props: any) {
                                 <button
                                     type="submit"
                                     disabled={qPending}
-                                    className="flex-1 py-3 rounded-xl bg-app-gradient-warning text-white text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 rounded-xl bg-app-warning text-white text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {qPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                                     {qPending ? 'Creating...' : 'Create →'}

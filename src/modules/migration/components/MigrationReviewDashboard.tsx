@@ -49,9 +49,9 @@ const ENTITY_COLORS: Record<string, string> = {
     UNIT: "text-cyan-600", CATEGORY: "text-blue-600", BRAND: "text-indigo-600",
     PRODUCT: "text-purple-600", CONTACT: "text-pink-600", TRANSACTION: "text-amber-600",
     ORDER_LINE: "text-orange-600", ACCOUNT: "text-emerald-600", ACCOUNT_TRANSACTION: "text-teal-600",
-    TAX_RATE: "text-app-text-muted", BUSINESS_LOCATION: "text-sky-600", EXPENSE_CATEGORY: "text-rose-600",
+    TAX_RATE: "text-app-muted-foreground", BUSINESS_LOCATION: "text-sky-600", EXPENSE_CATEGORY: "text-rose-600",
     PRODUCT_VARIATION: "text-fuchsia-600", CUSTOMER_GROUP: "text-violet-600", ACCOUNT_TYPE: "text-lime-600",
-    USER: "text-app-text-muted", CURRENCY: "text-yellow-600", COMBO_LINK: "text-app-text-muted",
+    USER: "text-app-muted-foreground", CURRENCY: "text-yellow-600", COMBO_LINK: "text-app-muted-foreground",
 }
 
 const entityGroupMeta: Record<string, { icon: any, gradient: string }> = {
@@ -144,7 +144,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
             return (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-app-text-faint uppercase">Accounting Connection</span>
+                        <span className="text-xs font-bold text-app-muted-foreground uppercase">Accounting Connection</span>
                         {state.is_linked_to_coa ? (
                             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">LINKED TO COA</Badge>
                         ) : (
@@ -153,12 +153,12 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-app-bg p-3 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Account Type</span>
-                            <p className="text-sm font-black text-app-text">{state.type || 'N/A'}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Account Type</span>
+                            <p className="text-sm font-black text-app-foreground">{state.type || 'N/A'}</p>
                         </div>
                         <div className="bg-app-bg p-3 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Currency</span>
-                            <p className="text-sm font-black text-app-text">{state.currency || 'USD'}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Currency</span>
+                            <p className="text-sm font-black text-app-foreground">{state.currency || 'USD'}</p>
                         </div>
                     </div>
                     <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
@@ -181,7 +181,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
             return (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-app-text-faint uppercase">Auxiliary Ledger</span>
+                        <span className="text-xs font-bold text-app-muted-foreground uppercase">Auxiliary Ledger</span>
                         {state.has_ledger_link ? (
                             <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">LEDGER READY</Badge>
                         ) : (
@@ -190,12 +190,12 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-app-bg p-3 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Partner Type</span>
-                            <p className="text-sm font-black text-app-text uppercase">{state.type || 'Contact'}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Partner Type</span>
+                            <p className="text-sm font-black text-app-foreground uppercase">{state.type || 'Contact'}</p>
                         </div>
                         <div className="bg-app-bg p-3 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Tax ID</span>
-                            <p className="text-sm font-black text-app-text">{state.tax_number || 'N/A'}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Tax ID</span>
+                            <p className="text-sm font-black text-app-foreground">{state.tax_number || 'N/A'}</p>
                         </div>
                     </div>
                     <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
@@ -211,20 +211,20 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
             return (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-app-text-faint uppercase">Valuation & Margin</span>
+                        <span className="text-xs font-bold text-app-muted-foreground uppercase">Valuation & Margin</span>
                         <Badge className="bg-purple-100 text-purple-700 border-purple-200">{state.product_type}</Badge>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <div className="bg-app-bg p-2.5 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Unit Cost</span>
-                            <p className="text-xs font-black text-app-text">{(state.purchase_price || 0).toLocaleString()}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Unit Cost</span>
+                            <p className="text-xs font-black text-app-foreground">{(state.purchase_price || 0).toLocaleString()}</p>
                         </div>
                         <div className="bg-app-bg p-2.5 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Price (HT)</span>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Price (HT)</span>
                             <p className="text-xs font-black text-blue-600">{(state.selling_price || 0).toLocaleString()}</p>
                         </div>
                         <div className="bg-app-bg p-2.5 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Tax Rate</span>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Tax Rate</span>
                             <p className="text-xs font-black text-emerald-600">{state.tax_rate || '0'}%</p>
                         </div>
                     </div>
@@ -250,19 +250,19 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
             return (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-app-text-faint uppercase">Posting Details</span>
+                        <span className="text-xs font-bold text-app-muted-foreground uppercase">Posting Details</span>
                         <Badge className={`bg-app-surface border ${state.status === 'PAID' || state.status === 'COMPLETED' ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'}`}>
                             {state.status}
                         </Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="bg-app-bg p-2.5 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Reference</span>
-                            <p className="text-xs font-black text-app-text">{state.reference || state.id}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Reference</span>
+                            <p className="text-xs font-black text-app-foreground">{state.reference || state.id}</p>
                         </div>
                         <div className="bg-app-bg p-2.5 rounded-xl border border-app-border">
-                            <span className="text-[9px] text-app-text-faint font-bold uppercase block mb-1">Date</span>
-                            <p className="text-xs font-black text-app-text">{state.date ? new Date(state.date).toLocaleDateString() : 'N/A'}</p>
+                            <span className="text-[9px] text-app-muted-foreground font-bold uppercase block mb-1">Date</span>
+                            <p className="text-xs font-black text-app-foreground">{state.date ? new Date(state.date).toLocaleDateString() : 'N/A'}</p>
                         </div>
                     </div>
                     <div className={`p-4 rounded-2xl border ${isSale ? 'bg-sky-50 border-sky-100' : 'bg-rose-50 border-rose-100'}`}>
@@ -272,8 +272,8 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                 <p className={`text-2xl font-black ${isSale ? 'text-sky-950' : 'text-rose-950'}`}>{(state.total_ttc || state.amount || 0).toLocaleString()}</p>
                             </div>
                             <div className="text-right">
-                                <span className="text-[9px] text-app-text-faint font-bold block">Method</span>
-                                <p className="text-xs font-black text-app-text uppercase">{state.payment_method || 'CREDIT'}</p>
+                                <span className="text-[9px] text-app-muted-foreground font-bold block">Method</span>
+                                <p className="text-xs font-black text-app-foreground uppercase">{state.payment_method || 'CREDIT'}</p>
                             </div>
                         </div>
                     </div>
@@ -283,7 +283,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
 
         return (
             <div className="py-10 text-center">
-                <p className="text-xs text-app-text-faint font-medium italic">Standard field-for-field mapping verification.</p>
+                <p className="text-xs text-app-muted-foreground font-medium italic">Standard field-for-field mapping verification.</p>
             </div>
         )
     }
@@ -368,7 +368,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-black text-app-text tracking-tight">
+                        <h2 className="text-2xl font-black text-app-foreground tracking-tight">
                             Migration Review
                         </h2>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -379,7 +379,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                 </span>
                             )}
                             {job?.completed_at && (
-                                <span className="text-app-text-faint text-xs font-medium">
+                                <span className="text-app-muted-foreground text-xs font-medium">
                                     Completed {new Date(job.completed_at).toLocaleString()}
                                 </span>
                             )}
@@ -421,7 +421,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <span className={`text-xl font-black ${healthPercent >= 95 ? 'text-emerald-600' : healthPercent >= 70 ? 'text-amber-600' : 'text-red-600'
                                     }`}>{healthPercent}%</span>
-                                <span className="text-app-text-faint text-[7px] font-bold uppercase tracking-widest">Health</span>
+                                <span className="text-app-muted-foreground text-[7px] font-bold uppercase tracking-widest">Health</span>
                             </div>
                         </div>
                     )}
@@ -443,7 +443,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             </div>
                             <div>
                                 <p className={`${color} text-2xl font-black tracking-tight leading-none`}>{(value || 0).toLocaleString()}</p>
-                                <p className="text-app-text-faint text-[9px] font-bold uppercase tracking-widest mt-0.5">{label}</p>
+                                <p className="text-app-muted-foreground text-[9px] font-bold uppercase tracking-widest mt-0.5">{label}</p>
                             </div>
                         </div>
                     </div>
@@ -464,7 +464,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                         <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                             className={`px-5 py-2.5 rounded-t-xl text-sm font-bold transition-all flex items-center gap-2 border-b-2 ${activeTab === tab.key
                                 ? "border-emerald-500 text-emerald-700 bg-emerald-50/50"
-                                : "border-transparent text-app-text-faint hover:text-app-text-muted hover:bg-app-bg"
+                                : "border-transparent text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-bg"
                                 }`}
                         >
                             <TabIcon className="w-4 h-4" />
@@ -486,7 +486,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                 loading ? (
                     <div className="flex flex-col items-center justify-center py-20 bg-app-surface border border-dashed border-app-border rounded-3xl">
                         <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mb-4" />
-                        <span className="text-app-text-faint font-bold tracking-tight">Gathering migration intelligence...</span>
+                        <span className="text-app-muted-foreground font-bold tracking-tight">Gathering migration intelligence...</span>
                     </div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center py-20 bg-red-50/30 border border-dashed border-red-200 rounded-3xl">
@@ -500,9 +500,9 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                 ) : review?.entities?.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 bg-app-bg border border-dashed border-app-border rounded-3xl">
                         <DatabaseZap className="w-10 h-10 text-slate-300 mb-4" />
-                        <span className="text-app-text-faint font-bold">No migrated data found yet</span>
-                        <p className="text-app-text-faint text-sm mt-1">The migration might still be in the early stages.</p>
-                        <Button onClick={fetchReview} variant="outline" size="sm" className="mt-6 border-app-border text-app-text-muted">
+                        <span className="text-app-muted-foreground font-bold">No migrated data found yet</span>
+                        <p className="text-app-muted-foreground text-sm mt-1">The migration might still be in the early stages.</p>
+                        <Button onClick={fetchReview} variant="outline" size="sm" className="mt-6 border-app-border text-app-muted-foreground">
                             Check Again
                         </Button>
                     </div>
@@ -511,28 +511,28 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                         {/* High-Level Health Stats */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
-                                <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Global Progress</p>
+                                <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Global Progress</p>
                                 <div className="flex items-end justify-between">
-                                    <h4 className="text-2xl font-black text-app-text">{review?.total_good ? Math.round((review.total_good / (review.total_mappings || 1)) * 100) : 0}%</h4>
+                                    <h4 className="text-2xl font-black text-app-foreground">{review?.total_good ? Math.round((review.total_good / (review.total_mappings || 1)) * 100) : 0}%</h4>
                                     <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px]">DATA SYNC</Badge>
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
-                                <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Audit Ready</p>
+                                <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Audit Ready</p>
                                 <div className="flex items-end justify-between">
                                     <h4 className="text-2xl font-black text-emerald-600">{(review?.total_good || 0).toLocaleString()}</h4>
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500 mb-1" />
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
-                                <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Needs Attention</p>
+                                <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Needs Attention</p>
                                 <div className="flex items-end justify-between">
                                     <h4 className="text-2xl font-black text-amber-500">{(review?.needs_review_count || 0).toLocaleString()}</h4>
                                     <AlertTriangle className="w-4 h-4 text-amber-500 mb-1" />
                                 </div>
                             </div>
                             <div className="bg-app-surface border border-app-border p-5 rounded-[2rem] shadow-sm">
-                                <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Ledger Errors</p>
+                                <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Ledger Errors</p>
                                 <div className="flex items-end justify-between">
                                     <h4 className="text-2xl font-black text-red-500">{(review?.total_errors || 0).toLocaleString()}</h4>
                                     <XCircle className="w-4 h-4 text-red-500 mb-1" />
@@ -550,9 +550,9 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                 <div key={groupKey} className="space-y-3">
                                     <div className="flex items-center gap-2 px-1">
                                         <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${groupMeta.gradient} flex items-center justify-center`}>
-                                            <GroupIcon className="w-3.5 h-3.5 text-app-text-muted" />
+                                            <GroupIcon className="w-3.5 h-3.5 text-app-muted-foreground" />
                                         </div>
-                                        <h3 className="text-xs font-black uppercase tracking-widest text-app-text-faint">{groupLabel}</h3>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground">{groupLabel}</h3>
                                         <div className="h-px flex-1 bg-app-surface-2" />
                                     </div>
 
@@ -560,7 +560,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                         {groupEntities.map(entity => {
                                             const Icon = ENTITY_ICONS[entity.entity_type] || Database
                                             const label = ENTITY_LABELS[entity.entity_type] || entity.entity_type
-                                            const color = ENTITY_COLORS[entity.entity_type] || "text-app-text-muted"
+                                            const color = ENTITY_COLORS[entity.entity_type] || "text-app-muted-foreground"
                                             const pct = entity.total > 0 ? Math.round((entity.good / entity.total) * 100) : 100
                                             const hasDrafts = entity.draft > 0 || entity.needs_review > 0
 
@@ -578,14 +578,14 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                                                 <Icon className={`w-5 h-5 ${hasDrafts ? 'text-amber-600' : color}`} />
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="text-xl font-black text-app-text leading-none">{(entity.total || 0).toLocaleString()}</p>
-                                                                <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-tighter mt-1">Total {label}</p>
+                                                                <p className="text-xl font-black text-app-foreground leading-none">{(entity.total || 0).toLocaleString()}</p>
+                                                                <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-tighter mt-1">Total {label}</p>
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-3">
                                                             <div>
-                                                                <h4 className="text-sm font-black text-app-text group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{label}</h4>
+                                                                <h4 className="text-sm font-black text-app-foreground group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{label}</h4>
                                                                 <div className="flex items-center gap-2 mt-1">
                                                                     <div className="flex-1 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                                         <div
@@ -593,7 +593,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                                                             style={{ width: `${pct}%` }}
                                                                         />
                                                                     </div>
-                                                                    <span className="text-[10px] font-black text-app-text-faint">{pct}%</span>
+                                                                    <span className="text-[10px] font-black text-app-muted-foreground">{pct}%</span>
                                                                 </div>
                                                             </div>
 
@@ -675,7 +675,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                             <span className="text-white/15 shrink-0 w-6 text-right select-none">{i + 1}</span>
                                             <span className={`${line.includes('ERROR') || line.includes('error') ? 'text-red-400'
                                                 : line.includes('WARN') || line.includes('skip') ? 'text-amber-600'
-                                                    : 'text-app-text-faint'
+                                                    : 'text-app-muted-foreground'
                                                 }`}>
                                                 {line}
                                             </span>
@@ -693,7 +693,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             ) : (
                                 <div className="text-center py-10">
                                     <CheckCircle2 className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
-                                    <p className="text-app-text-faint text-sm">No errors recorded for this migration.</p>
+                                    <p className="text-app-muted-foreground text-sm">No errors recorded for this migration.</p>
                                 </div>
                             )}
                         </CardContent>
@@ -703,10 +703,10 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
 
             {/*  Audit Modal  */}
             <Dialog open={!!auditEntity} onOpenChange={(open) => !open && setAuditEntity(null)}>
-                <DialogContent className="max-w-4xl max-h-[90vh] bg-app-surface border-app-border shadow-2xl text-app-text overflow-hidden flex flex-col p-0">
+                <DialogContent className="max-w-4xl max-h-[90vh] bg-app-surface border-app-border shadow-2xl text-app-foreground overflow-hidden flex flex-col p-0">
                     <DialogHeader className="p-6 pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-app-border">
                         <div className="flex items-center justify-between">
-                            <DialogTitle className="flex items-center gap-2.5 text-xl font-black text-app-text">
+                            <DialogTitle className="flex items-center gap-2.5 text-xl font-black text-app-foreground">
                                 <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
                                     <Banknote className="w-5 h-5 text-emerald-600" />
                                 </div>
@@ -714,7 +714,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                             </DialogTitle>
                             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">INTEGRITY CHECK</Badge>
                         </div>
-                        <DialogDescription className="text-app-text-faint mt-1 font-medium">
+                        <DialogDescription className="text-app-muted-foreground mt-1 font-medium">
                             Verify if balances, accounting types, and ledger links match your source data.
                         </DialogDescription>
                     </DialogHeader>
@@ -722,7 +722,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                     <div className="flex-1 overflow-hidden flex flex-col min-h-0 bg-slate-50/50">
                         <ScrollArea className="flex-1 px-6 py-6">
                             {loadingSamples ? (
-                                <div className="py-20 flex flex-col items-center justify-center gap-4 text-app-text-faint">
+                                <div className="py-20 flex flex-col items-center justify-center gap-4 text-app-muted-foreground">
                                     <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
                                     <p className="text-sm font-bold tracking-tight">Recalculating ledger impacts...</p>
                                 </div>
@@ -758,7 +758,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                         {auditSamples?.map((sample, idx) => (
                                             <div key={idx} className="flex flex-col gap-4">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-faint bg-app-surface px-3 py-1 rounded-full border border-app-border shadow-sm shrink-0">
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground bg-app-surface px-3 py-1 rounded-full border border-app-border shadow-sm shrink-0">
                                                         Sample #{idx + 1}
                                                     </span>
                                                     <div className="h-px flex-1 bg-app-surface-2" />
@@ -787,7 +787,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                                                 <div key={eidx} className="flex justify-between items-center text-[10px] border-b border-white/5 pb-2 last:border-0 last:pb-0">
                                                                     <div className="max-w-[120px] truncate">
                                                                         <p className="font-bold text-gray-300">{entry.account_name || entry.account_id}</p>
-                                                                        <p className="text-[8px] text-app-text-faint uppercase">{entry.type}</p>
+                                                                        <p className="text-[8px] text-app-muted-foreground uppercase">{entry.type}</p>
                                                                     </div>
                                                                     <p className="font-mono font-black text-emerald-400">
                                                                         {(entry.debit > 0 ? entry.debit : entry.credit).toLocaleString()}
@@ -800,7 +800,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
 
                                                 {/* SOURCE SUMMARY (The "How it was" part) */}
                                                 <details className="cursor-pointer">
-                                                    <summary className="text-[10px] font-black text-app-text-faint uppercase tracking-widest list-none flex items-center justify-center gap-1.5 py-2 hover:text-app-text-muted transition-colors">
+                                                    <summary className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest list-none flex items-center justify-center gap-1.5 py-2 hover:text-app-muted-foreground transition-colors">
                                                         Compare with Source Data <ChevronRight className="w-3 h-3 rotate-90" />
                                                     </summary>
                                                     <Card className="border-app-border bg-slate-50/50 rounded-3xl mt-2 overflow-hidden">
@@ -809,8 +809,8 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                                                 .filter(([k]) => !['created_at', 'updated_at', 'id'].includes(k))
                                                                 .map(([key, val]: [string, any]) => (
                                                                     <div key={key}>
-                                                                        <p className="text-[8px] font-bold text-app-text-faint uppercase tracking-tighter">{key.replace(/_/g, ' ')}</p>
-                                                                        <p className="text-[11px] font-black text-app-text-muted truncate">
+                                                                        <p className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-tighter">{key.replace(/_/g, ' ')}</p>
+                                                                        <p className="text-[11px] font-black text-app-muted-foreground truncate">
                                                                             {typeof val === 'object' ? '...' : String(val)}
                                                                         </p>
                                                                     </div>

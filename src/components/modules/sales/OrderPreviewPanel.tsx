@@ -26,7 +26,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
   if (!order) {
     return (
       <Card className="h-full flex items-center justify-center border-app-border/30">
-        <div className="text-center text-app-text-muted p-8">
+        <div className="text-center text-app-muted-foreground p-8">
           <Package size={48} className="mx-auto mb-4 opacity-20" />
           <p className="text-sm font-bold">Select an order to preview</p>
           <p className="text-xs mt-1 opacity-60">Click on any order from the list</p>
@@ -53,7 +53,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
                   {order.invoice_number || order.ref_code || `#${order.id}`}
                 </CardTitle>
               </div>
-              <div className="flex items-center gap-2 text-xs text-app-text-muted">
+              <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                 <Calendar size={12} />
                 {new Date(order.created_at).toLocaleDateString()}
               </div>
@@ -70,25 +70,25 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
           <div className="grid grid-cols-2 gap-2">
             {orderStatus && (
               <div className="text-center">
-                <p className="text-[9px] text-app-text-faint uppercase tracking-wider mb-1">Order</p>
+                <p className="text-[9px] text-app-muted-foreground uppercase tracking-wider mb-1">Order</p>
                 <Badge className={orderStatus.color}>{orderStatus.label}</Badge>
               </div>
             )}
             {deliveryStatus && (
               <div className="text-center">
-                <p className="text-[9px] text-app-text-faint uppercase tracking-wider mb-1">Delivery</p>
+                <p className="text-[9px] text-app-muted-foreground uppercase tracking-wider mb-1">Delivery</p>
                 <Badge className={deliveryStatus.color}>{deliveryStatus.label}</Badge>
               </div>
             )}
             {paymentStatus && (
               <div className="text-center">
-                <p className="text-[9px] text-app-text-faint uppercase tracking-wider mb-1">Payment</p>
+                <p className="text-[9px] text-app-muted-foreground uppercase tracking-wider mb-1">Payment</p>
                 <Badge className={paymentStatus.color}>{paymentStatus.label}</Badge>
               </div>
             )}
             {invoiceStatus && (
               <div className="text-center">
-                <p className="text-[9px] text-app-text-faint uppercase tracking-wider mb-1">Invoice</p>
+                <p className="text-[9px] text-app-muted-foreground uppercase tracking-wider mb-1">Invoice</p>
                 <Badge className={invoiceStatus.color}>{invoiceStatus.label}</Badge>
               </div>
             )}
@@ -105,17 +105,17 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <div className="font-bold text-app-text">{order.contact_name || 'Walk-In'}</div>
+          <div className="font-bold text-app-foreground">{order.contact_name || 'Walk-In'}</div>
           {order.contact && (
             <>
               {(order.contact as any).phone && (
-                <div className="flex items-center gap-2 text-xs text-app-text-muted">
+                <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                   <Phone size={12} />
                   {(order.contact as any).phone}
                 </div>
               )}
               {(order.contact as any).email && (
-                <div className="flex items-center gap-2 text-xs text-app-text-muted">
+                <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                   <Mail size={12} />
                   {(order.contact as any).email}
                 </div>
@@ -138,14 +138,14 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
             {order.lines?.map((line: any, i: number) => (
               <div key={i} className="flex items-start justify-between py-2 border-b border-app-border/30 last:border-0">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-app-text truncate">
+                  <p className="text-sm font-semibold text-app-foreground truncate">
                     {line.product_name || `Product #${line.product}`}
                   </p>
-                  <p className="text-xs text-app-text-muted">
+                  <p className="text-xs text-app-muted-foreground">
                     {line.quantity} × {fmt(parseFloat(line.unit_price))}
                   </p>
                 </div>
-                <div className="text-sm font-bold text-app-text">
+                <div className="text-sm font-bold text-app-foreground">
                   {fmt(parseFloat(line.subtotal))}
                 </div>
               </div>
@@ -159,7 +159,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
         <CardContent className="pt-6">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-app-text-muted">Subtotal</span>
+              <span className="text-app-muted-foreground">Subtotal</span>
               <span className="font-bold">{fmt(parseFloat(String(order.subtotal || 0)))}</span>
             </div>
             {order.discount_amount && parseFloat(String(order.discount_amount)) > 0 && (
@@ -170,7 +170,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
             )}
             {order.tax_amount && parseFloat(String(order.tax_amount)) > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-app-text-muted">Tax</span>
+                <span className="text-app-muted-foreground">Tax</span>
                 <span className="font-bold">{fmt(parseFloat(String(order.tax_amount)))}</span>
               </div>
             )}
@@ -185,7 +185,7 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
                   <span className="font-bold">{fmt(parseFloat(String(order.total_paid)))}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-app-text-muted">Due</span>
+                  <span className="text-app-muted-foreground">Due</span>
                   <span className="font-bold text-rose-600">
                     {fmt(parseFloat(String(order.amount_due || 0)))}
                   </span>
@@ -208,8 +208,8 @@ export function OrderPreviewPanel({ order, onClose }: OrderPreviewPanelProps) {
           <CardContent className="space-y-2">
             {order.notes && (
               <div>
-                <p className="text-[9px] text-app-text-faint uppercase mb-1">Customer Note</p>
-                <p className="text-xs text-app-text">{order.notes}</p>
+                <p className="text-[9px] text-app-muted-foreground uppercase mb-1">Customer Note</p>
+                <p className="text-xs text-app-foreground">{order.notes}</p>
               </div>
             )}
             {order.staff_notes && (

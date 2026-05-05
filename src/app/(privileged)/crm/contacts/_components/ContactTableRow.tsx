@@ -37,14 +37,14 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{
-              fontWeight: 700, fontSize: '0.8125rem', color: 'var(--app-text)',
+              fontWeight: 700, fontSize: '0.8125rem', color: 'var(--app-foreground)',
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '14rem',
             }}>
               {contact.name}
             </div>
             {contact.company_name && (
               <div style={{
-                fontSize: '0.6875rem', color: 'var(--app-text-muted)',
+                fontSize: '0.6875rem', color: 'var(--app-muted-foreground)',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '14rem',
               }}>
                 {contact.company_name}
@@ -72,7 +72,7 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
               padding: '0.0625rem 0.3125rem', borderRadius: '99px',
               fontSize: '0.5rem', fontWeight: 700,
               background: contact.customer_tier === 'VIP' ? '#FEF3C7' : 'var(--app-surface-2)',
-              color: contact.customer_tier === 'VIP' ? '#B45309' : 'var(--app-text-muted)',
+              color: contact.customer_tier === 'VIP' ? '#B45309' : 'var(--app-muted-foreground)',
             }}>
               {contact.customer_tier === 'VIP' && <Star size={7} style={{ fill: '#EAB308' }} />}
               {contact.customer_tier}
@@ -94,16 +94,16 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
       <td className="app-td">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.0625rem' }}>
           {contact.phone && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3125rem', fontSize: '0.75rem', color: 'var(--app-text)' }}>
-              <Phone size={10} style={{ color: 'var(--app-text-faint)' }} /> {contact.phone}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3125rem', fontSize: '0.75rem', color: 'var(--app-foreground)' }}>
+              <Phone size={10} style={{ color: 'var(--app-muted-foreground)' }} /> {contact.phone}
             </span>
           )}
           {contact.email && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3125rem', fontSize: '0.6875rem', color: 'var(--app-text-muted)' }}>
-              <Mail size={9} style={{ color: 'var(--app-text-faint)' }} /> {contact.email}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3125rem', fontSize: '0.6875rem', color: 'var(--app-muted-foreground)' }}>
+              <Mail size={9} style={{ color: 'var(--app-muted-foreground)' }} /> {contact.email}
             </span>
           )}
-          {!contact.phone && !contact.email && <span style={{ color: 'var(--app-text-faint)', fontSize: '0.6875rem' }}>—</span>}
+          {!contact.phone && !contact.email && <span style={{ color: 'var(--app-muted-foreground)', fontSize: '0.6875rem' }}>—</span>}
         </div>
       </td>
 
@@ -121,7 +121,7 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
             </span>
           ))}
           {(contact.tagNames || contact.tag_names || []).length > 2 && (
-            <span style={{ fontSize: '0.5rem', color: 'var(--app-text-faint)' }}>+{(contact.tagNames || contact.tag_names).length - 2}</span>
+            <span style={{ fontSize: '0.5rem', color: 'var(--app-muted-foreground)' }}>+{(contact.tagNames || contact.tag_names).length - 2}</span>
           )}
         </div>
       </td>
@@ -138,13 +138,13 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
               {act.orders}
             </span>
             {contact.last_purchase_date && (
-              <span style={{ fontSize: '0.5rem', color: 'var(--app-text-faint)' }}>
+              <span style={{ fontSize: '0.5rem', color: 'var(--app-muted-foreground)' }}>
                 {formatRelDate(contact.last_purchase_date)}
               </span>
             )}
           </div>
         ) : (
-          <span style={{ fontSize: '0.5625rem', color: 'var(--app-text-faint)', fontStyle: 'italic' }}>—</span>
+          <span style={{ fontSize: '0.5625rem', color: 'var(--app-muted-foreground)', fontStyle: 'italic' }}>—</span>
         )}
       </td>
 
@@ -152,7 +152,7 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
       <td className="app-td" style={{ textAlign: 'right' }}>
         <span style={{
           fontWeight: 700, fontSize: '0.8125rem',
-          color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-text-faint)',
+          color: bal > 0 ? 'var(--app-success)' : bal < 0 ? 'var(--app-error)' : 'var(--app-muted-foreground)',
           display: 'inline-flex', alignItems: 'center', gap: '0.1875rem',
         }}>
           {bal > 0 && <TrendingUp size={11} />}
@@ -163,7 +163,7 @@ export const ContactTableRow = React.memo(function ContactTableRow({ contact, on
 
       {/* Arrow */}
       <td className="app-td" style={{ textAlign: 'center' }}>
-        <ChevronRight size={14} style={{ color: 'var(--app-text-faint)' }} />
+        <ChevronRight size={14} style={{ color: 'var(--app-muted-foreground)' }} />
       </td>
     </tr>
   )

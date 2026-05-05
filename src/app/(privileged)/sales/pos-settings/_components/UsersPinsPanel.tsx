@@ -43,18 +43,18 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
                     <div className="flex items-center gap-2">
-                        <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-text-muted hover:text-app-text transition-all shrink-0" title="Return">
+                        <button onClick={onReturn || onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-app-border hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all shrink-0" title="Return">
                             <ArrowLeft size={14} />
                         </button>
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
                             <Key size={14} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-app-text">Users & PINs</h2>
-                            <p className="text-[9px] text-app-text-faint">{withPin} with PIN · {withoutPin} without</p>
+                            <h2 className="text-sm font-black text-app-foreground">Users & PINs</h2>
+                            <p className="text-[9px] text-app-muted-foreground">{withPin} with PIN · {withoutPin} without</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted"><X size={14} /></button>
+                    <button onClick={onClose} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground"><X size={14} /></button>
                 </div>
 
                 {/* Stats strip */}
@@ -74,9 +74,9 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                 {/* Search */}
                 <div className="px-5 py-3">
                     <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search users…"
-                            className="w-full text-[12px] pl-9 pr-3 py-2 bg-app-surface/50 border border-app-border/50 rounded-xl text-app-text placeholder:text-app-text-faint outline-none focus:border-app-primary/40 transition-all" />
+                            className="w-full text-[12px] pl-9 pr-3 py-2 bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground outline-none focus:border-app-primary/40 transition-all" />
                     </div>
                 </div>
 
@@ -112,7 +112,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                                     {/* Name + role */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <p className="text-[11px] font-bold text-app-text truncate">{name}</p>
+                                            <p className="text-[11px] font-bold text-app-foreground truncate">{name}</p>
                                             {isSelf && (
                                                 <span className="text-[7px] font-black px-1 py-0.5 rounded"
                                                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
@@ -120,7 +120,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-[9px] text-app-text-faint">{u.role_name || 'Staff'}</p>
+                                        <p className="text-[9px] text-app-muted-foreground">{u.role_name || 'Staff'}</p>
                                     </div>
 
                                     {/* PIN status */}

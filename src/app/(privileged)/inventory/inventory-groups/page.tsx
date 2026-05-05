@@ -22,7 +22,7 @@ const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
     PRIMARY: { label: 'Primary', color: '--app-success', icon: Star },
     TWIN: { label: 'Twin', color: '--app-primary', icon: Zap },
     SUBSTITUTE: { label: 'Substitute', color: '--app-warning', icon: ArrowRight },
-    NOT_SUB: { label: 'Analytics', color: '--app-text-muted', icon: BarChart3 },
+    NOT_SUB: { label: 'Analytics', color: '--app-muted-foreground', icon: BarChart3 },
 }
 
 /* ─── HELPERS ─────────────────────────────────────────────────────────── */
@@ -488,7 +488,7 @@ export default function InventoryGroupsPage() {
     )
 
     return (
-        <div className="min-h-screen layout-container-padding theme-bg">
+        <div className="min-h-screen layout-container-padding bg-app-bg">
             {/* ─── Header ──────────────────────────────────────────── */}
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">

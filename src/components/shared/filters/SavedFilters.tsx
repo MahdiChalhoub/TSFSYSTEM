@@ -78,7 +78,7 @@ export function SavedFilters({
       {/* Quick Filter Templates */}
       {templates.length > 0 && (
         <div>
-          <label className="text-sm font-bold theme-text-muted uppercase mb-2 block">
+          <label className="text-sm font-bold text-app-muted-foreground uppercase mb-2 block">
             Quick Filters
           </label>
           <div className="space-y-2">
@@ -92,7 +92,7 @@ export function SavedFilters({
                 <span className="mr-2">{template.icon}</span>
                 <div className="flex-1 text-left">
                   <div className="font-semibold">{template.name}</div>
-                  <div className="text-xs theme-text-muted">{template.description}</div>
+                  <div className="text-xs text-app-muted-foreground">{template.description}</div>
                 </div>
               </Button>
             ))}
@@ -103,14 +103,14 @@ export function SavedFilters({
       {/* Saved Filters */}
       {savedFilters.length > 0 && (
         <div>
-          <label className="text-sm font-bold theme-text-muted uppercase mb-2 block">
+          <label className="text-sm font-bold text-app-muted-foreground uppercase mb-2 block">
             My Saved Filters
           </label>
           <div className="space-y-2">
             {savedFilters.map(filter => (
               <div
                 key={filter.id}
-                className="flex items-center gap-2 p-2 theme-surface rounded-lg border theme-border hover:bg-[var(--theme-bg)] cursor-pointer"
+                className="flex items-center gap-2 p-2 theme-surface rounded-lg border theme-border hover:bg-[var(--bg-app-bg)] cursor-pointer"
                 onClick={() => onLoadFilter(filter)}
               >
                 {/* Default star */}
@@ -121,7 +121,7 @@ export function SavedFilters({
                 {/* Filter info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold theme-text truncate">
+                    <span className="font-semibold text-app-foreground truncate">
                       {filter.name}
                     </span>
                     {filter.isPublic && (
@@ -132,11 +132,11 @@ export function SavedFilters({
                     )}
                   </div>
                   {filter.description && (
-                    <p className="text-xs theme-text-muted truncate">
+                    <p className="text-xs text-app-muted-foreground truncate">
                       {filter.description}
                     </p>
                   )}
-                  <p className="text-xs theme-text-muted">
+                  <p className="text-xs text-app-muted-foreground">
                     Used {filter.usageCount} times
                   </p>
                 </div>
@@ -198,7 +198,7 @@ export function SavedFilters({
           <div className="space-y-4 py-4">
             {/* Filter name */}
             <div>
-              <label className="text-sm font-bold theme-text mb-2 block">
+              <label className="text-sm font-bold text-app-foreground mb-2 block">
                 Filter Name *
               </label>
               <Input
@@ -210,7 +210,7 @@ export function SavedFilters({
 
             {/* Description */}
             <div>
-              <label className="text-sm font-bold theme-text mb-2 block">
+              <label className="text-sm font-bold text-app-foreground mb-2 block">
                 Description
               </label>
               <Input
@@ -229,12 +229,12 @@ export function SavedFilters({
                   checked={isPublic}
                   onCheckedChange={(checked) => setIsPublic(checked as boolean)}
                 />
-                <label htmlFor="public" className="text-sm theme-text cursor-pointer">
+                <label htmlFor="public" className="text-sm text-app-foreground cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     <span>Share with team</span>
                   </div>
-                  <p className="text-xs theme-text-muted">
+                  <p className="text-xs text-app-muted-foreground">
                     Other users can see and use this filter
                   </p>
                 </label>
@@ -247,12 +247,12 @@ export function SavedFilters({
                   checked={isDefault}
                   onCheckedChange={(checked) => setIsDefault(checked as boolean)}
                 />
-                <label htmlFor="default" className="text-sm theme-text cursor-pointer">
+                <label htmlFor="default" className="text-sm text-app-foreground cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Star className="w-4 h-4" />
                     <span>Set as my default filter</span>
                   </div>
-                  <p className="text-xs theme-text-muted">
+                  <p className="text-xs text-app-muted-foreground">
                     Apply this filter automatically when you visit this page
                   </p>
                 </label>
@@ -274,10 +274,10 @@ export function SavedFilters({
 
       {/* Show default filter info */}
       {defaultFilter && (
-        <div className="p-3 theme-bg rounded-lg border theme-border">
+        <div className="p-3 bg-app-bg rounded-lg border theme-border">
           <div className="flex items-center gap-2 text-sm">
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span className="theme-text">
+            <span className="text-app-foreground">
               <span className="font-semibold">{defaultFilter.name}</span> is your default filter
             </span>
           </div>

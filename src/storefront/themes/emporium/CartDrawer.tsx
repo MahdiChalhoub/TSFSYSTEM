@@ -31,19 +31,19 @@ export default function EmporiumCartDrawer() {
                 {/* Header */}
                 <div className="p-6 border-b border-app-border flex items-center justify-between bg-app-bg">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-400 flex items-center justify-center rounded-xl shadow-sm text-app-text">
+                        <div className="w-10 h-10 bg-yellow-400 flex items-center justify-center rounded-xl shadow-sm text-app-foreground">
                             <ShoppingBag size={20} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-app-text tracking-tight">Shopping Cart</h2>
-                            <p className="text-[11px] text-app-text-faint uppercase font-bold tracking-widest">
+                            <h2 className="text-xl font-bold text-app-foreground tracking-tight">Shopping Cart</h2>
+                            <p className="text-[11px] text-app-muted-foreground uppercase font-bold tracking-widest">
                                 {cart.length} item{cart.length !== 1 ? 's' : ''} reserved
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={() => setCartOpen(false)}
-                        className="p-2 hover:bg-app-border rounded-lg transition-colors text-app-text-faint hover:text-app-text-muted"
+                        className="p-2 hover:bg-app-border rounded-lg transition-colors text-app-muted-foreground hover:text-app-muted-foreground"
                     >
                         <X size={24} />
                     </button>
@@ -56,8 +56,8 @@ export default function EmporiumCartDrawer() {
                             <div className="w-20 h-20 bg-app-bg rounded-full flex items-center justify-center mb-4 border border-app-border">
                                 <ShoppingBag size={32} className="text-slate-200" />
                             </div>
-                            <h3 className="text-app-text font-bold">Your cart is empty</h3>
-                            <p className="text-app-text-faint text-sm mt-1">Browse our massive catalog to add items.</p>
+                            <h3 className="text-app-foreground font-bold">Your cart is empty</h3>
+                            <p className="text-app-muted-foreground text-sm mt-1">Browse our massive catalog to add items.</p>
                             <button
                                 onClick={() => setCartOpen(false)}
                                 className="mt-6 px-6 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all"
@@ -81,10 +81,10 @@ export default function EmporiumCartDrawer() {
                                     </div>
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                                         <div>
-                                            <h3 className="text-sm font-bold text-app-text truncate">
+                                            <h3 className="text-sm font-bold text-app-foreground truncate">
                                                 {item.product_name}
                                             </h3>
-                                            <p className="text-xs font-bold text-app-text-muted mt-0.5">
+                                            <p className="text-xs font-bold text-app-muted-foreground mt-0.5">
                                                 {formatPrice(item.unit_price)}
                                             </p>
                                         </div>
@@ -93,14 +93,14 @@ export default function EmporiumCartDrawer() {
                                             <div className="flex items-center bg-app-surface rounded-lg border border-app-border shadow-sm overflow-hidden">
                                                 <button
                                                     onClick={() => updateCartQuantity(item.product_id, Math.max(1, item.quantity - 1), item.variant_id)}
-                                                    className="px-2 py-1 text-app-text-faint hover:bg-app-bg hover:text-app-text transition-colors"
+                                                    className="px-2 py-1 text-app-muted-foreground hover:bg-app-bg hover:text-app-foreground transition-colors"
                                                 >
                                                     <Minus size={12} />
                                                 </button>
-                                                <span className="w-8 text-center text-xs font-bold text-app-text bg-app-bg py-1 border-x border-app-border">{item.quantity}</span>
+                                                <span className="w-8 text-center text-xs font-bold text-app-foreground bg-app-bg py-1 border-x border-app-border">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateCartQuantity(item.product_id, item.quantity + 1, item.variant_id)}
-                                                    className="px-2 py-1 text-app-text-faint hover:bg-app-bg hover:text-app-text transition-colors"
+                                                    className="px-2 py-1 text-app-muted-foreground hover:bg-app-bg hover:text-app-foreground transition-colors"
                                                 >
                                                     <Plus size={12} />
                                                 </button>
@@ -124,8 +124,8 @@ export default function EmporiumCartDrawer() {
                     <div className="p-6 border-t border-app-border bg-slate-50/80 backdrop-blur-xl">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-widest">Grand Total</p>
-                                <p className="text-3xl font-black text-app-text leading-none mt-1">
+                                <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">Grand Total</p>
+                                <p className="text-3xl font-black text-app-foreground leading-none mt-1">
                                     <span className="text-sm font-bold mr-1">$</span>
                                     {cartTotal.toFixed(2)}
                                 </p>
@@ -148,12 +148,12 @@ export default function EmporiumCartDrawer() {
                             <Link
                                 href={`/tenant/${slug}/cart`}
                                 onClick={() => setCartOpen(false)}
-                                className="block w-full py-4 bg-app-surface border border-app-border hover:border-slate-400 text-app-text-muted hover:text-app-text rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all"
+                                className="block w-full py-4 bg-app-surface border border-app-border hover:border-slate-400 text-app-muted-foreground hover:text-app-foreground rounded-xl font-bold text-sm uppercase tracking-wider text-center transition-all"
                             >
                                 Edit Order
                             </Link>
                         </div>
-                        <p className="text-[10px] text-app-text-faint text-center mt-4 uppercase font-bold tracking-widest">
+                        <p className="text-[10px] text-app-muted-foreground text-center mt-4 uppercase font-bold tracking-widest">
                             Built with Emporium Engine™
                         </p>
                     </div>

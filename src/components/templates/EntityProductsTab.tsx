@@ -33,7 +33,7 @@ import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } fro
 import { createPortal } from 'react-dom'
 import {
     Search, Package, Loader2, ExternalLink, X, Info, ArrowRightLeft,
-    Check, SlidersHorizontal, ChevronRight, Folder, Ruler
+    Check, SlidersHorizontal, ChevronRight, Folder, Ruler, AlertTriangle,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -118,6 +118,12 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
     const [moveTarget, setMoveTarget] = useState<number | null>(null)
     const [movePreview, setMovePreview] = useState<any>(null)
     const [moveStep, setMoveStep] = useState<'picking' | 'preview' | 'executing'>('picking')
+    // Packaging-conflict resolution. When the preview reports cross-family
+    // packagings, the operator must explicitly pick `detach` (delete the
+    // affected ProductPackaging rows — recommended) or `keep` (orphan them
+    // — legacy behavior, accepts the silent break) before the Move button
+    // re-enables. Reset between modal opens.
+    const [packagingAction, setPackagingAction] = useState<'detach' | 'keep' | null>(null)
     const [targetSearch, setTargetSearch] = useState('')
     const [reconciliation, setReconciliation] = useState<any>({})
     const router = useRouter()
@@ -240,6 +246,7 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
 
     const previewMove = async (targetId: number) => {
         setMoveTarget(targetId); setMoveStep('preview')
+        setPackagingAction(null)
         try {
             const preview = await erpFetch(moveEndpoint!, {
                 method: 'POST', body: JSON.stringify({ product_ids: Array.from(selected), [moveTargetKey]: targetId, preview: true }),
@@ -258,6 +265,7 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                     product_ids: Array.from(selected),
                     [moveTargetKey]: moveTarget,
                     ...(Object.keys(reconciliation).length > 0 ? { reconciliation } : {}),
+                    ...(packagingAction ? { packaging_action: packagingAction } : {}),
                 }),
             })
             const targetName = moveTargets.find((t: any) => t.id === moveTarget)?.name || 'target'
@@ -638,6 +646,70 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                                         </div>
                                     )}
 
+                                    {/* Cross-family packaging warning (units endpoint sets this) ---------- */}
+                                    {Array.isArray(movePreview.packaging_impact) && movePreview.cross_family_count > 0 && (
+                                        <div className="rounded-xl overflow-hidden"
+                                             style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)' }}>
+                                            <div className="flex items-start gap-2.5 p-3" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 18%, transparent)' }}>
+                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 18%, transparent)' }}>
+                                                    <AlertTriangle size={14} style={{ color: 'var(--app-warning, #f59e0b)' }} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[12px] font-bold" style={{ color: 'var(--app-warning, #f59e0b)' }}>
+                                                        {movePreview.cross_family_count} product{movePreview.cross_family_count > 1 ? 's have' : ' has'} packaging tied to a different unit family
+                                                    </p>
+                                                    <p className="text-[10px] text-app-muted-foreground mt-0.5">
+                                                        Their packaging ratios are computed against the original base unit. Moving them to <span className="font-bold">{movePreview.target_unit?.name}</span> would silently break stock math unless we drop those rows.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="max-h-32 overflow-y-auto custom-scrollbar text-[10px]">
+                                                {movePreview.packaging_impact
+                                                    .filter((r: any) => r.same_family === false)
+                                                    .slice(0, 12)
+                                                    .map((r: any) => (
+                                                        <div key={r.product_id}
+                                                             className="flex items-center gap-2 px-3 py-1.5"
+                                                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)' }}>
+                                                            <span className="font-bold text-app-foreground truncate flex-1">{r.product_name}</span>
+                                                            <span className="font-mono text-app-muted-foreground flex-shrink-0">{r.packaging_count} pkg{r.packaging_count > 1 ? 's' : ''} · {r.source_unit_name || '—'}</span>
+                                                        </div>
+                                                    ))}
+                                                {movePreview.packaging_impact.filter((r: any) => r.same_family === false).length > 12 && (
+                                                    <div className="px-3 py-1.5 text-app-muted-foreground text-center" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)' }}>
+                                                        +{movePreview.packaging_impact.filter((r: any) => r.same_family === false).length - 12} more
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="p-3 space-y-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 18%, transparent)' }}>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-app-muted-foreground">Choose what to do</p>
+                                                <label className="flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors"
+                                                    style={{ background: packagingAction === 'detach' ? 'color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'transparent', border: `1px solid ${packagingAction === 'detach' ? 'color-mix(in srgb, var(--app-primary) 35%, transparent)' : 'var(--app-border)'}` }}>
+                                                    <input type="radio" name="pkg-action" className="mt-0.5 accent-app-primary"
+                                                        checked={packagingAction === 'detach'}
+                                                        onChange={() => setPackagingAction('detach')} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[12px] font-bold text-app-foreground">Detach packagings <span className="text-app-success">(recommended)</span></p>
+                                                        <p className="text-[10px] text-app-muted-foreground">Delete the affected ProductPackaging rows. Past purchase / sales orders that referenced them keep their history; the rows just stop existing for new transactions.</p>
+                                                    </div>
+                                                </label>
+                                                <label className="flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors"
+                                                    style={{ background: packagingAction === 'keep' ? 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)' : 'transparent', border: `1px solid ${packagingAction === 'keep' ? 'color-mix(in srgb, var(--app-error, #ef4444) 35%, transparent)' : 'var(--app-border)'}` }}>
+                                                    <input type="radio" name="pkg-action" className="mt-0.5 accent-app-error"
+                                                        checked={packagingAction === 'keep'}
+                                                        onChange={() => setPackagingAction('keep')} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[12px] font-bold text-app-foreground">Force-keep <span className="text-app-error">(dangerous)</span></p>
+                                                        <p className="text-[10px] text-app-muted-foreground">Move the products and leave the packaging rows pointing at the old unit. Stock conversions and per-package prices may silently misreport — only do this if you intend to fix them manually.</p>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Conflict resolver (optional — Categories passes this) */}
                                     {movePreview.has_conflicts && moveConflictRenderer && moveConflictRenderer({
                                         preview: movePreview,
@@ -658,11 +730,23 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => { setMoveStep('picking'); setMovePreview(null) }}
                                         className="flex-1 text-[12px] font-bold py-2 rounded-xl border border-app-border text-app-muted-foreground hover:bg-app-border/30 transition-all">← Back</button>
-                                    <button onClick={executeMove} disabled={moveStep === 'executing' || (movePreview.has_conflicts && !moveConflictRenderer)}
+                                    <button onClick={executeMove}
+                                        disabled={
+                                            moveStep === 'executing'
+                                            || (movePreview.has_conflicts && !moveConflictRenderer)
+                                            // Cross-family packaging requires explicit operator choice.
+                                            || ((movePreview.cross_family_count ?? 0) > 0 && packagingAction === null)
+                                        }
                                         className="flex-[2] flex items-center justify-center gap-2 text-[12px] font-bold bg-app-primary text-white py-2 rounded-xl hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                         style={{ boxShadow: moveStep !== 'executing' ? '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' : 'none' }}>
                                         {moveStep === 'executing' ? <Loader2 size={14} className="animate-spin" /> : <ArrowRightLeft size={14} />}
-                                        {moveStep === 'executing' ? 'Moving...' : `Move ${selected.size} Product${selected.size > 1 ? 's' : ''}`}
+                                        {moveStep === 'executing'
+                                            ? 'Moving...'
+                                            : packagingAction === 'detach'
+                                                ? `Detach packagings + move ${selected.size}`
+                                                : packagingAction === 'keep'
+                                                    ? `Force-move ${selected.size} (orphan packagings)`
+                                                    : `Move ${selected.size} Product${selected.size > 1 ? 's' : ''}`}
                                     </button>
                                 </div>
                             </div>

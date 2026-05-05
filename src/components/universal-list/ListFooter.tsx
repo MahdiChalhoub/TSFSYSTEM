@@ -36,13 +36,13 @@ export default function ListFooter({
  return (
  <div className="flex flex-wrap items-center justify-between gap-4 px-1 py-2">
  {/* Left: Count + Total */}
- <div className="flex items-center gap-4 text-xs text-app-text-muted">
- <span className="font-semibold text-app-text-muted">
+ <div className="flex items-center gap-4 text-xs text-app-muted-foreground">
+ <span className="font-semibold text-app-muted-foreground">
  {totalLabel || 'Items'} ({totalCount})
  </span>
  {totalValue && (
  <span>
- Total Value: <span className="font-semibold text-app-text-muted">{totalValue}</span>
+ Total Value: <span className="font-semibold text-app-muted-foreground">{totalValue}</span>
  </span>
  )}
  </div>
@@ -54,17 +54,17 @@ export default function ListFooter({
  <button
  onClick={() => onPageChange(page - 1)}
  disabled={page <= 1}
- className="p-1.5 rounded-lg border border-app-border text-app-text-muted hover:bg-app-bg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+ className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:bg-app-bg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
  >
  <ChevronLeft size={14} />
  </button>
- <span className="px-2 text-xs font-semibold text-app-text-muted">
+ <span className="px-2 text-xs font-semibold text-app-muted-foreground">
  {startItem}–{endItem} of {totalCount}
  </span>
  <button
  onClick={() => onPageChange(page + 1)}
  disabled={page >= totalPages}
- className="p-1.5 rounded-lg border border-app-border text-app-text-muted hover:bg-app-bg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+ className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:bg-app-bg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
  >
  <ChevronRight size={14} />
  </button>
@@ -74,7 +74,7 @@ export default function ListFooter({
  <select
  value={pageSize}
  onChange={e => onPageSizeChange(Number(e.target.value))}
- className="px-2 py-1.5 text-xs font-semibold border border-app-border rounded-lg bg-app-surface text-app-text-muted hover:border-app-border cursor-pointer"
+ className="px-2 py-1.5 text-xs font-semibold border border-app-border rounded-lg bg-app-surface text-app-muted-foreground hover:border-app-border cursor-pointer"
  >
  {[10, 25, 50, 100].map(size => (
  <option key={size} value={size}>

@@ -30,7 +30,7 @@ export default function DynamicModulePage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-app-gradient-accent flex items-center justify-center shadow-xl text-white shrink-0">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-app-primary flex items-center justify-center shadow-xl text-white shrink-0">
                     <Box size={24} className="md:w-8 md:h-8" />
                 </div>
                 <div>

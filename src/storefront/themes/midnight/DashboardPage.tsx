@@ -72,7 +72,7 @@ export default function MidnightDashboardPage() {
                     </div>
                     <div className="space-y-4">
                         <h1 className="text-4xl font-black text-white italic tracking-tighter">Access Denied</h1>
-                        <p className="text-app-text-faint text-sm leading-relaxed">
+                        <p className="text-app-muted-foreground text-sm leading-relaxed">
                             Your current identity session is not authorized to access the account stream.
                             Please authenticate to proceed.
                         </p>
@@ -106,7 +106,7 @@ export default function MidnightDashboardPage() {
                                 <Star size={14} fill="currentColor" /> {dashboard.loyalty_tier} Status
                             </div>
                         )}
-                        <Link href={path('/account/profile')} className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-app-text-faint hover:text-white hover:bg-white/10 transition-all">
+                        <Link href={path('/account/profile')} className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-app-muted-foreground hover:text-white hover:bg-white/10 transition-all">
                             <Settings size={20} />
                         </Link>
                     </div>
@@ -194,7 +194,7 @@ export default function MidnightDashboardPage() {
                                 <QrCode size={32} />
                             </div>
                             <div>
-                                <p className="text-[10px] text-app-text-faint font-black uppercase tracking-[0.3em]">Identity Reference Tag</p>
+                                <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-[0.3em]">Identity Reference Tag</p>
                                 <h2 className="text-2xl font-mono font-black text-white tracking-widest">{dashboard.barcode}</h2>
                             </div>
                         </div>
@@ -218,11 +218,11 @@ function HudItem({ label, value, icon, meta, color = 'blue' }: any) {
         <div className={`p-8 bg-slate-900/60 border border-white/5 rounded-[2rem] space-y-4 transition-all duration-300 ${colors[color]} group`}>
             <div className="flex justify-between items-start">
                 <div className="p-3 bg-white/5 rounded-2xl group-hover:scale-110 transition-transform">{icon}</div>
-                <div className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">{label}</div>
+                <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">{label}</div>
             </div>
             <div>
                 <p className="text-3xl font-black text-white italic">{value}</p>
-                <p className="text-[10px] text-app-text-faint mt-1 uppercase font-bold tracking-wider">{meta}</p>
+                <p className="text-[10px] text-app-muted-foreground mt-1 uppercase font-bold tracking-wider">{meta}</p>
             </div>
         </div>
     )
@@ -234,7 +234,7 @@ function OperationCard({ title, description, path, icon, color }: any) {
         amber: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
         cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
         purple: 'text-purple-400 bg-purple-500/10 border-purple-500/30',
-        slate: 'text-app-text-faint bg-slate-500/10 border-slate-500/30',
+        slate: 'text-app-muted-foreground bg-slate-500/10 border-slate-500/30',
     }
     return (
         <Link href={path} className="group p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex items-center gap-6 hover:border-white/10 transition-all duration-300">
@@ -243,9 +243,9 @@ function OperationCard({ title, description, path, icon, color }: any) {
             </div>
             <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-black text-white italic tracking-tight">{title}</h3>
-                <p className="text-app-text-faint text-xs mt-1">{description}</p>
+                <p className="text-app-muted-foreground text-xs mt-1">{description}</p>
             </div>
-            <ChevronRight size={20} className="text-app-text-muted group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+            <ChevronRight size={20} className="text-app-muted-foreground group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
         </Link>
     )
 }

@@ -166,7 +166,7 @@ export default function EncryptionPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-app-gradient-info flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                             <Shield className="text-white" size={22} />
                         </div>
                         AES-256 Encryption
@@ -202,7 +202,7 @@ export default function EncryptionPage() {
                 <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-5 ${isActive ? 'bg-app-primary' : 'bg-app-surface-hover'}`} />
                 <CardContent className="pt-8 pb-8 relative">
                     <div className="flex items-center gap-6">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-app-gradient-primary-soft border border-app-success' : 'bg-app-surface border border-app-border'}`}>
+                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-app-primary-soft border border-app-success' : 'bg-app-surface border border-app-border'}`}>
                             {isActive ? (
                                 <Lock className="text-app-success" size={36} />
                             ) : (
@@ -324,7 +324,7 @@ export default function EncryptionPage() {
                                 <button
                                     onClick={handleActivate}
                                     disabled={actionLoading !== null}
-                                    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-app-gradient-primary hover:brightness-110 text-white font-bold transition-all duration-200 shadow-lg shadow-app-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-app-primary hover:brightness-110 text-white font-bold transition-all duration-200 shadow-lg shadow-app-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {actionLoading === 'activate' ? (
                                         <RefreshCw className="animate-spin" size={18} />

@@ -65,7 +65,7 @@ export default function MidnightProfilePage() {
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
-                    <Link href={path('/account')} className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                    <Link href={path('/account')} className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
                     </Link>
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Identity <span className="text-blue-400">Control</span></h1>
@@ -80,17 +80,17 @@ export default function MidnightProfilePage() {
                         <h2 className="text-lg font-black text-white italic relative z-10">Personal Data</h2>
                         <div className="space-y-4 relative z-10">
                             <div className="relative">
-                                <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                                <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="text" value={name} onChange={e => setName(e.target.value)}
                                     className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Full Name" />
                             </div>
                             <div className="relative">
-                                <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                                <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                                     className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Email" />
                             </div>
                             <div className="relative">
-                                <Building2 size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                                <Building2 size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type="text" value={company} onChange={e => setCompany(e.target.value)}
                                     className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-5 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Company (optional)" />
                             </div>
@@ -102,10 +102,10 @@ export default function MidnightProfilePage() {
                         <h2 className="text-lg font-black text-white italic relative z-10">Security Credentials</h2>
                         <div className="space-y-4 relative z-10">
                             <div className="relative">
-                                <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-text-muted" />
+                                <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input type={showPass ? 'text' : 'password'} value={currentPass} onChange={e => setCurrentPass(e.target.value)}
                                     className="w-full bg-slate-950/60 border border-white/5 pl-12 pr-14 py-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" placeholder="Current Password" />
-                                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-text-muted hover:text-white transition-colors">
+                                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-white transition-colors">
                                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>

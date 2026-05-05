@@ -68,17 +68,17 @@ export function Numpad({
  };
 
  const modeColors: Record<NumpadMode, string> = {
- qty: 'bg-indigo-600 text-app-text',
- disc: 'bg-app-warning text-app-text',
- price: 'bg-app-primary text-app-text',
+ qty: 'bg-indigo-600 text-app-foreground',
+ disc: 'bg-app-warning text-app-foreground',
+ price: 'bg-app-primary text-app-foreground',
  };
 
  return (
  <div className="flex flex-col gap-2">
  {/* Display */}
  <div className="flex items-center gap-2 bg-app-bg rounded-xl px-4 py-3 border border-app-border">
- <span className="text-[9px] font-black uppercase tracking-widest text-app-text-faint">{modeLabels[mode]}</span>
- <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-app-text">
+ <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">{modeLabels[mode]}</span>
+ <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-app-foreground">
  {buffer || '0'}
  </span>
  </div>
@@ -91,7 +91,7 @@ export function Numpad({
  onClick={() => setMode(m)}
  className={clsx(
  "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
- mode === m ? modeColors[m] : "bg-app-surface-2 text-app-text-muted hover:bg-app-surface-3"
+ mode === m ? modeColors[m] : "bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-3"
  )}
  >
  {modeLabels[m]}
@@ -105,14 +105,14 @@ export function Numpad({
  <button
  key={d}
  onClick={() => handleDigit(d)}
- className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-app-text hover:bg-app-bg active:scale-95 transition-all shadow-sm"
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-app-foreground hover:bg-app-bg active:scale-95 transition-all shadow-sm"
  >
  {d}
  </button>
  ))}
  <button
  onClick={handleBackspace}
- className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-text-faint hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-muted-foreground hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
  >
  <Delete size={18} />
  </button>
@@ -126,7 +126,7 @@ export function Numpad({
  "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
  buffer
  ? `${modeColors[mode]} shadow-lg hover:opacity-90 active:scale-[0.98]`
- : "bg-app-surface-2 text-app-text-muted cursor-not-allowed"
+ : "bg-app-surface-2 text-app-muted-foreground cursor-not-allowed"
  )}
  >
  Confirm {modeLabels[mode]}

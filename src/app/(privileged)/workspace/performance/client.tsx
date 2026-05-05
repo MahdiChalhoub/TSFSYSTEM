@@ -30,10 +30,10 @@ interface Props {
 }
 
 const TIER_STYLES: Record<string, { bg: string; text: string; icon: string }> = {
-    PLATINUM: { bg: 'bg-app-gradient-accent', text: 'text-white', icon: '💎' },
-    GOLD: { bg: 'bg-app-gradient-warning', text: 'text-white', icon: '🥇' },
+    PLATINUM: { bg: 'bg-app-primary', text: 'text-white', icon: '💎' },
+    GOLD: { bg: 'bg-app-warning', text: 'text-white', icon: '🥇' },
     SILVER: { bg: 'bg-app-gradient-surface', text: 'text-app-foreground', icon: '🥈' },
-    BRONZE: { bg: 'bg-app-gradient-warning', text: 'text-white', icon: '🥉' },
+    BRONZE: { bg: 'bg-app-warning', text: 'text-white', icon: '🥉' },
 };
 
 export default function PerformanceClient({ leaderboard, myPerformance, kpiConfig }: Props) {
@@ -159,7 +159,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                             <div key={score.id} className="flex items-center gap-6 px-6 py-4 hover:bg-app-surface/50 transition-colors">
                                 <div className="text-sm font-bold text-app-muted-foreground w-24">{score.period_label}</div>
                                 <div className="flex-1 bg-app-surface-2 rounded-full h-3">
-                                    <div className="bg-app-gradient-info h-3 rounded-full transition-all" style={{ width: `${Math.min(score.overall_score, 100)}%` }} />
+                                    <div className="bg-app-info h-3 rounded-full transition-all" style={{ width: `${Math.min(score.overall_score, 100)}%` }} />
                                 </div>
                                 <span className="text-lg font-black text-app-foreground w-16 text-right">{score.overall_score}</span>
                                 {score.tier && (

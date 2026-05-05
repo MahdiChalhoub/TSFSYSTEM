@@ -68,8 +68,8 @@ export default function DailySummaryPage() {
             <BarChart3 size={32} className="theme-primary" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">Sales</p>
-            <h1 className="text-4xl font-black tracking-tight theme-text italic">
+            <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
+            <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
               Sales <span className="theme-primary">Summary</span>
             </h1>
           </div>
@@ -78,7 +78,7 @@ export default function DailySummaryPage() {
 
       {/* Hero KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-[var(--layout-element-gap)]">
-        <Card className="bg-app-gradient-primary layout-card-radius border-0 shadow-xl relative overflow-hidden">
+        <Card className="bg-app-primary layout-card-radius border-0 shadow-xl relative overflow-hidden">
           <CardContent className="layout-card-padding">
             <div className="absolute top-0 right-0 w-32 h-32 bg-app-surface/5 rounded-full -translate-y-10 translate-x-10" />
             <div className="relative text-white">
@@ -92,24 +92,24 @@ export default function DailySummaryPage() {
         <Card className="layout-card-radius border-0 shadow-sm theme-surface">
           <CardContent className="layout-card-padding">
             <ShoppingCart size={24} className="text-app-info mb-3" />
-            <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Total Orders</div>
-            <div className="text-3xl font-black theme-text tracking-tight">{overall?.orders || 0}</div>
+            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Total Orders</div>
+            <div className="text-3xl font-black text-app-foreground tracking-tight">{overall?.orders || 0}</div>
           </CardContent>
         </Card>
 
         <Card className="layout-card-radius border-0 shadow-sm theme-surface">
           <CardContent className="layout-card-padding">
             <TrendingUp size={24} className="theme-primary mb-3" />
-            <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Avg. Order</div>
-            <div className="text-3xl font-black theme-text tracking-tight">{fmt(overall?.avg_order || 0)}</div>
+            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Avg. Order</div>
+            <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.avg_order || 0)}</div>
           </CardContent>
         </Card>
 
         <Card className="layout-card-radius border-0 shadow-sm theme-surface">
           <CardContent className="layout-card-padding">
             <Receipt size={24} className="text-app-error mb-3" />
-            <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Tax Collected</div>
-            <div className="text-3xl font-black theme-text tracking-tight">{fmt(overall?.tax || 0)}</div>
+            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Tax Collected</div>
+            <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.tax || 0)}</div>
           </CardContent>
         </Card>
       </div>
@@ -241,7 +241,7 @@ export default function DailySummaryPage() {
                       <span className="text-xs text-app-muted-foreground font-medium">{p.count} orders</span>
                     </div>
                     <div className="h-2 bg-app-border rounded-full overflow-hidden">
-                      <div className="h-full bg-app-gradient-primary rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                      <div className="h-full bg-app-primary rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                     </div>
                     <div className="mt-1 text-right text-sm font-bold text-app-primary">{fmt(p.total)}</div>
                   </div>

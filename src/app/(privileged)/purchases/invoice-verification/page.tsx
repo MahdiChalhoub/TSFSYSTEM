@@ -407,10 +407,10 @@ export default function PurchaseInvoiceVerificationPage() {
                   <FileCheck size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-app-text">
+                  <h1 className="text-xl font-black text-app-foreground">
                     Purchase Invoice Verification
                   </h1>
-                  <p className="text-xs text-app-text-muted">
+                  <p className="text-xs text-app-muted-foreground">
                     3-way match: PO → GRN → Supplier Invoice
                   </p>
                 </div>
@@ -418,7 +418,7 @@ export default function PurchaseInvoiceVerificationPage() {
 
               <div className="flex items-center gap-3">
                 {loading && (
-                  <div className="flex items-center gap-2 text-sm text-app-text-muted">
+                  <div className="flex items-center gap-2 text-sm text-app-muted-foreground">
                     <Loader2 size={14} className="animate-spin" />
                     Loading...
                   </div>

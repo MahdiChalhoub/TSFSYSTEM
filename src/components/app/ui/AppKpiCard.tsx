@@ -39,7 +39,7 @@ interface AppKpiCardProps {
 const TREND_CONFIG = {
     up: { icon: TrendingUp, color: 'var(--app-success)' },
     down: { icon: TrendingDown, color: 'var(--app-error)' },
-    flat: { icon: Minus, color: 'var(--app-text-muted)' },
+    flat: { icon: Minus, color: 'var(--app-muted-foreground)' },
 };
 
 export function AppKpiCard({
@@ -95,7 +95,7 @@ export function AppKpiCard({
             {/* Label */}
             <p
                 className="text-[11px] font-black uppercase tracking-widest mb-1"
-                style={{ color: 'var(--app-text-muted)' }}
+                style={{ color: 'var(--app-muted-foreground)' }}
             >
                 {label}
             </p>
@@ -103,7 +103,7 @@ export function AppKpiCard({
             {/* Value */}
             <p
                 className="text-2xl font-black tracking-tight leading-none mb-2 animate-counter"
-                style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+                style={{ color: 'var(--app-foreground)', fontFamily: 'var(--app-font)' }}
             >
                 {value}
             </p>
@@ -122,7 +122,7 @@ export function AppKpiCard({
                     {trend.label && (
                         <span
                             className="text-[11px] font-medium"
-                            style={{ color: 'var(--app-text-faint)' }}
+                            style={{ color: 'var(--app-muted-foreground)' }}
                         >
                             {trend.label}
                         </span>
@@ -134,7 +134,7 @@ export function AppKpiCard({
             {footnote && (
                 <p
                     className="text-[10px] font-medium mt-1"
-                    style={{ color: 'var(--app-text-faint)' }}
+                    style={{ color: 'var(--app-muted-foreground)' }}
                 >
                     {footnote}
                 </p>

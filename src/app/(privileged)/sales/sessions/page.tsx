@@ -93,7 +93,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
 
  return (
  <div className={clsx("border rounded-2xl overflow-hidden transition-all",
- expanded ? "border-app-text/15 bg-app-foreground/5" : "border-app-text/5 bg-app-foreground/3 hover:bg-app-foreground/5 hover:border-app-text/10"
+ expanded ? "border-app-foreground/15 bg-app-foreground/5" : "border-app-foreground/5 bg-app-foreground/3 hover:bg-app-foreground/5 hover:border-app-foreground/10"
  )}>
  <button className="app-page w-full flex items-center gap-4 px-5 py-4 text-left" onClick={() => setExpanded(!expanded)}>
  {expanded
@@ -119,7 +119,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  </button>
 
  {expanded && (
- <div className="border-t border-app-text/5 px-5 pb-5 pt-4 space-y-4 animate-in fade-in duration-200">
+ <div className="border-t border-app-foreground/5 px-5 pb-5 pt-4 space-y-4 animate-in fade-in duration-200">
  <div className="grid grid-cols-2 gap-6">
  {/* Payment Breakdown */}
  <div>
@@ -134,7 +134,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  <span className="text-app-foreground font-bold tabular-nums">{fmt(b.total)}</span>
  </div>
  ))}
- <div className="flex justify-between border-t border-app-text/10 pt-1 text-xs font-black text-app-primary">
+ <div className="flex justify-between border-t border-app-foreground/10 pt-1 text-xs font-black text-app-primary">
  <span>TOTAL</span><span tabular-nums>{fmt(session.totalSales)}</span>
  </div>
  </div>
@@ -148,7 +148,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  <div className="flex justify-between"><span className="text-app-foreground/50">+ Cash sales</span><span className="text-app-foreground/70 tabular-nums">{fmt(session.totalCashIn)}</span></div>
  <div className="flex justify-between"><span className="text-app-foreground/50">Expected</span><span className="text-app-foreground/70 tabular-nums">{fmt(session.expectedBalance)}</span></div>
  <div className="flex justify-between"><span className="text-app-foreground/50">Counted</span><span className="text-app-foreground tabular-nums">{fmt(session.closingBalance)}</span></div>
- <div className={clsx("flex justify-between font-black border-t border-app-text/10 pt-1", diffColor)}>
+ <div className={clsx("flex justify-between font-black border-t border-app-foreground/10 pt-1", diffColor)}>
  <span>Diff</span><span className="tabular-nums">{diff >= 0 ? '+' : ''}{fmt(diff)}</span>
  </div>
  </div>
@@ -224,7 +224,7 @@ export default function SessionHistoryPage() {
  { label: 'Total Sales', value: `${currency} ${fmt(totalSalesAll)}`, icon: TrendingUp, color: 'text-app-primary' },
  { label: 'Loaded', value: String(sessions.length), icon: CreditCard, color: 'text-app-warning' },
  ].map(s => (
- <div key={s.label} className="bg-app-foreground/5 border border-app-text/5 rounded-2xl p-4 flex items-center gap-4">
+ <div key={s.label} className="bg-app-foreground/5 border border-app-foreground/5 rounded-2xl p-4 flex items-center gap-4">
  <s.icon size={20} className={clsx(s.color, 'shrink-0')} />
  <div>
  <div className="text-app-foreground/40 text-xs">{s.label}</div>
@@ -242,7 +242,7 @@ export default function SessionHistoryPage() {
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="Filter by register or cashier…"
- className="w-full pl-10 pr-4 py-3 bg-app-foreground/5 border border-app-text/8 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-app-primary"
+ className="w-full pl-10 pr-4 py-3 bg-app-foreground/5 border border-app-foreground/8 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-app-primary"
  />
  </div>
 

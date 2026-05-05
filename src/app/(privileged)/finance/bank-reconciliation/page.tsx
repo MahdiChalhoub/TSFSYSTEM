@@ -204,7 +204,7 @@ export default function BankReconciliationPage() {
             </header>
 
             {/* Total Balance */}
-            <Card className="bg-app-gradient-info text-white">
+            <Card className="bg-app-info text-white">
                 <CardContent className="py-6">
                     <div className="flex items-center justify-between">
                         <div>

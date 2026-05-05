@@ -57,10 +57,10 @@ export function ResponsiveList<T extends Record<string, any>>({
                 <div className="space-y-3">
                   {columns.slice(0, 3).map((column) => (
                     <div key={String(column.key)}>
-                      <p className="text-xs font-bold theme-text-muted uppercase tracking-wider mb-1">
+                      <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-1">
                         {column.label}
                       </p>
-                      <div className="theme-text">
+                      <div className="text-app-foreground">
                         {column.render ? column.render(item) : item[column.key]}
                       </div>
                     </div>
@@ -99,12 +99,12 @@ export function ResponsiveList<T extends Record<string, any>>({
           <TableHeader>
             <TableRow className="theme-border">
               {columns.map((column) => (
-                <TableHead key={String(column.key)} className="theme-text font-bold">
+                <TableHead key={String(column.key)} className="text-app-foreground font-bold">
                   {column.label}
                 </TableHead>
               ))}
               {(onView || onEdit || onDelete) && (
-                <TableHead className="theme-text font-bold">Actions</TableHead>
+                <TableHead className="text-app-foreground font-bold">Actions</TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -112,7 +112,7 @@ export function ResponsiveList<T extends Record<string, any>>({
             {data.map((item) => (
               <TableRow key={getRowId(item)} className="theme-border hover:bg-[var(--theme-surface-hover)]">
                 {columns.map((column) => (
-                  <TableCell key={String(column.key)} className="theme-text">
+                  <TableCell key={String(column.key)} className="text-app-foreground">
                     {column.render ? column.render(item) : item[column.key]}
                   </TableCell>
                 ))}

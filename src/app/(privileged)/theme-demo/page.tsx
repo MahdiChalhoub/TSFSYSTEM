@@ -37,11 +37,11 @@ export default function ThemeDemoPage() {
             className="h-8 w-8"
             style={{ color: 'var(--theme-primary)' }}
           />
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--theme-text)' }}>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-app-foreground)' }}>
             Theme & Layout System Demo
           </h1>
         </div>
-        <p className="text-lg" style={{ color: 'var(--theme-text-muted)' }}>
+        <p className="text-lg" style={{ color: 'var(--text-app-muted-foreground)' }}>
           Explore 50 unique visual combinations by mixing themes and layouts.
           Your preferences are saved automatically!
         </p>
@@ -62,10 +62,10 @@ export default function ThemeDemoPage() {
           <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
             Current Theme
           </h3>
-          <p className="text-xl font-bold mb-1" style={{ color: 'var(--theme-text)' }}>
+          <p className="text-xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
             {themeConfig.name}
           </p>
-          <p className="text-sm mb-2" style={{ color: 'var(--theme-text-muted)' }}>
+          <p className="text-sm mb-2" style={{ color: 'var(--text-app-muted-foreground)' }}>
             {themeConfig.description}
           </p>
           <div className="flex gap-2 mt-3">
@@ -74,7 +74,7 @@ export default function ThemeDemoPage() {
                 className="w-6 h-6 rounded"
                 style={{ background: themeConfig.colors.primary }}
               />
-              <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-app-muted-foreground)' }}>
                 Primary
               </span>
             </div>
@@ -86,7 +86,7 @@ export default function ThemeDemoPage() {
                   borderColor: 'var(--theme-border)',
                 }}
               />
-              <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-app-muted-foreground)' }}>
                 Surface
               </span>
             </div>
@@ -103,26 +103,26 @@ export default function ThemeDemoPage() {
           <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
             Current Layout
           </h3>
-          <p className="text-xl font-bold mb-1" style={{ color: 'var(--theme-text)' }}>
+          <p className="text-xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
             {layoutConfig.name}
           </p>
-          <p className="text-sm mb-2" style={{ color: 'var(--theme-text-muted)' }}>
+          <p className="text-sm mb-2" style={{ color: 'var(--text-app-muted-foreground)' }}>
             {layoutConfig.description}
           </p>
           <div className="flex gap-3 mt-3">
             <div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--theme-text-muted)' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text-app-muted-foreground)' }}>
                 Density:
               </span>
-              <span className="text-xs ml-1" style={{ color: 'var(--theme-text)' }}>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-app-foreground)' }}>
                 {layoutConfig.characteristics.density}
               </span>
             </div>
             <div>
-              <span className="text-xs font-semibold" style={{ color: 'var(--theme-text-muted)' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text-app-muted-foreground)' }}>
                 Whitespace:
               </span>
-              <span className="text-xs ml-1" style={{ color: 'var(--theme-text)' }}>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-app-foreground)' }}>
                 {layoutConfig.characteristics.whitespace}
               </span>
             </div>
@@ -138,7 +138,7 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Quick Theme Switch
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -148,10 +148,10 @@ export default function ThemeDemoPage() {
               onClick={() => setTheme(t.id)}
               className="p-3 rounded-lg transition-all"
               style={{
-                background: theme === t.id ? 'var(--theme-primary)' : 'var(--theme-bg)',
+                background: theme === t.id ? 'var(--theme-primary)' : 'var(--bg-app-bg)',
                 border: '2px solid',
                 borderColor: theme === t.id ? 'var(--theme-primary)' : 'var(--theme-border)',
-                color: theme === t.id ? '#fff' : 'var(--theme-text)',
+                color: theme === t.id ? '#fff' : 'var(--text-app-foreground)',
               }}
             >
               <div className="text-sm font-semibold mb-1">{t.name}</div>
@@ -174,7 +174,7 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Active Layout Config
         </h2>
         <div className="grid md:grid-cols-3 gap-3">
@@ -183,10 +183,10 @@ export default function ThemeDemoPage() {
               key={d}
               className="p-3 rounded-lg transition-all text-left"
               style={{
-                background: activeLayout?.density === d ? 'var(--theme-primary)' : 'var(--theme-bg)',
+                background: activeLayout?.density === d ? 'var(--theme-primary)' : 'var(--bg-app-bg)',
                 border: '2px solid',
                 borderColor: activeLayout?.density === d ? 'var(--theme-primary)' : 'var(--theme-border)',
-                color: activeLayout?.density === d ? '#fff' : 'var(--theme-text)',
+                color: activeLayout?.density === d ? '#fff' : 'var(--text-app-foreground)',
               }}
             >
               <div className="text-sm font-semibold mb-1 capitalize">{d}</div>
@@ -197,7 +197,7 @@ export default function ThemeDemoPage() {
       </div>
 
       {/* Dashboard Metrics Example */}
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
+      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
         Sample Dashboard Cards
       </h2>
       <div
@@ -234,7 +234,7 @@ export default function ThemeDemoPage() {
       </div>
 
       {/* Feature Cards */}
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
+      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
         Sample Feature Cards
       </h2>
       <div
@@ -266,7 +266,7 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Active CSS Variables
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
@@ -276,9 +276,9 @@ export default function ThemeDemoPage() {
             </h3>
             <div className="space-y-2 font-mono text-xs">
               <CSSVarDisplay name="--theme-primary" value={themeConfig.colors.primary} />
-              <CSSVarDisplay name="--theme-bg" value={themeConfig.colors.bg} />
+              <CSSVarDisplay name="--bg-app-bg" value={themeConfig.colors.bg} />
               <CSSVarDisplay name="--theme-surface" value={themeConfig.colors.surface} />
-              <CSSVarDisplay name="--theme-text" value={themeConfig.colors.text} />
+              <CSSVarDisplay name="--text-app-foreground" value={themeConfig.colors.text} />
             </div>
           </div>
           <div>
@@ -321,12 +321,12 @@ function MetricCard({
       }}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+        <span className="text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>
           {label}
         </span>
         <div style={{ color: 'var(--theme-primary)' }}>{icon}</div>
       </div>
-      <div className="text-2xl font-bold mb-1" style={{ color: 'var(--theme-text)' }}>
+      <div className="text-2xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
         {value}
       </div>
       <div className="text-sm" style={{ color: 'var(--theme-primary)' }}>
@@ -358,10 +358,10 @@ function FeatureCard({
       <div className="mb-3" style={{ color: 'var(--theme-primary)' }}>
         {icon}
       </div>
-      <h3 className="font-semibold mb-2" style={{ color: 'var(--theme-text)' }}>
+      <h3 className="font-semibold mb-2" style={{ color: 'var(--text-app-foreground)' }}>
         {title}
       </h3>
-      <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+      <p className="text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>
         {description}
       </p>
     </div>
@@ -373,12 +373,12 @@ function CSSVarDisplay({ name, value }: { name: string; value: string }) {
     <div
       className="p-2 rounded flex justify-between items-center"
       style={{
-        background: 'var(--theme-bg)',
+        background: 'var(--bg-app-bg)',
         border: '1px solid var(--theme-border)',
       }}
     >
-      <span style={{ color: 'var(--theme-text-muted)' }}>{name}</span>
-      <span style={{ color: 'var(--theme-text)' }}>{value}</span>
+      <span style={{ color: 'var(--text-app-muted-foreground)' }}>{name}</span>
+      <span style={{ color: 'var(--text-app-foreground)' }}>{value}</span>
     </div>
   )
 }

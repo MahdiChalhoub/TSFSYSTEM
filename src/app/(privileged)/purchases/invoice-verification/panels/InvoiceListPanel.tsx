@@ -52,7 +52,7 @@ export function InvoiceListPanel({
       <Card className="border-app-border/30 mb-4">
         <CardContent className="p-4 space-y-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
             <Input
               placeholder="Search invoices..."
               value={searchQuery}
@@ -102,17 +102,17 @@ export function InvoiceListPanel({
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <p className="text-sm font-bold text-app-text">{invoice.invoice_number}</p>
-                  <p className="text-xs text-app-text-muted">{invoice.supplier_name}</p>
+                  <p className="text-sm font-bold text-app-foreground">{invoice.invoice_number}</p>
+                  <p className="text-xs text-app-muted-foreground">{invoice.supplier_name}</p>
                 </div>
                 <Badge className={(statusColors as any)[invoice.status]}>{invoice.status}</Badge>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-app-text-faint flex items-center gap-1">
+                <span className="text-app-muted-foreground flex items-center gap-1">
                   <Calendar size={10} />
                   {new Date(invoice.invoice_date).toLocaleDateString()}
                 </span>
-                <span className="font-bold text-app-text">{fmt(invoice.total_amount)}</span>
+                <span className="font-bold text-app-foreground">{fmt(invoice.total_amount)}</span>
               </div>
               {invoice.status === 'DISCREPANCY' && (
                 <div className="mt-2 flex items-center gap-1 text-xs text-app-warning">

@@ -281,8 +281,8 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                         <Package className="h-5 w-5 text-violet-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold theme-text">Packaging Levels</h3>
-                        <p className="text-xs theme-text-muted">{packages.length} package{packages.length !== 1 ? 's' : ''} configured</p>
+                        <h3 className="text-lg font-bold text-app-foreground">Packaging Levels</h3>
+                        <p className="text-xs text-app-muted-foreground">{packages.length} package{packages.length !== 1 ? 's' : ''} configured</p>
                     </div>
                 </div>
                 {!showCreate && !editingId && (
@@ -300,7 +300,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             {/* Create / Edit Form */}
             {(showCreate || editingId) && (
                 <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-5 space-y-4">
-                    <h4 className="font-bold theme-text text-sm">
+                    <h4 className="font-bold text-app-foreground text-sm">
                         {showCreate ? '✦ New Package' : '✏️ Edit Package'}
                     </h4>
 
@@ -313,7 +313,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                     {/* Row 1: Unit Type, Name, SKU, Barcode */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 <Package className="inline h-3 w-3 mr-1" />Unit Type *
                             </label>
                             <select
@@ -331,7 +331,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                             : f.ratio,
                                     }));
                                 }}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             >
                                 <option value="">Select unit...</option>
                                 {unitTree
@@ -350,32 +350,32 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                             )}
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Package Name</label>
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">Package Name</label>
                             <input
                                 value={form.name || ''}
                                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                                 placeholder="Auto from unit if empty"
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">SKU / Reference</label>
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">SKU / Reference</label>
                             <input
                                 value={form.sku || ''}
                                 onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
                                 placeholder="PKG-CARTON-24"
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 <Barcode className="inline h-3 w-3 mr-1" />Barcode
                             </label>
                             <input
                                 value={form.barcode || ''}
                                 onChange={e => setForm(f => ({ ...f, barcode: e.target.value }))}
                                 placeholder="6001234000002"
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                     </div>
@@ -383,34 +383,34 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                     {/* Row 2: Ratio, Price Mode */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Qty in Base Unit *</label>
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">Qty in Base Unit *</label>
                             <input
                                 type="number"
                                 min="0.0001"
                                 step="0.0001"
                                 value={form.ratio ?? ''}
                                 onChange={e => setForm(f => ({ ...f, ratio: parseFloat(e.target.value) || 0 }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                         <div className="flex items-end pb-0.5">
-                            <p className="text-xs theme-text-muted">
+                            <p className="text-xs text-app-muted-foreground">
                                 {form.ratio && form.ratio > 0 ? `This package contains ${form.ratio}× of the base unit` : ''}
                             </p>
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Selling Price Mode</label>
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">Selling Price Mode</label>
                             <select
                                 value={form.price_mode || 'FORMULA'}
                                 onChange={e => setForm(f => ({ ...f, price_mode: e.target.value as 'FORMULA' | 'FIXED' }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             >
                                 <option value="FORMULA">Formula (auto)</option>
                                 <option value="FIXED">Fixed (manual)</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 {form.price_mode === 'FORMULA' ? 'Discount %' : 'Sell Price (TTC)'}
                             </label>
                             {form.price_mode === 'FORMULA' ? (
@@ -421,7 +421,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                     step="0.01"
                                     value={form.discount_pct ?? 0}
                                     onChange={e => setForm(f => ({ ...f, discount_pct: parseFloat(e.target.value) || 0 }))}
-                                    className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                    className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                                 />
                             ) : (
                                 <input
@@ -430,7 +430,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                     step="0.01"
                                     value={form.custom_selling_price ?? ''}
                                     onChange={e => setForm(f => ({ ...f, custom_selling_price: parseFloat(e.target.value) || null }))}
-                                    className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                    className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                                 />
                             )}
                         </div>
@@ -439,7 +439,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                     {/* Row 3: Purchase Prices */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 <ShoppingCart className="inline h-3 w-3 mr-1" />Purchase Price HT
                             </label>
                             <input
@@ -448,23 +448,23 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                 step="0.01"
                                 value={form.purchase_price_ht ?? ''}
                                 onChange={e => setForm(f => ({ ...f, purchase_price_ht: parseFloat(e.target.value) || 0 }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
-                            <p className="text-[10px] theme-text-muted mt-0.5">Default only — PO line is the real cost</p>
+                            <p className="text-[10px] text-app-muted-foreground mt-0.5">Default only — PO line is the real cost</p>
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Purchase Price TTC</label>
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">Purchase Price TTC</label>
                             <input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={form.purchase_price_ttc ?? ''}
                                 onChange={e => setForm(f => ({ ...f, purchase_price_ttc: parseFloat(e.target.value) || 0 }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 <Weight className="inline h-3 w-3 mr-1" />Weight (kg)
                             </label>
                             <input
@@ -473,11 +473,11 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                 step="0.001"
                                 value={form.weight_kg ?? ''}
                                 onChange={e => setForm(f => ({ ...f, weight_kg: parseFloat(e.target.value) || null }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                            <label className="text-xs font-medium text-app-muted-foreground block mb-1">
                                 <Ruler className="inline h-3 w-3 mr-1" />Dimensions (L×W×H cm)
                             </label>
                             <div className="flex gap-1">
@@ -485,19 +485,19 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                     type="number" min="0" step="0.1" placeholder="L"
                                     value={form.length_cm ?? ''}
                                     onChange={e => setForm(f => ({ ...f, length_cm: parseFloat(e.target.value) || null }))}
-                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
+                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
                                 />
                                 <input
                                     type="number" min="0" step="0.1" placeholder="W"
                                     value={form.width_cm ?? ''}
                                     onChange={e => setForm(f => ({ ...f, width_cm: parseFloat(e.target.value) || null }))}
-                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
+                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
                                 />
                                 <input
                                     type="number" min="0" step="0.1" placeholder="H"
                                     value={form.height_cm ?? ''}
                                     onChange={e => setForm(f => ({ ...f, height_cm: parseFloat(e.target.value) || null }))}
-                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
+                                    className="w-1/3 px-2 py-2 rounded-lg border border-app-border bg-app-surface text-app-foreground text-sm text-center focus:ring-2 focus:ring-violet-500/40 outline-none"
                                 />
                             </div>
                         </div>
@@ -505,7 +505,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
 
                     {/* Row 4: Flags */}
                     <div className="flex flex-wrap gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer text-sm theme-text">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-app-foreground">
                             <input
                                 type="checkbox"
                                 checked={form.is_default_sale || false}
@@ -514,7 +514,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                             />
                             <Star className="h-3.5 w-3.5 text-amber-400" /> Default Sale Package
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-sm theme-text">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-app-foreground">
                             <input
                                 type="checkbox"
                                 checked={form.is_default_purchase || false}
@@ -523,7 +523,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                             />
                             <ShoppingCart className="h-3.5 w-3.5 text-blue-400" /> Default Purchase Package
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-sm theme-text">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-app-foreground">
                             <input
                                 type="checkbox"
                                 checked={form.is_active !== false}
@@ -538,7 +538,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                     <div className="flex justify-end gap-2 pt-2">
                         <button
                             onClick={cancelEdit}
-                            className="px-4 py-2 rounded-lg border border-app-border text-sm theme-text hover:bg-app-surface-hover transition"
+                            className="px-4 py-2 rounded-lg border border-app-border text-sm text-app-foreground hover:bg-app-surface-hover transition"
                         >
                             <X className="inline h-3.5 w-3.5 mr-1" />Cancel
                         </button>
@@ -564,8 +564,8 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             ) : packages.length === 0 && !showCreate ? (
                 <div className="text-center py-12 rounded-2xl border border-dashed border-app-border">
                     <Package className="h-12 w-12 mx-auto text-app-muted-foreground mb-3 opacity-40" />
-                    <p className="theme-text-muted text-sm">No packaging levels configured</p>
-                    <p className="theme-text-muted text-xs mt-1">Add packages like &ldquo;Pack of 6&rdquo; or &ldquo;Carton of 24&rdquo;</p>
+                    <p className="text-app-muted-foreground text-sm">No packaging levels configured</p>
+                    <p className="text-app-muted-foreground text-xs mt-1">Add packages like &ldquo;Pack of 6&rdquo; or &ldquo;Carton of 24&rdquo;</p>
                 </div>
             ) : (
                 <div className="space-y-2">
@@ -587,7 +587,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-semibold theme-text text-sm truncate">{pkg.display_name}</span>
+                                            <span className="font-semibold text-app-foreground text-sm truncate">{pkg.display_name}</span>
                                             {pkg.is_default_sale && (
                                                 <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
                                                     SALE
@@ -604,7 +604,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs theme-text-muted mt-0.5">
+                                        <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-0.5">
                                             {pkg.sku && <span>SKU: {pkg.sku}</span>}
                                             {pkg.barcode && <span><Barcode className="inline h-3 w-3" /> {pkg.barcode}</span>}
                                             {pkg.weight_kg && <span><Weight className="inline h-3 w-3" /> {pkg.weight_kg}kg</span>}
@@ -616,20 +616,20 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                 {/* Center: Pricing */}
                                 <div className="hidden md:flex items-center gap-6 text-sm">
                                     <div className="text-right">
-                                        <div className="text-xs theme-text-muted">Sell TTC</div>
+                                        <div className="text-xs text-app-muted-foreground">Sell TTC</div>
                                         <div className="font-bold text-emerald-400">{fmtPrice(pkg.effective_selling_price)}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xs theme-text-muted">Sell HT</div>
-                                        <div className="font-semibold theme-text">{fmtPrice(pkg.effective_selling_price_ht)}</div>
+                                        <div className="text-xs text-app-muted-foreground">Sell HT</div>
+                                        <div className="font-semibold text-app-foreground">{fmtPrice(pkg.effective_selling_price_ht)}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xs theme-text-muted">Buy HT</div>
+                                        <div className="text-xs text-app-muted-foreground">Buy HT</div>
                                         <div className="font-semibold text-blue-400">{fmtPrice(pkg.purchase_price_ht)}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xs theme-text-muted">Per unit</div>
-                                        <div className="font-medium theme-text-muted">{fmtPrice(pkg.unit_selling_price)}</div>
+                                        <div className="text-xs text-app-muted-foreground">Per unit</div>
+                                        <div className="font-medium text-app-muted-foreground">{fmtPrice(pkg.unit_selling_price)}</div>
                                     </div>
                                 </div>
 

@@ -33,7 +33,7 @@ export default async function ChecklistsPage() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
                 <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-app-gradient-primary flex items-center justify-center text-white shadow-2xl">
+                        <div className="w-12 h-12 rounded-[20px] bg-app-primary flex items-center justify-center text-white shadow-2xl">
                             <ListChecks size={24} />
                         </div>
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Workspace</span>

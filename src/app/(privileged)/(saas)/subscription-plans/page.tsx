@@ -351,7 +351,7 @@ export default function SubscriptionPlansPage() {
 
                                     return (
                                         <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden cursor-pointer ${isCustom
-                                            ? 'bg-app-gradient-accent-soft border-app-accent hover:border-app-accent'
+                                            ? 'bg-app-primary-soft border-app-accent hover:border-app-accent'
                                             : 'bg-app-surface hover:border-app-primary/30'
                                             }`}
                                             onClick={() => router.push(`/subscription-plans/${plan.id}`)}>

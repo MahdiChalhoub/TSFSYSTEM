@@ -137,7 +137,7 @@ export default function LowStockPage() {
                         <p className="text-xs text-app-warning uppercase font-medium">Low Stock</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-app-gradient-info-soft">
+                <Card className="bg-app-info-soft">
                     <CardContent className="py-4 text-center">
                         <DollarSign size={24} className="mx-auto mb-2 text-indigo-400" />
                         <p className="text-xl font-bold text-app-info">{fmt(stats.total_restock_value)}</p>

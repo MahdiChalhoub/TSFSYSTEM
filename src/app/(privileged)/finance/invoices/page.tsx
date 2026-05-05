@@ -226,7 +226,7 @@ export default function InvoicesPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-info-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-info-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -241,7 +241,7 @@ export default function InvoicesPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-error-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-error-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
@@ -256,7 +256,7 @@ export default function InvoicesPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-app-gradient-primary-soft">
+                <Card className="rounded-2xl border-0 shadow-sm bg-app-primary-soft">
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>

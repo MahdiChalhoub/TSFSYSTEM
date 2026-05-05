@@ -72,7 +72,7 @@ export default function MidnightWalletPage() {
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
                     <Link href={path('/account')}
-                        className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                        className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
                     </Link>
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Liquid <span className="text-amber-400">Assets</span></h1>
@@ -122,7 +122,7 @@ export default function MidnightWalletPage() {
                         <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3rem] space-y-8">
                             <h2 className="text-xl font-black text-white italic">Transaction Ledger</h2>
                             {wallet.recent_transactions.length === 0 ? (
-                                <p className="text-app-text-faint text-sm text-center py-8">No transactions recorded</p>
+                                <p className="text-app-muted-foreground text-sm text-center py-8">No transactions recorded</p>
                             ) : (
                                 <div className="space-y-4">
                                     {wallet.recent_transactions.map(tx => {
@@ -134,7 +134,7 @@ export default function MidnightWalletPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-white font-bold text-sm">{tx.description}</p>
-                                                    <p className="text-app-text-muted text-[10px] font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+                                                    <p className="text-app-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1 flex items-center gap-2">
                                                         <Clock size={10} /> {new Date(tx.created_at).toLocaleDateString()}
                                                     </p>
                                                 </div>

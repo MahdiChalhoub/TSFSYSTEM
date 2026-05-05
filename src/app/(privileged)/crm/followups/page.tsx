@@ -28,7 +28,7 @@ const CHANNEL_ICONS: Record<string, any> = {
 }
 const CHANNEL_COLORS: Record<string, string> = {
     CALL: 'var(--app-info)', VISIT: 'var(--app-success)', WHATSAPP: '#25D366',
-    EMAIL: 'var(--app-warning)', NOTE: 'var(--app-text-muted)', SMS: 'var(--app-accent)', OTHER: 'var(--app-text-faint)',
+    EMAIL: 'var(--app-warning)', NOTE: 'var(--app-muted-foreground)', SMS: 'var(--app-accent)', OTHER: 'var(--app-muted-foreground)',
 }
 
 type TabKey = 'queue' | 'history' | 'analytics'
@@ -139,7 +139,7 @@ export default function FollowUpBoard() {
                             })
                         }}
                         variant="outline"
-                        className="bg-app-surface border-app-border text-app-text-muted hover:text-app-primary hover:border-app-primary/30"
+                        className="bg-app-surface border-app-border text-app-muted-foreground hover:text-app-primary hover:border-app-primary/30"
                     >
                         <Zap size={14} className="mr-2 text-app-primary shadow-[0_0_8px_rgba(var(--app-primary-rgb),0.3)]" /> Scan Policies
                     </Button>
@@ -230,7 +230,7 @@ export default function FollowUpBoard() {
                                                     Due: {new Date(act.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </span>
                                             </div>
-                                            <h3 className="font-bold text-app-text leading-tight group-hover:text-app-primary transition-colors truncate">
+                                            <h3 className="font-bold text-app-foreground leading-tight group-hover:text-app-primary transition-colors truncate">
                                                 {act.subject}
                                             </h3>
                                             <div className="flex items-center gap-3 mt-2">

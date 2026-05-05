@@ -92,7 +92,7 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
     return (
         <Card className="shadow-none border-none bg-transparent">
             <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-app-text-muted flex items-center gap-2">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-app-primary animate-pulse" />
                     Active Logistics Pipeline
                 </CardTitle>
@@ -114,25 +114,25 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                                     {getTypeIcon(op)}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <span className="text-xs font-black text-app-text flex items-center gap-1.5 uppercase tracking-wider truncate">
+                                    <span className="text-xs font-black text-app-foreground flex items-center gap-1.5 uppercase tracking-wider truncate">
                                         {op.failure_type ? getFailureLabel(op) : op.type}
-                                        <ArrowRight size={10} className="text-app-text-faint flex-shrink-0" />
+                                        <ArrowRight size={10} className="text-app-muted-foreground flex-shrink-0" />
                                         <span className="truncate font-mono">{op.reference}</span>
                                     </span>
-                                    <span className="text-[10px] text-app-text-faint font-medium mt-0.5 truncate">
+                                    <span className="text-[10px] text-app-muted-foreground font-medium mt-0.5 truncate">
                                         {op.source} <ArrowRight size={8} className="inline opacity-40 mx-0.5" /> {op.destination}
                                     </span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end text-right flex-shrink-0 ml-2">
-                                <span className={`text-sm font-black ${isFailed(op) ? 'line-through opacity-50 text-app-text' : 'text-app-text'}`}>
+                                <span className={`text-sm font-black ${isFailed(op) ? 'line-through opacity-50 text-app-foreground' : 'text-app-foreground'}`}>
                                     {Number(op.quantity).toLocaleString()} Units
                                 </span>
                                 <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md mt-1 ${op.failure_type === 'SUPPLIER_FAILURE' ? 'bg-rose-100 text-rose-700' :
                                         op.failure_type === 'INTERNAL_REJECTION' ? 'bg-orange-100 text-orange-700' :
                                             isFailed(op) ? 'bg-app-error-bg text-app-error' :
                                                 isDone(op) ? 'bg-app-primary-light text-app-success' :
-                                                    'bg-app-surface/70 text-app-text-muted'
+                                                    'bg-app-surface/70 text-app-muted-foreground'
                                     }`}>
                                     {op.status.replace(/_/g, ' ')}
                                 </span>
@@ -150,7 +150,7 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                                     </div>
                                 )}
                                 {op.reason && (
-                                    <div className="text-[10px] text-app-text-muted bg-black/5 px-2 py-1 rounded leading-tight">
+                                    <div className="text-[10px] text-app-muted-foreground bg-black/5 px-2 py-1 rounded leading-tight">
                                         <b className="uppercase text-[9px] tracking-wider mr-1">Reason:</b>
                                         "{op.reason}"
                                     </div>
@@ -183,7 +183,7 @@ export function ProductActivityFeed({ productId }: { productId: number | string 
                                     )}
                                 </div>
                                 {op.discrepancies.notes && (
-                                    <div className="mt-1 text-[10px] text-app-text-muted bg-black/5 px-2 py-1 rounded leading-tight">
+                                    <div className="mt-1 text-[10px] text-app-muted-foreground bg-black/5 px-2 py-1 rounded leading-tight">
                                         <b className="text-[9px] uppercase tracking-wider mr-1">Notes:</b>
                                         {op.discrepancies.notes}
                                     </div>

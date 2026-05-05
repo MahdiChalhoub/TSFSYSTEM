@@ -66,9 +66,9 @@ export function DocumentViewerPanel({
     return (
       <Card className="h-full flex items-center justify-center border-app-border/30">
         <div className="text-center p-8">
-          <FileText size={48} className="mx-auto mb-4 text-app-text-muted opacity-30" />
-          <p className="text-sm font-bold text-app-text-muted">No invoice selected</p>
-          <p className="text-xs text-app-text-faint mt-1">Select an invoice to view document</p>
+          <FileText size={48} className="mx-auto mb-4 text-app-muted-foreground opacity-30" />
+          <p className="text-sm font-bold text-app-muted-foreground">No invoice selected</p>
+          <p className="text-xs text-app-muted-foreground mt-1">Select an invoice to view document</p>
         </div>
       </Card>
     )
@@ -86,11 +86,11 @@ export function DocumentViewerPanel({
         <CardContent className="flex-1 flex items-center justify-center p-8">
           <div className="text-center space-y-4">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-app-surface-2 flex items-center justify-center">
-              <FileText size={40} className="text-app-text-muted opacity-30" />
+              <FileText size={40} className="text-app-muted-foreground opacity-30" />
             </div>
             <div>
-              <p className="text-sm font-bold text-app-text-muted mb-1">No Document Attached</p>
-              <p className="text-xs text-app-text-faint">Upload the supplier's invoice PDF or scan</p>
+              <p className="text-sm font-bold text-app-muted-foreground mb-1">No Document Attached</p>
+              <p className="text-xs text-app-muted-foreground">Upload the supplier's invoice PDF or scan</p>
             </div>
             <div>
               <label htmlFor="doc-upload" className="cursor-pointer">
@@ -106,7 +106,7 @@ export function DocumentViewerPanel({
                 className="hidden"
                 onChange={handleUpload}
               />
-              <p className="text-xs text-app-text-faint mt-2">PDF, JPG, PNG supported</p>
+              <p className="text-xs text-app-muted-foreground mt-2">PDF, JPG, PNG supported</p>
             </div>
           </div>
         </CardContent>
@@ -132,7 +132,7 @@ export function DocumentViewerPanel({
             >
               <ZoomOut size={14} />
             </Button>
-            <span className="text-xs font-bold text-app-text-muted min-w-[50px] text-center">
+            <span className="text-xs font-bold text-app-muted-foreground min-w-[50px] text-center">
               {zoom}%
             </span>
             <Button
