@@ -9,7 +9,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Plus, Tag, Loader2, Unlink, Sparkles, ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react'
+import { Plus, Tag, Loader2, Unlink, Sparkles, ChevronRight, ChevronDown, AlertTriangle, Check, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
@@ -49,6 +49,10 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
     const [scopeLoading, setScopeLoading] = useState<Set<number>>(new Set())
     /** Per-root saving flag so toggles can't race the POST. */
     const [scopeSaving, setScopeSaving] = useState<Set<number>>(new Set())
+    /** Per-root: whether to also show the not-selected children + a checkbox
+     *  to add them. Default off so the expanded view is a quick read of the
+     *  current scope; users opt into the picker when they want to extend it. */
+    const [showAvailable, setShowAvailable] = useState<Set<number>>(new Set())
     const router = useRouter()
 
     const loadData = useCallback(() => {
@@ -174,6 +178,15 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
             return next
         })
     }, [valueScopes, fetchChildren])
+
+    const toggleShowAvailable = useCallback((rootId: number) => {
+        setShowAvailable(prev => {
+            const next = new Set(prev)
+            if (next.has(rootId)) next.delete(rootId)
+            else next.add(rootId)
+            return next
+        })
+    }, [])
 
     const toggleChildScope = useCallback(async (rootId: number, childId: number) => {
         const current = valueScopes.get(rootId) || []
@@ -384,7 +397,8 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
                                         </button>
                                     </div>
 
-                                    {/* Expanded children — checkbox per leaf value, scoped to this brand */}
+                                    {/* Expanded children — selected-only by default; "Add value"
+                                        toggle reveals unselected values with an inline picker. */}
                                     {isOpen && (
                                         <div className="pl-12 pr-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-150"
                                             style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
@@ -396,46 +410,94 @@ export function AttributesTab({ brandId, brandName }: { brandId: number; brandNa
                                                 <p className="text-tp-xs text-app-muted-foreground italic py-2">
                                                     No leaf values defined under this attribute group yet.
                                                 </p>
-                                            ) : children ? (
-                                                <>
-                                                    <p className="text-tp-xxs text-app-muted-foreground mb-1.5 leading-snug">
-                                                        Pick which {g.name.toLowerCase()} values are valid for <strong>{brandName}</strong>.
-                                                        Empty = all values universal. Checking a value scopes it to this brand
-                                                        (and any other brand already scoped) — unchecked values stay universal.
-                                                    </p>
-                                                    <div className="space-y-0.5">
-                                                        {children.map(v => {
-                                                            // scoped_to_count > 0 means this value is already restricted
-                                                            // (some brand has it). Surface a small icon so unchecking a
-                                                            // value doesn't surprise the operator into thinking they made
-                                                            // it universal again — they'd need every brand to release it.
-                                                            const exclusive = v.scoped_to_count > 0
-                                                            return (
-                                                                <label key={v.id}
-                                                                    className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={v.in_scope}
-                                                                        disabled={saving}
-                                                                        onChange={() => toggleChildScope(g.id, v.id)}
-                                                                        className="w-3.5 h-3.5 cursor-pointer accent-app-success"
-                                                                    />
-                                                                    <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
-                                                                    {v.code && (
-                                                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
-                                                                    )}
-                                                                    {exclusive && !v.in_scope && (
-                                                                        <span title={`Currently scoped to ${v.scoped_to_count} other brand${v.scoped_to_count === 1 ? '' : 's'}`}
-                                                                            style={{ color: 'var(--app-warning)' }}>
-                                                                            <AlertTriangle size={11} />
+                                            ) : children ? (() => {
+                                                const selected = children.filter(c => c.in_scope)
+                                                const available = children.filter(c => !c.in_scope)
+                                                const showingAvail = showAvailable.has(g.id)
+                                                return (
+                                                    <>
+                                                        {/* Selected — primary view, just shows what's scoped today */}
+                                                        {selected.length === 0 ? (
+                                                            <p className="text-tp-xs text-app-muted-foreground italic py-1">
+                                                                No values scoped to <strong>{brandName}</strong> yet — every {g.name.toLowerCase()} value is universal.
+                                                            </p>
+                                                        ) : (
+                                                            <div className="space-y-0.5">
+                                                                {selected.map(v => (
+                                                                    <div key={v.id}
+                                                                        className="flex items-center gap-2 px-2 py-1 rounded-md group/v hover:bg-app-surface transition-colors">
+                                                                        <span className="w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0"
+                                                                            style={{ background: 'var(--app-success)', color: 'white' }}>
+                                                                            <Check size={9} strokeWidth={3} />
                                                                         </span>
-                                                                    )}
-                                                                </label>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                </>
-                                            ) : null}
+                                                                        <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
+                                                                        {v.code && (
+                                                                            <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => toggleChildScope(g.id, v.id)}
+                                                                            disabled={saving}
+                                                                            title={`Remove ${v.name} from ${brandName}'s scope`}
+                                                                            className="opacity-0 group-hover/v:opacity-100 transition-opacity p-0.5 rounded hover:bg-app-error/10 disabled:opacity-30"
+                                                                            style={{ color: 'var(--app-error)' }}>
+                                                                            <X size={11} />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Available — opt-in picker */}
+                                                        {available.length > 0 && (
+                                                            <div className="mt-2 pt-2 border-t border-app-border/40">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleShowAvailable(g.id)}
+                                                                    className="flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md transition-colors hover:bg-app-surface"
+                                                                    style={{ color: 'var(--app-success)' }}>
+                                                                    {showingAvail ? <ChevronDown size={11} /> : <Plus size={11} />}
+                                                                    {showingAvail ? 'Hide available' : `Add value (${available.length} available)`}
+                                                                </button>
+
+                                                                {showingAvail && (
+                                                                    <div className="mt-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                        <p className="text-tp-xxs text-app-muted-foreground px-2 mb-1 leading-snug">
+                                                                            Pick a value to scope it to <strong>{brandName}</strong>.
+                                                                            ⚠ icon = value is already scoped to other brands; adding here doesn&apos;t change that for them.
+                                                                        </p>
+                                                                        {available.map(v => {
+                                                                            const exclusive = v.scoped_to_count > 0
+                                                                            return (
+                                                                                <label key={v.id}
+                                                                                    className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
+                                                                                    <input
+                                                                                        type="checkbox"
+                                                                                        checked={false}
+                                                                                        disabled={saving}
+                                                                                        onChange={() => toggleChildScope(g.id, v.id)}
+                                                                                        className="w-3.5 h-3.5 cursor-pointer accent-app-success"
+                                                                                    />
+                                                                                    <span className="text-tp-sm font-medium text-app-muted-foreground flex-1 truncate">{v.name}</span>
+                                                                                    {v.code && (
+                                                                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                                    )}
+                                                                                    {exclusive && (
+                                                                                        <span title={`Currently scoped to ${v.scoped_to_count} other brand${v.scoped_to_count === 1 ? '' : 's'}`}
+                                                                                            style={{ color: 'var(--app-warning)' }}>
+                                                                                            <AlertTriangle size={11} />
+                                                                                        </span>
+                                                                                    )}
+                                                                                </label>
+                                                                            )
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )
+                                            })() : null}
                                         </div>
                                     )}
                                 </div>

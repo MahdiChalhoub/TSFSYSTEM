@@ -16,7 +16,7 @@
  *  invented palettes, no theme switcher, no per-page chrome.
  * ═══════════════════════════════════════════════════════════ */
 
-import { useEffect, useState, useCallback, useContext } from 'react'
+import React, { useEffect, useState, useCallback, useContext } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { erpFetch } from '@/lib/erp-api'
@@ -32,7 +32,7 @@ import {
     DollarSign, TrendingUp, AlertTriangle, CheckCircle2,
     Warehouse, Tag, Layers, Star, Ruler,
     Box, Shield, Archive, RefreshCw, ArrowRightLeft, BellRing, Sliders, Truck,
-    User as UserIcon, ChevronRight, Loader2,
+    User as UserIcon, ChevronRight, Loader2, Activity, Boxes, GitBranch,
     History, ExternalLink, Link2Off, ShoppingCart,
 } from 'lucide-react'
 
@@ -74,6 +74,21 @@ const ROLE_BADGES: Record<string, { label: string; color: string }> = {
     NOT_SUB:    { label: 'No Sub',     color: 'var(--app-muted-foreground)' },
 }
 
+type PackagingRow = {
+    id: number
+    name: string | null
+    display_name?: string | null
+    barcode: string | null
+    unit_name: string | null
+    level: number
+    ratio: number | string
+    effective_selling_price?: number | string | null
+    effective_purchase_price?: number | string | null
+    weight_kg?: number | string | null
+    is_default_sale?: boolean
+    is_default_purchase?: boolean
+}
+
 function useOpenInTab() {
     const ctx = useContext(AdminContext)
     return (title: string, path: string) => {
@@ -106,6 +121,8 @@ function ProductsDetailContent() {
     const [loading, setLoading] = useState(true)
     const [invMemberships, setInvMemberships] = useState<Record<string, unknown>[]>([])
     const [stockByWarehouse, setStockByWarehouse] = useState<Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>>([])
+    const [packagings, setPackagings] = useState<PackagingRow[]>([])
+    const [packagingView, setPackagingView] = useState<'list' | 'tree' | 'pipeline'>('pipeline')
     const [showDelete, setShowDelete] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [showExpiryAlert, setShowExpiryAlert] = useState(false)
@@ -115,9 +132,10 @@ function ProductsDetailContent() {
             setLoading(true)
             const data = await erpFetch(`products/${id}/`)
             setItem(data)
-            const [memberships, stock] = await Promise.all([
+            const [memberships, stock, packs] = await Promise.all([
                 erpFetch(`inventory/inventory-group-members/?product=${id}`).catch(() => []),
                 erpFetch(`inventory/?product=${id}`).catch(() => []),
+                erpFetch(`inventory/products/${id}/packaging/`).catch(() => []),
             ])
             setInvMemberships(Array.isArray(memberships) ? memberships : (memberships?.results || []))
             const stockRows = Array.isArray(stock) ? stock : (stock?.results || [])
@@ -127,6 +145,8 @@ function ProductsDetailContent() {
                 quantity: Number(r.quantity ?? r.on_hand_qty ?? 0),
                 reserved_quantity: Number(r.reserved_quantity ?? 0),
             })))
+            const packRows = Array.isArray(packs) ? packs : (packs?.results || [])
+            setPackagings(packRows as PackagingRow[])
         } catch (e) {
             console.error('Failed to load product:', e)
         } finally {
@@ -359,6 +379,63 @@ function ProductsDetailContent() {
                 )
             })()}
 
+            {/* ═══ Analytics — 3 health meters + alerts + business metrics ═══ */}
+            {(() => {
+                const reorderN = Number(it.reorder_point || 0)
+                const minN = Number(it.min_stock_level || 0)
+                const maxN = Number(it.max_stock_level || 0)
+                const financialPct = reorderN > 0 ? Math.min(100, Math.round((onHand / Math.max(reorderN, 1)) * 100)) : 100
+                const adjustmentPct = maxN > 0 ? Math.min(100, Math.round((onHand / maxN) * 100)) : 100
+                const marginPct = margin != null ? Math.max(0, Math.min(100, Math.round(margin))) : 0
+                const totalPurchases = Number(it.total_purchases ?? it.purchases_count ?? 0)
+                const totalProfit = Number(it.total_profit ?? 0)
+                const alerts: { icon: typeof AlertTriangle; label: string; color: string }[] = []
+                if (onHand <= 0) alerts.push({ icon: AlertTriangle, label: 'Out of stock', color: 'var(--app-error)' })
+                else if (minN > 0 && onHand <= minN) alerts.push({ icon: AlertTriangle, label: `Low stock — ${onHand} units (min ${minN})`, color: 'var(--app-warning)' })
+                if (it.is_active === false) alerts.push({ icon: AlertTriangle, label: 'Product inactive', color: 'var(--app-muted-foreground)' })
+                if (it.group_sync_status === 'BROKEN') alerts.push({ icon: AlertTriangle, label: 'Group price diverged', color: 'var(--app-error)' })
+                if (reorderN > 0 && onHand <= reorderN && onHand > 0) alerts.push({ icon: ShoppingCart, label: `Below reorder — purchase ${Math.max(reorderN - onHand, 1)} units`, color: 'var(--app-warning)' })
+                return (
+                    <PanelCard icon={<Activity size={13} />} accent="var(--app-primary)" title="Analytics">
+                        {/* Meters */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                            <Meter label="Financial"  value={financialPct}  tone="var(--app-primary)"          icon={<Activity size={13} />}    hint="On-hand vs reorder point" />
+                            <Meter label="Adjustment" value={adjustmentPct} tone="var(--app-info, #3b82f6)"    icon={<Activity size={13} />}    hint="On-hand vs max stock" />
+                            <Meter label="Margin"     value={marginPct}     tone="var(--app-success)"          icon={<TrendingUp size={13} />}  hint={margin != null ? `${margin.toFixed(1)}% over cost` : 'Set cost to compute'} />
+                        </div>
+
+                        {/* Alerts */}
+                        {alerts.length > 0 && (
+                            <div className="mt-3 rounded-xl px-3 py-2 flex items-center gap-2 flex-wrap"
+                                 style={{
+                                     background: 'color-mix(in srgb, var(--app-warning) 7%, transparent)',
+                                     border: '1px solid color-mix(in srgb, var(--app-warning) 22%, transparent)',
+                                 }}>
+                                <span className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>Alerts</span>
+                                {alerts.map((a, i) => {
+                                    const Icon = a.icon
+                                    return (
+                                        <span key={i} className="flex items-center gap-1 text-tp-xs font-bold" style={{ color: a.color }}>
+                                            <Icon size={11} /> {a.label}
+                                        </span>
+                                    )
+                                })}
+                            </div>
+                        )}
+
+                        {/* Business metrics */}
+                        <div className="mt-3 pt-3" style={{ borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
+                            <p className="text-tp-xxs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>Business metrics</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                                <BizStat label="Total sold"    value={fmtQty(totalSold)}     tone="var(--app-success)" hint="Lifetime units" />
+                                <BizStat label="Purchases"     value={fmtQty(totalPurchases)} tone="var(--app-warning)" hint="Distinct POs" />
+                                <BizStat label="Total profit"  value={fmt(totalProfit)}      tone="#8b5cf6"             hint={margin != null ? `${margin.toFixed(1)}% margin` : '—'} />
+                            </div>
+                        </div>
+                    </PanelCard>
+                )
+            })()}
+
             {/* ═══ 3-col widget row — auto-fit per design-language §3 ═══ */}
             <div className="flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
                 {/* Pricing breakdown */}
@@ -557,15 +634,45 @@ function ProductsDetailContent() {
                 </PanelCard>
             )}
 
-            {/* ═══ Packaging variants ═══ */}
-            <PanelCard icon={<Package size={13} />} accent="var(--app-warning)" title="Packaging Variants">
-                <ProductPackagingTab
-                    productId={id}
-                    productName={String(it.name || '')}
-                    basePriceTTC={Number(it.selling_price_ttc) || undefined}
-                    basePriceHT={Number(it.selling_price_ht) || undefined}
-                    productUnitId={it.unit as number}
-                />
+            {/* ═══ Packaging variants — three views: Pipeline · Tree · List ═══ */}
+            <PanelCard icon={<Package size={13} />} accent="var(--app-warning)" title="Packaging Variants"
+                right={
+                    <div className="flex items-center gap-0.5 p-0.5 rounded-lg"
+                         style={{ background: 'color-mix(in srgb, var(--app-foreground) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
+                        {([
+                            { id: 'pipeline', label: 'Pipeline', icon: <ArrowRightLeft size={11} /> },
+                            { id: 'tree',     label: 'Tree',     icon: <GitBranch size={11} /> },
+                            { id: 'list',     label: 'List',     icon: <Sliders size={11} /> },
+                        ] as const).map(v => {
+                            const active = packagingView === v.id
+                            return (
+                                <button key={v.id} type="button" onClick={() => setPackagingView(v.id)}
+                                    className="flex items-center gap-1 text-tp-xxs font-bold px-2 py-1 rounded-md transition-all"
+                                    style={{
+                                        background: active ? 'var(--app-warning)' : 'transparent',
+                                        color: active ? '#fff' : 'var(--app-muted-foreground)',
+                                    }}>
+                                    {v.icon}<span className="hidden sm:inline">{v.label}</span>
+                                </button>
+                            )
+                        })}
+                    </div>
+                }>
+                {packagingView === 'pipeline' && (
+                    <PackagingPipelineView levels={packagings} baseUnitName={String(it.unit_name || it.unit_code || 'unit')} />
+                )}
+                {packagingView === 'tree' && (
+                    <PackagingTreeView levels={packagings} baseUnitName={String(it.unit_name || it.unit_code || 'unit')} basePriceTTC={Number(it.selling_price_ttc) || 0} />
+                )}
+                {packagingView === 'list' && (
+                    <ProductPackagingTab
+                        productId={id}
+                        productName={String(it.name || '')}
+                        basePriceTTC={Number(it.selling_price_ttc) || undefined}
+                        basePriceHT={Number(it.selling_price_ht) || undefined}
+                        productUnitId={it.unit as number}
+                    />
+                )}
             </PanelCard>
 
             {/* ═══ Activity timeline ═══ */}
@@ -816,6 +923,337 @@ function ProductAuditTimeline({ productId }: { productId: number }) {
                     </div>
                 )
             })}
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  Meter — health gauge with percent + colored fill bar
+ *  BizStat — small business metric tile
+ * ═══════════════════════════════════════════════════════════ */
+function Meter({ label, value, tone, icon, hint }: { label: string; value: number; tone: string; icon: React.ReactNode; hint?: string }) {
+    return (
+        <div className="rounded-xl p-3 relative overflow-hidden"
+             style={{
+                 background: `color-mix(in srgb, ${tone} 4%, var(--app-surface))`,
+                 border: `1px solid color-mix(in srgb, ${tone} 22%, transparent)`,
+             }}>
+            <div className="flex items-start justify-between">
+                <div>
+                    <p className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: tone }}>{label}</p>
+                    <p className="text-2xl font-black tabular-nums tracking-tight mt-0.5" style={{ color: 'var(--app-foreground)' }}>{value}%</p>
+                    {hint && <p className="text-tp-xxs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>{hint}</p>}
+                </div>
+                <span style={{ color: tone, opacity: 0.6 }}>{icon}</span>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden"
+                 style={{ background: 'color-mix(in srgb, var(--app-foreground) 6%, transparent)' }}>
+                <div className="h-full rounded-full transition-all"
+                     style={{ width: `${Math.max(0, Math.min(100, value))}%`, background: tone }} />
+            </div>
+        </div>
+    )
+}
+function BizStat({ label, value, tone, hint }: { label: string; value: string; tone: string; hint?: string }) {
+    return (
+        <div className="rounded-xl px-3 py-2"
+             style={{
+                 background: `color-mix(in srgb, ${tone} 4%, var(--app-surface))`,
+                 border: `1px solid color-mix(in srgb, ${tone} 18%, transparent)`,
+             }}>
+            <p className="text-tp-xxs font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{label}</p>
+            <p className="text-tp-md font-black tabular-nums tracking-tight" style={{ color: tone }}>{value}</p>
+            {hint && <p className="text-tp-xxs truncate" style={{ color: 'var(--app-muted-foreground)' }}>{hint}</p>}
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  PACKAGING TIER ICONS
+ *  -----------------------------------------------------------
+ *  Each level gets a distinct icon that grows with the tier:
+ *    Level 0 (pc / base unit)  → small Box
+ *    Level 1 (paquet / pack)   → Package (sealed package)
+ *    Level 2 (carton)          → Boxes (multiple boxes stacked)
+ *    Level 3+ (pallet)         → PalletIcon (custom SVG: stack on slats)
+ * ═══════════════════════════════════════════════════════════ */
+function PalletIcon({ size = 28, color = 'currentColor' }: { size?: number; color?: string }) {
+    // A small stack of boxes on top of horizontal pallet slats with feet.
+    return (
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+             stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+             style={{ flexShrink: 0 }}>
+                {/* Top row of cartons */}
+                <rect x="4"  y="6"  width="7" height="7" rx="1" />
+                <rect x="13" y="6"  width="7" height="7" rx="1" />
+                <rect x="22" y="6"  width="6" height="7" rx="1" />
+                {/* Second row */}
+                <rect x="7"  y="13" width="9" height="7" rx="1" />
+                <rect x="18" y="13" width="9" height="7" rx="1" />
+                {/* Pallet base — top slat, gap, bottom slat */}
+                <line x1="2"  y1="22" x2="30" y2="22" />
+                <line x1="2"  y1="26" x2="30" y2="26" />
+                {/* Feet */}
+                <line x1="5"  y1="26" x2="5"  y2="29" />
+                <line x1="16" y1="26" x2="16" y2="29" />
+                <line x1="27" y1="26" x2="27" y2="29" />
+        </svg>
+    )
+}
+/* Tier accent — keeps a progressive color ramp by sorted index, regardless of
+ * how the unit is named. pc=neutral, then info/warning/violet for tiers 1/2/3+. */
+function tierAccent(idx: number): string {
+    if (idx <= 0) return 'var(--app-muted-foreground)'
+    if (idx === 1) return 'var(--app-info, #3b82f6)'
+    if (idx === 2) return 'var(--app-warning, #f59e0b)'
+    return '#8b5cf6'
+}
+/* Icon picker — driven by the actual unit_name keyword (pallet/carton/pack/
+ * paquet/can/piece), with the tier index only used to pick a base size and
+ * as a fallback. This is what fixes "Pack of 6" being drawn as a CARTON. */
+function iconForPackaging(unitName: string | null | undefined, idx: number, color: string): React.ReactNode {
+    const size = 22 + Math.min(idx, 3) * 4
+    const u = (unitName || '').toLowerCase()
+    if (/(pallet|crate|skid)/.test(u)) return <PalletIcon size={size + 2} color={color} />
+    if (/(carton|box|case)/.test(u))   return <Boxes size={size} style={{ color }} />
+    if (/(pack|paquet|package|bag|sachet|can|bottle|jar|tube)/.test(u))
+                                        return <Package size={Math.max(16, size - 2)} style={{ color }} />
+    if (/(piece|pc|unit|item|each)/.test(u) || idx === 0)
+                                        return <Box size={Math.max(14, size - 6)} style={{ color }} />
+    // Unknown unit name — fall back on tier index ramp so we always render *something*.
+    if (idx === 1) return <Package size={Math.max(16, size - 2)} style={{ color }} />
+    if (idx === 2) return <Boxes size={size} style={{ color }} />
+    return <PalletIcon size={size + 2} color={color} />
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  PackagingPipelineView — horizontal flow of tiers
+ *  ----------------------------------------------------------
+ *  Each tier card shows: icon · custom name · ratio over base ·
+ *  ratio over previous tier · barcode · price. Tiers are connected
+ *  by an arrow with the multiplier label.
+ * ═══════════════════════════════════════════════════════════ */
+function PackagingPipelineView({ levels, baseUnitName }: { levels: PackagingRow[]; baseUnitName: string }) {
+    if (levels.length === 0) {
+        return (
+            <div className="text-center py-6">
+                <Package size={28} className="mx-auto mb-2" style={{ color: 'var(--app-muted-foreground)', opacity: 0.4 }} />
+                <p className="text-tp-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>No packaging variants yet</p>
+                <p className="text-tp-xs mt-1" style={{ color: 'var(--app-muted-foreground)' }}>The base unit ({baseUnitName}) is the only way this product is sold.</p>
+            </div>
+        )
+    }
+    // Sort by RATIO ascending (the natural containment chain — small fits inside big),
+    // tie-break by level so two equal ratios still get a stable order. Using level as
+    // the *primary* key was wrong: that field is a manual ordering, not a containment
+    // index — a "pack of 6" with level=3 would be drawn after a carton with level=2
+    // even though 6 < 24, breaking the chain.
+    const sorted = [...levels].sort((a, b) => {
+        const ra = Number(a.ratio) || 1, rb = Number(b.ratio) || 1
+        if (ra !== rb) return ra - rb
+        return (a.level || 0) - (b.level || 0)
+    })
+    // Tier index 0 = base unit; subsequent indexes are real packaging levels in
+    // ratio order. We DRIVE the icon and accent off this index, not off the
+    // level field, so the visual progression matches the actual chain.
+    const chain: Array<{
+        isBase: boolean; tier: number; label: string; unitLabel: string;
+        ratio: number; barcode: string | null; price: number | null; isDefaultSale: boolean;
+    }> = [
+        { isBase: true, tier: 0, label: baseUnitName, unitLabel: baseUnitName, ratio: 1, barcode: null, price: null, isDefaultSale: false },
+        ...sorted.map((p, i) => ({
+            isBase: false, tier: i + 1,
+            label: p.display_name || p.name || (p.unit_name || `Level ${i + 1}`),
+            unitLabel: p.unit_name || (p.display_name || p.name || `Level ${i + 1}`),
+            ratio: Number(p.ratio) || 1,
+            barcode: p.barcode || null,
+            price: p.effective_selling_price != null ? Number(p.effective_selling_price) : null,
+            isDefaultSale: !!p.is_default_sale,
+        })),
+    ]
+    return (
+        <div className="overflow-x-auto custom-scrollbar -mx-3 px-3">
+            <div className="flex items-stretch gap-2" style={{ minWidth: 'fit-content' }}>
+                {chain.map((c, i) => {
+                    const accent = tierAccent(c.tier)
+                    const prev = i > 0 ? chain[i - 1] : null
+                    const localMul = prev ? c.ratio / prev.ratio : 1
+                    return (
+                        <React.Fragment key={i}>
+                            {/* Tier card */}
+                            <div className="rounded-xl p-3 flex flex-col items-center min-w-[150px]"
+                                 style={{
+                                     background: `color-mix(in srgb, ${accent} 6%, var(--app-surface))`,
+                                     border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
+                                 }}>
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-1.5"
+                                     style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}>
+                                    {iconForPackaging(c.unitLabel, c.tier, accent)}
+                                </div>
+                                <p className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: accent }}>
+                                    {c.isBase ? 'Base unit' : c.unitLabel}
+                                </p>
+                                <p className="text-tp-sm font-black truncate max-w-full text-center" style={{ color: 'var(--app-foreground)' }}>
+                                    {c.label}
+                                </p>
+                                {prev && (
+                                    <p className="text-tp-xxs font-bold tabular-nums mt-0.5" style={{ color: accent }}>
+                                        ×{+(Number(localMul).toFixed(4))} {(prev.unitLabel || baseUnitName).toLowerCase()}
+                                    </p>
+                                )}
+                                <p className="text-tp-xxs font-bold tabular-nums" style={{ color: 'var(--app-muted-foreground)' }}>
+                                    {+c.ratio} {baseUnitName} total
+                                </p>
+                                {c.barcode && (
+                                    <p className="font-mono text-tp-xxs font-bold mt-1 truncate max-w-full" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {c.barcode}
+                                    </p>
+                                )}
+                                {c.price != null && (
+                                    <p className="text-tp-sm font-black tabular-nums mt-1" style={{ color: 'var(--app-success)' }}>
+                                        {fmt(c.price)}
+                                    </p>
+                                )}
+                                {c.isDefaultSale && (
+                                    <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded mt-1"
+                                          style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
+                                        Default sale
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Arrow connector — between every pair, not after the last */}
+                            {i < chain.length - 1 && (() => {
+                                const next = chain[i + 1]
+                                const mul = next.ratio / c.ratio
+                                return (
+                                    <div className="flex flex-col items-center justify-center px-1 min-w-[52px]">
+                                        <p className="text-tp-xs font-black tabular-nums" style={{ color: tierAccent(next.tier) }}>
+                                            ×{+(Number(mul).toFixed(4))}
+                                        </p>
+                                        <ArrowRightLeft size={14} style={{ color: tierAccent(next.tier), opacity: 0.6, transform: 'scaleY(0.8)' }} />
+                                    </div>
+                                )
+                            })()}
+                        </React.Fragment>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  PackagingTreeView — hierarchical indented list
+ *  ----------------------------------------------------------
+ *  Each level renders one row with a tier icon, name, ratio,
+ *  barcode, and price. Indentation grows with level so the
+ *  containment relationship reads top-to-bottom.
+ * ═══════════════════════════════════════════════════════════ */
+function PackagingTreeView({ levels, baseUnitName, basePriceTTC }: { levels: PackagingRow[]; baseUnitName: string; basePriceTTC: number }) {
+    // Sort by ratio so containment reads correctly: pc < paquet < pack of 6 <
+    // carton of 24 < pallet of 144. The `level` field is unreliable as the
+    // tree-depth driver — see PackagingPipelineView for the same explanation.
+    const sorted = [...levels].sort((a, b) => {
+        const ra = Number(a.ratio) || 1, rb = Number(b.ratio) || 1
+        if (ra !== rb) return ra - rb
+        return (a.level || 0) - (b.level || 0)
+    })
+    return (
+        <div className="space-y-0.5">
+            {/* Base unit row — tier 0, no parent */}
+            <PackagingTreeRow
+                tier={0}
+                label={baseUnitName}
+                tierName="Base unit"
+                unitLabel={baseUnitName}
+                ratio={1}
+                localMul={null}
+                parentTierName={null}
+                baseUnitName={baseUnitName}
+                barcode={null}
+                price={basePriceTTC || null}
+            />
+            {sorted.map((p, i) => {
+                const tier = i + 1
+                const ratio = Number(p.ratio) || 1
+                const prevRatio = i === 0 ? 1 : (Number(sorted[i - 1].ratio) || 1)
+                const localMul = ratio / prevRatio
+                const unitLabel = p.unit_name || (p.display_name || p.name || `Level ${tier}`)
+                const parentUnitLabel = i === 0
+                    ? baseUnitName
+                    : (sorted[i - 1].unit_name || sorted[i - 1].display_name || sorted[i - 1].name || `Level ${i}`)
+                return (
+                    <PackagingTreeRow
+                        key={p.id}
+                        tier={tier}
+                        label={p.display_name || p.name || unitLabel}
+                        tierName={unitLabel}
+                        unitLabel={unitLabel}
+                        ratio={ratio}
+                        localMul={localMul}
+                        parentTierName={parentUnitLabel}
+                        baseUnitName={baseUnitName}
+                        barcode={p.barcode || null}
+                        price={p.effective_selling_price != null ? Number(p.effective_selling_price) : null}
+                        isDefaultSale={!!p.is_default_sale}
+                    />
+                )
+            })}
+        </div>
+    )
+}
+function PackagingTreeRow({ tier, label, tierName, unitLabel, ratio, localMul, parentTierName, baseUnitName, barcode, price, isDefaultSale }: {
+    tier: number; label: string; tierName: string; unitLabel: string;
+    ratio: number; localMul: number | null; parentTierName: string | null; baseUnitName: string;
+    barcode: string | null; price: number | null;
+    isDefaultSale?: boolean;
+}) {
+    const accent = tierAccent(tier)
+    const indent = tier * 22
+    return (
+        <div className="flex items-center gap-2 px-2 py-2 rounded-lg transition-colors"
+             style={{
+                 marginLeft: indent,
+                 background: 'transparent',
+                 borderLeft: tier > 0 ? `2px solid color-mix(in srgb, ${accent} 35%, transparent)` : '2px solid transparent',
+             }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                 style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)`, color: accent }}>
+                {iconForPackaging(unitLabel, tier, accent)}
+            </div>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>{label}</span>
+                    <span className="text-tp-xxs font-black uppercase tracking-widest" style={{ color: accent }}>{tierName}</span>
+                    {isDefaultSale && (
+                        <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded"
+                              style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
+                            Default sale
+                        </span>
+                    )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap text-tp-xxs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                    {localMul != null && parentTierName ? (
+                        <span className="font-bold tabular-nums">
+                            <span style={{ color: accent }}>×{+(Number(localMul).toFixed(4))} {parentTierName.toLowerCase()}</span>
+                            <span> · {+ratio} {baseUnitName} total</span>
+                        </span>
+                    ) : (
+                        <span className="font-bold tabular-nums">×{+ratio} {baseUnitName}</span>
+                    )}
+                    {barcode && <span className="font-mono">{barcode}</span>}
+                </div>
+            </div>
+            {price != null && (
+                <span className="text-tp-md font-black tabular-nums flex-shrink-0" style={{ color: 'var(--app-success)' }}>
+                    {fmt(price)}
+                </span>
+            )}
         </div>
     )
 }

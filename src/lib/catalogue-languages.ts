@@ -82,11 +82,58 @@ export async function setCatalogueLanguages(codes: LocaleCode[]): Promise<Locale
     return langs;
 }
 
+/** Per-(language, country) role flags. Both default to safe values when
+ *  a country has no entry in `roles`: catalogue-on, system-off (= legacy
+ *  storage shape stays semantically correct after the model extension). */
+export interface LangRole {
+    is_system: boolean;
+    is_catalogue: boolean;
+}
+
 /** Rich shape — locale code plus the list of OrgCountry FK ids the language
- *  is restricted to. Empty country_ids = "active in every enabled country". */
+ *  is restricted to. Empty country_ids = "active in every enabled country".
+ *  `roles` is keyed by stringified country FK id (JSON object keys are strings). */
 export interface CatalogueLanguageEntry {
     code: LocaleCode;
     country_ids: number[];
+    roles?: Record<string, LangRole>;
+}
+
+/** Pull the role flags for a (language, country) pair. Defaults: catalogue
+ *  on (this is a CATALOGUE language by definition once the entry exists),
+ *  system off (admin must opt-in to expose it as a UI language). */
+export function getLangRole(entry: CatalogueLanguageEntry, countryFkId: number): LangRole {
+    const r = entry.roles?.[String(countryFkId)];
+    return {
+        is_system: !!r?.is_system,
+        is_catalogue: r ? !!r.is_catalogue : true,
+    };
+}
+
+/** Codes that have `is_system: true` in at least one country. The topbar
+ *  language switcher uses this to trim its dropdown — so an admin who has
+ *  only catalogue-flagged a language doesn't see it offered as a UI locale. */
+export async function getSystemLanguageCodes(): Promise<LocaleCode[]> {
+    const entries = await getCatalogueLanguageEntries();
+    const out = new Set<string>();
+    for (const e of entries) {
+        const roles = e.roles || {};
+        for (const k in roles) {
+            if (roles[k]?.is_system) {
+                out.add(e.code);
+                break;
+            }
+        }
+    }
+    return Array.from(out);
+}
+
+/** Immutably set one role flag on one (language, country) cell of an entry. */
+export function setLangRoleOn(entry: CatalogueLanguageEntry, countryFkId: number, role: 'is_system' | 'is_catalogue', value: boolean): CatalogueLanguageEntry {
+    const key = String(countryFkId);
+    const current = getLangRole(entry, countryFkId);
+    const nextRoles = { ...(entry.roles || {}), [key]: { ...current, [role]: value } };
+    return { ...entry, roles: nextRoles };
 }
 
 export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEntry[]> {

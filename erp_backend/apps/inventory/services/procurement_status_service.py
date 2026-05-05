@@ -18,6 +18,7 @@ Status Chain:
 """
 import hashlib
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from django.apps import apps as django_apps
 from django.core.cache import cache
@@ -230,31 +231,89 @@ def _run_in_thread(fn, organization, product_ids):
 
 # Module-level executor — created once per Python process and reused
 # across requests. Avoids the ~50ms startup cost of `with
-# ThreadPoolExecutor()` per call. Three workers (one per phase) is the
-# steady-state need; concurrent requests serialize at the pool, but the
-# phases of a SINGLE request still run in parallel which is the win.
-_PHASE_EXECUTOR = ThreadPoolExecutor(max_workers=3, thread_name_prefix='procstat')
+# ThreadPoolExecutor()` per call.
+#
+# Capacity sizing: each worker holds **one** DB connection for the
+# duration of a phase query. With the default of 3 (one per phase), a
+# single request's phases run truly in parallel; multiple concurrent
+# requests share workers and serialize at pool entry. Bumping the
+# worker count past 3 only helps under heavy concurrency where you'd
+# otherwise queue at the pool — but every extra worker is +N DB
+# connections under load (e.g. 10 workers + 30 concurrent requests
+# = 30 concurrent connections used by procurement alone).
+#
+# Tune via env:
+#   PROCSTAT_WORKERS=3   # default, fine for most prod tenants
+#   PROCSTAT_WORKERS=8   # higher concurrency, watch Postgres max_connections
+#   PROCSTAT_WORKERS=1   # serial fallback (recovers prior behavior; use if
+#                        # connection pool pressure is observed)
+_PROCSTAT_WORKERS = max(1, int(os.getenv('PROCSTAT_WORKERS', '3')))
+_PHASE_EXECUTOR = ThreadPoolExecutor(
+    max_workers=_PROCSTAT_WORKERS,
+    thread_name_prefix='procstat',
+)
 
 
 # Cache TTL for the procurement-status batch. Short enough that PR/PO state
-# changes propagate quickly to the chip ("Available" → "Requested") without
-# requiring explicit invalidation; long enough to absorb a burst of concurrent
-# requests on the same product set (the typical pattern: a user pages through
-# the products list, scope-toggles, opens a side panel — each render hits this
-# function with the same tenant + product page).
+# changes propagate quickly even without explicit invalidation; long enough
+# to absorb a burst of concurrent requests on the same product set.
 _PROCUREMENT_CACHE_TTL_SEC = 30
 
 
+def _org_cache_version(organization_id) -> int:
+    """Per-org version counter for procurement cache.
+
+    Embedding the version in the cache key turns invalidation into a
+    single `cache.incr` (called by the post-save signals on
+    ProcurementRequest / PurchaseOrder / OperationalRequestLine). Old
+    keys stay in Redis until their 30s TTL expires, but they're
+    unreachable because the new key has a different version segment —
+    so the next read after a save always misses and rebuilds. No
+    `delete_pattern` dependency, works on the stock RedisCache backend.
+    """
+    try:
+        v = cache.get(f'procstat_ver:{organization_id}')
+        return int(v) if v is not None else 0
+    except Exception:
+        return 0
+
+
+def invalidate_procurement_status_cache(organization_id):
+    """Bump the org's version counter so subsequent reads miss.
+
+    Idempotent and safe to call from signal handlers — falls back to a
+    fresh `set` when the counter doesn't exist yet.
+    """
+    if organization_id is None:
+        return
+    key = f'procstat_ver:{organization_id}'
+    try:
+        cache.incr(key)
+    except ValueError:
+        # ValueError = key didn't exist (incr requires existing value).
+        # Set it to 1 so the next incr finds something to bump.
+        try:
+            cache.set(key, 1)
+        except Exception:
+            pass
+    except Exception:
+        # Cache backend down — fail open. Reads will eventually expire
+        # via TTL anyway, so worst case is 30s of staleness.
+        pass
+
+
 def _cache_key_for(organization_id, pids):
-    """Deterministic cache key for (org, product_id set).
+    """Deterministic cache key for (org, product_id set, current version).
 
     `hash()` of a tuple is salted per-process (PYTHONHASHSEED), so different
     gunicorn workers would compute different keys for the same input —
     defeating cross-worker cache sharing. md5 of the canonical comma-joined
-    id list is process-stable.
+    id list is process-stable. Version segment ensures
+    `invalidate_procurement_status_cache(org)` makes every existing key
+    unreachable in one cache.incr.
     """
     digest = hashlib.md5(','.join(map(str, pids)).encode('ascii')).hexdigest()
-    return f'procstat:{organization_id}:{digest}'
+    return f'procstat:{organization_id}:v{_org_cache_version(organization_id)}:{digest}'
 
 
 def get_procurement_status_batch(organization, product_ids):

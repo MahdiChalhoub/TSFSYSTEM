@@ -17,6 +17,7 @@ import { useAppTheme } from '@/components/app/AppThemeProvider';
 import { useTranslation } from '@/hooks/use-translation';
 import { LOCALES, type Locale } from '@/translations/dictionaries';
 import { Check } from 'lucide-react';
+import { getSystemLanguageCodes } from '@/lib/catalogue-languages';
 
 interface MenuItem {
     title: string; icon?: any; path?: string; children?: MenuItem[];
@@ -307,7 +308,22 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
     const langRef = useRef<HTMLDivElement>(null);
 
     const { locale, switchLocale } = useTranslation();
-    const currentLang = LOCALES.find(l => l.id === locale) || LOCALES[0];
+    // System-flagged codes from Regional Settings → Languages. The dropdown
+    // hides languages the admin hasn't opted into as System UI. Falls back
+    // to the full LOCALES catalogue before the fetch resolves AND when no
+    // language has been flagged is_system yet (so nobody is locked out).
+    const [systemCodes, setSystemCodes] = useState<string[] | null>(null);
+    useEffect(() => {
+        getSystemLanguageCodes().then(codes => {
+            setSystemCodes(codes.length > 0 ? codes : null);
+        }).catch(() => setSystemCodes(null));
+    }, []);
+    const visibleLocales = systemCodes
+        ? LOCALES.filter(l => systemCodes.includes(l.id))
+        : LOCALES;
+    const currentLang = visibleLocales.find(l => l.id === locale)
+        || LOCALES.find(l => l.id === locale)
+        || LOCALES[0];
 
     useEffect(() => { setMounted(true); }, []);
     useEffect(() => {
@@ -485,7 +501,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                                         <p className="label-micro" style={{ color: 'var(--app-muted-foreground)' }}>Language</p>
                                     </div>
                                     <div className="p-1.5">
-                                        {LOCALES.map((lang) => (
+                                        {visibleLocales.map((lang) => (
                                             <button key={lang.id} dir={lang.dir}
                                                 onClick={() => { switchLocale(lang.id as Locale); setLangOpen(false); }}
                                                 className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150"

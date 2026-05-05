@@ -108,6 +108,10 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
     const [valueScopes, setValueScopes] = useState<Map<number, ScopeValue[]>>(new Map())
     const [scopeLoading, setScopeLoading] = useState<Set<number>>(new Set())
     const [scopeSaving, setScopeSaving] = useState<Set<number>>(new Set())
+    /** Per-root: when true, render the not-yet-selected children with a
+     *  checkbox picker. Default off so the expanded view is a quick read
+     *  of what's currently scoped; users opt in when they want to extend. */
+    const [showAvailable, setShowAvailable] = useState<Set<number>>(new Set())
     // Migration flow state
     const [migrateSource, setMigrateSource] = useState<AttributeRow | null>(null) // The source group we're migrating away from
     const [migrateTargetId, setMigrateTargetId] = useState<number | ''>('')
@@ -188,6 +192,15 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
             return next
         })
     }, [valueScopes, fetchScopeChildren])
+
+    const toggleShowAvailable = useCallback((rootId: number) => {
+        setShowAvailable(prev => {
+            const next = new Set(prev)
+            if (next.has(rootId)) next.delete(rootId)
+            else next.add(rootId)
+            return next
+        })
+    }, [])
 
     const toggleChildScope = useCallback(async (rootId: number, childId: number) => {
         const current = valueScopes.get(rootId) || []
@@ -662,7 +675,8 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                     </div>
                                 </div>
 
-                                {/* Expanded children — checkbox per leaf value, scoped to this category */}
+                                {/* Expanded children — selected-only by default; "Add value"
+                                    toggle reveals unselected values with an inline picker. */}
                                 {isOpen && (
                                     <div className="pl-12 pr-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-150"
                                         style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)' }}>
@@ -674,43 +688,94 @@ export function AttributesTab({ categoryId, categoryName }: { categoryId: number
                                             <p className="text-tp-xs text-app-muted-foreground italic py-2">
                                                 No leaf values defined under this attribute group yet.
                                             </p>
-                                        ) : children ? (
-                                            <>
-                                                <p className="text-tp-xxs text-app-muted-foreground mb-1.5 leading-snug">
-                                                    Pick which {group.name.toLowerCase()} values are valid for <strong>{categoryName}</strong>.
-                                                    Empty = all values universal. Checking a value scopes it to this category
-                                                    (and any other category already scoped) — unchecked values stay universal
-                                                    unless another category has scoped them.
-                                                </p>
-                                                <div className="space-y-0.5">
-                                                    {children.map(v => {
-                                                        const exclusive = v.scoped_to_count > 0
-                                                        return (
-                                                            <label key={v.id}
-                                                                className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={v.in_scope}
-                                                                    disabled={saving}
-                                                                    onChange={() => toggleChildScope(group.id, v.id)}
-                                                                    className="w-3.5 h-3.5 cursor-pointer accent-app-warning"
-                                                                />
-                                                                <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
-                                                                {v.code && (
-                                                                    <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
-                                                                )}
-                                                                {exclusive && !v.in_scope && (
-                                                                    <span title={`Currently scoped to ${v.scoped_to_count} other categor${v.scoped_to_count === 1 ? 'y' : 'ies'}`}
-                                                                        style={{ color: 'var(--app-warning)' }}>
-                                                                        <AlertTriangle size={11} />
+                                        ) : children ? (() => {
+                                            const selected = children.filter(c => c.in_scope)
+                                            const available = children.filter(c => !c.in_scope)
+                                            const showingAvail = showAvailable.has(group.id)
+                                            return (
+                                                <>
+                                                    {/* Selected — primary view */}
+                                                    {selected.length === 0 ? (
+                                                        <p className="text-tp-xs text-app-muted-foreground italic py-1">
+                                                            No values scoped to <strong>{categoryName}</strong> yet — every {group.name.toLowerCase()} value is universal.
+                                                        </p>
+                                                    ) : (
+                                                        <div className="space-y-0.5">
+                                                            {selected.map(v => (
+                                                                <div key={v.id}
+                                                                    className="flex items-center gap-2 px-2 py-1 rounded-md group/v hover:bg-app-surface transition-colors">
+                                                                    <span className="w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0"
+                                                                        style={{ background: 'var(--app-warning)', color: 'white' }}>
+                                                                        <Check size={9} strokeWidth={3} />
                                                                     </span>
-                                                                )}
-                                                            </label>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </>
-                                        ) : null}
+                                                                    <span className="text-tp-sm font-medium text-app-foreground flex-1 truncate">{v.name}</span>
+                                                                    {v.code && (
+                                                                        <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => toggleChildScope(group.id, v.id)}
+                                                                        disabled={saving}
+                                                                        title={`Remove ${v.name} from ${categoryName}'s scope`}
+                                                                        className="opacity-0 group-hover/v:opacity-100 transition-opacity p-0.5 rounded hover:bg-app-error/10 disabled:opacity-30"
+                                                                        style={{ color: 'var(--app-error)' }}>
+                                                                        <X size={11} />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Available — opt-in picker */}
+                                                    {available.length > 0 && (
+                                                        <div className="mt-2 pt-2 border-t border-app-border/40">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleShowAvailable(group.id)}
+                                                                className="flex items-center gap-1.5 text-tp-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md transition-colors hover:bg-app-surface"
+                                                                style={{ color: 'var(--app-warning)' }}>
+                                                                {showingAvail ? <ChevronDown size={11} /> : <Plus size={11} />}
+                                                                {showingAvail ? 'Hide available' : `Add value (${available.length} available)`}
+                                                            </button>
+
+                                                            {showingAvail && (
+                                                                <div className="mt-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                    <p className="text-tp-xxs text-app-muted-foreground px-2 mb-1 leading-snug">
+                                                                        Pick a value to scope it to <strong>{categoryName}</strong>.
+                                                                        ⚠ icon = value is already scoped to other categories; adding here doesn&apos;t change that for them.
+                                                                    </p>
+                                                                    {available.map(v => {
+                                                                        const exclusive = v.scoped_to_count > 0
+                                                                        return (
+                                                                            <label key={v.id}
+                                                                                className="flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer hover:bg-app-surface transition-colors">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={false}
+                                                                                    disabled={saving}
+                                                                                    onChange={() => toggleChildScope(group.id, v.id)}
+                                                                                    className="w-3.5 h-3.5 cursor-pointer accent-app-warning"
+                                                                                />
+                                                                                <span className="text-tp-sm font-medium text-app-muted-foreground flex-1 truncate">{v.name}</span>
+                                                                                {v.code && (
+                                                                                    <span className="text-tp-xxs font-mono text-app-muted-foreground">{v.code}</span>
+                                                                                )}
+                                                                                {exclusive && (
+                                                                                    <span title={`Currently scoped to ${v.scoped_to_count} other categor${v.scoped_to_count === 1 ? 'y' : 'ies'}`}
+                                                                                        style={{ color: 'var(--app-warning)' }}>
+                                                                                        <AlertTriangle size={11} />
+                                                                                    </span>
+                                                                                )}
+                                                                            </label>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )
+                                        })() : null}
                                     </div>
                                 )}
                               </div>

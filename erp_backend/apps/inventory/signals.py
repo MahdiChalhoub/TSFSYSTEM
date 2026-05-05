@@ -3,7 +3,7 @@ Inventory Module Signals
 ========================
 Event-driven signal handlers for stock adjustments and transfers.
 """
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 import logging
 
@@ -163,3 +163,67 @@ if Product:
                 if not category.attributes.filter(id=group.id).exists():
                     category.attributes.add(group)
                     logger.info(f"[SIGNAL] Auto-linked Attribute Group {group.name} to Category {category.name}")
+
+
+# ─── Procurement-status cache invalidation ────────────────────────────────
+#
+# The /api/products/ list endpoint caches its computed
+# `pipeline_status` per (org, product-id-set) for 30s. Without these
+# signal handlers, an operator who creates / approves / cancels a PR or PO
+# would see the chip stay stuck on its previous state for up to 30s while
+# the cached batch lingers.
+#
+# We don't `cache.delete` individual keys (the cache key includes a set
+# of product ids that we don't track) — instead we bump a per-org version
+# counter, so every existing key for that org is silently unreachable.
+# Old keys age out via TTL.
+try:
+    from apps.pos.models.procurement_request_models import ProcurementRequest
+    from apps.pos.models.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+    from apps.inventory.models import OperationalRequestLine
+    from apps.inventory.services.procurement_status_service import (
+        invalidate_procurement_status_cache,
+    )
+
+    def _bump_org_cache(org_id):
+        # Defensive: signal handlers must never break a save. Catch
+        # everything, log, move on.
+        try:
+            invalidate_procurement_status_cache(org_id)
+        except Exception:
+            logger.exception('Failed to invalidate procurement status cache')
+
+    @receiver(post_save, sender=ProcurementRequest)
+    def _proc_req_saved(sender, instance, **kwargs):
+        _bump_org_cache(instance.organization_id)
+
+    @receiver(post_delete, sender=ProcurementRequest)
+    def _proc_req_deleted(sender, instance, **kwargs):
+        _bump_org_cache(instance.organization_id)
+
+    @receiver(post_save, sender=PurchaseOrder)
+    def _purchase_order_saved(sender, instance, **kwargs):
+        _bump_org_cache(instance.organization_id)
+
+    @receiver(post_delete, sender=PurchaseOrder)
+    def _purchase_order_deleted(sender, instance, **kwargs):
+        _bump_org_cache(instance.organization_id)
+
+    @receiver(post_save, sender=PurchaseOrderLine)
+    def _purchase_order_line_saved(sender, instance, **kwargs):
+        _bump_org_cache(instance.organization_id)
+
+    @receiver(post_save, sender=OperationalRequestLine)
+    def _op_request_line_saved(sender, instance, **kwargs):
+        # OperationalRequestLine.organization can be null in legacy rows
+        # (the request itself owns the tenant). Fall back via FK.
+        org_id = getattr(instance, 'organization_id', None)
+        if not org_id and getattr(instance, 'request_id', None):
+            try:
+                org_id = instance.request.organization_id
+            except Exception:
+                org_id = None
+        _bump_org_cache(org_id)
+
+except Exception as exc:  # noqa: BLE001 — wiring is best-effort at startup
+    logger.warning(f'Procurement cache signals not wired: {exc}')

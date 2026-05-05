@@ -149,7 +149,7 @@ export function BrandPanel() {
                         style={{ background: 'var(--app-primary)' }} />
 
                     <div className="relative flex items-baseline justify-center gap-1 tabular-nums"
-                        style={{ fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif" }}>
+                        style={{ fontFamily: "var(--app-font, 'Outfit', system-ui, sans-serif)" }}>
                         {/* Hours */}
                         <span className="text-[80px] sm:text-[96px] font-[900] leading-none tracking-tighter"
                             style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{hh}</span>

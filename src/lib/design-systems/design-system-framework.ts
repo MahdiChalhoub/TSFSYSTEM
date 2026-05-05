@@ -385,8 +385,11 @@ export function applyDesignSystem(
   const r3xl = base + 12;
   const r4xl = base + 16;
 
-  // ── Font family (strip CSS var() wrapper for direct body use) ──
-  const fontStack = system.typography.fontFamily;
+  // ── Font family ──
+  // NOTE: fontStack is read here only for the mono variant.
+  // The primary body font is LOCKED to Outfit by AppThemeProvider
+  // (CANONICAL_FONT). Design systems must NOT override font-family.
+  // See AppThemeProvider.tsx applyFullThemeToDOM() for the lock.
 
   // ── Component heights ──
   const btnH   = system.components.button.height.base;
@@ -457,12 +460,11 @@ export function applyDesignSystem(
     [data-design-system="${id}"] .shadow-xl   { box-shadow: ${shadowXl}; }
 
     /* ── 3. Typography — font family ──────────────────────────────── */
-    /* Rely on CSS inheritance — set on html+body, everything inherits.
-       Avoid element-type selectors (div, span, etc.) which raise specificity to (0,1,1)
-       and can override Tailwind layout utilities at (0,1,0). */
-    [data-design-system="${id}"] { font-family: ${fontStack}; }
-    [data-design-system="${id}"] body { font-family: ${fontStack}; }
-    [data-design-system="${id}"] .font-sans { font-family: ${fontStack}; }
+    /* LOCKED: Body font is canonically Outfit, set by AppThemeProvider.
+       Design systems intentionally do NOT override font-family here.
+       This prevents silent font drift when switching between Ant Design
+       (Inter), Material (Roboto), Apple HIG (SF Pro), etc.
+       Only the mono font is design-system-specific (set in applyDesignSystem). */
 
     /* ── 4. Font sizes ────────────────────────────────────────────── */
     [data-design-system="${id}"] .text-sm   { font-size: ${fsSm}px; line-height: ${lhNormal}; }
@@ -515,9 +517,8 @@ export function applyDesignSystem(
       --input-radius:      ${inputR}px !important;
       --modal-radius:      ${modalR}px !important;
 
-      --app-font:          ${fontStack} !important;
-      --app-font-display:  ${fontStack} !important;
-      --font-family:       ${fontStack} !important;
+      /* font-family vars intentionally NOT overridden here.
+         Typography is locked to Outfit by AppThemeProvider. */
 
       --app-shadow-sm:     ${shadowSm} !important;
       --app-shadow-base:   ${shadowBase} !important;
@@ -547,7 +548,7 @@ export function applyDesignSystem(
     }
   `;
 
-  console.log(`🎨 [DesignSystem] Applied: ${system.name} — font="${system.typography.fontFamily.split(',')[0]}" base=${base}px btn=${btnR}px btnH=${btnH}px shadow="${shadowSm.substring(0,30)}..."`);
+  console.log(`🎨 [DesignSystem] Applied: ${system.name} — base=${base}px btn=${btnR}px btnH=${btnH}px shadow="${shadowSm.substring(0,30)}..."`);  // font locked to Outfit by AppThemeProvider
 }
 
 /**

@@ -1608,20 +1608,51 @@ class CategoryViewSet(TenantModelViewSet):
         Stored in Organization.settings['catalogue_languages']. Default: ['fr','ar'].
 
         Storage shape (canonical, mixed with legacy support on read):
-            [{ 'code': 'fr', 'country_ids': [1, 2] }, ...]
-        Empty country_ids = active in every enabled country (default).
+            [
+              {
+                'code': 'fr',
+                'country_ids': [1, 2],
+                'roles': { '1': {'is_system': true, 'is_catalogue': true},
+                           '2': {'is_system': false,'is_catalogue': true} }
+              },
+              ...
+            ]
+
+        Empty country_ids = active in every enabled country (catalogue role only).
+        `roles` keys are stringified country FK ids (JSON object keys are strings).
+        Missing role entry for a country defaults to `is_catalogue: true,
+        is_system: false` so the legacy storage shape stays semantically correct.
 
         Response always includes both `languages` (codes only — legacy contract
         for category/brand/attribute forms) and `entries` (rich shape — used by
         the Regional Settings page).
 
         POST accepts either:
-            { 'languages': ['fr', 'ar'] }                      # legacy (preserves existing country_ids)
-            { 'entries': [{'code':'fr','country_ids':[1]}] }   # rich shape
+            { 'languages': ['fr', 'ar'] }                       # legacy (preserves existing country_ids + roles)
+            { 'entries': [{'code':'fr','country_ids':[1],
+                           'roles':{'1':{'is_system':true,'is_catalogue':true}}}, ...] }
         """
         organization, err = _get_org_or_400()
         if err: return err
         settings = organization.settings or {}
+
+        def _clean_roles(raw_roles):
+            """Normalise role map: keys → str(int), values → 2-bool dict."""
+            out = {}
+            if not isinstance(raw_roles, dict):
+                return out
+            for k, v in raw_roles.items():
+                try:
+                    cid = str(int(k))
+                except (TypeError, ValueError):
+                    continue
+                if not isinstance(v, dict):
+                    continue
+                out[cid] = {
+                    'is_system': bool(v.get('is_system', False)),
+                    'is_catalogue': bool(v.get('is_catalogue', True)),
+                }
+            return out
 
         def _to_entries(stored):
             out = []
@@ -1629,13 +1660,14 @@ class CategoryViewSet(TenantModelViewSet):
                 if isinstance(item, str):
                     code = item.strip().lower()
                     if code:
-                        out.append({'code': code, 'country_ids': []})
+                        out.append({'code': code, 'country_ids': [], 'roles': {}})
                 elif isinstance(item, dict) and item.get('code'):
                     code = str(item['code']).strip().lower()
                     if not code:
                         continue
                     cids = sorted({int(x) for x in (item.get('country_ids') or []) if x is not None})
-                    out.append({'code': code, 'country_ids': cids})
+                    roles = _clean_roles(item.get('roles'))
+                    out.append({'code': code, 'country_ids': cids, 'roles': roles})
             return out
 
         raw = settings.get('catalogue_languages', ['fr', 'ar'])
@@ -1654,7 +1686,8 @@ class CategoryViewSet(TenantModelViewSet):
                     if not code or code in seen:
                         continue
                     cids = sorted({int(x) for x in (e.get('country_ids') or []) if x is not None})
-                    cleaned.append({'code': code, 'country_ids': cids})
+                    roles = _clean_roles(e.get('roles'))
+                    cleaned.append({'code': code, 'country_ids': cids, 'roles': roles})
                     seen.add(code)
                     if len(cleaned) >= 20:
                         break
@@ -1668,7 +1701,9 @@ class CategoryViewSet(TenantModelViewSet):
                 for c in codes:
                     s = str(c or '').strip().lower()
                     if s and s not in seen:
-                        cleaned.append(existing.get(s, {'code': s, 'country_ids': []}))
+                        # Preserve the existing entry's country_ids + roles when re-listing
+                        # via the legacy `languages: [...]` path.
+                        cleaned.append(existing.get(s, {'code': s, 'country_ids': [], 'roles': {}}))
                         seen.add(s)
                     if len(cleaned) >= 20:
                         break

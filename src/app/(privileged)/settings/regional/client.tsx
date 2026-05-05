@@ -41,6 +41,7 @@ import {
 import { toast } from 'sonner';
 import {
     getCatalogueLanguageEntries, setCatalogueLanguageEntries,
+    getLangRole, setLangRoleOn,
     labelFor, isRTL,
     type CatalogueLanguageEntry,
 } from '@/lib/catalogue-languages';
@@ -182,6 +183,18 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                     ? e.country_ids.filter(x => x !== countryFkId)
                     : [...e.country_ids, countryFkId].sort((a, b) => a - b),
             };
+        });
+        persistLangEntries(next);
+    };
+
+    /** Flip is_system or is_catalogue on a (language, country) pair.
+     *  The country is implicitly active for the language — child controls
+     *  only render under active rows in the UI. */
+    const toggleLangCountryRole = (code: string, countryFkId: number, role: 'is_system' | 'is_catalogue') => {
+        const next = langEntries.map(e => {
+            if (e.code !== code) return e;
+            const cur = getLangRole(e, countryFkId);
+            return setLangRoleOn(e, countryFkId, role, !cur[role]);
         });
         persistLangEntries(next);
     };
@@ -594,7 +607,9 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 country_ids: e.country_ids,
                                 is_default: idx === 0,
                             }))}
+                            langEntries={langEntries}
                             onToggleLangCountry={toggleLangCountry}
+                            onToggleLangCountryRole={toggleLangCountryRole}
                         />
                     )}
                     {tab === 'currencies' && (() => {
@@ -704,6 +719,8 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
                                 orgCountries={orgCountries}
                                 allCountries={allCountries}
                                 onToggleLangCountry={toggleLangCountry}
+                                onToggleLangCountryRole={toggleLangCountryRole}
+                                langEntries={langEntries}
                                 // Custom locale code add-row footer band:
                                 rightPaneFooter={
                                     <div className="px-4 py-2.5 border-t border-app-border/50 shrink-0 flex items-center gap-2"
@@ -796,7 +813,7 @@ function TwoPanePicker({
     onEnable, onSetDefault, onDisable,
     enabledCurrencyCodes,
     orgCountries, allCountries, orgCurrencies, allCurrencies, onToggleCurrencyCountry,
-    orgLanguages, onToggleLangCountry,
+    orgLanguages, onToggleLangCountry, onToggleLangCountryRole, langEntries,
     rightPaneHeaderLeft, rightPaneBody, hideRightPaneSearch, rightPaneFooter,
 }: {
     kind: 'country' | 'currency' | 'language';
@@ -822,6 +839,10 @@ function TwoPanePicker({
      *  empty = active in every enabled country. */
     orgLanguages?: Array<{ id: string; code: string; native_name: string; country_ids: number[]; is_default: boolean }>;
     onToggleLangCountry?: (langCode: string, countryFkId: number) => void;
+    onToggleLangCountryRole?: (langCode: string, countryFkId: number, role: 'is_system' | 'is_catalogue') => void;
+    /** Full language entries — required to read the per-(language, country)
+     *  role flags so the row children can render their checkbox state. */
+    langEntries?: CatalogueLanguageEntry[];
     /** Optional content rendered inside the right-pane header band, before the
      *  search input — used by the Currencies tab to host its sub-tab strip. */
     rightPaneHeaderLeft?: React.ReactNode;
@@ -873,8 +894,10 @@ function TwoPanePicker({
                             orgCurrencies={orgCurrencies}
                             allCurrencies={allCurrencies}
                             orgLanguages={orgLanguages}
+                            langEntries={langEntries}
                             onToggleCurrencyCountry={onToggleCurrencyCountry}
                             onToggleLangCountry={onToggleLangCountry}
+                            onToggleLangCountryRole={onToggleLangCountryRole}
                         />
                     ))}
                 </div>
@@ -967,7 +990,7 @@ function TwoPanePicker({
 // Polymorphic across country/currency/language axes; properties are read with
 // typeof checks at the leaves. Keeping `any` here is the pragmatic call.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable, orgCountries, allCountries, orgCurrencies, allCurrencies, orgLanguages, onToggleCurrencyCountry, onToggleLangCountry }: any) {
+function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable, orgCountries, allCountries, orgCurrencies, allCurrencies, orgLanguages, langEntries, onToggleCurrencyCountry, onToggleLangCountry, onToggleLangCountryRole }: any) {
     const [expanded, setExpanded] = useState(false);
     // Country expansion has TWO sub-sections (Currencies + Languages) that can
     // be collapsed independently. Both default-open.
@@ -1097,7 +1120,9 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                                         <LanguagesForCountry
                                             countryOc={oc}
                                             orgLanguages={orgLanguages}
+                                            langEntries={langEntries}
                                             onToggleLangCountry={onToggleLangCountry}
+                                            onToggleLangCountryRole={onToggleLangCountryRole}
                                             accent={accent}
                                             isPending={isPending}
                                         />
@@ -1108,10 +1133,12 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                     ) : isLanguage ? (
                         <CountriesForLanguage
                             langCode={code}
+                            langEntry={(langEntries as CatalogueLanguageEntry[] | undefined)?.find(e => e.code === code)}
                             country_ids={oc.country_ids as number[]}
                             orgCountries={orgCountries as OrgCountry[]}
                             allCountries={allCountries as RefCountry[]}
                             onToggleLangCountry={onToggleLangCountry}
+                            onToggleLangCountryRole={onToggleLangCountryRole}
                             accent={accent}
                             isPending={isPending}
                         />
@@ -1325,10 +1352,12 @@ function CurrenciesForCountry({ countryOc, orgCurrencies, allCurrencies, onToggl
 
 /** Country row → expand to show every enabled language with a per-language
  *  toggle scoped to this single country (mirror of CurrenciesForCountry). */
-function LanguagesForCountry({ countryOc, orgLanguages, onToggleLangCountry, accent, isPending }: {
+function LanguagesForCountry({ countryOc, orgLanguages, langEntries, onToggleLangCountry, onToggleLangCountryRole, accent, isPending }: {
     countryOc: OrgCountry;
     orgLanguages: Array<{ id: string; code: string; native_name: string; country_ids: number[]; is_default: boolean }>;
+    langEntries?: CatalogueLanguageEntry[];
     onToggleLangCountry?: (langCode: string, countryFkId: number) => void;
+    onToggleLangCountryRole?: (langCode: string, countryFkId: number, role: 'is_system' | 'is_catalogue') => void;
     accent: string;
     isPending: boolean;
 }) {
@@ -1338,49 +1367,62 @@ function LanguagesForCountry({ countryOc, orgLanguages, onToggleLangCountry, acc
                 const allOn = lang.country_ids.length === 0;
                 const isActiveHere = lang.is_default || allOn || lang.country_ids.includes(countryOc.id);
                 const code = lang.code;
+                const entry = langEntries?.find(e => e.code === code);
+                const role = entry ? getLangRole(entry, countryOc.id) : { is_system: false, is_catalogue: true };
                 return (
-                    <div key={lang.code} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
-                        <div className="w-5 shrink-0" />{/* indent */}
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 border"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
-                                borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
-                                color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
-                            }}>
-                            <span className="font-black uppercase" style={{ fontSize: 10 }}>{code.slice(0, 2)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                            <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}
-                                dir={isRTL(code) ? 'rtl' : undefined}>{lang.native_name}</span>
-                            <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{code}</span>
-                            {lang.is_default && (
-                                <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
-                                    style={{
-                                        ...soft('--app-muted-foreground', 12),
-                                        color: 'var(--app-muted-foreground)',
-                                        fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
-                                        border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
-                                    }}>
-                                    Default
+                    <div key={lang.code}>
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
+                            <div className="w-5 shrink-0" />{/* indent */}
+                            <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 border"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                    borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
+                                    color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
+                                }}>
+                                <span className="font-black uppercase" style={{ fontSize: 10 }}>{code.slice(0, 2)}</span>
+                            </div>
+                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}
+                                    dir={isRTL(code) ? 'rtl' : undefined}>{lang.native_name}</span>
+                                <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{code}</span>
+                                {lang.is_default && (
+                                    <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
+                                        style={{
+                                            ...soft('--app-muted-foreground', 12),
+                                            color: 'var(--app-muted-foreground)',
+                                            fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
+                                            border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
+                                        }}>
+                                        Default
+                                    </span>
+                                )}
+                            </div>
+                            {/* Default language is always available — same lock-icon convention
+                                as the base currency in CurrenciesForCountry. */}
+                            {lang.is_default ? (
+                                <span className="shrink-0 inline-flex items-center justify-center w-9 h-4"
+                                    title="Default language is always available in every enabled country">
+                                    <Lock size={11} style={{ color: 'var(--app-muted-foreground)' }} />
                                 </span>
+                            ) : (
+                                <button onClick={() => onToggleLangCountry?.(lang.code, countryOc.id)}
+                                    disabled={isPending}
+                                    className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
+                                    style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 72%, transparent)` : 'var(--app-border)' }}
+                                    title={`${isActiveHere ? 'Disable' : 'Enable'} ${code.toUpperCase()} for ${countryOc.country_name || 'this country'}`}>
+                                    <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`}
+                                        style={{ background: 'var(--app-primary-foreground, white)' }} />
+                                </button>
                             )}
                         </div>
-                        {/* Default language is always available — same lock-icon convention
-                            as the base currency in CurrenciesForCountry. */}
-                        {lang.is_default ? (
-                            <span className="shrink-0 inline-flex items-center justify-center w-9 h-4"
-                                title="Default language is always available in every enabled country">
-                                <Lock size={11} style={{ color: 'var(--app-muted-foreground)' }} />
-                            </span>
-                        ) : (
-                            <button onClick={() => onToggleLangCountry?.(lang.code, countryOc.id)}
-                                disabled={isPending}
-                                className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
-                                style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 72%, transparent)` : 'var(--app-border)' }}
-                                title={`${isActiveHere ? 'Disable' : 'Enable'} ${code.toUpperCase()} for ${countryOc.country_name || 'this country'}`}>
-                                <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`}
-                                    style={{ background: 'var(--app-primary-foreground, white)' }} />
-                            </button>
+                        {isActiveHere && (
+                            <RoleChildren
+                                accent={accent}
+                                isPending={isPending}
+                                isSystem={role.is_system}
+                                isCatalogue={role.is_catalogue}
+                                onToggle={(r) => onToggleLangCountryRole?.(code, countryOc.id, r)}
+                            />
                         )}
                     </div>
                 );
@@ -1456,14 +1498,62 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
     );
 }
 
+/** Indented child row with two role checkboxes (System UI / Catalogue).
+ *  Rendered under any (language, country) row that's active, in either tab.
+ *  Same component used by CountriesForLanguage and LanguagesForCountry so
+ *  the visual treatment stays identical regardless of pivot. */
+function RoleChildren({ isPending, isSystem, isCatalogue, onToggle }: {
+    accent: string;  // accepted but unused — children deliberately use --app-info to differentiate from parent
+    isPending: boolean;
+    isSystem: boolean;
+    isCatalogue: boolean;
+    onToggle: (role: 'is_system' | 'is_catalogue') => void;
+}) {
+    // Children deliberately use --app-info (blue) rather than the parent's
+    // --app-primary so the eye instantly distinguishes which toggle layer
+    // it's reading. A thin left rail visually groups the role rows under
+    // the parent row they belong to.
+    const childAccent = '--app-info';
+    const SwitchRow = ({ label, on, role }: { label: string; on: boolean; role: 'is_system' | 'is_catalogue' }) => (
+        <div className="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors hover:bg-app-surface/50">
+            <div className="w-2 shrink-0" />{/* small indent inside the rail */}
+            <span className="flex-1 min-w-0 text-app-muted-foreground" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {label}
+            </span>
+            <button onClick={() => onToggle(role)}
+                disabled={isPending}
+                className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
+                style={{ background: on ? `color-mix(in srgb, var(${childAccent}) 72%, transparent)` : 'var(--app-border)' }}
+                title={`${on ? 'Disable' : 'Enable'} ${label}`}>
+                <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${on ? 'left-[22px]' : 'left-0.5'}`}
+                    style={{ background: 'white' }} />
+            </button>
+        </div>
+    );
+    return (
+        // Indent matches parent's flag/icon column. The left border is the
+        // grouping rail — same color family as the child toggles so the
+        // affordance reads as "this group of switches belongs to that row".
+        <div className="ml-12 mb-1 pl-2"
+            style={{ borderLeft: `1px solid color-mix(in srgb, var(${childAccent}) 35%, transparent)` }}>
+            <SwitchRow label="System UI" on={isSystem} role="is_system" />
+            <SwitchRow label="Catalogue" on={isCatalogue} role="is_catalogue" />
+        </div>
+    );
+}
+
 /** Language row → expand to show every enabled country with per-country toggle.
- *  Same exact layout as CountriesForCurrency — empty country_ids = "all on". */
-function CountriesForLanguage({ langCode, country_ids, orgCountries, allCountries, onToggleLangCountry, accent, isPending }: {
+ *  Same exact layout as CountriesForCurrency — empty country_ids = "all on".
+ *  When a country is active, a child row exposes System / Catalogue role
+ *  checkboxes so the same language can play different roles per country. */
+function CountriesForLanguage({ langEntry, langCode, country_ids, orgCountries, allCountries, onToggleLangCountry, onToggleLangCountryRole, accent, isPending }: {
+    langEntry?: CatalogueLanguageEntry;
     langCode: string;
     country_ids: number[];
     orgCountries: OrgCountry[];
     allCountries: RefCountry[];
     onToggleLangCountry?: (langCode: string, countryFkId: number) => void;
+    onToggleLangCountryRole?: (langCode: string, countryFkId: number, role: 'is_system' | 'is_catalogue') => void;
     accent: string;
     isPending: boolean;
 }) {
@@ -1485,34 +1575,46 @@ function CountriesForLanguage({ langCode, country_ids, orgCountries, allCountrie
                 const iso = refCountry?.iso2 || country_oc.country_iso2 || '??';
                 const cName = refCountry?.name || country_oc.country_name || iso;
                 const isActiveHere = allOn || country_ids.includes(country_oc.id);
+                const role = langEntry ? getLangRole(langEntry, country_oc.id) : { is_system: false, is_catalogue: true };
                 return (
-                    <div key={country_oc.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
-                        <div className="w-5 shrink-0" />
-                        <span className="flag text-lg shrink-0">{flag(iso)}</span>
-                        <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                            <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
-                            <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
-                            {country_oc.is_default && (
-                                <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
-                                    style={{
-                                        ...soft('--app-muted-foreground', 12),
-                                        color: 'var(--app-muted-foreground)',
-                                        fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
-                                        border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
-                                    }}
-                                    title="Default country for this organization">
-                                    <Crown size={7} className="inline mr-0.5 -mt-px" /> Home
-                                </span>
-                            )}
+                    <div key={country_oc.id}>
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-app-surface/50">
+                            <div className="w-5 shrink-0" />
+                            <span className="flag text-lg shrink-0">{flag(iso)}</span>
+                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>{cName}</span>
+                                <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{iso}</span>
+                                {country_oc.is_default && (
+                                    <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
+                                        style={{
+                                            ...soft('--app-muted-foreground', 12),
+                                            color: 'var(--app-muted-foreground)',
+                                            fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
+                                            border: '1px solid color-mix(in srgb, var(--app-border) 80%, transparent)',
+                                        }}
+                                        title="Default country for this organization">
+                                        <Crown size={7} className="inline mr-0.5 -mt-px" /> Home
+                                    </span>
+                                )}
+                            </div>
+                            <button onClick={() => onToggleLangCountry?.(langCode, country_oc.id)}
+                                disabled={isPending}
+                                className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
+                                style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 72%, transparent)` : 'var(--app-border)' }}
+                                title={`${isActiveHere ? 'Disable' : 'Enable'} ${langCode.toUpperCase()} for ${cName}`}>
+                                <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`}
+                                    style={{ background: 'var(--app-primary-foreground, white)' }} />
+                            </button>
                         </div>
-                        <button onClick={() => onToggleLangCountry?.(langCode, country_oc.id)}
-                            disabled={isPending}
-                            className="w-9 h-4 rounded-full relative transition-all shrink-0 disabled:opacity-50"
-                            style={{ background: isActiveHere ? `color-mix(in srgb, var(${accent}) 72%, transparent)` : 'var(--app-border)' }}
-                            title={`${isActiveHere ? 'Disable' : 'Enable'} ${langCode.toUpperCase()} for ${cName}`}>
-                            <span className={`w-3 h-3 rounded-full absolute top-0.5 transition-all shadow ${isActiveHere ? 'left-[22px]' : 'left-0.5'}`}
-                                style={{ background: 'var(--app-primary-foreground, white)' }} />
-                        </button>
+                        {isActiveHere && (
+                            <RoleChildren
+                                accent={accent}
+                                isPending={isPending}
+                                isSystem={role.is_system}
+                                isCatalogue={role.is_catalogue}
+                                onToggle={(r) => onToggleLangCountryRole?.(langCode, country_oc.id, r)}
+                            />
+                        )}
                     </div>
                 );
             })}

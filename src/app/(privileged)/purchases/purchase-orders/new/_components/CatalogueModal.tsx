@@ -20,19 +20,20 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { X, Search, Package, ChevronDown, Loader2, Check, Filter, Plus, ShoppingCart, RotateCcw, Settings2 } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
 
-// Reuse the rich filter UI + filter shape from the inventory products page so
-// the catalogue picker has the same filtering vocabulary (type, completeness,
-// verified, ranges, etc.). Future cleanup: lift these to `src/lib/products/`
-// or `src/components/products/` so the cross-page coupling isn't via _lib/.
-import { FiltersPanel } from '../../../../inventory/products/_components/FiltersPanel'
-import type { Filters, Lookups } from '../../../../inventory/products/_lib/types'
+// Shared product filter shape + UI. Re-exported from the canonical
+// inventory products page so the catalogue picker uses the same
+// vocabulary without reaching across route groups into another feature's
+// private `_lib/`. If the source ever moves, those barrel files are the
+// only update needed.
+import { FiltersPanel } from '@/components/products/FiltersPanel'
+import type { Filters, Lookups } from '@/lib/products/filter-shape'
 import {
     EMPTY_FILTERS,
     EMPTY_LOOKUPS,
     DEFAULT_VISIBLE_FILTERS,
     COMPLETENESS_LEVELS,
     ALL_FILTERS,
-} from '../../../../inventory/products/_lib/constants'
+} from '@/lib/products/filter-shape'
 
 // Shared Customize panel — same one /inventory/products uses. Same UX, same
 // profile model, just tailored CATALOGUE_COLUMNS for the picker's narrow grid.
