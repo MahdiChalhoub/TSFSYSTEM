@@ -84,9 +84,36 @@ type PackagingRow = {
     ratio: number | string
     effective_selling_price?: number | string | null
     effective_purchase_price?: number | string | null
+    custom_selling_price?: number | string | null
+    custom_selling_price_ht?: number | string | null
+    price_mode?: 'FORMULA' | 'FIXED' | string | null
+    discount_pct?: number | string | null
     weight_kg?: number | string | null
     is_default_sale?: boolean
     is_default_purchase?: boolean
+}
+
+/* Pricing-source explainer — turns the opaque `effective_selling_price` into
+ * a readable "where did this number come from?" string for the operator.
+ *
+ *   FIXED + custom set        → "Custom 0.75"
+ *   FORMULA, no discount      → "Auto: base × 1"
+ *   FORMULA, with discount    → "Base × 1 − 5%"
+ *   No price                  → null (caller hides the chip)
+ */
+function pricingSource(p: PackagingRow | null, basePriceTTC: number | null, ratio: number): { label: string; tone: 'fixed' | 'formula' } | null {
+    if (!p) return basePriceTTC ? { label: `Product base price`, tone: 'formula' } : null
+    const mode = (p.price_mode || '').toString().toUpperCase()
+    const customRaw = p.custom_selling_price != null ? Number(p.custom_selling_price) : null
+    const discount = p.discount_pct != null ? Number(p.discount_pct) : 0
+    if (mode === 'FIXED' || (customRaw != null && customRaw > 0)) {
+        return { label: 'Custom price', tone: 'fixed' }
+    }
+    if (basePriceTTC && basePriceTTC > 0) {
+        const formula = `Base × ${+(Number(ratio).toFixed(4))}${discount ? ` − ${+discount}%` : ''}`
+        return { label: formula, tone: 'formula' }
+    }
+    return { label: 'Auto from formula', tone: 'formula' }
 }
 
 function useOpenInTab() {
@@ -659,7 +686,7 @@ function ProductsDetailContent() {
                     </div>
                 }>
                 {packagingView === 'pipeline' && (
-                    <PackagingPipelineView levels={packagings} baseUnitName={String(it.unit_name || it.unit_code || 'unit')} />
+                    <PackagingPipelineView levels={packagings} baseUnitName={String(it.unit_name || it.unit_code || 'unit')} basePriceTTC={Number(it.selling_price_ttc) || 0} />
                 )}
                 {packagingView === 'tree' && (
                     <PackagingTreeView levels={packagings} baseUnitName={String(it.unit_name || it.unit_code || 'unit')} basePriceTTC={Number(it.selling_price_ttc) || 0} />
@@ -1036,7 +1063,7 @@ function iconForPackaging(unitName: string | null | undefined, idx: number, colo
  *  ratio over previous tier · barcode · price. Tiers are connected
  *  by an arrow with the multiplier label.
  * ═══════════════════════════════════════════════════════════ */
-function PackagingPipelineView({ levels, baseUnitName }: { levels: PackagingRow[]; baseUnitName: string }) {
+function PackagingPipelineView({ levels, baseUnitName, basePriceTTC }: { levels: PackagingRow[]; baseUnitName: string; basePriceTTC: number }) {
     if (levels.length === 0) {
         return (
             <div className="text-center py-6">
@@ -1059,12 +1086,32 @@ function PackagingPipelineView({ levels, baseUnitName }: { levels: PackagingRow[
     // Tier index 0 = base unit; subsequent indexes are real packaging levels in
     // ratio order. We DRIVE the icon and accent off this index, not off the
     // level field, so the visual progression matches the actual chain.
+    // De-dupe the synthetic "base unit" card when there's already a packaging
+    // level at ratio 1. That level IS the base unit's salable form (same
+    // quantity, just with SKU/barcode/price/default-sale-flag), so showing
+    // both reads as a duplicate. We "absorb" it: tier 0 takes the level's
+    // label/barcode/price, and the rest of the chain shifts up by one.
+    const baseLevelIdx = sorted.findIndex(p => Number(p.ratio || 1) === 1)
+    const baseLevel = baseLevelIdx >= 0 ? sorted[baseLevelIdx] : null
+    const restLevels = baseLevel ? sorted.filter((_, i) => i !== baseLevelIdx) : sorted
+
     const chain: Array<{
         isBase: boolean; tier: number; label: string; unitLabel: string;
         ratio: number; barcode: string | null; price: number | null; isDefaultSale: boolean;
+        priceSource: ReturnType<typeof pricingSource>;
     }> = [
-        { isBase: true, tier: 0, label: baseUnitName, unitLabel: baseUnitName, ratio: 1, barcode: null, price: null, isDefaultSale: false },
-        ...sorted.map((p, i) => ({
+        {
+            isBase: true,
+            tier: 0,
+            label: baseLevel ? (baseLevel.display_name || baseLevel.name || baseUnitName) : baseUnitName,
+            unitLabel: baseLevel ? (baseLevel.unit_name || baseUnitName) : baseUnitName,
+            ratio: 1,
+            barcode: baseLevel?.barcode || null,
+            price: baseLevel?.effective_selling_price != null ? Number(baseLevel.effective_selling_price) : (basePriceTTC || null),
+            isDefaultSale: !!baseLevel?.is_default_sale,
+            priceSource: pricingSource(baseLevel, basePriceTTC, 1),
+        },
+        ...restLevels.map((p, i) => ({
             isBase: false, tier: i + 1,
             label: p.display_name || p.name || (p.unit_name || `Level ${i + 1}`),
             unitLabel: p.unit_name || (p.display_name || p.name || `Level ${i + 1}`),
@@ -1072,6 +1119,7 @@ function PackagingPipelineView({ levels, baseUnitName }: { levels: PackagingRow[
             barcode: p.barcode || null,
             price: p.effective_selling_price != null ? Number(p.effective_selling_price) : null,
             isDefaultSale: !!p.is_default_sale,
+            priceSource: pricingSource(p, basePriceTTC, Number(p.ratio) || 1),
         })),
     ]
     return (
@@ -1115,6 +1163,13 @@ function PackagingPipelineView({ levels, baseUnitName }: { levels: PackagingRow[
                                 {c.price != null && (
                                     <p className="text-tp-sm font-black tabular-nums mt-1" style={{ color: 'var(--app-success)' }}>
                                         {fmt(c.price)}
+                                    </p>
+                                )}
+                                {c.priceSource && c.price != null && (
+                                    <p className="text-tp-xxs font-medium mt-0.5"
+                                       style={{ color: c.priceSource.tone === 'fixed' ? 'var(--app-warning)' : 'var(--app-muted-foreground)' }}
+                                       title={c.priceSource.tone === 'fixed' ? 'Manually set on this packaging' : 'Computed from product base price'}>
+                                        {c.priceSource.label}
                                     </p>
                                 )}
                                 {c.isDefaultSale && (
@@ -1163,30 +1218,39 @@ function PackagingTreeView({ levels, baseUnitName, basePriceTTC }: { levels: Pac
         if (ra !== rb) return ra - rb
         return (a.level || 0) - (b.level || 0)
     })
+    // Same dedupe as the pipeline view: if a packaging level has ratio 1, it
+    // IS the base unit's salable form. Absorb it into tier 0 instead of
+    // rendering both.
+    const baseLevelIdx = sorted.findIndex(p => Number(p.ratio || 1) === 1)
+    const baseLevel = baseLevelIdx >= 0 ? sorted[baseLevelIdx] : null
+    const restLevels = baseLevel ? sorted.filter((_, i) => i !== baseLevelIdx) : sorted
+
     return (
         <div className="space-y-0.5">
-            {/* Base unit row — tier 0, no parent */}
+            {/* Base unit row — absorbs a ratio-1 packaging level when present */}
             <PackagingTreeRow
                 tier={0}
-                label={baseUnitName}
+                label={baseLevel ? (baseLevel.display_name || baseLevel.name || baseUnitName) : baseUnitName}
                 tierName="Base unit"
-                unitLabel={baseUnitName}
+                unitLabel={baseLevel ? (baseLevel.unit_name || baseUnitName) : baseUnitName}
                 ratio={1}
                 localMul={null}
                 parentTierName={null}
                 baseUnitName={baseUnitName}
-                barcode={null}
-                price={basePriceTTC || null}
+                barcode={baseLevel?.barcode || null}
+                price={baseLevel?.effective_selling_price != null ? Number(baseLevel.effective_selling_price) : (basePriceTTC || null)}
+                priceSource={pricingSource(baseLevel, basePriceTTC, 1)}
+                isDefaultSale={!!baseLevel?.is_default_sale}
             />
-            {sorted.map((p, i) => {
+            {restLevels.map((p, i) => {
                 const tier = i + 1
                 const ratio = Number(p.ratio) || 1
-                const prevRatio = i === 0 ? 1 : (Number(sorted[i - 1].ratio) || 1)
+                const prevRatio = i === 0 ? 1 : (Number(restLevels[i - 1].ratio) || 1)
                 const localMul = ratio / prevRatio
                 const unitLabel = p.unit_name || (p.display_name || p.name || `Level ${tier}`)
                 const parentUnitLabel = i === 0
-                    ? baseUnitName
-                    : (sorted[i - 1].unit_name || sorted[i - 1].display_name || sorted[i - 1].name || `Level ${i}`)
+                    ? (baseLevel ? (baseLevel.unit_name || baseUnitName) : baseUnitName)
+                    : (restLevels[i - 1].unit_name || restLevels[i - 1].display_name || restLevels[i - 1].name || `Level ${i}`)
                 return (
                     <PackagingTreeRow
                         key={p.id}
@@ -1200,6 +1264,7 @@ function PackagingTreeView({ levels, baseUnitName, basePriceTTC }: { levels: Pac
                         baseUnitName={baseUnitName}
                         barcode={p.barcode || null}
                         price={p.effective_selling_price != null ? Number(p.effective_selling_price) : null}
+                        priceSource={pricingSource(p, basePriceTTC, ratio)}
                         isDefaultSale={!!p.is_default_sale}
                     />
                 )
@@ -1207,10 +1272,11 @@ function PackagingTreeView({ levels, baseUnitName, basePriceTTC }: { levels: Pac
         </div>
     )
 }
-function PackagingTreeRow({ tier, label, tierName, unitLabel, ratio, localMul, parentTierName, baseUnitName, barcode, price, isDefaultSale }: {
+function PackagingTreeRow({ tier, label, tierName, unitLabel, ratio, localMul, parentTierName, baseUnitName, barcode, price, priceSource, isDefaultSale }: {
     tier: number; label: string; tierName: string; unitLabel: string;
     ratio: number; localMul: number | null; parentTierName: string | null; baseUnitName: string;
     barcode: string | null; price: number | null;
+    priceSource: ReturnType<typeof pricingSource>;
     isDefaultSale?: boolean;
 }) {
     const accent = tierAccent(tier)
@@ -1250,9 +1316,18 @@ function PackagingTreeRow({ tier, label, tierName, unitLabel, ratio, localMul, p
                 </div>
             </div>
             {price != null && (
-                <span className="text-tp-md font-black tabular-nums flex-shrink-0" style={{ color: 'var(--app-success)' }}>
-                    {fmt(price)}
-                </span>
+                <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-tp-md font-black tabular-nums" style={{ color: 'var(--app-success)' }}>
+                        {fmt(price)}
+                    </span>
+                    {priceSource && (
+                        <span className="text-tp-xxs font-medium"
+                              style={{ color: priceSource.tone === 'fixed' ? 'var(--app-warning)' : 'var(--app-muted-foreground)' }}
+                              title={priceSource.tone === 'fixed' ? 'Manually set on this packaging' : 'Computed from product base price'}>
+                            {priceSource.label}
+                        </span>
+                    )}
+                </div>
             )}
         </div>
     )

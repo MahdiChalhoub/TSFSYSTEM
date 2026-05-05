@@ -346,8 +346,11 @@ def get_resource_audit_history(organization, resource_type: str, resource_id, li
         elif log.username:
             actor = log.username
 
-        # Description: details dict has a fields_changed list for UPDATE,
-        # otherwise fall back to resource_repr or empty.
+        # Description: prefer the most specific shape for the action.
+        # The m2m_changed signals stash the M2M label + affected ids in
+        # `details` so we can render "Linked 2 attribute(s)" instead of
+        # just the bare resource_repr — without that, every M2M write
+        # would render as the same generic "tes" / "Coca-Cola" string.
         details = log.details or {}
         if verb == 'UPDATE' and details.get('fields_changed'):
             description = f"Updated: {', '.join(details['fields_changed'])}"
@@ -355,6 +358,25 @@ def get_resource_audit_history(organization, resource_type: str, resource_id, li
             description = f"Created {log.resource_repr or resource_type}"
         elif verb == 'DELETE':
             description = f"Deleted {log.resource_repr or resource_type}"
+        elif details.get('m2m'):
+            # M2M signal — verb is LINK_<m2m> / UNLINK_<m2m> / CLEAR_<m2m>
+            label = details['m2m']
+            count = details.get('count', 0)
+            verb_lower = verb.lower().replace(f'_{label}', '').replace(f'_{label}s', '')
+            verb_word = {
+                'link': 'Linked', 'unlink': 'Unlinked', 'clear': 'Cleared',
+            }.get(verb_lower, verb_lower.title())
+            plural = '' if count == 1 else 's'
+            description = f"{verb_word} {count} {label}{plural}"
+        elif details.get('attribute_value_id'):
+            # Attribute-value scope signal — value name is in details.
+            value_name = details.get('attribute_value_name', f'#{details["attribute_value_id"]}')
+            verb_word = {
+                'SCOPE_VALUE': 'Scoped value',
+                'UNSCOPE_VALUE': 'Unscoped value',
+                'UNSCOPE_ALL': 'Cleared scope for value',
+            }.get(verb, verb.replace('_', ' ').title())
+            description = f"{verb_word}: {value_name}"
         else:
             description = log.resource_repr or ''
 

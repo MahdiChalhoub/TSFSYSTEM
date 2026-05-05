@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Loader2, Plus, Pencil, Trash2, Clock } from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, Clock, Link2, Unlink, Filter, FilterX } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api'
 import type { Brand } from '../types'
 
@@ -62,9 +62,27 @@ export function AuditTab({ brand }: { brand: Brand }) {
     return (
         <div className="space-y-1.5 p-3 overflow-y-auto custom-scrollbar h-full">
             {entries.map(e => {
-                const Icon = e.action === 'CREATE' ? Plus : e.action === 'DELETE' ? Trash2 : Pencil
-                const tint = e.action === 'CREATE' ? 'var(--app-success, #22c55e)'
-                    : e.action === 'DELETE' ? 'var(--app-error, #ef4444)'
+                // Icon + tint per action class. The audit helper produces:
+                //   CREATE / UPDATE / DELETE      — direct field mutations
+                //   LINK_<m2m> / UNLINK_<m2m>    — Brand M2M to attributes / categories / countries
+                //   SCOPE_VALUE / UNSCOPE_VALUE  — leaf attribute value scoping
+                //   CLEAR_<m2m> / UNSCOPE_ALL    — bulk wipes
+                // Map to a focused icon + tint so the audit history reads
+                // at a glance instead of looking like 50 identical UPDATE rows.
+                const isLink = e.action === 'CREATE' || e.action.startsWith('LINK_') || e.action === 'SCOPE_VALUE'
+                const isUnlink = e.action.startsWith('UNLINK_') || e.action === 'UNSCOPE_VALUE'
+                const isClear = e.action.startsWith('CLEAR_') || e.action === 'UNSCOPE_ALL'
+                const isDelete = e.action === 'DELETE'
+                const Icon = isDelete ? Trash2
+                    : isClear ? FilterX
+                    : isUnlink ? Unlink
+                    : isLink && e.action !== 'CREATE' ? Link2
+                    : e.action === 'CREATE' ? Plus
+                    : Pencil
+                const tint = isDelete ? 'var(--app-error, #ef4444)'
+                    : isClear ? 'var(--app-error, #ef4444)'
+                    : isUnlink ? 'var(--app-warning, #f59e0b)'
+                    : isLink ? 'var(--app-success, #22c55e)'
                     : 'var(--app-primary)'
                 const diff: { key: string; before: any; after: any }[] = []
                 if (e.action === 'UPDATE' && e.old_value && e.new_value) {

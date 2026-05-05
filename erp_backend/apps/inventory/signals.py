@@ -227,3 +227,152 @@ try:
 
 except Exception as exc:  # noqa: BLE001 — wiring is best-effort at startup
     logger.warning(f'Procurement cache signals not wired: {exc}')
+
+
+# ─── M2M audit logging for Brand / Category / ProductAttribute ────────────
+#
+# `AuditLogMixin.save()` only catches direct field updates on the parent
+# model — it can't see M2M writes. So when the operator clicks
+# "Link attribute" / "Link category" / "Add value to scope" the side-panel
+# Audit tab stays silent. Wire a single `m2m_changed` receiver per M2M
+# so add/remove/clear all turn into AuditLog rows that the side-panel
+# Audit tab can render.
+#
+# We use the canonical `audit_log()` helper directly — that bypasses
+# AuditLogMixin's per-instance __init__ but still goes through the same
+# context-thread-locals so user/IP/path get attributed correctly.
+try:
+    from django.db.models.signals import m2m_changed as _m2m_changed
+    from apps.inventory.models import Brand, Category, ProductAttribute
+    from kernel.audit.audit_logger import audit_log as _audit_log
+
+    def _audit_m2m(*, parent_instance, parent_type, action, child_label, child_ids):
+        """Emit a single AuditLog row summarizing one M2M change.
+
+        Args:
+            parent_instance: the side that owns the M2M (Brand or Category).
+            parent_type: 'brand' / 'category' / 'productattribute' — used
+                as the audit row's resource_type so the side-panel Audit
+                tab finds it.
+            action: 'link_<m2m>' / 'unlink_<m2m>' / 'clear_<m2m>'.
+            child_label: human label for the M2M (e.g. 'attribute', 'category').
+            child_ids: ids on the OTHER side of the M2M.
+        """
+        try:
+            _audit_log(
+                action=f'{parent_type}.{action}',
+                resource_type=parent_type,
+                resource_id=parent_instance.pk,
+                resource_repr=str(parent_instance),
+                details={
+                    'm2m': child_label,
+                    'ids': sorted(int(x) for x in child_ids if x is not None),
+                    'count': len(child_ids) if child_ids else 0,
+                },
+            )
+        except Exception:
+            logger.exception(f'Failed to audit-log {parent_type}.{action}')
+
+    def _make_m2m_handler(parent_type, child_label):
+        """Build a m2m_changed handler bound to a single parent type + label."""
+        def handler(sender, instance, action, pk_set, reverse, **kwargs):
+            # Only react on the SAVE side of the m2m_changed lifecycle —
+            # post_add / post_remove / post_clear emit after the DB write.
+            # `reverse=True` means the signal fired from the OTHER side
+            # of the M2M (e.g. category.brands.add(brand) from a Category
+            # instance) — handle both directions.
+            if action == 'post_add':
+                op = f'link_{child_label}'
+            elif action == 'post_remove':
+                op = f'unlink_{child_label}'
+            elif action == 'post_clear':
+                op = f'clear_{child_label}'
+            else:
+                return
+            if reverse:
+                # Signal fired from the reverse side: `instance` is the
+                # OTHER side, `pk_set` are the parent ids. Skip — the
+                # forward-side row will record the same change.
+                return
+            _audit_m2m(
+                parent_instance=instance,
+                parent_type=parent_type,
+                action=op,
+                child_label=child_label,
+                child_ids=list(pk_set or []),
+            )
+        return handler
+
+    # Brand M2Ms
+    _m2m_changed.connect(
+        _make_m2m_handler('brand', 'attribute'),
+        sender=Brand.attributes.through,
+        weak=False,
+    )
+    _m2m_changed.connect(
+        _make_m2m_handler('brand', 'category'),
+        sender=Brand.categories.through,
+        weak=False,
+    )
+    _m2m_changed.connect(
+        _make_m2m_handler('brand', 'country'),
+        sender=Brand.countries.through,
+        weak=False,
+    )
+    if hasattr(Brand, 'origin_countries'):
+        _m2m_changed.connect(
+            _make_m2m_handler('brand', 'origin_country'),
+            sender=Brand.origin_countries.through,
+            weak=False,
+        )
+
+    # Category M2Ms
+    _m2m_changed.connect(
+        _make_m2m_handler('category', 'attribute'),
+        sender=Category.attributes.through,
+        weak=False,
+    )
+
+    # ProductAttribute scope M2Ms — the leaf-value scoping we added in the
+    # AttributesTab. Audited under the parent BRAND or CATEGORY id (not
+    # the leaf attribute id) so they show up on the right side-panel —
+    # the operator's mental model is "I scoped a value TO this brand",
+    # not "I edited an attribute".
+    def _attr_scope_handler(child_label):
+        def handler(sender, instance, action, pk_set, reverse, **kwargs):
+            if action not in ('post_add', 'post_remove', 'post_clear'):
+                return
+            op = {'post_add': 'scope_value', 'post_remove': 'unscope_value', 'post_clear': 'unscope_all'}[action]
+            # `instance` here is a ProductAttribute (the leaf); `pk_set`
+            # contains brand ids (or category ids). For each affected
+            # parent, emit an audit row keyed to that parent.
+            for parent_pk in (pk_set or []):
+                try:
+                    _audit_log(
+                        action=f'{child_label}.{op}',
+                        resource_type=child_label,
+                        resource_id=parent_pk,
+                        resource_repr=f'attribute_value:{instance.pk}',
+                        details={
+                            'attribute_value_id': instance.pk,
+                            'attribute_value_name': instance.name,
+                            'parent_attribute_id': instance.parent_id,
+                        },
+                    )
+                except Exception:
+                    logger.exception(f'Failed to audit-log {child_label}.{op}')
+        return handler
+
+    _m2m_changed.connect(
+        _attr_scope_handler('brand'),
+        sender=ProductAttribute.scope_brands.through,
+        weak=False,
+    )
+    _m2m_changed.connect(
+        _attr_scope_handler('category'),
+        sender=ProductAttribute.scope_categories.through,
+        weak=False,
+    )
+
+except Exception as exc:  # noqa: BLE001 — wiring is best-effort at startup
+    logger.warning(f'M2M audit signals not wired: {exc}')

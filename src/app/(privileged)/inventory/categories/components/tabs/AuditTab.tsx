@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Loader2, Plus, Pencil, Trash2, Clock } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Clock, Link2, Unlink, FilterX } from 'lucide-react';
 import { erpFetch } from '@/lib/erp-api';
 import type { CategoryNode } from '../types';
 
@@ -63,9 +63,23 @@ export function AuditTab({ node }: { node: CategoryNode }) {
     return (
         <div className="space-y-1.5">
             {entries.map(e => {
-                const Icon = e.action === 'CREATE' ? Plus : e.action === 'DELETE' ? Trash2 : Pencil;
-                const tint = e.action === 'CREATE' ? 'var(--app-success, #22c55e)'
-                    : e.action === 'DELETE' ? 'var(--app-error, #ef4444)'
+                // Same icon/tint mapping as the brand AuditTab — keep them
+                // visually aligned so the audit story reads identically
+                // across both side panels.
+                const isLink = e.action === 'CREATE' || e.action.startsWith('LINK_') || e.action === 'SCOPE_VALUE'
+                const isUnlink = e.action.startsWith('UNLINK_') || e.action === 'UNSCOPE_VALUE'
+                const isClear = e.action.startsWith('CLEAR_') || e.action === 'UNSCOPE_ALL'
+                const isDelete = e.action === 'DELETE'
+                const Icon = isDelete ? Trash2
+                    : isClear ? FilterX
+                    : isUnlink ? Unlink
+                    : isLink && e.action !== 'CREATE' ? Link2
+                    : e.action === 'CREATE' ? Plus
+                    : Pencil;
+                const tint = isDelete ? 'var(--app-error, #ef4444)'
+                    : isClear ? 'var(--app-error, #ef4444)'
+                    : isUnlink ? 'var(--app-warning, #f59e0b)'
+                    : isLink ? 'var(--app-success, #22c55e)'
                     : 'var(--app-primary)';
                 // For UPDATE, diff the changed fields only
                 const diff: { key: string; before: any; after: any }[] = [];
