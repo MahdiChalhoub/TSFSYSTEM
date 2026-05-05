@@ -24,12 +24,14 @@ import { ProductThumbnail } from '@/components/products/ProductThumbnail'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { AdminContext } from '@/context/AdminContext'
 import ProductPackagingTab from '@/components/inventory/ProductPackagingTab'
+import { RequestFlowProvider, useRequestFlow } from '@/components/products/RequestFlowProvider'
+import { ExpiryAlertDialog } from '@/components/products/ExpiryAlertDialog'
 import { toast } from 'sonner'
 import {
     ArrowLeft, Edit3, Trash2, Package,
     DollarSign, TrendingUp, AlertTriangle, CheckCircle2,
     Warehouse, Tag, Layers, Star, Ruler,
-    Box, Shield, Archive, RefreshCw,
+    Box, Shield, Archive, RefreshCw, ArrowRightLeft, BellRing, Sliders, Truck,
     User as UserIcon, ChevronRight, Loader2,
     History, ExternalLink, Link2Off, ShoppingCart,
 } from 'lucide-react'
@@ -81,13 +83,24 @@ function useOpenInTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════
- *  PAGE
+ *  PAGE — wraps the content in RequestFlowProvider so the quick
+ *  Purchase / Transfer actions can drive the same dialog the list
+ *  page uses (single source of truth for the request flow).
  * ═══════════════════════════════════════════════════════════ */
 export default function ProductsDetailPage() {
+    return (
+        <RequestFlowProvider>
+            <ProductsDetailContent />
+        </RequestFlowProvider>
+    )
+}
+
+function ProductsDetailContent() {
     const router = useRouter()
     const params = useParams()
     const id = params.id as string
     const openInTab = useOpenInTab()
+    const { trigger: triggerRequest } = useRequestFlow()
 
     const [item, setItem] = useState<Record<string, unknown> | null>(null)
     const [loading, setLoading] = useState(true)
@@ -95,6 +108,7 @@ export default function ProductsDetailPage() {
     const [stockByWarehouse, setStockByWarehouse] = useState<Array<{ warehouse: number; warehouse_name?: string; quantity: number; reserved_quantity?: number }>>([])
     const [showDelete, setShowDelete] = useState(false)
     const [deleting, setDeleting] = useState(false)
+    const [showExpiryAlert, setShowExpiryAlert] = useState(false)
 
     const loadData = useCallback(async () => {
         try {
@@ -189,16 +203,22 @@ export default function ProductsDetailPage() {
     const maxWarehouseQty = Math.max(1, ...stockByWarehouse.map(s => s.quantity))
 
     return (
-        <div className="flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 space-y-4 md:space-y-5 overflow-y-auto custom-scrollbar">
+        <div className="p-4 md:p-6 animate-in fade-in duration-300 space-y-4 md:space-y-5 overflow-y-auto custom-scrollbar"
+             style={{ height: '100%', maxHeight: 'calc(100vh - 4rem)' }}>
             {/* ═══ Header — design-language §2 ═══ */}
             <header className="flex-shrink-0">
-                <Link href="/inventory/products"
-                    className="inline-flex items-center gap-1.5 text-tp-xs font-bold transition-colors mb-3 hover:opacity-70"
-                    style={{ color: 'var(--app-muted-foreground)' }}>
-                    <ArrowLeft size={13} /> Back to products
-                </Link>
-
                 <div className="flex items-start md:items-center gap-3 md:gap-4">
+                    {/* Back chevron — sits beside the product icon, not above */}
+                    <Link href="/inventory/products"
+                          className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors flex-shrink-0 hover:opacity-80"
+                          style={{
+                              background: 'color-mix(in srgb, var(--app-foreground) 5%, transparent)',
+                              border: '1px solid color-mix(in srgb, var(--app-foreground) 10%, transparent)',
+                              color: 'var(--app-muted-foreground)',
+                          }}
+                          title="Back to products">
+                        <ArrowLeft size={15} />
+                    </Link>
                     <div className="page-header-icon bg-app-primary"
                          style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                         <ProductThumbnail image={it.image} productType={it.product_type} name={it.name} size={36} color="white" iconSize={18} />
@@ -208,28 +228,18 @@ export default function ProductsDetailPage() {
                             <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight truncate">
                                 {String(it.name || `Product #${it.id}`)}
                             </h1>
-                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                                  style={{
-                                      background: `color-mix(in srgb, ${isActive ? 'var(--app-success)' : 'var(--app-error)'} 10%, transparent)`,
-                                      color: isActive ? 'var(--app-success)' : 'var(--app-error)',
-                                      border: `1px solid color-mix(in srgb, ${isActive ? 'var(--app-success)' : 'var(--app-error)'} 20%, transparent)`,
-                                  }}>
-                                {isActive ? 'Active' : 'Inactive'}
-                            </span>
+                            <Badge tone={isActive ? 'var(--app-success)' : 'var(--app-error)'} label={isActive ? 'Active' : 'Inactive'} />
+                            {it.product_type && (
+                                <Badge tone="var(--app-info, #3b82f6)" label={String(it.product_type).replace(/_/g, ' ')} />
+                            )}
                             {hasGroup && syncBadge.icon && (
-                                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0"
-                                      style={{
-                                          background: `color-mix(in srgb, ${syncBadge.color} 10%, transparent)`,
-                                          color: syncBadge.color,
-                                          border: `1px solid color-mix(in srgb, ${syncBadge.color} 20%, transparent)`,
-                                      }}>
-                                    <syncBadge.icon size={9} /> {syncBadge.label}
-                                </span>
+                                <Badge tone={syncBadge.color} label={syncBadge.label} icon={<syncBadge.icon size={9} />} />
                             )}
                         </div>
                         <p className="text-tp-xxs font-bold uppercase tracking-widest mt-1.5"
                            style={{ color: 'var(--app-muted-foreground)' }}>
                             <span className="font-mono normal-case">{String(it.sku || `#${it.id}`)}</span>
+                            {it.short_name && <> · <span className="normal-case italic">{String(it.short_name)}</span></>}
                             {it.brand_name && <> · {String(it.brand_name)}</>}
                             {it.category_name && <> · {String(it.category_name)}</>}
                             {it.unit_name && <> · {String(it.unit_name)}</>}
@@ -268,6 +278,40 @@ export default function ProductsDetailPage() {
                     </div>
                 </div>
             </header>
+
+            {/* ═══ Quick actions — same set the list page exposes per row ═══ */}
+            <div className="flex-shrink-0 flex items-center gap-2 flex-wrap">
+                <QuickAction
+                    icon={<ShoppingCart size={12} />}
+                    label="Request Purchase"
+                    color="var(--app-info)"
+                    onClick={() => triggerRequest('PURCHASE', [{
+                        id: Number(it.id), name: String(it.name || ''), sku: String(it.sku || ''),
+                        reorder_quantity: Number(it.reorder_quantity || 0),
+                        min_stock_level: Number(it.min_stock_level || 0),
+                        pipeline_status: it.pipeline_status as any,
+                    }])} />
+                <QuickAction
+                    icon={<ArrowRightLeft size={12} />}
+                    label="Request Transfer"
+                    color="var(--app-warning)"
+                    onClick={() => triggerRequest('TRANSFER', [{
+                        id: Number(it.id), name: String(it.name || ''), sku: String(it.sku || ''),
+                        reorder_quantity: Number(it.reorder_quantity || 0),
+                        min_stock_level: Number(it.min_stock_level || 0),
+                        pipeline_status: it.pipeline_status as any,
+                    }])} />
+                <QuickAction
+                    icon={<BellRing size={12} />}
+                    label="Expiry Alert"
+                    color="var(--app-error)"
+                    onClick={() => setShowExpiryAlert(true)} />
+                <QuickAction
+                    icon={<Sliders size={12} />}
+                    label="Stock Adjustment"
+                    color="#8b5cf6"
+                    onClick={() => router.push(`/inventory/adjustments?product=${id}`)} />
+            </div>
 
             {/* ═══ KPI Strip — design-language §4 (compact, auto-fit) ═══ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
@@ -341,7 +385,7 @@ export default function ProductsDetailPage() {
                     </div>
                     {hasGroup && syncBadge.icon && (
                         <div className="mt-3 pt-2 flex items-center gap-2 text-tp-xs"
-                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
                             <span style={{ color: syncBadge.color }} className="flex items-center gap-1 font-bold">
                                 <syncBadge.icon size={11} /> {syncBadge.label}
                             </span>
@@ -412,10 +456,27 @@ export default function ProductsDetailPage() {
                                 onClick={it.unit ? () => openInTab(String(it.unit_name || it.unit_code), `/inventory/units?unit=${it.unit}`) : undefined} />
                         )}
                         {it.barcode && <Row label="Barcode" value={String(it.barcode)} mono muted />}
+                        {it.product_type && <Row label="Type" value={String(it.product_type).replace(/_/g, ' ')} muted />}
+                        {it.short_name && <Row label="Short name" value={String(it.short_name)} muted />}
                     </div>
+
+                    {/* Operational flags — pulled from create-form's Traceability & Rules. */}
+                    {(it.is_for_sale != null || it.is_for_purchasing != null || it.is_serialized != null || it.is_expiry_tracked != null) && (
+                        <div className="mt-3 pt-2 flex items-center gap-1.5 flex-wrap"
+                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
+                            <p className="w-full text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-0.5 flex items-center gap-1.5">
+                                <Sliders size={10} /> Operational flags
+                            </p>
+                            <FlagChip on={it.is_for_sale !== false} label="For sale" tone="var(--app-success)" offTone="var(--app-muted-foreground)" />
+                            <FlagChip on={it.is_for_purchasing !== false} label="For purchase" tone="var(--app-info, #3b82f6)" offTone="var(--app-muted-foreground)" />
+                            <FlagChip on={!!it.is_expiry_tracked} label="Expiry tracked" tone="var(--app-warning)" offTone="var(--app-muted-foreground)" />
+                            <FlagChip on={!!it.is_serialized} label="Serialized (IMEI)" tone="#8b5cf6" offTone="var(--app-muted-foreground)" />
+                        </div>
+                    )}
+
                     {invMemberships.length > 0 && (
                         <div className="mt-3 pt-2"
-                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                             style={{ borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
                             <p className="text-tp-xxs font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 flex items-center gap-1.5">
                                 <Layers size={10} /> Inventory groups · {invMemberships.length}
                             </p>
@@ -451,6 +512,51 @@ export default function ProductsDetailPage() {
                 </PanelCard>
             )}
 
+            {/* ═══ Suppliers — sourced from /products/{id}/ payload (suppliers field) ═══ */}
+            {Array.isArray(it.suppliers) && it.suppliers.length > 0 && (
+                <PanelCard icon={<Truck size={13} />} accent="var(--app-info, #3b82f6)"
+                    title={`Suppliers · ${it.suppliers.length}`}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                        {it.suppliers.map((s: Record<string, any>) => (
+                            <button key={String(s.id ?? s.supplier ?? s.supplier_id)} type="button"
+                                onClick={() => s.supplier && openInTab(String(s.supplier_name || `Supplier #${s.supplier}`), `/contacts/${s.supplier}`)}
+                                className="text-left p-3 rounded-xl transition-all"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, var(--app-surface))',
+                                    border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 22%, transparent)',
+                                }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, var(--app-surface))' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 4%, var(--app-surface))' }}>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <Truck size={13} style={{ color: 'var(--app-info, #3b82f6)' }} className="flex-shrink-0" />
+                                    <span className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-foreground)' }}>
+                                        {String(s.supplier_name || `Supplier #${s.supplier}`)}
+                                    </span>
+                                </div>
+                                <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1">
+                                    {s.supplier_sku && <Row label="SKU" value={String(s.supplier_sku)} mono muted />}
+                                    {s.supplier_price != null && <Row label="Price" value={fmt(s.supplier_price)} color="text-app-success" />}
+                                    {s.supplier_lead_time != null && <Row label="Lead time" value={`${s.supplier_lead_time}d`} muted />}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </PanelCard>
+            )}
+
+            {/* ═══ Attribute values (parfum, size, ...) — render when present ═══ */}
+            {Array.isArray(it.attribute_values) && it.attribute_values.length > 0 && (
+                <PanelCard icon={<Tag size={13} />} accent="var(--app-warning)" title="Attributes">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {it.attribute_values.map((a: Record<string, any>) => (
+                            <Badge key={String(a.id)}
+                                tone="var(--app-warning)"
+                                label={`${a.attribute_name || a.group_name || ''}: ${a.value || a.name || ''}`.trim().replace(/^:\s*/, '')} />
+                        ))}
+                    </div>
+                </PanelCard>
+            )}
+
             {/* ═══ Packaging variants ═══ */}
             <PanelCard icon={<Package size={13} />} accent="var(--app-warning)" title="Packaging Variants">
                 <ProductPackagingTab
@@ -477,7 +583,70 @@ export default function ProductsDetailPage() {
                 confirmText={deleting ? 'Deleting…' : 'Delete'}
                 variant="danger"
             />
+
+            {/* Expiry alert dialog — same component the list cards open */}
+            <ExpiryAlertDialog
+                open={showExpiryAlert}
+                onClose={() => setShowExpiryAlert(false)}
+                productId={Number(it.id)}
+                productName={String(it.name || `Product #${it.id}`)}
+                productSku={it.sku ? String(it.sku) : null}
+            />
         </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  Badge — small inline pill, used in hero status row
+ *  FlagChip — on/off pill for operational flags (For Sale, etc)
+ * ═══════════════════════════════════════════════════════════ */
+function Badge({ tone, label, icon }: { tone: string; label: string; icon?: React.ReactNode }) {
+    return (
+        <span className="text-tp-xxs font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex items-center gap-1 flex-shrink-0"
+              style={{
+                  background: `color-mix(in srgb, ${tone} 10%, transparent)`,
+                  color: tone,
+                  border: `1px solid color-mix(in srgb, ${tone} 22%, transparent)`,
+              }}>
+            {icon} {label}
+        </span>
+    )
+}
+function FlagChip({ on, label, tone, offTone }: { on: boolean; label: string; tone: string; offTone: string }) {
+    const c = on ? tone : offTone
+    return (
+        <span className="text-tp-xxs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+              style={{
+                  background: `color-mix(in srgb, ${c} ${on ? 12 : 6}%, transparent)`,
+                  color: c,
+                  border: `1px solid color-mix(in srgb, ${c} ${on ? 28 : 18}%, transparent)`,
+                  textDecoration: on ? 'none' : 'line-through',
+                  opacity: on ? 1 : 0.7,
+              }}>
+            {label}
+        </span>
+    )
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+ *  QuickAction — matches list page's bulk-action button style
+ *  (text-[10px] font-bold, accent border 30%, hover accent bg 10%)
+ * ═══════════════════════════════════════════════════════════ */
+function QuickAction({ icon, label, color, onClick }: { icon: React.ReactNode; label: string; color: string; onClick: () => void }) {
+    return (
+        <button onClick={onClick}
+            className="flex items-center gap-1.5 text-tp-xs font-bold px-2.5 py-1.5 rounded-lg transition-all"
+            style={{
+                color,
+                border: `1px solid color-mix(in srgb, ${color} 32%, transparent)`,
+                background: 'transparent',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = `color-mix(in srgb, ${color} 10%, transparent)` }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+            {icon}
+            <span className="hidden sm:inline">{label}</span>
+        </button>
     )
 }
 
@@ -488,11 +657,11 @@ function KpiTile({ icon, label, value, color }: { icon: React.ReactNode; label: 
     return (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
              style={{
-                 background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                 border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                 background: `color-mix(in srgb, ${color} 4%, var(--app-surface))`,
+                 border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
              }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                 style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>
+                 style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
                 {icon}
             </div>
             <div className="min-w-0">
@@ -519,7 +688,7 @@ function PanelCard({ icon, title, accent, right, children }: {
         <section className="rounded-2xl overflow-hidden"
                  style={{
                      background: 'var(--app-surface)',
-                     border: '1px solid color-mix(in srgb, var(--app-border) 60%, transparent)',
+                     border: `1px solid color-mix(in srgb, ${accent} 22%, transparent)`,
                  }}>
             <header className="px-3 py-2 flex items-center gap-2"
                     style={{
