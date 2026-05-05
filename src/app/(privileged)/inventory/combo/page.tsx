@@ -29,7 +29,7 @@ export default async function ComboPage() {
     return (
         <div className="p-6 space-y-6">
             <div>
-                <h1 className="text-2xl font-bold">Combo &amp; Bundle Products</h1>
+                <h1>Combo &amp; Bundle Products</h1>
                 <p className="text-sm text-app-muted-foreground mt-1">
                     Create product bundles by combining multiple items into a single combo.
                     When sold, stock for each component is deducted automatically.

@@ -334,7 +334,7 @@ export function PrintDialog({ isOpen, onClose, spec }: Props) {
                             <Printer size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">Print {spec.title}</h3>
+                            <h3>Print {spec.title}</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">
                                 Pick what appears on paper
                             </p>

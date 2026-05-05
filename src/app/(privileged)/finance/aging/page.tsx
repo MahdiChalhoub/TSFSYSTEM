@@ -99,7 +99,7 @@ export default function AgingReportPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground">Aging Report</h1>
+                    <h1>Aging Report</h1>
                     <p className="text-sm text-app-muted-foreground mt-1">Receivables & Payables breakdown by age</p>
                 </div>
                 <div className="flex rounded-lg border overflow-hidden">

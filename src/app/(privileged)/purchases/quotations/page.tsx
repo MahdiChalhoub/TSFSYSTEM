@@ -34,7 +34,7 @@ function CustomizePanel({ isOpen, onClose, visibleColumns, setVisibleColumns }: 
  if (!isOpen) return null; return (
   <div className="fixed inset-0 z-50"><div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
    <div className="fixed right-0 top-0 bottom-0 w-80 bg-app-surface border-l border-app-border shadow-2xl p-5 overflow-y-auto animate-in slide-in-from-right-5 duration-200">
-    <div className="flex items-center justify-between mb-4"><h3 className="text-sm font-black text-app-foreground">Customize View</h3><button onClick={onClose} className="p-1 rounded-lg hover:bg-app-muted/10"><X size={14} /></button></div>
+    <div className="flex items-center justify-between mb-4"><h3>Customize View</h3><button onClick={onClose} className="p-1 rounded-lg hover:bg-app-muted/10"><X size={14} /></button></div>
     <div className="space-y-1"><p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-2">Visible Columns</p>
      {ALL_COLUMNS.map(col => { const isOn = col.defaultVisible ? visibleColumns[col.key] !== false : visibleColumns[col.key]; return <label key={col.key} className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-app-muted/10 cursor-pointer transition-all"><input type="checkbox" checked={!!isOn} onChange={() => setVisibleColumns({ ...visibleColumns, [col.key]: !isOn })} className="w-3.5 h-3.5 accent-[var(--app-primary)] cursor-pointer rounded" /><span className="text-[11px] font-bold text-app-foreground">{col.label}</span></label> })}
     </div></div></div>)
@@ -80,7 +80,7 @@ export default function QuotationsPage() {
     ) : (
      <>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-       <div className="flex items-center gap-3"><div className="page-header-icon" style={{ background: 'var(--app-accent-cyan)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-accent-cyan) 30%, transparent)' }}><Send size={20} className="text-white" /></div><div><h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Supplier Quotations</h1><p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{quotations.length} Quotations · {activeCount} Active · {acceptedCount} Accepted</p></div></div>
+       <div className="flex items-center gap-3"><div className="page-header-icon" style={{ background: 'var(--app-accent-cyan)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-accent-cyan) 30%, transparent)' }}><Send size={20} className="text-white" /></div><div><h1>Supplier Quotations</h1><p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{quotations.length} Quotations · {activeCount} Active · {acceptedCount} Accepted</p></div></div>
        <div className="flex items-center gap-1.5 flex-shrink-0"><button onClick={load} className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"><RefreshCw size={13} /></button><button onClick={() => setFocusMode(true)} className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"><Maximize2 size={13} /></button></div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>

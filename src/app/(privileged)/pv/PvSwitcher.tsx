@@ -46,8 +46,7 @@ export default function PvSwitcher({
                         <ArrowLeft size={18} />
                     </Link>
                     <FileText size={16} style={{ color: 'var(--app-primary)' }} />
-                    <h1 className="text-lg md:text-xl font-black tracking-tight"
-                        style={{ color: 'var(--app-foreground)' }}>
+                    <h1 style={{ color: 'var(--app-foreground)' }}>
                         Purchase <span style={{ color: 'var(--app-primary)' }}>Playground</span>
                     </h1>
                 </div>

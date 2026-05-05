@@ -205,7 +205,7 @@ export default function ProductGroupingPage() {
             <SquareStack size={22} style={{ color: '#fff' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+            <h1 style={{ color: 'var(--app-foreground)' }}>
               Product Grouping
             </h1>
             <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -1021,7 +1021,7 @@ function CreateGroupModal({ tab, onClose, onCreated }: {
               <Plus size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-black" style={{ color: 'var(--app-foreground)' }}>
+              <h3 style={{ color: 'var(--app-foreground)' }}>
                 New {tab === 'pricing' ? 'Pricing' : 'Inventory'} Group
               </h3>
               <p className="text-xs" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -1383,7 +1383,7 @@ function EmptyState({ icon, title, description, actionLabel, onAction }: {
       }}>
         {icon}
       </div>
-      <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--app-foreground)' }}>{title}</h3>
+      <h3 className="mb-2" style={{ color: 'var(--app-foreground)' }}>{title}</h3>
       <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'var(--app-muted-foreground)' }}>{description}</p>
       {actionLabel && onAction && (
         <button

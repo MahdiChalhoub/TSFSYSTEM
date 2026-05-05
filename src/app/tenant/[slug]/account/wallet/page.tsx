@@ -112,7 +112,7 @@ export default function WalletPage() {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-white">Please log in</h1>
+                    <h1 className="text-white">Please log in</h1>
                     <Link href={`/tenant/${slug}`} className="text-app-success font-bold">Go to Store</Link>
                 </div>
             </div>
@@ -126,7 +126,7 @@ export default function WalletPage() {
             <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-warning/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-6">
-                <h1 className="text-3xl font-black text-white">Wallet & Loyalty</h1>
+                <h1 className="text-white">Wallet & Loyalty</h1>
 
                 {/* Balance Cards */}
                 {!loading && wallet && (
@@ -191,7 +191,7 @@ export default function WalletPage() {
                 {/* Top-Up Request */}
                 {!loading && wallet && (
                     <div className="p-6 bg-app-surface/60 border border-white/5 rounded-3xl space-y-4">
-                        <h3 className="text-white font-bold flex items-center gap-2">
+                        <h3 className="text-white flex items-center gap-2">
                             <PlusCircle size={18} className="text-app-success" /> Request Top-Up
                         </h3>
                         <div className="flex gap-3">
@@ -221,7 +221,7 @@ export default function WalletPage() {
 
                 {/* Transactions */}
                 <div className="space-y-3">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 className="text-white flex items-center gap-2">
                         <Clock size={18} className="text-app-muted-foreground" /> Recent Transactions
                     </h2>
                     {transactions.length === 0 ? (

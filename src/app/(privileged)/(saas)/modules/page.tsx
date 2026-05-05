@@ -181,7 +181,7 @@ export default function SaaSModulesPage() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Global Registry</h2>
+                    <h2>Global Registry</h2>
                     <p className="text-app-muted-foreground mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
                     {lastSynced && <p className="text-app-success/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>

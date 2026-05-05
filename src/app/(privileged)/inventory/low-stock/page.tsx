@@ -91,7 +91,7 @@ export default function LowStockPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-app-foreground">Low Stock Alerts</h1>
+                <h1>Low Stock Alerts</h1>
                 <p className="text-sm text-app-muted-foreground mt-1">Products at or below minimum stock levels</p>
             </header>
 

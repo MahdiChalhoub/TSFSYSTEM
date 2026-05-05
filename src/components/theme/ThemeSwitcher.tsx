@@ -143,7 +143,7 @@ export function ThemeSwitcher({
             border: '1px solid var(--app-border)',
           }}>
           <div>
-            <h3 className="font-semibold" style={{ color: 'var(--app-foreground)' }}>Color Mode</h3>
+            <h3 style={{ color: 'var(--app-foreground)' }}>Color Mode</h3>
             <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>Switch between dark and light mode</p>
           </div>
           <Button
@@ -170,7 +170,7 @@ export function ThemeSwitcher({
         <div className="space-y-6">
           {categories.map((category) => (
             <div key={category.id}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider mb-3"
+              <h3 className="uppercase mb-3"
                 style={{ color: 'var(--app-muted-foreground)' }}>
                 {category.name}
               </h3>
@@ -267,7 +267,7 @@ export function ThemeSwitcher({
                   background: 'var(--app-surface)',
                   borderBottom: '1px solid var(--app-border)',
                 }}>
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--app-foreground)' }}>
+                <h3 style={{ color: 'var(--app-foreground)' }}>
                   Choose Theme
                 </h3>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>

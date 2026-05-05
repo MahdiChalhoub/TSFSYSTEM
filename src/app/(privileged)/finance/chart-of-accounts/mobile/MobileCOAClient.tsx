@@ -320,7 +320,7 @@ export function MobileCOAClient({ accounts, orgCurrencies = [], numberingRules }
                                 WebkitOverflowScrolling: 'touch',
                                 paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))',
                             }}>
-                            <h2 className="text-tp-lg font-bold text-app-foreground mb-3">
+                            <h2 className="text-tp-lg mb-3">
                                 {addParentId ? 'Add sub-account' : 'New account'}
                             </h2>
                             <AccountForm

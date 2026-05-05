@@ -117,7 +117,7 @@ function ListViewSection({ config }: { config: ListViewConfig }) {
  <List className="h-5 w-5 text-app-primary" />
  </div>
  <div className="text-left">
- <h3 className="font-semibold text-app-foreground">{config.title}</h3>
+ <h3>{config.title}</h3>
  <p className="text-xs text-app-muted-foreground mt-0.5">{config.description}</p>
  </div>
  </div>
@@ -264,7 +264,7 @@ export default function ListViewSettingsPage() {
  <Settings className="h-7 w-7 text-app-foreground" />
  </div>
  <div>
- <h1 className="page-header-title tracking-tighter">ListView <span className="text-app-primary">Settings</span></h1>
+ <h1 className="page-header-title">ListView <span className="text-app-primary">Settings</span></h1>
  <p className="text-sm text-app-muted-foreground">Customize columns, page size, sorting, and filters for every list view</p>
  </div>
  </div>

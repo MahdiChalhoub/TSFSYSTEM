@@ -59,7 +59,7 @@ export default async function ContactsPage() {
                             </div>
                             <span className="text-xs font-black text-app-info uppercase tracking-[0.3em]">Master Entity Management</span>
                         </div>
-                        <h1 className="text-5xl lg:text-7xl font-black text-app-foreground tracking-tighter leading-none">
+                        <h1>
                             Contact <span className="text-app-info">Center</span>
                         </h1>
                         <p className="mt-6 text-app-muted-foreground font-medium max-w-2xl text-lg leading-relaxed">

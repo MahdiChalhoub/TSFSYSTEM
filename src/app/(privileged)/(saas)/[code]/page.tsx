@@ -34,7 +34,7 @@ export default function DynamicModulePage() {
                     <Box size={24} className="md:w-8 md:h-8" />
                 </div>
                 <div>
-                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
+                    <h2 className="text-white capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
                     <p className="text-xs md:text-sm text-app-muted-foreground mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-app-success">{code}</code></p>
                 </div>
             </div>

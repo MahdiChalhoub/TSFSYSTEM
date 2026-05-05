@@ -73,7 +73,7 @@ export default function AuditTrailPage() {
         <div className="p-6 space-y-6">
             {/* Header */}
             <header>
-                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                <h1 className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-app-bg flex items-center justify-center">
                         <History size={20} className="text-white" />
                     </div>

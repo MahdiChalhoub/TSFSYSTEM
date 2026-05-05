@@ -65,7 +65,7 @@ export default async function WiseConsolePage() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Manager View</p>
-                            <h1 className="text-4xl font-black tracking-tighter italic">
+                            <h1 className="italic">
                                 WISE <span className="text-app-error">Command Console</span>
                             </h1>
                             {s && (

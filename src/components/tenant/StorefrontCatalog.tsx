@@ -65,7 +65,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
         return (
             <div className="p-12 text-center bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
                 <ShoppingBag className="mx-auto text-app-muted-foreground mb-4" size={48} />
-                <h3 className="text-xl font-bold text-white">Catalog Coming Soon</h3>
+                <h3 className="text-white">Catalog Coming Soon</h3>
                 <p className="text-app-muted-foreground mt-2">We are currently updating our inventory. Please check back later.</p>
             </div>
         );
@@ -76,7 +76,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
             {/* Header + Search */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                    <h2 className="text-3xl font-black text-white tracking-tighter">Featured Collection</h2>
+                    <h2 className="text-white">Featured Collection</h2>
                     <div className="flex gap-2">
                         <div className="w-2 h-2 rounded-full bg-app-success animate-pulse" />
                         <span className="text-[10px] font-black text-app-success uppercase tracking-widest">Live Inventory</span>
@@ -188,7 +188,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                             <div className="p-8 space-y-4">
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-start">
-                                        <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
+                                        <h3 className="text-white group-hover:text-emerald-400 transition-colors uppercase">{p.name}</h3>
                                         <div className="flex items-center gap-1 text-app-success">
                                             <Star size={12} fill="currentColor" />
                                             <span className="text-[10px] font-black">4.9</span>

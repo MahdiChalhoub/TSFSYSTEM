@@ -89,7 +89,7 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                             <Package size={20} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black tracking-tight">Post Reception</h3>
+                            <h3>Post Reception</h3>
                             <p className="text-xs font-bold text-app-success uppercase tracking-widest">Receive Stock + Report Discrepancies</p>
                         </div>
                     </div>

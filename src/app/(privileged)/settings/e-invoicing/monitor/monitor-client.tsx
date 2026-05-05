@@ -160,7 +160,7 @@ export default function FNEMonitorClient() {
   <Zap size={12} /> Direction Générale des Impôts
   </span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="page-header-title flex items-center gap-4">
   <div className="w-16 h-16 rounded-[1.8rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-emerald-200">
   <ShieldCheck size={32} className="text-white" />
   </div>

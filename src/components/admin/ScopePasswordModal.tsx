@@ -23,7 +23,7 @@ export default function ScopePasswordModal({
             <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
                 <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 text-center">
                     <Shield size={48} className="text-app-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-app-muted-foreground mb-2">No System Login</h3>
+                    <h3 className="text-app-muted-foreground mb-2">No System Login</h3>
                     <p className="text-sm text-app-muted-foreground mb-6">This employee doesn&apos;t have a system login. Create one first from the employee form.</p>
                     <button onClick={onClose} className="px-6 py-3 bg-gray-100 text-app-muted-foreground rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all">Close</button>
                 </div>
@@ -63,7 +63,7 @@ export default function ScopePasswordModal({
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-app-border flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-black text-app-foreground">Access Passwords</h2>
+                        <h2>Access Passwords</h2>
                         <p className="text-xs text-app-muted-foreground font-bold mt-1">{employee.firstName} {employee.lastName}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl transition-all text-app-muted-foreground hover:text-app-foreground">

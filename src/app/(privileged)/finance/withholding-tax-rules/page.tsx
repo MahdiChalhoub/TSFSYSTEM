@@ -89,7 +89,7 @@ function RuleEditor({ item, onSave, onCancel }: { item: WHT | null; onSave: (dat
             <Shield size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit Withholding Rule' : 'New Withholding Rule'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -227,7 +227,7 @@ export default function WithholdingTaxRulesPage() {
                   <Shield size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Withholding Tax Rules</h1>
+                  <h1>Withholding Tax Rules</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     {items.length} Rules · WHT Engine
                   </p>

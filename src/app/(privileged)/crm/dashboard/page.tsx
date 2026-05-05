@@ -60,7 +60,7 @@ export default function RelationshipDashboard() {
             </div>
             <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">{title}</p>
-                <h3 className="text-2xl font-black tracking-tighter text-app-foreground tabular-nums leading-none">{value}</h3>
+                <h3 className="tabular-nums">{value}</h3>
                 <p className="text-[10px] text-app-muted-foreground/60">{subText}</p>
             </div>
         </div>
@@ -76,7 +76,7 @@ export default function RelationshipDashboard() {
                     </div>
                     <div>
                         <p className="text-[0.625rem] font-black uppercase tracking-[0.15em] text-app-muted-foreground/60 mb-0.5">CRM Intelligence</p>
-                        <h1 className="text-2xl font-black tracking-tighter text-app-foreground italic uppercase">
+                        <h1 className="italic uppercase">
                             Relationship <span className="text-app-primary">Command Center</span>
                         </h1>
                     </div>
@@ -114,7 +114,7 @@ export default function RelationshipDashboard() {
                             <div className="p-2 rounded-xl bg-app-primary/10 text-app-primary">
                                 <ListChecks className="w-5 h-5" />
                             </div>
-                            <h2 className="text-sm font-black uppercase tracking-widest text-app-foreground italic leading-none">Priority <span className="text-app-primary">Radar</span></h2>
+                            <h2 className="uppercase italic">Priority <span className="text-app-primary">Radar</span></h2>
                         </div>
                         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-app-surface border border-app-border">
                             {[
@@ -207,7 +207,7 @@ export default function RelationshipDashboard() {
                             ) : (
                                 <div className="py-20 flex flex-col items-center justify-center text-center app-card border-dashed border-2 bg-transparent opacity-40">
                                     <ShieldCheck className="w-12 h-12 text-app-muted-foreground/30 mb-4" />
-                                    <h3 className="text-xs font-black uppercase tracking-widest">Horizon Clear</h3>
+                                    <h3 className="uppercase">Horizon Clear</h3>
                                     <p className="text-[10px] text-app-muted-foreground mt-1">No pending relationship actions detected.</p>
                                 </div>
                             )}
@@ -223,7 +223,7 @@ export default function RelationshipDashboard() {
                             <div className="p-2 rounded-xl bg-app-info/10 text-app-info">
                                 <Target size={18} />
                             </div>
-                            <h3 className="font-black uppercase tracking-tighter text-app-foreground italic leading-none">
+                            <h3 className="uppercase italic">
                                 Predictive <span className="text-app-info">Insights</span>
                             </h3>
                         </div>

@@ -62,7 +62,7 @@ export function LifecycleBar({ status, approvals = [], onAction, canAction, isLo
                         <StatusIcon className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider opacity-60">Document Status</h3>
+                        <h3 className="uppercase opacity-60">Document Status</h3>
                         <Badge variant="outline" className={cn("mt-1 font-bold", currentConfig.color)}>
                             {currentConfig.label}
                         </Badge>

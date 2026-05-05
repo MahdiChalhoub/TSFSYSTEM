@@ -186,7 +186,7 @@ export function DocumentViewerPanel({
             {/* Mock PDF viewer - replace with real implementation */}
             <div className="bg-app-surface rounded-lg shadow-lg p-8 w-[600px] relative">
               <div className="border-b-2 border-app-border pb-4 mb-4">
-                <h2 className="text-2xl font-bold">INVOICE</h2>
+                <h2>INVOICE</h2>
                 <p className="text-sm text-app-muted-foreground">{invoice.supplier_name}</p>
               </div>
               <div className="space-y-2 text-sm">

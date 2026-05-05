@@ -99,7 +99,7 @@ export default function RegistersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-app-foreground tracking-tight flex items-center gap-3">
+          <h1 className="flex items-center gap-3">
             <Monitor className="text-app-primary" size={24} />
             POS Registers
           </h1>
@@ -153,7 +153,7 @@ export default function RegistersPage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-black text-app-foreground text-base">{reg.name}</h3>
+                  <h3>{reg.name}</h3>
                   <p className="text-app-foreground/40 text-xs mt-0.5">
                     {reg.branch_name || reg.branch?.name || 'No branch'} · ID #{reg.id}
                   </p>
@@ -219,7 +219,7 @@ export default function RegistersPage() {
         >
           <div className="w-full max-w-md bg-app-surface rounded-3xl border border-app-foreground/10 shadow-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-app-foreground/5 flex items-center justify-between">
-              <h2 className="text-app-foreground font-black text-lg">New Register</h2>
+              <h2>New Register</h2>
               <button
                 onClick={() => setShowCreate(false)}
                 className="w-8 h-8 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/40 flex items-center justify-center"

@@ -151,7 +151,7 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                 <Card className="border-2 border-app-success dark:border-emerald-800 shadow-lg">
                     <CardContent className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-black text-app-foreground">
+                            <h3>
                                 {editingId ? 'Edit Payment Term' : 'New Payment Term'}
                             </h3>
                             <button onClick={resetForm} className="text-app-muted-foreground hover:text-app-foreground">

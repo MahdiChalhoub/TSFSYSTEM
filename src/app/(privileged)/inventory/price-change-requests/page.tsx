@@ -72,7 +72,7 @@ export default function PriceChangeRequestsPage() {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Price Governance</p>
-                    <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                    <h1>
                         Price Change <span style={{ color: 'var(--app-primary)' }}>Requests</span>
                     </h1>
                 </div>

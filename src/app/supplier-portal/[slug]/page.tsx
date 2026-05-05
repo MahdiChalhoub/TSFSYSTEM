@@ -102,7 +102,7 @@ export default function SupplierPortalPage() {
                     <div className="w-20 h-20 bg-app-accent/20 border border-app-accent/30 rounded-3xl flex items-center justify-center mx-auto text-app-accent">
                         <Building2 size={36} />
                     </div>
-                    <h1 className="text-3xl font-black text-white">Supplier Portal</h1>
+                    <h1 className="text-white">Supplier Portal</h1>
                     <p className="text-app-muted-foreground text-sm">
                         Secure access for <span className="text-white font-bold">{slug}</span>
                     </p>
@@ -200,7 +200,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                 {/* Header */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-4xl font-black text-white">Supplier Portal</h1>
+                        <h1 className="text-white">Supplier Portal</h1>
                         <p className="text-app-muted-foreground text-sm mt-1">
                             {session.contact.company || session.contact.name} • <span className="text-app-accent">{session.contact.supplier_category || 'Supplier'}</span>
                         </p>

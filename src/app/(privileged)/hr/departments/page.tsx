@@ -29,7 +29,7 @@ export default async function DepartmentsPage() {
                         </div>
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Organization</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Depart<span className="text-violet-600">ments</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">

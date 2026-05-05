@@ -183,7 +183,7 @@ export function SettingsPageShell({
                         {icon}
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight truncate leading-tight">
+                        <h1 className="truncate">
                             {title}
                         </h1>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap text-tp-xxs leading-none">

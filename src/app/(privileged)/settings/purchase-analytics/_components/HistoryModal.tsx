@@ -20,7 +20,7 @@ export function HistoryModal({ historyData, onClose, onRestore }: {
         <div className="px-4 py-3 border-b border-app-border flex items-center justify-between sticky top-0 bg-app-surface z-10">
           <div className="flex items-center gap-2">
             <History size={14} className="text-app-primary" />
-            <h3 className="text-[13px] font-bold text-app-foreground">Config Version History</h3>
+            <h3>Config Version History</h3>
             <span className="text-[9px] px-1.5 py-0.5 rounded bg-app-primary/10 text-app-primary font-bold">{historyData.length} versions</span>
           </div>
           <button type="button" onClick={onClose} className="text-app-muted-foreground hover:text-app-foreground transition-colors">

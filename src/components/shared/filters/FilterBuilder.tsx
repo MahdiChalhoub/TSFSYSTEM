@@ -298,7 +298,7 @@ export function FilterBuilder({ fields, filterGroup, onChange }: FilterBuilderPr
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-app-foreground">Filter Conditions</h3>
+            <h3>Filter Conditions</h3>
             <p className="text-sm text-app-muted-foreground">
               {group.conditions.length === 0
                 ? 'No conditions yet'

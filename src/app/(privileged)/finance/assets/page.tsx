@@ -131,7 +131,7 @@ export default function AssetsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Fixed Assets</h1>
+                    <h1 className="font-serif">Fixed Assets</h1>
                     <p className="text-app-muted-foreground font-medium mt-1">Track assets, depreciation schedules, and book values</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -260,7 +260,7 @@ export default function AssetsPage() {
             {/* Assets Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-5 py-3 border-b flex items-center justify-between bg-app-surface/50">
-                    <h2 className="font-semibold text-app-foreground flex items-center gap-2"><Package size={16} /> Asset Register</h2>
+                    <h2 className="flex items-center gap-2"><Package size={16} /> Asset Register</h2>
                     <div className="relative w-64">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input
@@ -357,7 +357,7 @@ export default function AssetsPage() {
                 <Card className="rounded-2xl shadow-sm overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                     <div className="px-5 py-4 border-b flex justify-between items-center bg-app-warning-soft/30">
                         <div>
-                            <h2 className="font-semibold text-app-foreground flex items-center gap-2">
+                            <h2 className="flex items-center gap-2">
                                 <Calendar size={16} /> Depreciation Schedule: {selectedAsset.name}
                             </h2>
                             <p className="text-sm text-app-muted-foreground mt-0.5">

@@ -66,7 +66,7 @@ export function RolesMatrixClient({ data }: { data: RoleData }) {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-black text-app-foreground tracking-tight">Access Control Matrix</h2>
+                    <h2>Access Control Matrix</h2>
                     <p className="text-sm text-app-muted-foreground mt-1">Granularly assign or override permissions per user</p>
                 </div>
 

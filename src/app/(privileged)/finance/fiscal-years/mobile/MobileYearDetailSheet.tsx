@@ -82,7 +82,7 @@ export function MobileYearDetailSheet({ year, onClose, onYearEndClose, onSoftClo
                     <ArrowLeft size={16} style={{ color: 'var(--app-muted-foreground)' }} />
                 </button>
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-[15px] font-black truncate" style={{ color: 'var(--app-foreground)' }}>
+                    <h2 className="truncate" style={{ color: 'var(--app-foreground)' }}>
                         {year.name}
                     </h2>
                     <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>

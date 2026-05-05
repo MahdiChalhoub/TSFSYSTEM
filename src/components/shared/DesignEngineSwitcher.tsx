@@ -54,7 +54,7 @@ export function DesignEngineSwitcher({ className, showLabel = true }: DesignEngi
             <div className="px-4 py-3 border-b border-[var(--theme-border)] bg-[var(--bg-app-bg)]">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-[var(--theme-primary)]" />
-                <h3 className="text-sm font-semibold text-[var(--text-app-foreground)]">
+                <h3 className="text-[var(--)]">
                   Design Engine
                 </h3>
               </div>

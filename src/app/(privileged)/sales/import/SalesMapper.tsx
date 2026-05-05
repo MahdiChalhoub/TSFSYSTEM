@@ -101,7 +101,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                         <Upload size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Step 1: Upload Source</h2>
+                        <h2 className="uppercase">Step 1: Upload Source</h2>
                         <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Select your CSV data file</p>
                     </div>
                 </div>
@@ -147,7 +147,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                             <Settings2 size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Step 2: Engine Configuration</h2>
+                            <h2 className="uppercase">Step 2: Engine Configuration</h2>
                             <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Bridge columns and set destination parameters</p>
                         </div>
                     </div>
@@ -155,7 +155,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         {/* Column Mapping */}
                         <div className="space-y-6">
-                            <h3 className="text-xs font-black uppercase text-app-muted-foreground tracking-widest flex items-center gap-2">
+                            <h3 className="uppercase text-app-muted-foreground flex items-center gap-2">
                                 <Database size={14} /> Column Mapping
                             </h3>
                             <div className="grid grid-cols-1 gap-4">
@@ -186,7 +186,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
                         {/* Destination Config */}
                         <div className="space-y-6">
-                            <h3 className="text-xs font-black uppercase text-app-muted-foreground tracking-widest flex items-center gap-2">
+                            <h3 className="uppercase text-app-muted-foreground flex items-center gap-2">
                                 <ArrowRight size={14} /> Destination Parameters
                             </h3>
 
@@ -272,7 +272,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                 <CheckCircle2 size={24} />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Sync Results</h2>
+                                <h2 className="uppercase">Sync Results</h2>
                                 <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Execution report for batch sync</p>
                             </div>
                         </div>
@@ -291,7 +291,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
                     {results.errors.length > 0 && (
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-200">
-                            <h3 className="text-xs font-black uppercase text-app-error tracking-tighter">Error Diagnostic Log</h3>
+                            <h3 className="uppercase text-app-error">Error Diagnostic Log</h3>
                             <div className="space-y-2">
                                 {results.errors.map((err: Record<string, any>, i: number) => (
                                     <div key={i} className="p-4 bg-app-error-bg border border-red-100 rounded-xl flex gap-3 items-start">

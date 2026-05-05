@@ -85,7 +85,7 @@ export default function FreshProductsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">PLM Governance</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Fresh <span style={{ color: 'var(--app-primary)' }}>Products</span>
                         </h1>
                     </div>
@@ -178,7 +178,7 @@ export default function FreshProductsPage() {
             {tab === 'policy' && policy && (
                 <div className="max-w-2xl space-y-6">
                     <div className="rounded-xl p-5" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                        <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-4">Barcode Encoding</h3>
+                        <h3 className="uppercase text-app-muted-foreground mb-4">Barcode Encoding</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-app-muted-foreground mb-1">Encoding Mode</label>
@@ -216,7 +216,7 @@ export default function FreshProductsPage() {
                     </div>
 
                     <div className="rounded-xl p-5" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                        <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-4">Shelf Life & Label</h3>
+                        <h3 className="uppercase text-app-muted-foreground mb-4">Shelf Life & Label</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-app-muted-foreground mb-1">Default Shelf Life (days)</label>

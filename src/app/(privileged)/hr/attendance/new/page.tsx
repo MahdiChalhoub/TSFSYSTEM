@@ -53,7 +53,7 @@ export default function CreateAttendancePage() {
         </div>
 
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-app-foreground">
+          <h1>
             Create Attendance
           </h1>
           <p className="text-app-muted-foreground mt-1">

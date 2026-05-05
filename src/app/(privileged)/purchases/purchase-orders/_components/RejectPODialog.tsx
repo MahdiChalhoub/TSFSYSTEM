@@ -40,7 +40,7 @@ export function RejectPODialog({
                         <AlertTriangle className="w-5 h-5" style={{ color: 'var(--app-error)' }} />
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-sm font-bold text-app-foreground">Reject {poNumber || 'Purchase Order'}</h2>
+                        <h2>Reject {poNumber || 'Purchase Order'}</h2>
                         <p className="text-[11px] text-app-muted-foreground mt-0.5">
                             Choose a category — it drives whether the source request is auto-reissued.
                         </p>

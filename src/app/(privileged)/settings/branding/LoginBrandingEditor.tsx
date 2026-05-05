@@ -285,7 +285,7 @@ export function LoginBrandingEditor({ initialBranding }: { initialBranding: Bran
                                     >
                                         A
                                     </div>
-                                    <h3 className="text-xl font-black text-white tracking-tight">YOUR BRAND</h3>
+                                    <h3 className="text-white">YOUR BRAND</h3>
                                     <p className="text-xs text-app-faint leading-relaxed">
                                         {tagline || "Secure enterprise gateway. Authorized personnel only."}
                                     </p>

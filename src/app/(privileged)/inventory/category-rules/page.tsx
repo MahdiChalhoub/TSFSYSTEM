@@ -114,7 +114,7 @@ export default function CategoryRulesPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">PLM Governance</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Category <span style={{ color: 'var(--app-primary)' }}>Rules</span>
                         </h1>
                     </div>
@@ -177,7 +177,7 @@ export default function CategoryRulesPage() {
                         onClick={e => e.stopPropagation()}>
                         <div className="sticky top-0 z-10 p-4 flex items-center justify-between"
                             style={{ background: 'var(--app-bg)', borderBottom: '1px solid var(--app-border)' }}>
-                            <h3 className="font-bold text-app-foreground">{editing.id ? 'Edit Rule' : 'New Category Rule'}</h3>
+                            <h3>{editing.id ? 'Edit Rule' : 'New Category Rule'}</h3>
                             <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg hover:bg-app-surface-hover">
                                 <X size={16} className="text-app-muted-foreground" />
                             </button>

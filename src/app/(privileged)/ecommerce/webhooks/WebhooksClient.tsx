@@ -146,7 +146,7 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                                 <Plus size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-foreground)]">Add Webhook</h2>
+                                <h2 className="text-[var(--app-foreground)]">Add Webhook</h2>
                                 <p className="text-xs text-[var(--app-muted-foreground)]">HTTP callback endpoint</p>
                             </div>
                         </div>

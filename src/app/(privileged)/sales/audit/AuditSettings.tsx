@@ -62,7 +62,7 @@ export default function AuditSettings() {
  return (
  <div className="bg-app-surface rounded-xl shadow-sm border border-app-border overflow-hidden max-w-4xl">
  <div className="px-6 py-5 border-b bg-app-surface-2/50">
- <h3 className="text-lg font-bold text-app-foreground">Audit Alert Configuration</h3>
+ <h3>Audit Alert Configuration</h3>
  <p className="text-sm text-app-muted-foreground mt-1">Configure which POS events should notify managers or create immediate follow-up tasks.</p>
  </div>
  <div className="p-0">

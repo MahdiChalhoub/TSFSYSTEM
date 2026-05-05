@@ -93,7 +93,7 @@ export default function AutoRulesListPage() {
                         <Zap size={20} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Auto Rules</h1>
+                        <h1>Auto Rules</h1>
                         <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                             {items.length} Records · Raw auto-rule list
                         </p>

@@ -24,7 +24,7 @@ export function ScoringSection() {
                     <BarChart3 size={15} style={{ color: C }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-[13px] font-black text-app-foreground">Scoring & Data Sources</h3>
+                    <h3>Scoring & Data Sources</h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground">Financial score weights and PO count source</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('scoring') }}

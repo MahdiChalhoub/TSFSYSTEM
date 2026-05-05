@@ -24,7 +24,7 @@ export default function SalesOrdersPage() {
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-app-info-bg flex items-center justify-center">
               <ShoppingCart size={40} className="text-app-info" />
             </div>
-            <h1 className="text-lg font-bold text-app-foreground mb-2">Redirecting to Sales Console...</h1>
+            <h1 className="mb-2">Redirecting to Sales Console...</h1>
             <p className="text-sm text-app-muted-foreground">
               You'll be redirected to the main sales page momentarily.
             </p>

@@ -114,7 +114,7 @@ function Modal({
                             {icon}
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-sm font-black text-app-foreground truncate">{title}</h3>
+                            <h3 className="truncate">{title}</h3>
                             {subtitle && <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">{subtitle}</p>}
                         </div>
                     </div>
@@ -315,7 +315,7 @@ function ZonesTab({ zones, onReload, loading }: { zones: DeliveryZone[]; onReloa
                                         <MapPin size={13} />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-[13px] font-black text-app-foreground truncate">{zone.name}</h3>
+                                        <h3 className="truncate">{zone.name}</h3>
                                         {zone.description && <p className="text-[10px] text-app-muted-foreground truncate">{zone.description}</p>}
                                     </div>
                                 </div>

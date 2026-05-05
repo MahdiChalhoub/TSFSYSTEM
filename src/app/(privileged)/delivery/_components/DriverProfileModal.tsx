@@ -108,7 +108,7 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                             <Truck size={40} />
                         </div>
                         <div className="mb-14">
-                            <h2 className="text-2xl font-black text-white drop-shadow-sm">
+                            <h2 className="text-white drop-shadow-sm">
                                 {driver ? 'Driver Profile' : 'Initialize Profile'}
                             </h2>
                             <p className="text-white/80 text-sm font-medium">Fleet Management Module</p>
@@ -199,7 +199,7 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                             <div className="w-8 h-8 rounded-xl bg-app-primary/10 flex items-center justify-center text-app-primary">
                                 <CreditCard size={16} />
                             </div>
-                            <h3 className="text-sm font-black text-app-foreground">Earnings & Commission</h3>
+                            <h3>Earnings & Commission</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -237,7 +237,7 @@ export default function DriverProfileModal({ driver, userId, onClose, onSaved }:
                             <div className="w-8 h-8 rounded-xl bg-app-primary/10 flex items-center justify-center text-app-primary">
                                 <Zap size={16} />
                             </div>
-                            <h3 className="text-sm font-black text-app-foreground">Available For</h3>
+                            <h3>Available For</h3>
                         </div>
                         <p className="text-xs text-app-muted-foreground -mt-1">
                             Controls which module pickers list this driver. Both on = visible everywhere.

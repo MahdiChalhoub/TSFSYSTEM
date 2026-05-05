@@ -16,7 +16,7 @@ interface QuickProductsProps {
 export function QuickProducts({ products, onSelect }: QuickProductsProps) {
  return (
  <div className="space-y-4">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Quick Products</h3>
+ <h3 className="uppercase">Quick Products</h3>
  <div className="space-y-2">
  {products.length === 0 ? (
  <p className="text-[10px] text-app-muted-foreground font-bold uppercase italic">No quick items set.</p>

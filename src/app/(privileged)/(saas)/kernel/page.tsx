@@ -102,7 +102,7 @@ export default function KernelPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
+                    <h1 className="flex items-center gap-2">
                         <Cpu className="w-8 h-8" />
                         Kernel Management
                     </h1>

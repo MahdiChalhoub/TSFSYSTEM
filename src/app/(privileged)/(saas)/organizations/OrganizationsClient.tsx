@@ -155,7 +155,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                         <Building2 size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-app-foreground tracking-tight">Tenant Registry</h1>
+                        <h1>Tenant Registry</h1>
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
                             {filteredOrgs.length} of {totalOrgs} entities
@@ -240,7 +240,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                                         {isSaas ? <ShieldCheck size={20} className="text-white" /> : <Building2 size={18} className="text-white" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-[15px] font-black text-app-foreground tracking-tight truncate group-hover:text-app-primary transition-colors">{org.name}</h3>
+                                        <h3 className="truncate group-hover:text-app-primary transition-colors">{org.name}</h3>
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <Globe size={10} className="text-app-muted-foreground" />
                                             <span className="text-[10px] font-bold text-app-muted-foreground truncate">{org.slug}{branding.suffix}</span>
@@ -312,7 +312,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                         <div className="px-6 py-4 border-b border-app-border/50 flex items-center gap-3 bg-app-background">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={gradBg('--app-primary')}><Plus size={18} className="text-white" /></div>
                             <div>
-                                <h2 className="text-[15px] font-black text-app-foreground">Provision Instance</h2>
+                                <h2>Provision Instance</h2>
                                 <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-widest">Create Organization</p>
                             </div>
                             <button onClick={() => setCreateOpen(false)} className="ml-auto p-2 rounded-xl hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-colors"><X size={16} /></button>
@@ -389,7 +389,7 @@ export function OrganizationsClient({ initialOrgs, businessTypes, currencies }: 
                         <div className="px-6 py-4 border-b border-app-border/50 flex items-center gap-3 bg-app-background">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={gradBg('--app-info')}><Layers size={18} className="text-white" /></div>
                             <div>
-                                <h2 className="text-[15px] font-black text-app-foreground">Module Management</h2>
+                                <h2>Module Management</h2>
                                 <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-widest">{selectedOrg?.name}</p>
                             </div>
                             <button onClick={() => setModulesOpen(false)} className="ml-auto p-2 rounded-xl hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-colors"><X size={16} /></button>

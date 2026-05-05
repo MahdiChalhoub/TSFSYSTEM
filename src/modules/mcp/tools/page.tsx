@@ -226,7 +226,7 @@ export default function MCPToolsPage() {
                         borderLeft: '3px solid var(--app-primary)',
                     }}>
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+                        <h3 className="uppercase">
                             {editing ? 'Edit Tool' : 'Add MCP Tool'}
                         </h3>
                         <button onClick={() => setShowForm(false)} className="p-1 hover:bg-app-border/50 rounded-lg transition-colors">
@@ -326,7 +326,7 @@ export default function MCPToolsPage() {
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <h3 className="text-[13px] font-black text-app-foreground truncate font-mono">{t.name}</h3>
+                                                <h3 className="truncate font-mono">{t.name}</h3>
                                                 <StatusPill label={cat.label} color={cat.color} />
                                                 {t.requires_confirmation && (
                                                     <StatusPill label="Confirm" color="var(--app-warning, #f59e0b)" icon={<ShieldAlert size={9} />} />

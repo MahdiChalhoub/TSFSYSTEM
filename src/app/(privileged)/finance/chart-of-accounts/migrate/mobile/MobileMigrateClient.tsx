@@ -385,7 +385,7 @@ function PreviewSheet({ preview, targetName, executing, onApply, onClose }: any)
                     <BarChart3 size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>
+                    <h3 className="truncate" style={{ fontSize: 'var(--tp-2xl)' }}>
                         Migration Preview
                     </h3>
                     <div className="font-bold text-app-muted-foreground truncate" style={{ fontSize: 'var(--tp-sm)' }}>

@@ -84,7 +84,7 @@ export default function CategoryManagementModal({
                              style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <FolderKanban size={16} className="text-white" />
                         </div>
-                        <h2 className="text-base font-bold" style={{ color: 'var(--app-foreground)' }}>Manage Categories</h2>
+                        <h2 style={{ color: 'var(--app-foreground)' }}>Manage Categories</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-xl transition-colors hover:opacity-70"
                             style={{ color: 'var(--app-muted-foreground)' }}>
@@ -104,7 +104,7 @@ export default function CategoryManagementModal({
                     <form onSubmit={handleCreate}
                           className="p-4 rounded-xl border"
                           style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
-                        <h3 className="text-tp-sm font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--app-foreground)' }}>
+                        <h3 className="text-tp-sm uppercase mb-3" style={{ color: 'var(--app-foreground)' }}>
                             New Category
                         </h3>
                         <div className="flex gap-2">

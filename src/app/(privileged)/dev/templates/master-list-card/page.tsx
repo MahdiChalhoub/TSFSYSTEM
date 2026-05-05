@@ -97,7 +97,7 @@ export default function MasterListCardDemo() {
                     <ArrowLeft size={14} />
                 </Link>
                 <div>
-                    <h1 className="text-lg font-black text-app-foreground tracking-tight">MasterListCard</h1>
+                    <h1>MasterListCard</h1>
                     <p className="text-tp-xs text-app-muted-foreground">
                         Dumb-props card primitive — same grammar as the KPI filter chips in TreeMasterPage.
                     </p>
@@ -107,7 +107,7 @@ export default function MasterListCardDemo() {
             {/* Scenario 1 — PO-style rows mapped to MasterListCard */}
             <section className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-tp-md font-bold text-app-foreground">Variants in one list</h2>
+                    <h2 className="text-tp-md">Variants in one list</h2>
                     <span className="text-tp-xxs font-bold uppercase tracking-wider px-1.5 py-[1px] rounded-full"
                         style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                         click to select
@@ -146,7 +146,7 @@ export default function MasterListCardDemo() {
 
             {/* Scenario 2 — density compact + different icons */}
             <section className="mb-6">
-                <h2 className="text-tp-md font-bold text-app-foreground mb-1">Compact density + different icons</h2>
+                <h2 className="text-tp-md mb-1">Compact density + different icons</h2>
                 <p className="text-tp-xs text-app-muted-foreground mb-3">
                     Same primitive used for taxonomies — Units, Warehouses, Categories.
                 </p>
@@ -187,7 +187,7 @@ export default function MasterListCardDemo() {
 
             {/* Scenario 3 — minimal */}
             <section>
-                <h2 className="text-tp-md font-bold text-app-foreground mb-1">Minimal (title + right only)</h2>
+                <h2 className="text-tp-md mb-1">Minimal (title + right only)</h2>
                 <p className="text-tp-xs text-app-muted-foreground mb-3">
                     Every prop is optional except title. Leave out the icon / subtitle / badges.
                 </p>

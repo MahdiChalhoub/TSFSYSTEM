@@ -181,7 +181,7 @@ Always be specific with numbers and actionable recommendations.`
                     }}>
                     <div className="px-3 py-2 border-b flex-shrink-0"
                         style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                        <h3 className="uppercase text-app-muted-foreground">
                             Recent Analysis
                         </h3>
                     </div>
@@ -231,7 +231,7 @@ Always be specific with numbers and actionable recommendations.`
                                         }}>
                                         <Sparkles size={28} />
                                     </div>
-                                    <h2 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">AI Business Analytics</h2>
+                                    <h2>AI Business Analytics</h2>
                                     <p className="text-[12px] text-app-muted-foreground mt-1 max-w-md font-medium">
                                         Get instant charts, data analysis, and strategic recommendations powered by AI.
                                     </p>

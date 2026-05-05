@@ -291,7 +291,7 @@ export function AccountForm({
         <form action={onSubmit} className="flex flex-col gap-3">
             {/* Title */}
             <div className="flex items-center justify-between">
-                <h3 className="text-tp-lg font-bold tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                <h3 className="text-tp-lg" style={{ color: 'var(--app-foreground)' }}>
                     {title || (preselectedParentId ? t('finance.coa.form_add_sub') : t('finance.coa.form_add_root'))}
                 </h3>
             </div>

@@ -153,7 +153,7 @@ export default function UserGroupsPage() {
                     <Users size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Teams</h1>
+                    <h1>Teams</h1>
                     <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         {groups.length} Teams · Assign work to a group of people at once
                     </p>
@@ -267,7 +267,7 @@ export default function UserGroupsPage() {
                                     <Users size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-app-foreground">{editing.id ? 'Edit Group' : 'New User Group'}</h3>
+                                    <h3>{editing.id ? 'Edit Group' : 'New User Group'}</h3>
                                     <p className="text-tp-xs font-bold text-app-muted-foreground">Team · members · leader</p>
                                 </div>
                             </div>

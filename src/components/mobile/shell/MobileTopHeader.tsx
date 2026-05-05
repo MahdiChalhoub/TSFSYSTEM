@@ -70,7 +70,7 @@ export function MobileTopHeader({ user, onMenuPress, onSearchPress, onAvatarPres
                     </button>
 
                     <div className="flex-1 min-w-0">
-                        <h1 className="font-black text-app-foreground truncate tracking-tight"
+                        <h1 className="truncate"
                             style={{ fontSize: 'var(--tp-xl)' }}>
                             {title || 'TSF'}
                         </h1>

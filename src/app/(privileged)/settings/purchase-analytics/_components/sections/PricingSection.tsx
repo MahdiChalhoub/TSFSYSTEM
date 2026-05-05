@@ -24,7 +24,7 @@ export function PricingSection() {
                     <ShoppingCart size={15} style={{ color: C }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-[13px] font-black text-app-foreground">Supplier & Pricing</h3>
+                    <h3>Supplier & Pricing</h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground">Best price lookups and purchase context</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('pricing') }}

@@ -114,7 +114,7 @@ function CreatePurchaseReturnForm() {
                     <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-info mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Purchase Detail
                     </Link>
-                    <h1 className="text-4xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <Truck size={32} className="text-app-info" />
                         Supplier Return for <span className="text-app-info">{order.ref_code || `#${orderId}`}</span>
                     </h1>
@@ -162,7 +162,7 @@ function CreatePurchaseReturnForm() {
                     </Card>
 
                     <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
-                        <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Instructions / Reason</h3>
+                        <h3 className="uppercase text-app-muted-foreground">Return Instructions / Reason</h3>
                         <textarea
                             className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-blue-200 focus:border-app-info transition-all outline-none text-sm"
                             placeholder="Reason for return, RMN number, or special instructions for the supplier..."

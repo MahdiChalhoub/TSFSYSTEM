@@ -47,7 +47,7 @@ export default function EntityProductsTabDemo() {
                     <ArrowLeft size={14} />
                 </Link>
                 <div>
-                    <h1 className="text-lg font-black text-app-foreground tracking-tight">EntityProductsTab</h1>
+                    <h1>EntityProductsTab</h1>
                     <p className="text-tp-xs text-app-muted-foreground">
                         Drop-in tab used inside detail panels. Live data from <code className="font-mono">units/:id/explore/</code>.
                     </p>

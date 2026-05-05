@@ -133,7 +133,7 @@ export const OpeningStep = memo(function OpeningStep({ register, site, verifiedU
                 <div className="w-16 h-16 rounded-full bg-[var(--app-success-bg)] border border-[var(--app-success)]/30 text-[var(--app-success)] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-sm shadow-[var(--app-success)]/20">
                     <CheckCircle2 size={30} />
                 </div>
-                <h2 className="text-2xl font-black text-[var(--app-foreground)]">Open Register</h2>
+                <h2 className="text-[var(--app-foreground)]">Open Register</h2>
                 <p className="text-[var(--app-muted-foreground)] text-sm mt-0.5">{register.name} · {verifiedUser.name}</p>
             </div>
 

@@ -37,7 +37,7 @@ export default function ThemeDemoPage() {
             className="h-8 w-8"
             style={{ color: 'var(--theme-primary)' }}
           />
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-app-foreground)' }}>
+          <h1 style={{ color: 'var(--text-app-foreground)' }}>
             Theme & Layout System Demo
           </h1>
         </div>
@@ -59,7 +59,7 @@ export default function ThemeDemoPage() {
             border: '2px solid var(--theme-primary)',
           }}
         >
-          <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
+          <h3 className="mb-2" style={{ color: 'var(--theme-primary)' }}>
             Current Theme
           </h3>
           <p className="text-xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
@@ -100,7 +100,7 @@ export default function ThemeDemoPage() {
             border: '2px solid var(--theme-primary)',
           }}
         >
-          <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
+          <h3 className="mb-2" style={{ color: 'var(--theme-primary)' }}>
             Current Layout
           </h3>
           <p className="text-xl font-bold mb-1" style={{ color: 'var(--text-app-foreground)' }}>
@@ -138,7 +138,7 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
+        <h2 className="mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Quick Theme Switch
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -174,7 +174,7 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
+        <h2 className="mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Active Layout Config
         </h2>
         <div className="grid md:grid-cols-3 gap-3">
@@ -197,7 +197,7 @@ export default function ThemeDemoPage() {
       </div>
 
       {/* Dashboard Metrics Example */}
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
+      <h2 className="mb-4" style={{ color: 'var(--text-app-foreground)' }}>
         Sample Dashboard Cards
       </h2>
       <div
@@ -234,7 +234,7 @@ export default function ThemeDemoPage() {
       </div>
 
       {/* Feature Cards */}
-      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
+      <h2 className="mb-4" style={{ color: 'var(--text-app-foreground)' }}>
         Sample Feature Cards
       </h2>
       <div
@@ -266,12 +266,12 @@ export default function ThemeDemoPage() {
           border: '1px solid var(--theme-border)',
         }}
       >
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-app-foreground)' }}>
+        <h2 className="mb-4" style={{ color: 'var(--text-app-foreground)' }}>
           Active CSS Variables
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
+            <h3 className="mb-2" style={{ color: 'var(--theme-primary)' }}>
               Theme Variables
             </h3>
             <div className="space-y-2 font-mono text-xs">
@@ -282,7 +282,7 @@ export default function ThemeDemoPage() {
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--theme-primary)' }}>
+            <h3 className="mb-2" style={{ color: 'var(--theme-primary)' }}>
               Layout Variables
             </h3>
             <div className="space-y-2 font-mono text-xs">
@@ -358,7 +358,7 @@ function FeatureCard({
       <div className="mb-3" style={{ color: 'var(--theme-primary)' }}>
         {icon}
       </div>
-      <h3 className="font-semibold mb-2" style={{ color: 'var(--text-app-foreground)' }}>
+      <h3 className="mb-2" style={{ color: 'var(--text-app-foreground)' }}>
         {title}
       </h3>
       <p className="text-sm" style={{ color: 'var(--text-app-muted-foreground)' }}>

@@ -43,7 +43,7 @@ export default async function QuotationsPage() {
     return (
         <div className="p-6 space-y-6">
             <div>
-                <h1 className="text-2xl font-bold">Quotations & Proforma</h1>
+                <h1>Quotations & Proforma</h1>
                 <p className="text-sm text-app-muted-foreground mt-1">
                     Create proformas, manage line items, and convert accepted quotations into sale orders.
                 </p>

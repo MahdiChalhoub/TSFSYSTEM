@@ -107,7 +107,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  </div>
  <div>
  <div className="flex items-center gap-2 mb-1">
- <h2 className="text-3xl font-black text-app-foreground tracking-tight">{clientName}</h2>
+ <h2>{clientName}</h2>
  {tierInfo.current !== 'STANDARD' && (
  <div className={clsx(
  "px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1.5 shadow-lg",
@@ -216,7 +216,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  <div className="relative">
  <div className="flex items-center justify-between mb-8">
  <div>
- <h3 className="text-xl font-black text-app-foreground mb-1">Tier Progression</h3>
+ <h3 className="mb-1">Tier Progression</h3>
  <p className="text-xs font-bold text-app-foreground/40">Keep spending to unlock premium benefits</p>
  </div>
  <div className="text-right">
@@ -292,7 +292,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  </div>
 
  <div className="space-y-6">
- <h3 className="text-lg font-black text-app-foreground flex items-center gap-2">
+ <h3 className="flex items-center gap-2">
  <Zap className="text-app-warning" size={18} />
  Loyalty Mechanism
  </h3>
@@ -324,7 +324,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {/* Purchase History (Top Products) */}
  <div className="space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Favorite Products</h3>
+ <h3 className="uppercase">Favorite Products</h3>
  <span className="text-[10px] font-bold text-app-foreground/20">Based on quantity purchased</span>
  </div>
  <div className="space-y-2">
@@ -351,7 +351,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
  {/* Recent Orders */}
  <div className="space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Transaction Log</h3>
+ <h3 className="uppercase">Transaction Log</h3>
  <button className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">View All Archive</button>
  </div>
  <div className="space-y-2">

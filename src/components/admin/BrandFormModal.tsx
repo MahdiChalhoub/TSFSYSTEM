@@ -293,7 +293,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories, 
                             <Award size={16} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-tp-md font-bold text-app-foreground truncate">
+                            <h3 className="text-tp-md truncate">
                                 {brand ? 'Edit Brand' : 'Create Brand'}
                             </h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground truncate">

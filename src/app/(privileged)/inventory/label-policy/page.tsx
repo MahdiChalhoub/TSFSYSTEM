@@ -52,7 +52,7 @@ export default function LabelPolicyPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">PLM Governance</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Label <span style={{ color: 'var(--app-primary)' }}>Policy</span>
                         </h1>
                     </div>
@@ -66,7 +66,7 @@ export default function LabelPolicyPage() {
 
             <div className="space-y-4">
                 <div className="rounded-xl p-5" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-4 flex items-center gap-2">
+                    <h3 className="uppercase text-app-muted-foreground mb-4 flex items-center gap-2">
                         <Printer size={12} /> Print Settings
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -90,7 +90,7 @@ export default function LabelPolicyPage() {
                 </div>
 
                 <div className="rounded-xl p-5" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-4 flex items-center gap-2">
+                    <h3 className="uppercase text-app-muted-foreground mb-4 flex items-center gap-2">
                         <Settings size={12} /> Automation Rules
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">

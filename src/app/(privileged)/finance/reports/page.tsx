@@ -110,8 +110,7 @@ export default function ReportsHubPage() {
                         <TrendingUp size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black tracking-tight"
-                            style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Financial Reports
                         </h1>
                         <p className="text-tp-xs md:text-tp-sm font-bold uppercase tracking-widest"
@@ -214,7 +213,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle: strin
     return (
         <section className="space-y-2">
             <div className="flex items-baseline gap-3">
-                <h2 className="text-tp-md font-black uppercase tracking-widest"
+                <h2 className="text-tp-md uppercase"
                     style={{ color: 'var(--app-foreground)' }}>
                     {title}
                 </h2>

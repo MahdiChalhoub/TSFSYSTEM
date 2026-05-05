@@ -12,7 +12,7 @@ export const InventoryStatsWidget = ({ data }: { data: Record<string, any> }) =>
             <div className="flex justify-between items-start z-10">
                 <div>
                     <p className="text-sm font-medium text-app-muted-foreground mb-2">Total Products</p>
-                    <h3 className="text-3xl font-bold text-app-foreground tracking-tight">{value.toLocaleString()}</h3>
+                    <h3>{value.toLocaleString()}</h3>
                 </div>
                 <div className={clsx("p-3 rounded-2xl bg-gradient-to-br transition-transform group-hover:scale-110 duration-300", "text-violet-600", "from-violet-400/20 to-violet-600/20")}>
                     <Package size={24} />

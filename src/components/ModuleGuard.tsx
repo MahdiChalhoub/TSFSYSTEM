@@ -52,7 +52,7 @@ export function ModuleGuard({ moduleCode, moduleName, children }: ModuleGuardPro
                     </div>
 
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-app-foreground">
+                        <h2>
                             {moduleName} Module Required
                         </h2>
                         <p className="text-app-muted-foreground">

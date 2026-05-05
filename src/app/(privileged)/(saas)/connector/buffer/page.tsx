@@ -142,7 +142,7 @@ export default function ConnectorBufferPage() {
                             <Database size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Buffer Queue</h2>
+                    <h2>Buffer Queue</h2>
                     <p className="text-app-muted-foreground mt-2 font-medium">Buffered write requests awaiting module availability</p>
                 </div>
                 <div className="flex gap-3">

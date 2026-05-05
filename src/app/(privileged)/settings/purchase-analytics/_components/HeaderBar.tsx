@@ -81,7 +81,7 @@ export function HeaderBar(p: Props) {
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
                             Settings · Procurement
                         </p>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Purchase Analytics
                         </h1>
                         <p className="text-[11px] text-app-muted-foreground mt-0.5">

@@ -58,7 +58,7 @@ export default async function NewProductPage(props: {
                         </svg>
                     </div>
                     <div>
-                        <h1 className="text-xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             {cloneId ? 'Clone Product' : 'Create Product'}
                         </h1>
                         <p className="text-[11px] font-medium" style={{ color: 'var(--app-muted-foreground)' }}>

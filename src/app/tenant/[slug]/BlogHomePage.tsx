@@ -12,7 +12,7 @@ export function BlogHomePage({ org }: { org: any }) {
  {/* Main Content */}
  <main className="max-w-5xl mx-auto px-6 py-16">
  <div className="mb-16">
- <h1 className="text-4xl md:text-5xl font-black text-app-foreground tracking-tighter mb-4">Latest Insights</h1>
+ <h1 className="mb-4">Latest Insights</h1>
  <p className="text-xl text-app-muted-foreground font-medium">Thoughts, stories and ideas from the team at {org.name}.</p>
  </div>
 
@@ -24,7 +24,7 @@ export function BlogHomePage({ org }: { org: any }) {
  <span>&bull;</span>
  <span className="flex items-center gap-1"><Clock size={12} /> {post.readTime} read</span>
  </div>
- <h2 className="text-2xl font-black text-app-foreground mb-3 group-hover:text-app-accent transition-colors">
+ <h2 className="mb-3 group-hover:text-app-accent transition-colors">
  {post.title}
  </h2>
  <p className="text-app-muted-foreground font-medium leading-relaxed mb-4 max-w-2xl">

@@ -93,7 +93,7 @@ export default function ModuleDependenciesPage() {
 
     if (!graph || graph.nodes.length === 0) return (
         <div className="p-12 text-center">
-            <h2 className="text-xl font-bold text-app-foreground">No modules registered</h2>
+            <h2>No modules registered</h2>
             <p className="text-sm text-app-muted-foreground mt-2">Sync modules from the <a href="/modules" className="text-app-success underline">Modules page</a> first.</p>
         </div>
     )
@@ -109,7 +109,7 @@ export default function ModuleDependenciesPage() {
                         <ArrowLeft size={18} />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
+                        <h1 className="flex items-center gap-3">
                             <Network size={24} className="text-app-success" />
                             Module Dependencies
                         </h1>
@@ -123,7 +123,7 @@ export default function ModuleDependenciesPage() {
 
             {core.length > 0 && (
                 <section>
-                    <h2 className="text-xs font-black uppercase tracking-widest text-app-accent mb-3 flex items-center gap-2">
+                    <h2 className="uppercase text-app-accent mb-3 flex items-center gap-2">
                         <Crown size={14} /> Core Infrastructure
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -133,7 +133,7 @@ export default function ModuleDependenciesPage() {
             )}
 
             <section>
-                <h2 className="text-xs font-black uppercase tracking-widest text-app-success mb-3 flex items-center gap-2">
+                <h2 className="uppercase text-app-success mb-3 flex items-center gap-2">
                     <Package size={14} /> Business Modules
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

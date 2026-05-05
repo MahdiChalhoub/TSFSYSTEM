@@ -481,7 +481,7 @@ export function CategoryFormModal({
                             <FolderTree size={16} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-tp-md font-bold text-app-foreground truncate">
+                            <h3 className="text-tp-md truncate">
                                 {category ? 'Edit Category' : 'Create Category'}
                             </h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground truncate">

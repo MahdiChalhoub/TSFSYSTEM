@@ -34,7 +34,7 @@ export default function PeriodEditor({ period, onClose }: { period: Record<strin
             <div {...contentProps} className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200"
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                 <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                    <h3 className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>Edit Period</h3>
+                    <h3 className="text-tp-md" style={{ color: 'var(--app-foreground)' }}>Edit Period</h3>
                     <button onClick={onClose} className="p-1 rounded-lg transition-all" style={{ color: 'var(--app-muted-foreground)' }}>
                         <X size={14} />
                     </button>

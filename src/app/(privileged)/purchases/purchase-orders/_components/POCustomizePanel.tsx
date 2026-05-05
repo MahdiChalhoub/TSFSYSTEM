@@ -43,7 +43,7 @@ export function POCustomizePanel({
       <div className="fixed right-0 top-0 bottom-0 z-50 w-80 bg-app-surface border-l border-app-border shadow-2xl flex flex-col animate-in slide-in-from-right-5 duration-200">
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-app-border/50">
-          <h3 className="text-sm font-black text-app-foreground">Customize View</h3>
+          <h3>Customize View</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-muted/10 text-app-muted-foreground hover:text-app-foreground transition-all">
             <X size={14} />
           </button>

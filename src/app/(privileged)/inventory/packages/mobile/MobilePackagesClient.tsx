@@ -368,7 +368,7 @@ function MobileTemplateDetail({
                     <Box size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-app-foreground truncate leading-tight" style={{ fontSize: 'var(--tp-2xl)' }}>{tpl.name}</h3>
+                    <h3 className="truncate" style={{ fontSize: 'var(--tp-2xl)' }}>{tpl.name}</h3>
                     <div className="flex items-center gap-2 mt-0.5">
                         {tpl.code && (
                             <span className="font-mono font-bold" style={{ fontSize: 'var(--tp-sm)', color: 'var(--app-primary)' }}>{tpl.code}</span>

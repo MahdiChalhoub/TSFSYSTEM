@@ -20,7 +20,7 @@ export default async function PaymentTermsPage() {
                         <CreditCard size={24} className="text-app-success" />
                     </div>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Payment <span className="text-app-success">Terms</span>
                         </h1>
                         <p className="text-xs text-app-muted-foreground mt-0.5">Manage payment conditions for purchase orders and invoices</p>

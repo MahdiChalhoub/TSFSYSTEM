@@ -38,7 +38,7 @@ export default async function AdjustmentPage() {
                         </div>
                         <span className="text-[10px] font-black text-app-error uppercase tracking-[0.3em]">Stock Operations</span>
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Stock <span className="text-app-error">Adjustment</span>
                     </h1>
                     <p className="mt-4 text-app-muted-foreground font-medium max-w-xl">

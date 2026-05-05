@@ -69,7 +69,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
             {/* Header */}
             <div className="p-6 border-b border-app-border flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0">
                 <div>
-                    <h2 className="text-xl font-bold text-app-foreground tracking-tight">Current Order</h2>
+                    <h2>Current Order</h2>
                     <div className="flex gap-1.5 mt-1">
                         <button
                             onClick={() => setScope('OFFICIAL')}

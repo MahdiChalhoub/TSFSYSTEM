@@ -160,7 +160,7 @@ export default function HealthPage() {
                             v3.5.0 Production
                         </Badge>
                     </div>
-                    <h1 className="text-5xl font-black text-app-foreground tracking-tighter leading-none">
+                    <h1>
                         Platform <span className="text-app-primary">Intelligence</span>
                     </h1>
                     <p className="text-app-muted-foreground mt-3 font-medium text-lg">
@@ -362,7 +362,7 @@ export default function HealthPage() {
                                     <Shield size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-app-foreground">Security & Integrity</h3>
+                                    <h3>Security & Integrity</h3>
                                     <p className="text-xs text-app-muted-foreground mt-0.5">AES-256 GCM encrypted transport active · Zero-trust routing verified</p>
                                 </div>
                             </div>

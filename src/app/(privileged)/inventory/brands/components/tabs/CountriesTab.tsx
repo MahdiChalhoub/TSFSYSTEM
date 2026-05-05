@@ -333,7 +333,7 @@ export function CountriesTab({ brandId, brandName }: { brandId: number; brandNam
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', maxHeight: '80vh' }}>
                         <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
                             <Globe size={14} style={{ color: 'var(--app-info)' }} />
-                            <h3 className="flex-1 text-tp-md font-bold text-app-foreground">Remove Universal</h3>
+                            <h3 className="flex-1 text-tp-md">Remove Universal</h3>
                             <button onClick={() => setRemoveUniversalOpen(false)}
                                 className="p-1 rounded hover:bg-app-border/40 text-app-muted-foreground">
                                 <X size={14} />

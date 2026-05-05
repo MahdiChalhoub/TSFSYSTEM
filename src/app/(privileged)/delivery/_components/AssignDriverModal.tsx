@@ -94,7 +94,7 @@ export default function AssignDriverModal({ order, onClose, onAssigned }: Assign
                                 <Truck size={24} />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-app-foreground italic">Assign <span className="text-app-primary">Driver</span></h2>
+                                <h2 className="italic">Assign <span className="text-app-primary">Driver</span></h2>
                                 <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Order: {order.order_ref}</p>
                             </div>
                         </div>

@@ -89,7 +89,7 @@ export function SerialTracker() {
                                         <div className={`p-2 rounded-lg ${selectedSerial?.id === s.id ? 'bg-white/10' : 'bg-slate-50 text-app-muted-foreground'}`}>
                                             <Barcode size={16} />
                                         </div>
-                                        <h3 className="font-black text-lg tracking-tight uppercase">{s.serial_number}</h3>
+                                        <h3 className="uppercase">{s.serial_number}</h3>
                                     </div>
                                     <p className={`text-xs font-bold leading-tight ${selectedSerial?.id === s.id ? 'text-app-muted-foreground' : 'text-app-muted-foreground'}`}>
                                         {s.product_name}
@@ -119,7 +119,7 @@ export function SerialTracker() {
                             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-app-muted-foreground mb-4">
                                 <Barcode size={32} />
                             </div>
-                            <h3 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">No Serial Data</h3>
+                            <h3 className="text-app-muted-foreground uppercase">No Serial Data</h3>
                             <p className="text-xs text-app-muted-foreground mt-2 font-medium">Use the search bar to locate specific units.</p>
                         </div>
                     )}
@@ -134,7 +134,7 @@ export function SerialTracker() {
                                     <History size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-app-foreground uppercase tracking-tighter">Unit Timeline</h3>
+                                    <h3 className="uppercase">Unit Timeline</h3>
                                     <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">History Log</p>
                                 </div>
                             </div>

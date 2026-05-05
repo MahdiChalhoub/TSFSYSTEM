@@ -116,7 +116,7 @@ function CreateReturnForm() {
                     <Link href={`/sales/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-error mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Sale Detail
                     </Link>
-                    <h1 className="text-4xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <RotateCcw size={32} className="text-app-error" />
                         Return Items from <span className="text-app-error">{order.ref_code || `#${orderId}`}</span>
                     </h1>
@@ -164,7 +164,7 @@ function CreateReturnForm() {
                     </Card>
 
                     <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
-                        <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Reason</h3>
+                        <h3 className="uppercase text-app-muted-foreground">Return Reason</h3>
                         <textarea
                             className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-rose-200 focus:border-app-error transition-all outline-none text-sm"
                             placeholder="Why is the customer returning these items? (e.g. Defective, Wrong Item, Customer Choice)"

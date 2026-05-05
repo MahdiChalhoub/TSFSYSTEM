@@ -368,7 +368,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-black text-app-foreground tracking-tight">
+                        <h2>
                             Migration Review
                         </h2>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -552,7 +552,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                         <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${groupMeta.gradient} flex items-center justify-center`}>
                                             <GroupIcon className="w-3.5 h-3.5 text-app-muted-foreground" />
                                         </div>
-                                        <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground">{groupLabel}</h3>
+                                        <h3 className="uppercase text-app-muted-foreground">{groupLabel}</h3>
                                         <div className="h-px flex-1 bg-app-surface-2" />
                                     </div>
 

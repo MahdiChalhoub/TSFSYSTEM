@@ -168,7 +168,7 @@ export default function PackagesPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight">
+                        <h1 className="text-white">
                             Package Storage Center
                         </h1>
                         <p className="text-app-muted-foreground mt-1">

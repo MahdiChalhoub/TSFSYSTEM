@@ -28,7 +28,7 @@ export default function ContactModal({
                             {type === 'CUSTOMER' ? <User size={24} /> : <Briefcase size={24} />}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-app-foreground leading-tight">
+                            <h2>
                                 Establish {type === 'CUSTOMER' ? 'Client' : 'Supplier'}
                             </h2>
                             <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Master Data Initialization</p>

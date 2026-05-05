@@ -23,7 +23,7 @@ export function FlowSection() {
                     <Activity size={15} style={{ color: C }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-[13px] font-black text-app-foreground">Request Flow</h3>
+                    <h3>Request Flow</h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground">How "Request Purchase / Transfer" buttons behave</p>
                 </div>
             </div>

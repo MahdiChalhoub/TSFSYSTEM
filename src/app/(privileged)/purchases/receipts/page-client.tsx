@@ -118,7 +118,7 @@ export default function ReceiptsPage() {
            <PackageCheck size={20} className="text-white" />
          </div>
          <div>
-           <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Goods Receiving</h1>
+           <h1>Goods Receiving</h1>
            <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
              {orders.length} Orders · {pending} Awaiting · {received} Received
            </p>
@@ -180,7 +180,7 @@ export default function ReceiptsPage() {
          return (
            <div className="px-4 py-3">
              <div className="flex items-center justify-between mb-3">
-               <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-wider">Order Lines ({detail.lines?.length || 0})</h3>
+               <h3 className="text-app-muted-foreground uppercase">Order Lines ({detail.lines?.length || 0})</h3>
                <Link href={`/purchases/${po.id}`} className="flex items-center gap-1.5 text-[11px] font-bold text-app-primary hover:underline"><Eye size={12} /> Full View</Link>
              </div>
              {detail.lines?.map((line: POLine) => {
@@ -228,7 +228,7 @@ export default function ReceiptsPage() {
      {receiveLine && (
        <div className="fixed inset-0 z-50"><div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setReceiveLine(null); setReceiveQty('') }} />
          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-app-surface border border-app-border rounded-2xl shadow-2xl p-5">
-           <h3 className="text-sm font-black text-app-foreground mb-3">Receive: {receiveLine.line.product?.name || receiveLine.line.product_name}</h3>
+           <h3 className="mb-3">Receive: {receiveLine.line.product?.name || receiveLine.line.product_name}</h3>
            <div className="space-y-3">
              <div><label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">Quantity</label>
                <input type="number" min="1" value={receiveQty} onChange={e => setReceiveQty(e.target.value)} className="w-full px-3 py-2 border border-app-border rounded-xl bg-app-surface text-sm text-app-foreground focus:outline-none focus:ring-1 focus:ring-app-primary/30" /></div>

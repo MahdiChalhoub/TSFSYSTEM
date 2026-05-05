@@ -26,7 +26,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                         <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                        <h1 className="flex items-center gap-2">
                             Event #{event.id}
                             <Badge variant={event.status === 'SETTLED' ? 'default' : 'secondary'}>
                                 {event.status}

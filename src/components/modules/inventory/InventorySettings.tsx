@@ -13,7 +13,7 @@ export default async function InventorySettingsPanel() {
                     </svg>
                 </div>
                 <div>
-                    <h2 className="text-xl font-semibold text-app-foreground">Product Naming Rule</h2>
+                    <h2>Product Naming Rule</h2>
                     <p className="text-sm text-app-muted-foreground">Customize how product names are auto-generated</p>
                 </div>
             </div>

@@ -21,7 +21,7 @@ export function ProcurementPulse({ data }: { data: any[] }) {
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500">
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
+                    <h3 className="uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
                         <Zap size={12} className="text-app-info" />
                         Procurement Pulse
                     </h3>
@@ -70,7 +70,7 @@ export function UrgentActionCenter({ issues }: { issues: any[] }) {
     return (
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col">
             <div className="mb-5">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
+                <h3 className="uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
                     <AlertTriangle size={12} className="text-app-error" />
                     Critical Operations
                 </h3>
@@ -120,7 +120,7 @@ export function WarehouseDistribution({ data }: { data: any[] }) {
     return (
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col">
             <div className="mb-3">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
+                <h3 className="uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
                     <Package size={12} className="text-violet-500" />
                     Storage Topology
                 </h3>
@@ -168,7 +168,7 @@ export function SupplierPerformance({ data }: { data: any[] }) {
     return (
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col">
             <div className="mb-5">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
+                <h3 className="uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
                     <Truck size={12} className="text-app-info" />
                     Top Suppliers
                 </h3>
@@ -223,7 +223,7 @@ export function ProcurementActivityFeed({ orders }: { orders: any[] }) {
     return (
         <div className="bg-app-surface/80 backdrop-blur-md rounded-[2rem] border border-app-border/50 p-6 h-[360px] flex flex-col hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500">
             <div className="mb-5">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
+                <h3 className="uppercase tracking-[0.18em] text-app-muted-foreground flex items-center gap-2">
                     <HistoryIcon size={12} className="text-app-info" />
                     Recent Activity
                 </h3>

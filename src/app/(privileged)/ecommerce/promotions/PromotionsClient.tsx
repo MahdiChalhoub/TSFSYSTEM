@@ -179,7 +179,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                                 <Zap size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-foreground)]">New Promotion</h2>
+                                <h2 className="text-[var(--app-foreground)]">New Promotion</h2>
                                 <p className="text-xs text-[var(--app-muted-foreground)]">Automatic cart discount rule</p>
                             </div>
                         </div>

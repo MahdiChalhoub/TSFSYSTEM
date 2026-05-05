@@ -91,7 +91,7 @@ export default function BankReconciliationPage() {
                         <ArrowLeft size={16} className="mr-1" /> Back
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold text-app-foreground">
+                        <h1>
                             {detail.account?.code} — {detail.account?.name}
                         </h1>
                         <p className="text-sm text-app-muted-foreground">Bank reconciliation detail</p>
@@ -194,7 +194,7 @@ export default function BankReconciliationPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                <h1 className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                         <Landmark size={20} className="text-white" />
                     </div>
@@ -231,7 +231,7 @@ export default function BankReconciliationPage() {
                                 <Badge variant="outline" className="font-mono text-xs">{acc.code}</Badge>
                                 <FileText size={14} className="text-app-faint" />
                             </div>
-                            <h3 className="font-semibold text-app-foreground mb-2">{acc.name}</h3>
+                            <h3 className="mb-2">{acc.name}</h3>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-lg font-bold text-app-info">{fmt(acc.book_balance)}</p>

@@ -72,7 +72,7 @@ export default function RegisterPage() {
                         <CheckCircle2 size={36} className="text-app-success" />
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-black text-white">Account Created!</h1>
+                        <h1 className="text-white">Account Created!</h1>
                         <p className="text-app-muted-foreground text-sm leading-relaxed">
                             Welcome, <span className="text-white font-bold">{name}</span>! Your account has been created.
                             You can now sign in to access your dashboard, browse products, and place orders.
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                     <div className="w-20 h-20 bg-app-success/20 border border-app-success/30 rounded-3xl flex items-center justify-center mx-auto text-app-success">
                         <UserPlus size={36} />
                     </div>
-                    <h1 className="text-3xl font-black text-white">Create Account</h1>
+                    <h1 className="text-white">Create Account</h1>
                     <p className="text-app-muted-foreground text-sm">
                         Join <span className="text-white font-bold">{slug}</span> as a client
                     </p>

@@ -58,7 +58,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                         <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Inventory / Taxonomy
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Attributes
                         </h1>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -209,7 +209,7 @@ function AttributeCard({ attribute, onEdit }: Record<string, any>) {
                     {attribute.product_count || 0} products
                 </span>
             </div>
-            <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>{attribute.name}</h3>
+            <h3 className="mb-1" style={{ color: 'var(--app-foreground)' }}>{attribute.name}</h3>
             {attribute.short_name && <p className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>{attribute.short_name}</p>}
 
             <div className="mt-3 pt-3 flex flex-wrap gap-1" style={{ borderTop: '1px solid var(--app-border)' }}>
@@ -261,7 +261,7 @@ function AttributeRow({ attribute, onEdit }: Record<string, any>) {
                         color: 'var(--app-warning, #f59e0b)',
                     }}><Sparkles size={18} /></div>
                     <div>
-                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-foreground)' }}>{attribute.name}</h3>
+                        <h3 style={{ color: 'var(--app-foreground)' }}>{attribute.name}</h3>
                         <div className="flex gap-2 text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
                             {attribute.short_name && <span className="font-mono px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 8%, transparent)' }}>{attribute.short_name}</span>}
                             <span>{attribute.product_count || 0} products</span>

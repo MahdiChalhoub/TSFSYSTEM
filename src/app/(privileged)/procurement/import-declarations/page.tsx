@@ -103,7 +103,7 @@ function DeclEditor({ item, onSave, onCancel }: { item: Decl | null; onSave: (da
             <Ship size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit Import Declaration' : 'New Import Declaration'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -280,7 +280,7 @@ export default function ImportDeclarationsPage() {
                   <Ship size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Import Declarations</h1>
+                  <h1>Import Declarations</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     Procurement · Customs · Duties · Import VAT · Landed Cost
                   </p>

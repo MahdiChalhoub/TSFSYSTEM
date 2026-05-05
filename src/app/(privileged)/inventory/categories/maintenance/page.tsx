@@ -46,7 +46,7 @@ export default async function CategoryMaintenancePage(props: {
                         <ArrowLeft size={18} />
                     </Link>
                     <div className="min-w-0">
-                        <h1 className="font-bold text-app-foreground truncate" style={{ fontSize: 'var(--tp-xl)' }}>
+                        <h1 className="truncate" style={{ fontSize: 'var(--tp-xl)' }}>
                             {activeCategoryId ? currentCategoryName : 'Category Maintenance'}
                         </h1>
                         <p className="text-app-muted-foreground hidden md:block truncate" style={{ fontSize: 'var(--tp-md)' }}>

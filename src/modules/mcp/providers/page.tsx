@@ -227,7 +227,7 @@ export default function MCPProvidersPage() {
                         borderLeft: '3px solid var(--app-primary)',
                     }}>
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+                        <h3 className="uppercase">
                             {editing ? 'Edit Provider' : 'Add AI Provider'}
                         </h3>
                         <button onClick={() => setShowForm(false)} className="p-1 hover:bg-app-border/50 rounded-lg transition-colors">
@@ -394,7 +394,7 @@ function ProviderCard({
             <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="text-[13px] font-black text-app-foreground truncate">{provider.name}</h3>
+                        <h3 className="truncate">{provider.name}</h3>
                         {provider.is_default && <StatusPill label="Default" color="var(--app-warning, #f59e0b)" icon={<Star size={9} />} />}
                         {!provider.is_active && <StatusPill label="Inactive" color="var(--app-muted-foreground)" />}
                     </div>

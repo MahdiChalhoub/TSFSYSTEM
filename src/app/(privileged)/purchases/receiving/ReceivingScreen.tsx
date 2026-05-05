@@ -430,7 +430,7 @@ export default function ReceivingScreen() {
                             <PackageCheck size={28} className="text-app-success" />
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-app-foreground">
+                            <h1>
                                 Goods <span className="text-app-success">Receipt</span>
                             </h1>
                             <p className="text-sm font-medium text-app-muted-foreground mt-0.5">
@@ -553,7 +553,7 @@ export default function ReceivingScreen() {
                             <PackageCheck size={24} className="text-app-success" />
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-2xl font-black tracking-tight text-app-foreground flex items-center gap-2">
+                            <h1 className="flex items-center gap-2">
                                 {session.receipt_number}
                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${mode === 'DIRECT' ? 'bg-app-info-bg text-app-info dark:bg-blue-900/30' : 'bg-app-info-bg text-app-info dark:bg-indigo-900/30'}`}>
                                     {mode === 'DIRECT' ? 'Direct' : 'PO-Based'}
@@ -710,7 +710,7 @@ export default function ReceivingScreen() {
                                         <Package size={20} className="text-app-success" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-black text-lg text-app-foreground truncate">
+                                        <h3 className="truncate">
                                             {popup.line?.product_name || popup.product?.name || 'Product'}
                                         </h3>
                                         <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">

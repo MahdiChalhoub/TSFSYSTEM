@@ -150,7 +150,7 @@ export function DeleteConflictDialog({
                         <ShieldAlert size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-black tracking-tight truncate" style={{ color: 'var(--app-foreground)' }}>
+                        <h3 className="truncate" style={{ color: 'var(--app-foreground)' }}>
                             Cannot delete "{sourceName}"
                         </h3>
                         <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--app-error, #ef4444)' }}>

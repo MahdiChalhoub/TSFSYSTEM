@@ -11,7 +11,7 @@ export default async function SecurityPage() {
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
                 <div>
-                    <h1 className="text-3xl font-black text-app-foreground uppercase tracking-tighter flex items-center gap-3">
+                    <h1 className="uppercase flex items-center gap-3">
                         <div className="p-2 bg-slate-900 rounded-xl">
                             <Shield className="text-app-success" size={28} />
                         </div>
@@ -33,7 +33,7 @@ export default async function SecurityPage() {
                                 <Key className="text-app-info" size={24} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">Session Management</h2>
+                                <h2 className="uppercase">Session Management</h2>
                                 <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Active devices and login history</p>
                             </div>
                         </div>
@@ -60,7 +60,7 @@ export default async function SecurityPage() {
                         <div className="absolute top-0 right-0 p-8 opacity-10">
                             <Shield size={120} />
                         </div>
-                        <h3 className="text-xl font-black uppercase tracking-tighter mb-2 relative z-10">Account Health</h3>
+                        <h3 className="uppercase mb-2 relative z-10">Account Health</h3>
                         <p className="text-xs text-app-muted-foreground font-medium mb-6 relative z-10">Security score and recommendations</p>
 
                         <div className="space-y-4 relative z-10">

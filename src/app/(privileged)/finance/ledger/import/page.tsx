@@ -310,7 +310,7 @@ function JournalImport() {
                         <Upload className="h-7 w-7 text-app-foreground" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-app-foreground mb-2">Confirm Import</h2>
+                        <h2 className="mb-2">Confirm Import</h2>
                         <p className="text-app-muted-foreground text-sm">
                             Creating <strong className="text-app-foreground">{preview.valid} journal entries</strong> as{' '}
                             <strong className={targetStatus === 'POSTED' ? 'text-app-success' : 'text-app-foreground'}>{targetStatus}</strong>.
@@ -341,7 +341,7 @@ function JournalImport() {
                         {(result.created ?? 0) > 0 ? <CheckCircle className="h-8 w-8 text-app-success" /> : <XCircle className="h-8 w-8 text-app-error" />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-app-foreground mb-2">{(result.created ?? 0) > 0 ? 'Import Complete' : 'Import Failed'}</h2>
+                        <h2 className="mb-2">{(result.created ?? 0) > 0 ? 'Import Complete' : 'Import Failed'}</h2>
                         <p className="text-app-muted-foreground text-sm">
                             <strong className="text-app-success">{result.created ?? 0}</strong> of <strong>{String((result as { total?: unknown }).total ?? '')}</strong> entries created.
                             {(result.errors?.length ?? 0) > 0 && <> <strong className="text-app-error">{result.errors!.length}</strong> failed.</>}
@@ -624,7 +624,7 @@ function OpeningBalanceImport() {
                         <BookOpen className="h-7 w-7 text-app-foreground" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-app-foreground mb-2">Confirm Opening Balances</h2>
+                        <h2 className="mb-2">Confirm Opening Balances</h2>
                         <p className="text-app-muted-foreground text-sm">
                             One opening balance entry will be created for{' '}
                             <strong className="text-app-foreground">{date}</strong> with{' '}
@@ -657,7 +657,7 @@ function OpeningBalanceImport() {
                         {result.created_entry_id ? <CheckCircle className="h-8 w-8 text-app-success" /> : <XCircle className="h-8 w-8 text-app-error" />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-app-foreground mb-2">
+                        <h2 className="mb-2">
                             {result.created_entry_id ? 'Opening Balances Imported' : 'Import Failed'}
                         </h2>
                         <p className="text-app-muted-foreground text-sm">
@@ -718,7 +718,7 @@ export default function LedgerImportPage() {
                     <ChevronLeft className="h-4 w-4" /> Back to Ledger
                 </button>
                 <span className="text-app-faint">/</span>
-                <h1 className="text-xl font-bold text-app-foreground">Import Financial Data</h1>
+                <h1>Import Financial Data</h1>
             </div>
 
             {/* Tab selector */}

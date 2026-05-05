@@ -272,7 +272,7 @@ const FormalOrderFormV2 = forwardRef<FormalOrderFormV2Handle, {
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-app-primary mb-0.5">
                         {scope === 'OFFICIAL' ? 'Official Scope' : 'Internal Scope'}
                     </span>
-                    <h2 className="text-2xl font-black tracking-tight text-app-foreground">
+                    <h2>
                         New <span className="text-app-primary">Purchase Order</span>
                     </h2>
                 </div>

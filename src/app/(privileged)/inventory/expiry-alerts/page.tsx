@@ -155,7 +155,7 @@ export default function ExpiryAlertsPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground">Expiry Alerts</h1>
+                    <h1>Expiry Alerts</h1>
                     <p className="text-sm text-app-muted-foreground mt-1">Monitor product batches nearing or past expiration</p>
                 </div>
                 <div className="flex items-center gap-3">

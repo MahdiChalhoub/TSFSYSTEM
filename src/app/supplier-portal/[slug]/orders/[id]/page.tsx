@@ -108,7 +108,7 @@ export default function SupplierOrderDetail() {
         return (
             <div className="min-h-screen bg-app-bg p-4 lg:p-12 text-center flex flex-col items-center justify-center bg-app-bg">
                 <FileText size={48} className="text-app-muted-foreground mb-4" />
-                <h1 className="text-2xl font-black text-app-foreground mb-2">Order Not Found</h1>
+                <h1 className="mb-2">Order Not Found</h1>
                 <Link href={`/supplier-portal/${slug}/orders`} className="text-app-success hover:underline">Return to Orders</Link>
             </div>
         )
@@ -129,7 +129,7 @@ export default function SupplierOrderDetail() {
                     </Link>
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl sm:text-4xl font-black text-app-foreground tracking-tight">{order.po_number}</h1>
+                            <h1>{order.po_number}</h1>
                             <p className="text-app-muted-foreground mt-1">Issued on {new Date(order.created_at).toLocaleDateString()}</p>
                         </div>
                         <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${st.bg} border border-app-foreground/5`}>
@@ -142,7 +142,7 @@ export default function SupplierOrderDetail() {
                 {/* Actions Panel */}
                 {(order.status === 'ORDERED' || order.status === 'CONFIRMED') && (
                     <div className="bg-app-surface/80 border border-app-foreground/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
-                        <h2 className="text-xl font-black text-app-foreground mb-4">Action Required</h2>
+                        <h2 className="mb-4">Action Required</h2>
 
                         {order.status === 'ORDERED' && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -208,7 +208,7 @@ export default function SupplierOrderDetail() {
                 {/* Line Items */}
                 <div className="bg-app-surface/60 border border-app-foreground/5 rounded-3xl overflow-hidden backdrop-blur-xl">
                     <div className="p-6 border-b border-app-foreground/5 flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                        <h3 className="flex items-center gap-2">
                             <Package size={18} className="text-app-success" />
                             Requested Items
                         </h3>
@@ -258,7 +258,7 @@ export default function SupplierOrderDetail() {
                     <div className="bg-app-surface/60 border border-app-foreground/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
                         {order.tracking_number && (
                             <div>
-                                <h3 className="text-app-foreground font-bold mb-2 text-sm flex items-center gap-2">
+                                <h3 className="mb-2 flex items-center gap-2">
                                     <Truck size={16} className="text-app-success" /> Dispatch Info
                                 </h3>
                                 <div className="bg-app-foreground/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-app-foreground/5">
@@ -277,7 +277,7 @@ export default function SupplierOrderDetail() {
                         )}
                         {order.notes && (
                             <div>
-                                <h3 className="text-app-foreground font-bold mb-2 text-sm flex items-center gap-2">
+                                <h3 className="mb-2 flex items-center gap-2">
                                     <FileText size={16} className="text-app-muted-foreground" /> Internal Notes
                                 </h3>
                                 <p className="text-app-muted-foreground text-sm whitespace-pre-wrap">{order.notes}</p>

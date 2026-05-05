@@ -36,7 +36,7 @@ export default async function ProductEditPage(props: { params: Promise<{ id: str
  <Package size={32} className="text-app-success" />
  </div>
  <div>
- <h1 className="text-3xl font-black tracking-tighter text-app-foreground flex items-center gap-3">
+ <h1 className="flex items-center gap-3">
  {product.name}
  <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-widest ${product.isActive ? 'bg-app-primary-light text-app-success' : 'bg-app-error-bg text-app-error'}`}>
  {product.isActive ? 'Active' : 'Archived'}
@@ -69,7 +69,7 @@ export default async function ProductEditPage(props: { params: Promise<{ id: str
  {/* Left Column: Details */}
  <div className="lg:col-span-1 space-y-6">
  <div className="app-card p-5 bg-app-surface border border-app-border rounded-xl shadow-sm space-y-4">
- <h3 className="text-sm font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
+ <h3 className="uppercase text-app-muted-foreground flex items-center gap-2">
  <Info size={16} /> Details
  </h3>
 

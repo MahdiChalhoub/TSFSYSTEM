@@ -123,7 +123,7 @@ export default function StockCountPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Stock Count</h1>
+                    <h1>Stock Count</h1>
                     <p className="text-muted-foreground text-sm">Physical inventory counting with dual-person verification</p>
                 </div>
                 <Button onClick={() => setShowCreate(true)}>

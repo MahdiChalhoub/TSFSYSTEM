@@ -68,7 +68,7 @@ export function PurchaseOrderDetailPanel({
                         <StatusIcon size={13} className="text-white" />
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-tp-md font-bold text-app-foreground truncate">
+                        <h3 className="text-tp-md truncate">
                             {node.po_number || `PO-${node.id}`}
                         </h3>
                         <p className="text-tp-xxs font-bold uppercase tracking-wider"

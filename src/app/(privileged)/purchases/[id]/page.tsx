@@ -60,7 +60,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
-                <h1 className="text-2xl font-black text-app-foreground tracking-tighter">Order Not Found</h1>
+                <h1>Order Not Found</h1>
                 <Link href="/purchases" className="text-app-success font-bold hover:underline">Return to Registry</Link>
             </div>
         );
@@ -90,7 +90,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                         <ArrowLeft size={14} /> Back to Procurement
                     </Link>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl lg:text-5xl font-black text-app-foreground tracking-tighter">
+                        <h1>
                             {order.status === 'DRAFT' ? 'RFQ' : 'Purchase Order'}{" "}
                             <span className="text-app-success">{order.ref_code || `#${order.id}`}</span>
                         </h1>

@@ -87,7 +87,7 @@ export function NotificationBell() {
             <DropdownMenuContent align="end" className="w-[380px] p-0 shadow-2xl border-app-border rounded-2xl overflow-hidden">
                 <div className="bg-gray-50/80 p-4 border-b border-app-border flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-black text-app-foreground uppercase tracking-tighter">Notifications</h3>
+                        <h3 className="uppercase">Notifications</h3>
                         <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-tight">You have {unreadCount} unread alerts</p>
                     </div>
                     {unreadCount > 0 && (

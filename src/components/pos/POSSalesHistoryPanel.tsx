@@ -114,7 +114,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
  </div>
  <div>
  <span className="text-[10px] font-black text-app-primary uppercase tracking-[0.3em] block mb-0.5">Operations Ledger</span>
- <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Transaction Audit</h2>
+ <h2 className="uppercase">Transaction Audit</h2>
  </div>
  </div>
  <div className="flex items-center gap-2">

@@ -216,7 +216,7 @@ export function GenericCsvImportDialog({
                             <Upload size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground capitalize">Import {plural}</h3>
+                            <h3 className="capitalize">Import {plural}</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">Bulk create from CSV / XLS / XLSX</p>
                         </div>
                     </div>

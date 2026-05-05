@@ -92,7 +92,7 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
         style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
         <div className="w-6 h-6 rounded-lg flex items-center justify-center"
           style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>{icon}</div>
-        <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">{title}</h3>
+        <h3 className="uppercase">{title}</h3>
       </div>
       <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>{children}</div>
     </div>
@@ -347,7 +347,7 @@ export default function OrgTaxPolicyFormPage() {
             <ShieldCheck size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{isEdit ? 'Edit Tax Policy' : 'New Tax Policy'}</h1>
+            <h1>{isEdit ? 'Edit Tax Policy' : 'New Tax Policy'}</h1>
             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Universal Tax Engine · Organization Fiscal Configuration</p>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default function OrgTaxPolicyFormPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                 <BookOpen size={13} />
               </div>
-              <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">GL Account Mapping</h3>
+              <h3 className="uppercase">GL Account Mapping</h3>
               <span className="text-[10px] font-bold text-app-muted-foreground hidden sm:inline">Resolved from Posting Rules</span>
             </div>
             <a href="/finance/settings/posting-rules" target="_blank"
@@ -574,7 +574,7 @@ export default function OrgTaxPolicyFormPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
                 <Layers size={13} />
               </div>
-              <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">Custom Tax Rules ({customRules.length})</h3>
+              <h3 className="uppercase">Custom Tax Rules ({customRules.length})</h3>
               <span className="text-[10px] font-bold text-app-muted-foreground hidden sm:inline">Extra taxes beyond core engine</span>
             </div>
             <ChevronDown size={14} className={`text-app-muted-foreground transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />

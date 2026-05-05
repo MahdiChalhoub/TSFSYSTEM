@@ -26,7 +26,7 @@ export function SalesSection() {
                     <TrendingUp size={15} style={{ color: SECTION_COLOR }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-[13px] font-black text-app-foreground">Sales Analysis</h3>
+                    <h3>Sales Analysis</h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground">How daily/monthly averages are calculated</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('sales') }}

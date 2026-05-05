@@ -70,7 +70,7 @@ export function PINResetModal({ userId, userName, mode, onClose, onSuccess }: PI
                                 {mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                             </div>
                             <div>
-                                <h3 className="text-[14px] font-black text-app-foreground">
+                                <h3>
                                     {mode === 'self' ? 'Change Your PIN' : `Reset PIN`}
                                 </h3>
                                 <p className="text-[10px] text-app-muted-foreground">

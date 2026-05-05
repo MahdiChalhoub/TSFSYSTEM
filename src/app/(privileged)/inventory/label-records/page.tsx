@@ -59,7 +59,7 @@ export default function LabelRecordsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Print History</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Label <span style={{ color: 'var(--app-primary)' }}>Records</span>
                         </h1>
                     </div>

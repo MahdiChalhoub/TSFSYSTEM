@@ -50,7 +50,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: UsersPin
                             <Key size={14} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-app-foreground">Users & PINs</h2>
+                            <h2>Users & PINs</h2>
                             <p className="text-[9px] text-app-muted-foreground">{withPin} with PIN · {withoutPin} without</p>
                         </div>
                     </div>

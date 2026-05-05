@@ -41,7 +41,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
                     <FileText size={14} className="text-white" />
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
-                    <h1 className="text-[14px] font-bold text-app-foreground tracking-tight whitespace-nowrap">
+                    <h1 className="whitespace-nowrap">
                         JV <span className="font-mono">#{entry.id}</span>
                     </h1>
                     <span className="text-tp-xxs font-bold uppercase px-1.5 py-0.5 rounded"

@@ -20,7 +20,7 @@ export function NoTenantNotice() {
                     <Award size={26} />
                 </div>
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                    <h1>
                         Brands live inside an organization
                     </h1>
                     <p className="text-sm text-app-muted-foreground mt-2 max-w-md mx-auto">

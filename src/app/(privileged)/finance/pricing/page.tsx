@@ -7,7 +7,7 @@ export default async function PricingPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold text-app-foreground mb-6 font-serif">Pricing Engine</h1>
+            <h1 className="mb-6 font-serif">Pricing Engine</h1>
             <PriceListManager priceLists={priceLists} />
         </div>
     )

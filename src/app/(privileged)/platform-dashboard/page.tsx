@@ -168,7 +168,7 @@ export default function SaaSPlatformDashboard() {
                             style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}>
                             <Globe size={20} style={{ color: '#fff' }} />
                         </div>
-                        <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Platform Control Center
                         </h1>
                     </div>
@@ -228,7 +228,7 @@ export default function SaaSPlatformDashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <Building2 size={16} style={{ color: 'var(--app-primary)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="uppercase" style={{ color: 'var(--app-foreground)' }}>
                                 Organizations
                             </h2>
                         </div>
@@ -291,7 +291,7 @@ export default function SaaSPlatformDashboard() {
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="flex items-center gap-2 mb-4">
                             <Server size={16} style={{ color: 'var(--app-primary)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="uppercase" style={{ color: 'var(--app-foreground)' }}>
                                 Infrastructure
                             </h2>
                         </div>
@@ -327,7 +327,7 @@ export default function SaaSPlatformDashboard() {
                         style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                         <div className="flex items-center gap-2 mb-4">
                             <Package size={16} style={{ color: 'var(--app-accent)' }} />
-                            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 className="uppercase" style={{ color: 'var(--app-foreground)' }}>
                                 Modules
                             </h2>
                         </div>

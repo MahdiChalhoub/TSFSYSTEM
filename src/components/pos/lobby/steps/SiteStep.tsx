@@ -14,7 +14,7 @@ export const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Sit
                     <MapPin size={12} className="text-[var(--app-primary)]" />
                     <span className="text-[11px] font-black text-[var(--app-primary)] uppercase tracking-widest">Select Location</span>
                 </div>
-                <h2 className="text-3xl font-black text-[var(--app-foreground)] mb-1">Where are you working?</h2>
+                <h2 className="text-[var(--app-foreground)] mb-1">Where are you working?</h2>
                 <p className="text-[var(--app-muted-foreground)] text-sm">Choose the site for this session</p>
             </div>
 
@@ -41,7 +41,7 @@ export const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Sit
                                 )}>
                                     <Building2 size={20} />
                                 </div>
-                                <h3 className="font-black text-[var(--app-foreground)] text-base leading-tight">{site.name}</h3>
+                                <h3 className="text-[var(--app-foreground)]">{site.name}</h3>
                                 {site.code && <p className="text-[var(--app-muted-foreground)] text-xs font-mono mt-0.5">{site.code}</p>}
                                 {site.address && <p className="text-[var(--app-muted-foreground)] text-xs mt-1 line-clamp-1">{site.address}</p>}
                                 <div className="flex items-center gap-2 mt-3">

@@ -33,7 +33,7 @@ export default function PricingSection() {
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-24 relative z-10">
             <div className="text-center mb-16 space-y-4">
-                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                <h2 className="text-white">
                     Power Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Empire</span>
                 </h2>
                 <p className="text-app-muted-foreground max-w-2xl mx-auto text-lg">

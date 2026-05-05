@@ -194,7 +194,7 @@ export default function PlanDetailPage() {
                 </Button>
                 <div className="flex-1">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-3xl font-black text-app-foreground tracking-tight">{plan.name}</h2>
+                        <h2>{plan.name}</h2>
                         <Badge className={form.is_public ? "bg-app-success-bg text-app-success" : "bg-app-warning-bg text-app-warning"}>
                             {form.is_public ? <><Globe size={12} className="mr-1" /> Public</> : <><Lock size={12} className="mr-1" /> Private</>}
                         </Badge>

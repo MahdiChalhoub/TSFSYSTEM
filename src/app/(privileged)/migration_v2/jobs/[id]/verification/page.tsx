@@ -128,7 +128,7 @@ export default function VerificationPage() {
                             <ArrowLeft className="w-5 h-5 text-app-foreground" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tight flex items-center gap-2">
+                            <h1 className="uppercase flex items-center gap-2">
                                 <ShieldCheck className="w-6 h-6 text-purple-600" />
                                 Record Verification
                             </h1>

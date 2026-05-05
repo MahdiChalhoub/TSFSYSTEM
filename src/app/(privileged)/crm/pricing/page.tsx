@@ -68,7 +68,7 @@ export default async function PricingPage() {
                             </div>
                             <span className="text-xs font-black text-violet-600 uppercase tracking-[0.3em]">Revenue Optimization</span>
                         </div>
-                        <h1 className="text-5xl lg:text-7xl font-black text-app-foreground tracking-tighter leading-none">
+                        <h1>
                             Client <span className="text-violet-600">Pricing</span>
                         </h1>
                         <p className="mt-6 text-app-muted-foreground font-medium max-w-2xl text-lg leading-relaxed">

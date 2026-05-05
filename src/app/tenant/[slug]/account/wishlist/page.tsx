@@ -45,7 +45,7 @@ export default function WishlistPage() {
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-black text-white flex items-center gap-3">
+                    <h1 className="text-white flex items-center gap-3">
                         <Heart size={28} className="text-app-error" /> Wishlist
                     </h1>
                     <span className="text-app-muted-foreground text-sm font-medium">{wishlist.length} items</span>
@@ -58,7 +58,7 @@ export default function WishlistPage() {
                 ) : wishlist.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <Heart size={48} className="mx-auto text-app-faint" />
-                        <h2 className="text-xl font-bold text-white">Your wishlist is empty</h2>
+                        <h2 className="text-white">Your wishlist is empty</h2>
                         <p className="text-app-muted-foreground">Save products you love and come back to them later</p>
                         <Link href={`/tenant/${slug}`}
                             className="inline-flex items-center gap-2 px-6 py-3 bg-app-primary-dark text-white rounded-xl font-bold hover:bg-app-primary transition-all">

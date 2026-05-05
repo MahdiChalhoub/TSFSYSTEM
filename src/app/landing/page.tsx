@@ -233,7 +233,7 @@ export default function LandingPage() {
                     <Sparkles size={14} className="animate-pulse" />
                     Enterprise Business Platform
                 </div>
-                <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
+                <h1 className="text-white italic select-none">
                     {PLATFORM_CONFIG.name.split(' ')[0]} <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">{PLATFORM_CONFIG.name.split(' ').slice(1).join(' ')}</span>
                 </h1>
                 <p className="text-app-muted-foreground max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">

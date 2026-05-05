@@ -381,7 +381,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     <ClipboardList size={20} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Task Board</h1>
+                    <h1>Task Board</h1>
                     <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                         {kpiStats.total} Tasks · {kpiStats.pending} Pending · {kpiStats.overdue} Overdue
                     </p>
@@ -556,7 +556,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                     {/* Tasks header bar */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                         <div>
-                            <h2 className="text-base sm:text-lg font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>
                                 {getDisplayTitle()}
                             </h2>
                             <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -765,7 +765,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                          style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
                                         <FolderKanban size={24} style={{ color: 'var(--app-primary)' }} />
                                     </div>
-                                    <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>No tasks found</h3>
+                                    <h3 className="mb-1" style={{ color: 'var(--app-foreground)' }}>No tasks found</h3>
                                     <p className="text-tp-sm font-medium" style={{ color: 'var(--app-muted-foreground)' }}>Create a task to get started</p>
                                 </div>
                             ) : (
@@ -875,7 +875,7 @@ export default function TasksClient({ tasks: initialTasks, categories: initialCa
                                 <CheckCircle2 size={15} className="text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Before we mark this done</h3>
+                                <h3 style={{ color: 'var(--app-foreground)' }}>Before we mark this done</h3>
                                 <p className="text-tp-sm font-bold truncate" style={{ color: 'var(--app-muted-foreground)' }}>
                                     {proofTask.title}
                                 </p>

@@ -260,7 +260,7 @@ function FormEditorModal({
             <div className="bg-app-surface rounded-2xl shadow-2xl w-full max-w-3xl mx-4 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-app-border">
-                    <h2 className="text-lg font-bold text-app-foreground">
+                    <h2>
                         {existing ? 'Edit Form' : 'New Form Definition'}
                     </h2>
                     <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ function FormEditorModal({
                             {/* Fields */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-sm font-bold text-app-foreground">
+                                    <h3>
                                         Fields <span className="text-app-muted-foreground font-normal">({fields.length})</span>
                                     </h3>
                                     <button onClick={addField}
@@ -449,7 +449,7 @@ export default function FormDefinitionsPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground mb-1">Form Definitions</h1>
+                    <h1 className="mb-1">Form Definitions</h1>
                     <p className="text-sm text-app-muted-foreground">
                         Define custom JSON-schema forms for tax rules, expense categories, supplier profiles, and more.
                     </p>
@@ -470,7 +470,7 @@ export default function FormDefinitionsPage() {
             ) : forms.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-app-border rounded-2xl">
                     <div className="text-4xl mb-3">📋</div>
-                    <h3 className="font-bold text-app-foreground mb-1">No form definitions yet</h3>
+                    <h3 className="mb-1">No form definitions yet</h3>
                     <p className="text-app-muted-foreground text-sm mb-4">Create your first schema-driven form to add custom fields to any entity.</p>
                     <button onClick={() => setEditing('new')}
                         className="inline-flex items-center gap-2 bg-app-bg text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface">
@@ -488,7 +488,7 @@ export default function FormDefinitionsPage() {
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h3 className="font-bold text-app-foreground text-sm">{form.name}</h3>
+                                    <h3>{form.name}</h3>
                                     <span className="font-mono text-[10px] text-app-muted-foreground bg-app-surface-2 px-1.5 py-0.5 rounded">{form.key}</span>
                                     {!form.is_active && (
                                         <span className="text-[10px] font-bold text-app-muted-foreground bg-app-surface-2 border border-app-border px-1.5 py-0.5 rounded uppercase tracking-wider">Inactive</span>

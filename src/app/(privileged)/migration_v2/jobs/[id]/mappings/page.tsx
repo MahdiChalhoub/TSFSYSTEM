@@ -126,7 +126,7 @@ export default function MigrationMappingsPage() {
                         <ArrowLeft className="w-5 h-5 text-app-foreground" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tight">Audit Trail & Mappings</h1>
+                        <h1 className="uppercase">Audit Trail & Mappings</h1>
                         <p className="text-app-muted-foreground text-sm">Review precise entity linkages between the source dump and TSFSYSTEM.</p>
                     </div>
                 </div>

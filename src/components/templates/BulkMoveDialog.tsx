@@ -79,7 +79,7 @@ export function BulkMoveDialog({ config, selectedIds, allItems, onClose, onDone 
                             <FolderTree size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">Move to {config.targetLabel}</h3>
+                            <h3>Move to {config.targetLabel}</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">
                                 {selectedIds.length} item{selectedIds.length !== 1 ? 's' : ''} selected
                             </p>

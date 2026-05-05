@@ -137,7 +137,7 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                             <Calendar size={20} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight leading-tight">{t('finance.fiscal_years_page.title')}</h1>
+                            <h1>{t('finance.fiscal_years_page.title')}</h1>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">{t('finance.fiscal_years_page.subtitle')}</p>
                                 {currentContext && (

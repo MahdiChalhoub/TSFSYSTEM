@@ -27,7 +27,7 @@ export default async function WiseAdjustmentsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Manual Intervention</p>
-                        <h1 className="text-4xl font-black tracking-tighter italic">
+                        <h1 className="italic">
                             WISE <span className="text-violet-400">Adjustment Center</span>
                         </h1>
                         <p className="text-sm opacity-40 mt-0.5 font-medium">

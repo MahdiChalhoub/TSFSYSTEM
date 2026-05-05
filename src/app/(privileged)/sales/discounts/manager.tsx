@@ -198,7 +198,7 @@ export default function DiscountManager({
             {showCreate && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setShowCreate(false)}>
                     <div className="bg-app-surface rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4">New Discount Rule</h3>
+                        <h3 className="mb-4">New Discount Rule</h3>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
@@ -317,7 +317,7 @@ export default function DiscountManager({
             {selectedLog && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setSelectedLog(null)}>
                     <div className="bg-app-surface rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4">Usage Log</h3>
+                        <h3 className="mb-4">Usage Log</h3>
                         {selectedLog.logs.length === 0 ? (
                             <p className="text-center text-app-muted-foreground py-6">No uses recorded yet</p>
                         ) : (

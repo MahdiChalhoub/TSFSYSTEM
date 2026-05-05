@@ -128,7 +128,7 @@ export default function DriverDeliveryPage() {
  <div className="min-h-screen bg-gradient-to-br from-red-900 to-slate-900 flex items-center justify-center p-6 bg-app-bg">
  <div className="bg-app-foreground/10 backdrop-blur-md rounded-3xl p-8 text-center max-w-sm w-full">
  <Lock className="mx-auto mb-4 text-red-300" size={48} />
- <h1 className="text-app-foreground text-xl font-black mb-2">Access Denied</h1>
+ <h1 className="mb-2">Access Denied</h1>
  <p className="text-red-200 text-sm">{error}</p>
  </div>
  </div>
@@ -147,7 +147,7 @@ export default function DriverDeliveryPage() {
  <div className="w-28 h-28 rounded-full bg-app-foreground/20 flex items-center justify-center mx-auto mb-6">
  <CheckCircle className="text-app-foreground" size={56} />
  </div>
- <h1 className="text-app-foreground text-3xl font-black mb-2">Delivered! 🎉</h1>
+ <h1 className="mb-2">Delivered! 🎉</h1>
  <p className="text-emerald-200">
  {delivery.recipient_name && `Delivered to ${delivery.recipient_name}.`}
  </p>
@@ -165,7 +165,7 @@ export default function DriverDeliveryPage() {
  <Truck size={20} className="text-app-foreground" />
  </div>
  <div>
- <h1 className="text-sm font-black">Delivery Driver View</h1>
+ <h1>Delivery Driver View</h1>
  <p className="text-[11px] text-app-foreground/50">Order #{delivery.order_ref || delivery.id}</p>
  </div>
  <span className={`ml-auto text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${delivery.status === 'IN_TRANSIT' ? 'bg-app-info/30 text-blue-300' :

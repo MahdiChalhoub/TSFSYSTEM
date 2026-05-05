@@ -59,7 +59,7 @@ export default function SupplierPortalAdminPage() {
  <Activity size={12} /> Sync: Direct
  </span>
  </div>
- <h1 className="text-5xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-emerald-200">
  <Truck size={32} className="text-app-foreground fill-white" />
  </div>
@@ -87,7 +87,7 @@ export default function SupplierPortalAdminPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Total Value</p>
- <h2 className="text-3xl font-black text-app-foreground">${totalProformaValue.toFixed(2)}</h2>
+ <h2>${totalProformaValue.toFixed(2)}</h2>
  </div>
  <div className="bg-app-warning p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-app-foreground">
  <div className="flex justify-between items-start mb-4">
@@ -99,7 +99,7 @@ export default function SupplierPortalAdminPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest leading-none mb-1">Price Adjustments</p>
- <h2 className="text-3xl font-black text-app-foreground">{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
+ <h2>{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
  </div>
  <div className="bg-app-surface p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
  <div className="flex justify-between items-start mb-4">
@@ -111,7 +111,7 @@ export default function SupplierPortalAdminPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Total Proformas</p>
- <h2 className="text-3xl font-black text-app-foreground">{proformas.length}</h2>
+ <h2>{proformas.length}</h2>
  </div>
  </div>
  {/* Tabs */}

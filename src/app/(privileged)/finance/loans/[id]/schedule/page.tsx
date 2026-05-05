@@ -94,7 +94,7 @@ export default function LoanAmortizationSchedulePage({ params }: { params: Promi
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
-              <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+              <h1 className="italic">
                 Amortization <span className="text-app-primary">Schedule</span>
               </h1>
               <p className="text-sm text-app-muted-foreground mt-1">

@@ -215,7 +215,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
                             <Landmark size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
+                            <h1>
                                 Balance Sheet
                             </h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
@@ -326,7 +326,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
                             borderBottom: '1px solid color-mix(in srgb, var(--app-error) 25%, var(--app-border))',
                         }}>
                         <Target size={14} style={{ color: 'var(--app-error)' }} />
-                        <h3 className="text-tp-md font-black uppercase tracking-widest" style={{ color: 'var(--app-error)' }}>
+                        <h3 className="text-tp-md uppercase" style={{ color: 'var(--app-error)' }}>
                             Forensic diagnosis · {diag.length} finding{diag.length !== 1 ? 's' : ''}
                         </h3>
                     </div>
@@ -386,7 +386,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
                             borderLeft: `3px solid ${TYPE_CONFIG.ASSET.color}`,
                         }}>
                         <Landmark size={13} style={{ color: TYPE_CONFIG.ASSET.color }} />
-                        <h2 className="text-tp-md font-black uppercase tracking-widest"
+                        <h2 className="text-tp-md uppercase"
                             style={{ color: TYPE_CONFIG.ASSET.color }}>
                             Assets
                         </h2>
@@ -422,7 +422,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
                             borderLeft: `3px solid ${TYPE_CONFIG.LIABILITY.color}`,
                         }}>
                         <Scale size={13} style={{ color: TYPE_CONFIG.LIABILITY.color }} />
-                        <h2 className="text-tp-md font-black uppercase tracking-widest"
+                        <h2 className="text-tp-md uppercase"
                             style={{ color: TYPE_CONFIG.LIABILITY.color }}>
                             Liabilities & Equity
                         </h2>
@@ -542,7 +542,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: {
 
             {/* Print-only header */}
             <div className="report-only-print px-6 py-4 text-center">
-                <h2 className="report-statement-title text-3xl font-bold">Balance Sheet</h2>
+                <h2 className="report-statement-title">Balance Sheet</h2>
                 <p className="text-sm mt-1">
                     As of {new Date(asOfDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>

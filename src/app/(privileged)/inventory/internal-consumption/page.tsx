@@ -103,7 +103,7 @@ function EvtEditor({ item, onSave, onCancel }: { item: Evt | null; onSave: (d: E
             <Package size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit Self-Supply Event' : 'New Self-Supply Event'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Auto-Livraison VAT</p>
@@ -251,7 +251,7 @@ export default function SelfSupplyVATPage() {
                   <Package size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Internal Consumption</h1>
+                  <h1>Internal Consumption</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     Inventory · Auto-Livraison · Internal Use
                   </p>

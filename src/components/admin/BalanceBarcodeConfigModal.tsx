@@ -143,7 +143,7 @@ export function BalanceBarcodeConfigModal({ isOpen, onClose }: Props) {
                             <Scale size={18} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-tp-md font-bold tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                            <h3 className="text-tp-md" style={{ color: 'var(--app-foreground)' }}>
                                 Variable Barcode Config
                             </h3>
                             <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>

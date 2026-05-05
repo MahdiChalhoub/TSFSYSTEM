@@ -26,7 +26,7 @@ export default function InventoryMovementsPage() {
         <div className="p-6 space-y-6">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+                    <h1 className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-app-info flex items-center justify-center shadow-lg shadow-indigo-200">
                             <History size={28} className="text-white" />
                         </div>

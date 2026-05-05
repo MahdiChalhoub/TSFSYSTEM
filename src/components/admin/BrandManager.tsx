@@ -55,7 +55,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                         <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Inventory / Taxonomy
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Brands
                         </h1>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -240,7 +240,7 @@ function BrandCard({ brand, onEdit }: Record<string, any>) {
                     </span>
                 </div>
 
-                <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>
+                <h3 className="mb-1" style={{ color: 'var(--app-foreground)' }}>
                     <Link href={`/inventory/brands/${brand.id}`} className="block transition-colors"
                         onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-foreground)'; }}
@@ -331,7 +331,7 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
 
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-foreground)' }}>{brand.name}</h3>
+                            <h3 style={{ color: 'var(--app-foreground)' }}>{brand.name}</h3>
                             <span className="text-[10px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>({brand.product_count || 0})</span>
                         </div>
                         <div className="flex gap-1 mt-0.5">

@@ -32,7 +32,7 @@ export default async function SaasMasterDashboard() {
                     <div className="flex items-center gap-2 text-app-success font-bold text-xs uppercase tracking-[0.2em]">
                         <ShieldCheck size={14} /> Platform Control Center
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-app-foreground tracking-tight flex items-center gap-4">
+                    <h1 className="flex items-center gap-4">
                         SaaS Dashboard
                     </h1>
                     <p className="text-app-muted-foreground font-medium text-sm md:text-lg italic">Infrastructure & Tenant Management Engine</p>

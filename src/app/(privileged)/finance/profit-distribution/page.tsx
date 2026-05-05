@@ -141,7 +141,7 @@ export default function ProfitDistributionPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Profit Distribution</h1>
+                    <h1 className="font-serif">Profit Distribution</h1>
                     <p className="text-app-muted-foreground font-medium mt-1">Year-end profit allocation across equity wallets</p>
                 </div>
                 <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>
@@ -321,7 +321,7 @@ export default function ProfitDistributionPage() {
             {/* Distribution History Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-5 py-3 border-b bg-app-surface/50">
-                    <h2 className="font-semibold text-app-foreground flex items-center gap-2"><Calendar size={16} /> Distribution History</h2>
+                    <h2 className="flex items-center gap-2"><Calendar size={16} /> Distribution History</h2>
                 </div>
                 <Table>
                     <TableHeader>

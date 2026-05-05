@@ -48,7 +48,7 @@ export default function EmployeeModal({
                             <Users size={24} />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-app-foreground leading-tight">Master HR Enrollment</h2>
+                            <h2>Master HR Enrollment</h2>
                             <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Employee & Payroll Identity</p>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ export default function EmployeeModal({
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <User size={18} className="text-app-info" />
-                            <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Personal Identification</h3>
+                            <h3 className="uppercase">Personal Identification</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
@@ -99,7 +99,7 @@ export default function EmployeeModal({
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <Building2 size={18} className="text-app-info" />
-                            <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Branch & Role Assignment</h3>
+                            <h3 className="uppercase">Branch & Role Assignment</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
@@ -122,7 +122,7 @@ export default function EmployeeModal({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Key size={18} className="text-app-info" />
-                                <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">System Login Access</h3>
+                                <h3 className="uppercase">System Login Access</h3>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="createLogin" className="sr-only peer" checked={createLogin} onChange={(e) => setCreateLogin(e.target.checked)} />
@@ -151,7 +151,7 @@ export default function EmployeeModal({
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <CreditCard size={18} className="text-app-info" />
-                            <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest">Person Category & Ledger</h3>
+                            <h3 className="uppercase">Person Category & Ledger</h3>
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">

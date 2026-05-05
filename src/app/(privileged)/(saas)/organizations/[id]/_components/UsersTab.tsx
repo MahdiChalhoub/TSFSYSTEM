@@ -17,7 +17,7 @@ export function UsersTab({ users, onCreateUser, onResetPassword }: UsersTabProps
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-app-foreground">Organization Users</h3>
+                    <h3>Organization Users</h3>
                     <p className="text-sm text-app-muted-foreground">{users.length} user{users.length !== 1 ? 's' : ''} in this organization</p>
                 </div>
                 <Button onClick={onCreateUser} className="bg-app-primary-dark hover:bg-app-primary-dark text-white rounded-xl font-bold shadow-md">

@@ -170,7 +170,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         <div className="space-y-8 max-w-5xl mx-auto pb-20">
             {/* Master Settings */}
             <div className="card-premium p-6">
-                <h3 className="text-lg font-bold text-app-foreground mb-4 border-b pb-2 flex items-center gap-2">
+                <h3 className="mb-4 border-b pb-2 flex items-center gap-2">
                     <Box className="text-app-success" /> Master Identity (Parfum / Family)
                 </h3>
                 <p className="text-sm text-app-muted-foreground mb-4 px-2">Define the Category, Brand, and Product details here.</p>
@@ -252,7 +252,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
             {/* Variants */}
             <div className="card-premium p-6">
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                    <h3 className="flex items-center gap-2">
                         <Globe className="text-app-info" /> Country Variants
                     </h3>
                     <button onClick={addVariant} className="btn-secondary text-sm py-1.5">

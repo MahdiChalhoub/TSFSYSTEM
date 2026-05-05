@@ -75,7 +75,7 @@ export default function AccountBookManagerPage() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
-            <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            <h1 className="italic">
               Account <span className="text-app-primary">Book</span>
             </h1>
             {accountName && (
@@ -106,7 +106,7 @@ export default function AccountBookManagerPage() {
                     <AlertTriangle size={24} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-black text-app-warning">
+                    <h3 className="text-app-warning">
                       {summary.pendingCount} Entries Require Manager Approval
                     </h3>
                     <p className="text-app-warning/80 text-sm mt-1 max-w-2xl font-medium">
@@ -139,7 +139,7 @@ export default function AccountBookManagerPage() {
                   <div className="w-16 h-16 card-section flex items-center justify-center text-app-primary mb-4 animate-bounce">
                     <Verified size={32} />
                   </div>
-                  <h3 className="text-xl font-black text-app-success">All Clear!</h3>
+                  <h3 className="text-app-success">All Clear!</h3>
                   <p className="text-app-success/80 mt-2 font-medium">
                     {accountName
                       ? `No pending Account Book entries for "${decodeURIComponent(accountName)}".`
@@ -161,7 +161,7 @@ export default function AccountBookManagerPage() {
           {activeTab === 'snapshots' && (
             <div className="bg-app-surface border border-app-border rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="p-4 border-b border-app-border flex items-center justify-between bg-app-surface-2/50">
-                <h3 className="font-bold text-app-foreground flex items-center gap-2">
+                <h3 className="flex items-center gap-2">
                   <Clock size={16} className="text-app-muted-foreground" />
                   Historical Register Snapshots
                 </h3>

@@ -62,7 +62,7 @@ export function AddGroupForm({ onSave, onCancel, groups }: {
             style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderColor: 'var(--app-border)', borderLeft: '3px solid var(--app-primary)' }}>
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+                    <h3 className="uppercase">
                         {isChild ? `Add Value to "${selectedParent?.name}"` : 'New Attribute Group'}
                     </h3>
                     {!isChild && (
@@ -327,7 +327,7 @@ export function EditModal({ item, tree, onSave, onCancel }: {
                             <Pencil size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">Edit {isRootGroup ? 'Attribute Group' : 'Value'}</h3>
+                            <h3>Edit {isRootGroup ? 'Attribute Group' : 'Value'}</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">{current.name}</p>
                         </div>
                     </div>
@@ -455,7 +455,7 @@ export function CategoryLinkModal({ attributeId, attributeName, currentCategoryI
                             <FolderTree size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">Link Categories</h3>
+                            <h3>Link Categories</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">{attributeName}</p>
                         </div>
                     </div>
@@ -507,7 +507,7 @@ export function BrandLinkModal({ attributeId, attributeName, currentBrandIds, al
                             <Building2 size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">Link Brands</h3>
+                            <h3>Link Brands</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">{attributeName}</p>
                         </div>
                     </div>

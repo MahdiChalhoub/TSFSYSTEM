@@ -88,7 +88,7 @@ export function PrintBrandingClient({ initialOrg }: Props) {
                             <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
                                 Source data
                             </p>
-                            <h3 className="text-tp-md font-bold text-app-foreground">Organization Profile</h3>
+                            <h3 className="text-tp-md">Organization Profile</h3>
                         </div>
                         <a
                             href="/settings/organization"
@@ -160,7 +160,7 @@ export function PrintBrandingClient({ initialOrg }: Props) {
                         <p className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground">
                             Editable
                         </p>
-                        <h3 className="text-tp-md font-bold text-app-foreground">Print Footer Note</h3>
+                        <h3 className="text-tp-md">Print Footer Note</h3>
                         <p className="text-tp-xs text-app-muted-foreground mt-0.5">
                             Appears next to your tenant name in the footer of every printed page. Use it for
                             trade-register, VAT/TIN, or compliance lines.

@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
-                        <h1 className="text-3xl font-black text-white flex items-center gap-3">
+                        <h1 className="text-white flex items-center gap-3">
                             <Bell size={28} className="text-app-info" /> Notifications
                         </h1>
                         {unreadCount > 0 && (
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
                 ) : filtered.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <Bell size={48} className="mx-auto text-app-faint" />
-                        <h2 className="text-xl font-bold text-white">
+                        <h2 className="text-white">
                             {filter === 'unread' ? 'All caught up!' : 'No notifications yet'}
                         </h2>
                         <p className="text-app-muted-foreground">

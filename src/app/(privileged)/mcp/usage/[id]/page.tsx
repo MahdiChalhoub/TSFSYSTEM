@@ -83,7 +83,7 @@ export default function UsageDetailPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black text-app-foreground">
+            <h1>
               {item.name || item.title || `Usage #${item.id}`}
             </h1>
             <p className="text-app-muted-foreground mt-1">

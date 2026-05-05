@@ -115,7 +115,7 @@ export default function NewFinancialEventPage() {
                 <Link href="/finance/events">
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
-                <h1 className="text-2xl font-bold">New Financial Event</h1>
+                <h1>New Financial Event</h1>
             </div>
 
             {!selectedType ? (

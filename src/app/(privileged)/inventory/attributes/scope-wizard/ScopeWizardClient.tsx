@@ -292,7 +292,7 @@ export function ScopeWizardClient({
                     <ArrowLeft size={16} />
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-2">
+                    <h1 className="flex items-center gap-2">
                         <Sparkles size={20} className="text-app-primary" />
                         Scope Review Wizard
                     </h1>
@@ -411,7 +411,7 @@ export function ScopeWizardClient({
                                 <Sparkles size={16} />
                             </div>
                             <div>
-                                <h3 className="text-tp-md font-bold text-app-foreground">
+                                <h3 className="text-tp-md">
                                     {bulkConfirm.risky.length} risky suggestion{bulkConfirm.risky.length === 1 ? '' : 's'} need confirmation
                                 </h3>
                                 <p className="text-tp-xs text-app-muted-foreground">
@@ -471,7 +471,7 @@ export function ScopeWizardClient({
                                 <Sparkles size={16} />
                             </div>
                             <div>
-                                <h3 className="text-tp-md font-bold text-app-foreground">Confirm scope narrowing</h3>
+                                <h3 className="text-tp-md">Confirm scope narrowing</h3>
                                 <p className="text-tp-xs text-app-muted-foreground">
                                     Applying this scope to <strong>{pendingConfirm.suggestion.value_name}</strong> would
                                     remove <strong>{pendingConfirm.impact.products_that_would_lose_access}</strong> of
@@ -522,7 +522,7 @@ export function ScopeWizardClient({
                 <div className="space-y-6">
                     {grouped.map(({ groupName, items }) => (
                         <section key={groupName}>
-                            <h2 className="text-tp-xs font-black uppercase tracking-widest text-app-muted-foreground mb-2 flex items-center gap-2">
+                            <h2 className="text-tp-xs uppercase text-app-muted-foreground mb-2 flex items-center gap-2">
                                 <Tag size={11} /> {groupName}
                                 <span className="text-app-muted-foreground/60">·</span>
                                 <span>{items.length}</span>

@@ -34,7 +34,7 @@ export default async function AttendancePage() {
                         </div>
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Tracking</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Atten<span className="text-app-success">dance</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">

@@ -66,7 +66,7 @@
   --app-border-strong: rgba(16, 185, 129, 0.5);
 
   --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
-  --app-font-display: 'Poppins', system-ui, sans-serif;
+  --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
 
   --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
@@ -111,7 +111,7 @@
   --app-border: rgba(255, 255, 255, 0.08);
   --app-border-strong: rgba(16, 185, 129, 0.5);
   --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
-  --app-font-display: 'Poppins', system-ui, sans-serif;
+  --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
   --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
   --app-sidebar-text: #CBD5E1;
@@ -669,7 +669,7 @@
 .theme-heading {
   font-size: var(--font-size-h1);
   font-weight: 800;
-  font-family: var(--font-heading);
+  font-family: var(--font-heading, var(--font-sans));
   color: var(--app-foreground);
   letter-spacing: -0.025em;
   line-height: 1.2;
@@ -679,7 +679,7 @@
 .theme-heading-sm {
   font-size: var(--font-size-h2);
   font-weight: 700;
-  font-family: var(--font-heading);
+  font-family: var(--font-heading, var(--font-sans));
   color: var(--app-foreground);
   letter-spacing: -0.015em;
   line-height: 1.3;
@@ -939,10 +939,51 @@ body {
   background: var(--app-bg);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+ * Global heading scale — the canonical typography system.
+ * A bare <h1>{title}</h1> picks up the full styling without needing
+ * any Tailwind size/weight overrides. Pages that DO override (149+
+ * legacy spots use ad-hoc Tailwind sizes) still work but bypass the
+ * system. Migrate them by removing the className text overrides.
+ *
+ * Sizes are driven by --font-size-h1..h4 + --font-size-body, defined
+ * at :root in globals.css. Density modes can shift them.
+ *
+ * Weight: font-bold (700) chosen over font-black (900) because
+ * Outfit's 900 weight isn't reliably loaded by next/font and falls
+ * back to a system font that paradoxically renders LIGHTER. Stick to
+ * 700 for headings.
+ * ═══════════════════════════════════════════════════════════════ */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+  /* Fall back to --font-sans (Outfit) when --font-heading isn't set. */
+  font-family: var(--font-heading, var(--font-sans));
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--app-foreground);
+  /* Reset browser default margins — Tailwind preflight already does
+     this but stating it here makes the canonical scale explicit. */
+  margin: 0;
 }
 
-h1 { font-size: var(--font-size-h1); }
-h2 { font-size: var(--font-size-h2); }
-h3 { font-size: var(--font-size-h3); }
+h1 {
+  font-size: var(--font-size-h1);     /* 24px */
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+h2 {
+  font-size: var(--font-size-h2);     /* 20px */
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+h3 {
+  font-size: var(--font-size-h3);     /* 17px */
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+h4 {
+  font-size: var(--font-size-h4);     /* 15px */
+  line-height: 1.35;
+}
+h5, h6 {
+  font-size: var(--font-size-body);   /* 15px */
+  line-height: 1.4;
+}

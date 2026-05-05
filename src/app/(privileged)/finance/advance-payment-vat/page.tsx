@@ -97,7 +97,7 @@ function RecEditor({ item, onSave, onCancel }: { item: Rec | null; onSave: (d: R
             <Banknote size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit Advance Payment' : 'New Advance Payment'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Deposit VAT Tracking</p>
@@ -225,7 +225,7 @@ export default function AdvancePaymentVATPage() {
                   <Banknote size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Advance Payment VAT</h1>
+                  <h1>Advance Payment VAT</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Deposit VAT · Pre-Invoice</p>
                 </div>
               </div>

@@ -152,7 +152,7 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
  </button>
  )}
  <div className="flex-1">
- <h2 className="text-app-foreground font-black text-lg">Return / Refund</h2>
+ <h2>Return / Refund</h2>
  <p className="text-app-foreground/40 text-xs mt-0.5">
  {step === 'search' ? 'Enter the invoice number' :
  step === 'items' ? `Order ${foundOrder?.ref} — Select items to return` :

@@ -231,7 +231,7 @@ export default function PricingManager({
                                                 <Tag size={20} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-black text-app-foreground">{group.name}</h3>
+                                                <h3>{group.name}</h3>
                                                 <p className="text-xs text-app-muted-foreground font-bold">Priority: {group.priority}</p>
                                             </div>
                                         </div>
@@ -335,7 +335,7 @@ export default function PricingManager({
             {showGroupForm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
                     <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-lg p-8 space-y-6 animate-in fade-in zoom-in duration-300">
-                        <h2 className="text-2xl font-black text-app-foreground">New Price Group</h2>
+                        <h2>New Price Group</h2>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2">Group Name</label>
@@ -375,7 +375,7 @@ export default function PricingManager({
             {showRuleForm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
                     <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-lg p-8 space-y-6 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-2xl font-black text-app-foreground">New Price Rule</h2>
+                        <h2>New Price Rule</h2>
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

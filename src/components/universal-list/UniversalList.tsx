@@ -160,7 +160,7 @@ export default function UniversalList<T = any>({
  <Icon size={18} />
  </div>
  )}
- <h1 className="text-2xl font-black text-app-foreground tracking-tight">{title}</h1>
+ <h1>{title}</h1>
  </div>
  <div className="flex items-center gap-3">
  {onExport && (

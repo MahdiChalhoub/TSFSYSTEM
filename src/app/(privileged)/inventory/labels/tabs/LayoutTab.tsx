@@ -136,7 +136,7 @@ export default function LayoutTab({ initialTemplates }: Props) {
             {/* ── Template List ── */}
             <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 340px)' }}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background shrink-0 flex items-center justify-between">
-                    <h3 className="text-[13px] font-black text-app-foreground flex items-center gap-2"><Layout size={16} style={{ color: v('--app-primary') }} /> Templates</h3>
+                    <h3 className="flex items-center gap-2"><Layout size={16} style={{ color: v('--app-primary') }} /> Templates</h3>
                     <button onClick={newTemplate} className="flex items-center gap-1 px-3 h-7 rounded-lg text-white text-[10px] font-bold" style={grad('--app-primary')}><Plus size={12} /> New</button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1.5">

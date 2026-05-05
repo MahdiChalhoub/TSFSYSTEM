@@ -9,7 +9,7 @@ export function LandingHomePage({ org }: { org: any }) {
  <Badge className="mb-6 bg-app-accent-bg text-app-accent border-app-accent/30 font-bold uppercase tracking-widest px-4 py-1">
  Welcome to {org.name}
  </Badge>
- <h1 className="text-6xl md:text-8xl font-black text-app-foreground tracking-tighter leading-[1.1] mb-8">
+ <h1 className="leading-[1.1] mb-8">
  Elevating your <br /><span className="text-transparent bg-clip-text bg-app-primary">business standards.</span>
  </h1>
  <p className="text-xl text-app-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
@@ -32,21 +32,21 @@ export function LandingHomePage({ org }: { org: any }) {
  <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-app-accent flex items-center justify-center mb-6">
  <ShieldCheck size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-foreground mb-3">Enterprise Security</h3>
+ <h3 className="mb-3">Enterprise Security</h3>
  <p className="text-app-muted-foreground font-medium leading-relaxed">Your data and daily operations are protected by military-grade encryption and compliance standards.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
  <div className="w-14 h-14 rounded-2xl bg-app-accent-bg text-app-accent flex items-center justify-center mb-6">
  <Zap size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-foreground mb-3">Lightning Fast</h3>
+ <h3 className="mb-3">Lightning Fast</h3>
  <p className="text-app-muted-foreground font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
  <div className="w-14 h-14 rounded-2xl bg-app-success-bg text-app-success flex items-center justify-center mb-6">
  <Globe size={28} />
  </div>
- <h3 className="text-xl font-bold text-app-foreground mb-3">Global Reach</h3>
+ <h3 className="mb-3">Global Reach</h3>
  <p className="text-app-muted-foreground font-medium leading-relaxed">Scale your localized business seamlessly to international markets with our robust network.</p>
  </div>
  </div>

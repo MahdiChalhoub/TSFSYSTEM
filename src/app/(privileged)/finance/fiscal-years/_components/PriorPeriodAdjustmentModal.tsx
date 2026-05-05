@@ -126,7 +126,7 @@ export function PriorPeriodAdjustmentModal({
                     <div>
                         <div className="flex items-center gap-2">
                             <ArrowRightLeft size={16} style={{ color: 'var(--app-warning, #f59e0b)' }} />
-                            <h3 className="text-tp-lg font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <h3 className="text-tp-lg" style={{ color: 'var(--app-foreground)' }}>
                                 Prior Period Adjustment
                             </h3>
                         </div>

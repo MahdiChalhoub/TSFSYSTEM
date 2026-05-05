@@ -40,7 +40,7 @@ export default async function EditGroupPage({ params }: { params: Promise<{ id: 
     return (
         <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
             <div>
-                <h1 className="text-3xl font-bold text-app-foreground">Edit Product Family</h1>
+                <h1>Edit Product Family</h1>
                 <p className="text-app-muted-foreground">Update the Parfum/Group details or add new variants.</p>
             </div>
 

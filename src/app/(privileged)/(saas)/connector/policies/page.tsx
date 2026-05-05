@@ -295,7 +295,7 @@ export default function ConnectorPoliciesPage() {
                             <Settings size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Routing Policies</h2>
+                    <h2>Routing Policies</h2>
                     <p className="text-app-muted-foreground mt-2 font-medium">
                         {filteredPolicies.length} policies {hasActiveFilters ? '(filtered)' : ''}
                     </p>
@@ -341,7 +341,7 @@ export default function ConnectorPoliciesPage() {
                 <Card className="rounded-2xl border-app-accent bg-app-accent-bg/50">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-app-accent">Filter Policies</h3>
+                            <h3 className="text-app-accent">Filter Policies</h3>
                             {hasActiveFilters && (
                                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-app-accent">
                                     <X size={14} /> Clear All

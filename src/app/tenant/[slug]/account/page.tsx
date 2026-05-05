@@ -69,7 +69,7 @@ export default function AccountPage() {
                     <div className="w-20 h-20 bg-app-warning/10 border border-app-warning/20 rounded-full flex items-center justify-center mx-auto text-app-warning">
                         <Shield size={40} />
                     </div>
-                    <h1 className="text-3xl font-black text-white">Authentication Required</h1>
+                    <h1 className="text-white">Authentication Required</h1>
                     <p className="text-app-muted-foreground">Please log in from the storefront to access your account</p>
                     <Link href={`/tenant/${slug}`}
                         className="inline-flex items-center gap-2 px-8 py-4 bg-app-primary-dark text-white rounded-2xl font-bold hover:bg-app-primary transition-all">
@@ -89,7 +89,7 @@ export default function AccountPage() {
                 {/* Header */}
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
-                        <h1 className="text-3xl font-black text-white">My Account</h1>
+                        <h1 className="text-white">My Account</h1>
                         <p className="text-app-muted-foreground text-sm mt-1">Welcome back, {user?.name}</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -151,7 +151,7 @@ export default function AccountPage() {
                             <Package size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Order History</h3>
+                            <h3 className="text-white">Order History</h3>
                             <p className="text-app-muted-foreground text-xs">Track & manage orders</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />
@@ -163,7 +163,7 @@ export default function AccountPage() {
                             <Heart size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Wishlist</h3>
+                            <h3 className="text-white">Wishlist</h3>
                             <p className="text-app-muted-foreground text-xs">{wishlistCount} saved items</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />
@@ -175,7 +175,7 @@ export default function AccountPage() {
                             <Wallet size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Wallet & Loyalty</h3>
+                            <h3 className="text-white">Wallet & Loyalty</h3>
                             <p className="text-app-muted-foreground text-xs">Balance & points</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />
@@ -187,7 +187,7 @@ export default function AccountPage() {
                             <Bell size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Notifications</h3>
+                            <h3 className="text-white">Notifications</h3>
                             <p className="text-app-muted-foreground text-xs">Alerts & updates</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />
@@ -199,7 +199,7 @@ export default function AccountPage() {
                             <TicketCheck size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Support</h3>
+                            <h3 className="text-white">Support</h3>
                             <p className="text-app-muted-foreground text-xs">{dashboard?.open_tickets || 0} open tickets</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />
@@ -211,7 +211,7 @@ export default function AccountPage() {
                             <User size={22} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white">Profile</h3>
+                            <h3 className="text-white">Profile</h3>
                             <p className="text-app-muted-foreground text-xs">Settings & security</p>
                         </div>
                         <ChevronRight size={16} className="text-app-faint group-hover:text-white transition-colors" />

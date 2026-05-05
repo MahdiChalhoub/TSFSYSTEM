@@ -14,7 +14,7 @@ export function DashboardHeader() {
                         <span className="w-2 h-2 rounded-full bg-app-success animate-pulse"></span>
                         System Operational
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">
+                    <h1 className="text-white mb-2">
                         Command Center
                     </h1>
                     <p className="text-app-muted-foreground text-lg max-w-xl">

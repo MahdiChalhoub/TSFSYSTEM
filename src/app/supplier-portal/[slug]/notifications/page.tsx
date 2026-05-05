@@ -114,7 +114,7 @@ export default function SupplierNotificationsPage() {
                             className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
-                        <h1 className="text-4xl font-black text-white">Notifications</h1>
+                        <h1 className="text-white">Notifications</h1>
                         <p className="text-app-muted-foreground text-sm">
                             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
                         </p>
@@ -149,7 +149,7 @@ export default function SupplierNotificationsPage() {
                 ) : displayed.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <Bell size={48} className="mx-auto text-app-muted-foreground" />
-                        <h2 className="text-xl font-bold text-white">
+                        <h2 className="text-white">
                             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
                         </h2>
                         <p className="text-app-muted-foreground text-sm">

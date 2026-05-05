@@ -34,7 +34,7 @@ export default async function PrintBrandingPage() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
                             Settings / Documents
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Print Letterhead
                         </h1>
                         <p className="text-sm mt-0.5 text-app-muted-foreground">

@@ -139,7 +139,7 @@ function ModuleCard({
 
             {/* Info */}
             <div className="mb-3">
-                <h3 className="text-base font-bold text-app-foreground mb-0.5 leading-tight">{mod.name}</h3>
+                <h3 className="mb-0.5">{mod.name}</h3>
                 <p className="text-[11px] text-app-muted-foreground line-clamp-2">{mod.description}</p>
             </div>
 
@@ -226,7 +226,7 @@ function DetailPanel({
                             <ModuleIcon name={mod.icon} size={28} className="text-app-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-app-foreground">{mod.name}</h2>
+                            <h2>{mod.name}</h2>
                             <p className="text-xs text-app-muted-foreground">v{mod.version}</p>
                         </div>
                     </div>
@@ -262,14 +262,14 @@ function DetailPanel({
 
                     {/* Description */}
                     <div>
-                        <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-2">About</h3>
+                        <h3 className="uppercase text-app-muted-foreground mb-2">About</h3>
                         <p className="text-sm text-app-foreground/80 leading-relaxed">{mod.description}</p>
                     </div>
 
                     {/* Features */}
                     {mod.features.length > 0 && (
                         <div>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Features</h3>
+                            <h3 className="uppercase text-app-muted-foreground mb-3">Features</h3>
                             <div className="space-y-2">
                                 {mod.features.map(f => (
                                     <div key={f.code} className="flex items-center justify-between rounded-xl p-3 bg-app-muted/5 border border-app-border/20">
@@ -288,7 +288,7 @@ function DetailPanel({
                     {/* Dependencies */}
                     {mod.dependencies.length > 0 && (
                         <div>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-app-muted-foreground mb-3">Dependencies</h3>
+                            <h3 className="uppercase text-app-muted-foreground mb-3">Dependencies</h3>
                             <div className="flex flex-wrap gap-2">
                                 {mod.dependencies.map(dep => (
                                     <span key={dep} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-app-primary/10 text-app-primary border border-app-primary/20">
@@ -416,7 +416,7 @@ export default function MarketplacePage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Admin · Platform</p>
-                        <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+                        <h1 className="italic">
                             App <span className="text-app-primary">Marketplace</span>
                         </h1>
                     </div>

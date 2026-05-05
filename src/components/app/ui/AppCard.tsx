@@ -106,10 +106,7 @@ export function AppSection({
                 style={{ borderBottom: '1px solid var(--app-border)' }}
             >
                 <div>
-                    <h3
-                        className="text-sm font-black tracking-tight"
-                        style={{ color: 'var(--app-foreground)' }}
-                    >
+                    <h3 style={{ color: 'var(--app-foreground)' }}>
                         {title}
                     </h3>
                     {description && (

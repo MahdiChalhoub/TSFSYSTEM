@@ -355,7 +355,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <BookOpen size={20} />
  </div>
  <div>
- <h2 className="text-base font-black text-app-foreground">Account Book</h2>
+ <h2>Account Book</h2>
  <p className="text-[10px] text-app-muted-foreground font-bold">
  Cashier Daily Ledger • {entries.length} entries
  </p>
@@ -615,7 +615,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {showAddForm ? (
  <div className="p-4 space-y-3 animate-in slide-in-from-bottom-4 max-h-[60vh] overflow-y-auto">
  <div className="flex items-center justify-between">
- <h3 className="text-xs font-black text-app-foreground uppercase tracking-widest">New Entry</h3>
+ <h3 className="uppercase">New Entry</h3>
  <button onClick={() => setShowAddForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground">
  <X size={14} />
  </button>

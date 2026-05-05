@@ -104,7 +104,7 @@ export default function ProformasPage() {
                             className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
-                        <h1 className="text-4xl font-black text-white">Proformas</h1>
+                        <h1 className="text-white">Proformas</h1>
                         <p className="text-app-muted-foreground text-sm">Create and manage quotations sent to the buyer</p>
                     </div>
                     <button onClick={() => setShowCreate(true)}
@@ -117,7 +117,7 @@ export default function ProformasPage() {
                 {showCreate && (
                     <div className="p-8 bg-slate-900/80 border border-app-success/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                            <h2 className="text-white flex items-center gap-3">
                                 <FileText size={22} className="text-app-success" /> New Proforma
                             </h2>
                             <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white"><X size={20} /></button>
@@ -149,7 +149,7 @@ export default function ProformasPage() {
                 ) : proformas.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <FileText size={48} className="mx-auto text-app-muted-foreground" />
-                        <h2 className="text-xl font-bold text-white">No proformas yet</h2>
+                        <h2 className="text-white">No proformas yet</h2>
                         <p className="text-app-muted-foreground">Create your first proforma to send a quotation</p>
                     </div>
                 ) : (

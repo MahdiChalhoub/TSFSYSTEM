@@ -45,7 +45,7 @@ export default function SwitcherPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h2 className="text-3xl font-black text-app-foreground tracking-tight">Instance Switcher</h2>
+                <h2>Instance Switcher</h2>
                 <p className="text-app-muted-foreground mt-2 font-medium">Switch between your authorized organization workspaces</p>
             </div>
 

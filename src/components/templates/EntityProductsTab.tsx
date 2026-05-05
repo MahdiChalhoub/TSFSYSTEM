@@ -570,7 +570,7 @@ export function EntityProductsTab({ config }: { config: EntityProductsTabConfig 
                                     <ArrowRightLeft size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-app-foreground">Move Products</h3>
+                                    <h3>Move Products</h3>
                                     <p className="text-[11px] text-app-muted-foreground">{selected.size} product{selected.size > 1 ? 's' : ''} from &ldquo;{entityName}&rdquo;</p>
                                 </div>
                             </div>

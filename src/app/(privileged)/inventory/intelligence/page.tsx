@@ -45,7 +45,7 @@ export default function IntelligenceDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2">
             <Brain className="h-8 w-8 text-primary" />
             Inventory Intelligence
           </h1>

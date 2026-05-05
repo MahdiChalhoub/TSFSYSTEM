@@ -177,7 +177,7 @@ export default function AddProductForm({
 
                 {/* --- Card 1: Basic Info --- */}
                 <div className="card p-6 bg-app-surface rounded-xl shadow-sm border border-app-border">
-                    <h3 className="text-lg font-semibold mb-4 text-app-foreground">Basic Information</h3>
+                    <h3 className="mb-4">Basic Information</h3>
 
                     <div className="space-y-4">
                         {/* Step 1: Category FIRST */}
@@ -357,7 +357,7 @@ export default function AddProductForm({
 
                 {/* --- Card 2: Identification --- */}
                 <div className="card p-6 bg-app-surface rounded-xl shadow-sm border border-app-border">
-                    <h3 className="text-lg font-semibold mb-4 text-app-foreground">Identification</h3>
+                    <h3 className="mb-4">Identification</h3>
 
                     <div className="space-y-4">
                         <div>
@@ -406,7 +406,7 @@ export default function AddProductForm({
 
                 {/* --- Card 3: Pricing --- */}
                 <div className="card p-6 bg-app-surface rounded-xl shadow-sm border border-app-border">
-                    <h3 className="text-lg font-semibold mb-4 text-app-foreground">Pricing Strategy</h3>
+                    <h3 className="mb-4">Pricing Strategy</h3>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -437,7 +437,7 @@ export default function AddProductForm({
 
                 {/* --- Card 4: Inventory --- */}
                 <div className="card p-6 bg-app-surface rounded-xl shadow-sm border border-app-border">
-                    <h3 className="text-lg font-semibold mb-4 text-app-foreground">Inventory Settings</h3>
+                    <h3 className="mb-4">Inventory Settings</h3>
 
                     <div className="space-y-4">
                         <div>

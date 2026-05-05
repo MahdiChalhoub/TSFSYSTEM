@@ -272,7 +272,7 @@ export default function PackageManagerPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-white flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-900/30">
                             <Package size={24} className="text-white" />
                         </div>

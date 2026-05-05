@@ -17,7 +17,7 @@ export function SitesTab({ sites, onCreateSite, onToggleSite }: SitesTabProps) {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-app-foreground">Organization Sites</h3>
+                    <h3>Organization Sites</h3>
                     <p className="text-sm text-app-muted-foreground">{sites.length} site{sites.length !== 1 ? 's' : ''} — branches, warehouses, locations</p>
                 </div>
                 <Button onClick={onCreateSite} className="bg-app-accent-strong hover:bg-app-accent-strong text-white rounded-xl font-bold shadow-md">

@@ -94,7 +94,7 @@ export default function QuotePage() {
                     <div className="w-20 h-20 bg-app-success/10 border border-app-success/20 rounded-full flex items-center justify-center mx-auto text-app-success">
                         <CheckCircle2 size={40} />
                     </div>
-                    <h1 className="text-3xl font-black text-white">Quote Request Sent!</h1>
+                    <h1 className="text-white">Quote Request Sent!</h1>
                     <p className="text-app-muted-foreground">We&#39;ll review your request and get back to you with a detailed quotation.</p>
                     <div className="flex items-center justify-center gap-4">
                         <Link href={`/tenant/${slug}`}
@@ -119,7 +119,7 @@ export default function QuotePage() {
                         className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Back to Store
                     </Link>
-                    <h1 className="text-4xl font-black text-white flex items-center gap-3">
+                    <h1 className="text-white flex items-center gap-3">
                         <FileQuestion className="text-teal-400" /> Request a Quote
                     </h1>
                     <p className="text-app-muted-foreground text-sm">Tell us what you need and we&#39;ll prepare a detailed quotation for you</p>
@@ -134,7 +134,7 @@ export default function QuotePage() {
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Contact Info */}
                     <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-5">
-                        <h2 className="text-lg font-bold text-white">Contact Information</h2>
+                        <h2 className="text-white">Contact Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" placeholder="Full Name *" value={contactName} onChange={e => setContactName(e.target.value)} required
                                 className="bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint" />
@@ -150,7 +150,7 @@ export default function QuotePage() {
                     {/* Line Items */}
                     <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-5">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-white">Products / Services Needed</h2>
+                            <h2 className="text-white">Products / Services Needed</h2>
                             <div className="flex gap-2">
                                 {cart.length > 0 && (
                                     <button type="button" onClick={importFromCart}
@@ -205,7 +205,7 @@ export default function QuotePage() {
 
                     {/* Message */}
                     <div className="p-8 bg-app-surface/60 border border-white/5 rounded-3xl space-y-4">
-                        <h2 className="text-lg font-bold text-white">Additional Message</h2>
+                        <h2 className="text-white">Additional Message</h2>
                         <textarea placeholder="Delivery timeline, budget range, special requirements..." value={message}
                             onChange={e => setMessage(e.target.value)} rows={4}
                             className="w-full bg-app-bg/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-app-success transition-all placeholder:text-app-faint resize-none" />

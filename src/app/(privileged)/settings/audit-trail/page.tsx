@@ -180,7 +180,7 @@ export default function GlobalAuditTrailPage() {
                         <ClipboardList size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">System Audit Trail</h1>
+                        <h1>System Audit Trail</h1>
                         <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                             {filteredEntries.length} entries · Compliance Dashboard
                         </p>

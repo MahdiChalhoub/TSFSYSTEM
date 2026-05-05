@@ -113,7 +113,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                             <Ruler size={14} />
                         </div>
                         <div>
-                            <h3 className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <h3 className="text-tp-md" style={{ color: 'var(--app-foreground)' }}>
                                 {unit ? 'Edit Unit' : 'Create Unit'}
                             </h3>
                             <p className="text-tp-xs font-semibold" style={{ color: 'var(--app-muted-foreground)' }}>

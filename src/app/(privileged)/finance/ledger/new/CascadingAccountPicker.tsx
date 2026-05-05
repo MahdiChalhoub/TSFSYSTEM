@@ -212,7 +212,7 @@ export function CascadingAccountPicker({ accounts, value, displayValue, onChange
                   <FolderTree size={18} className="text-app-success" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-app-foreground">Browse Chart of Accounts</h3>
+                  <h3>Browse Chart of Accounts</h3>
                   <p className="text-tp-xs text-app-muted-foreground">
                     {rootAccounts.length} top-level · Select step by step
                   </p>

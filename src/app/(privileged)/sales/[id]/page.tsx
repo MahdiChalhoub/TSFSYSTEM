@@ -29,7 +29,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
-                <h1 className="text-2xl font-black text-app-foreground tracking-tighter">Sale Not Found</h1>
+                <h1>Sale Not Found</h1>
                 <Link href="/sales/history" className="text-app-success font-bold hover:underline">Return to History</Link>
             </div>
         );
@@ -46,7 +46,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                         <ArrowLeft size={14} /> Back to Sales History
                     </Link>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl lg:text-5xl font-black text-app-foreground tracking-tighter">
+                        <h1>
                             Sale Record <span className="text-app-success">{order.invoice_number || order.ref_code || `#${order.id}`}</span>
                         </h1>
                     </div>

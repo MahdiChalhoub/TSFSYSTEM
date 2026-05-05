@@ -108,7 +108,7 @@ export default function SystemUpdatesPage() {
                         <div className="p-2 bg-app-accent-bg rounded-xl text-app-accent shadow-sm border border-app-accent shrink-0">
                             <Cpu size={24} />
                         </div>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-app-foreground tracking-tight">System Updates</h2>
+                        <h2>System Updates</h2>
                     </div>
                     <p className="text-app-muted-foreground mt-2 font-medium text-sm md:text-base">Privileged update channel for the Dajingo Platform Kernel</p>
                 </div>
@@ -202,7 +202,7 @@ export default function SystemUpdatesPage() {
                                         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 md:gap-0">
                                             <div className="space-y-1">
                                                 <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                                                    <h3 className="text-base md:text-lg font-black text-app-foreground tracking-tight">v{update.version}</h3>
+                                                    <h3>v{update.version}</h3>
                                                     {update.is_applied ? (
                                                         <Badge className="bg-app-success-bg text-app-success border-app-success text-[10px]">Applied</Badge>
                                                     ) : (

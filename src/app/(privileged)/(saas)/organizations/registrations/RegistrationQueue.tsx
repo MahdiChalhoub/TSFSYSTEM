@@ -82,7 +82,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                 <div className="w-20 h-20 bg-app-surface rounded-full flex items-center justify-center mx-auto mb-6">
                     <Check className="text-app-faint" size={40} />
                 </div>
-                <h2 className="text-xl font-black text-app-faint uppercase tracking-tighter">Queue Empty</h2>
+                <h2 className="text-app-faint uppercase">Queue Empty</h2>
                 <p className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mt-1">No pending registrations at the moment</p>
             </div>
         );
@@ -100,7 +100,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                         <Building2 className="text-app-muted-foreground" size={24} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-black text-app-foreground uppercase tracking-tighter truncate">
+                                        <h3 className="uppercase truncate">
                                             {user.organization?.name || 'New Organization'}
                                         </h3>
                                         <p className="text-[10px] font-black uppercase text-app-info tracking-widest">

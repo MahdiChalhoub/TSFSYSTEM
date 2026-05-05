@@ -366,7 +366,7 @@ export default function MigrationPage() {
                         </Button>
                     )}
                     <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 flex items-center gap-3">
+                        <h1 className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 flex items-center gap-3">
                             <Globe className="w-8 h-8 text-purple-400" />
                             Import from Third Party
                         </h1>
@@ -420,7 +420,7 @@ export default function MigrationPage() {
                                             <StatusIcon className={`w-5 h-5 ${job.status === "RUNNING" ? "animate-spin" : ""}`} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-white font-semibold truncate">{job.name}</h3>
+                                            <h3 className="text-white truncate">{job.name}</h3>
                                             <div className="flex items-center gap-4 mt-1 text-sm text-white/40 flex-wrap">
                                                 <span>{config.label}</span>
                                                 <span>•</span>
@@ -499,7 +499,7 @@ export default function MigrationPage() {
             {step === "SOURCE" && (
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white mb-2">Choose Import Source</h2>
+                        <h2 className="text-white mb-2">Choose Import Source</h2>
                         <p className="text-white/40">Select the system you're migrating from</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -518,7 +518,7 @@ export default function MigrationPage() {
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <span className="text-3xl">{source.icon}</span>
-                                        <h3 className="text-white font-bold text-lg mt-3">{source.name}</h3>
+                                        <h3 className="text-white mt-3">{source.name}</h3>
                                         <p className="text-white/40 text-sm mt-1">{source.description}</p>
                                     </div>
                                     {source.available && (
@@ -608,7 +608,7 @@ export default function MigrationPage() {
             {step === "BUSINESSES" && (
                 <div className="max-w-3xl mx-auto space-y-6">
                     <div className="text-center mb-4">
-                        <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+                        <h2 className="text-white mb-2 flex items-center justify-center gap-3">
                             <Building2 className="w-7 h-7 text-orange-400" />
                             Select Business to Import
                         </h2>
@@ -639,7 +639,7 @@ export default function MigrationPage() {
                                             <Building2 className="w-5 h-5 text-orange-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-white font-semibold text-lg truncate">
+                                            <h3 className="text-white truncate">
                                                 {biz.name || `Business #${biz.id}`}
                                             </h3>
                                             <div className="flex items-center gap-4 mt-1 text-sm text-white/40">
@@ -802,7 +802,7 @@ export default function MigrationPage() {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
                     <CardContent className="py-12 text-center">
                         <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
-                        <h2 className="text-2xl font-bold text-white mb-2">
+                        <h2 className="text-white mb-2">
                             {activeJob.migration_mode === "SYNC" ? "Syncing Data..." : "Import in Progress"}
                         </h2>
                         <p className="text-white/50 mb-1">
@@ -862,7 +862,7 @@ export default function MigrationPage() {
                                 <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
                             )}
                             <div>
-                                <h2 className="text-xl font-bold text-white">
+                                <h2 className="text-white">
                                     {activeJob.status === "COMPLETED"
                                         ? (activeJob.migration_mode === "SYNC" ? "Sync Completed!" : "Import Completed!")
                                         : activeJob.status === "FAILED" ? "Import Failed" : "Import Running..."}

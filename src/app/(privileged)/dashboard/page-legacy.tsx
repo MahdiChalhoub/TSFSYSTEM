@@ -194,7 +194,7 @@ export default function AdvancedIntelligenceDashboard() {
  )}
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">30D Gross Revenue</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter mt-1">{fmt(parseFloat(data.salesSummary?.sales?.total || 0))}</h2>
+ <h2 className="mt-1">{fmt(parseFloat(data.salesSummary?.sales?.total || 0))}</h2>
  <div className="mt-6 pt-5 border-t border-app-border flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
  <Target size={14} className="text-app-primary" /> {totalTransactions.toLocaleString()} transactions this period
  </div>
@@ -211,7 +211,7 @@ export default function AdvancedIntelligenceDashboard() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">REVENUE LIQUIDITY</p>
- <h2 className="text-4xl font-black text-app-primary tracking-tighter mt-1">{fmt(revenueLiquidity)}</h2>
+ <h2 className="text-app-primary mt-1">{fmt(revenueLiquidity)}</h2>
  <div className="mt-6 pt-5 border-t border-app-border flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
  <ShieldCheck size={14} className="text-app-primary" /> Position: Fully Hedged
  </div>
@@ -229,7 +229,7 @@ export default function AdvancedIntelligenceDashboard() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">ECONOMIC EXPOSURE</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter mt-1">{fmt(economicExposure)}</h2>
+ <h2 className="mt-1">{fmt(economicExposure)}</h2>
  <div className="mt-6 pt-5 border-t border-app-foreground/5 flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
  <Clock size={14} className="text-app-primary" /> Review Priority: Alpha
  </div>
@@ -246,7 +246,7 @@ export default function AdvancedIntelligenceDashboard() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">Stock Health</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter mt-1">{stockResolutionRate}%</h2>
+ <h2 className="mt-1">{stockResolutionRate}%</h2>
  <div className="mt-6 pt-5 border-t border-app-border flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-tight">
  <RefreshCw size={14} className={`text-app-warning ${data.lowStock.length > 0 ? 'animate-spin-slow' : ''}`} /> {data.lowStock.length} items need reorder
  </div>
@@ -259,7 +259,7 @@ export default function AdvancedIntelligenceDashboard() {
  <CardHeader className="px-10 pt-10 flex flex-row items-center justify-between pb-4">
  <div>
  <CardTitle className="text-[11px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">Financial Trend</CardTitle>
- <h3 className="text-2xl font-black text-app-foreground tracking-tight">Revenue vs Cost of Goods</h3>
+ <h3>Revenue vs Cost of Goods</h3>
  </div>
  <div className="flex items-center gap-6">
  <div className="flex items-center gap-3">
@@ -301,7 +301,7 @@ export default function AdvancedIntelligenceDashboard() {
  <Card className="card-premium overflow-hidden bg-app-surface">
  <CardHeader className="px-10 pt-10">
  <CardTitle className="text-[11px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">Location Performance</CardTitle>
- <h3 className="text-2xl font-black text-app-foreground tracking-tight">Warehouse Activity</h3>
+ <h3>Warehouse Activity</h3>
  </CardHeader>
  <CardContent className="px-10 pb-10 space-y-6">
  {terminalPerformance.map((t: any, i: number) => (
@@ -335,7 +335,7 @@ export default function AdvancedIntelligenceDashboard() {
  <Card className="card-premium overflow-hidden bg-app-surface">
  <CardHeader className="p-10 pb-0">
  <CardTitle className="text-[11px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">Sales Performance</CardTitle>
- <h3 className="text-2xl font-black text-app-foreground tracking-tight">Top Sellers</h3>
+ <h3>Top Sellers</h3>
  </CardHeader>
  <CardContent className="p-10 space-y-8">
  {topSellers.length === 0 ? (
@@ -371,7 +371,7 @@ export default function AdvancedIntelligenceDashboard() {
  <Card className="card-premium overflow-hidden bg-app-surface border-app-success/30/50 shadow-app-primary/20">
  <CardHeader className="p-10 pb-0">
  <CardTitle className="text-[11px] font-black uppercase tracking-widest text-app-primary mb-2">Recent Activity</CardTitle>
- <h3 className="text-2xl font-black text-app-foreground tracking-tight">Inventory Movements</h3>
+ <h3>Inventory Movements</h3>
  </CardHeader>
  <CardContent className="p-10 space-y-8">
  {recentMovements.length === 0 ? (

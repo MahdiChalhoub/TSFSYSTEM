@@ -144,7 +144,7 @@ export default function SubscriptionPlansPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Subscription Plans</h2>
+                    <h2>Subscription Plans</h2>
                     <p className="text-app-muted-foreground mt-2 font-medium">Manage pricing tiers and feature entitlements</p>
                 </div>
                 <div className="flex gap-2">
@@ -340,7 +340,7 @@ export default function SubscriptionPlansPage() {
                     {categories.map(cat => (
                         <div key={cat.id} className="space-y-4">
                             <div className="flex items-center gap-3 pb-2 border-b border-app-border">
-                                <h3 className="text-xl font-bold text-app-foreground">{cat.name}</h3>
+                                <h3>{cat.name}</h3>
                                 <Badge variant="secondary" className="text-xs font-mono">{cat.type}</Badge>
                             </div>
 
@@ -481,7 +481,7 @@ export default function SubscriptionPlansPage() {
                     <div className="space-y-4 mt-8">
                         <div className="flex items-center justify-between pb-2 border-b border-app-border">
                             <div>
-                                <h3 className="text-xl font-bold text-app-foreground">Plan Add-ons</h3>
+                                <h3>Plan Add-ons</h3>
                                 <p className="text-xs text-app-muted-foreground mt-1">Per-item upgrades clients can purchase (monthly recurring)</p>
                             </div>
                             <Dialog open={addonOpen} onOpenChange={setAddonOpen}>

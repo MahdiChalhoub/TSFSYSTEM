@@ -59,7 +59,7 @@ export function TemplateDetail({
                         {(() => { const I = resolveIcon(template.icon); return <I size={16} className="text-white" /> })()}
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-app-foreground">{template.name}</h3>
+                        <h3>{template.name}</h3>
                         <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider">
                             {template.region} · {accounts.length} accts · {postingRules.length} rules
                         </p>

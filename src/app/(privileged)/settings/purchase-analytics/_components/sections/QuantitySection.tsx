@@ -25,7 +25,7 @@ export function QuantitySection() {
                     <Calculator size={15} style={{ color: SECTION_COLOR }} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-[13px] font-black text-app-foreground">Proposed Quantity</h3>
+                    <h3>Proposed Quantity</h3>
                     <p className="text-[9px] font-bold text-app-muted-foreground">How the system suggests order quantities</p>
                 </div>
                 <button type="button" onClick={(e) => { e.stopPropagation(); s.resetSection('proposed') }}

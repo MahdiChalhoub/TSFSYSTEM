@@ -132,7 +132,7 @@ export function RolesBuilderClient({ initialRoles, permissions }: { initialRoles
             {/* LEFT SIDEBAR: ROLES */}
             <div className="w-full lg:w-80 flex shrink-0 flex-col gap-4 bg-app-surface/60 backdrop-blur-md border border-app-border/40 p-4 rounded-[2rem] overflow-hidden">
                 <div className="flex items-center justify-between pb-2">
-                    <h2 className="font-black text-app-foreground uppercase tracking-wider text-xs px-2">Access Roles</h2>
+                    <h2 className="uppercase px-2">Access Roles</h2>
                     <button onClick={() => setIsCreating(true)} className="w-8 h-8 rounded-full bg-app-primary/10 text-app-primary flex items-center justify-center hover:bg-app-primary/20 transition-colors">
                         <Plus size={16} strokeWidth={3} />
                     </button>
@@ -194,7 +194,7 @@ export function RolesBuilderClient({ initialRoles, permissions }: { initialRoles
                     {/* Header */}
                     <div className="p-6 border-b border-app-border/40 flex items-center justify-between shrink-0 bg-app-background/30">
                         <div>
-                            <h2 className="text-2xl font-black text-app-foreground flex items-center gap-3">
+                            <h2 className="flex items-center gap-3">
                                 {activeRole.name}
                                 {activeRole.is_system_role && <span className="bg-app-error/10 text-app-error text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">System</span>}
                             </h2>
@@ -288,7 +288,7 @@ export function RolesBuilderClient({ initialRoles, permissions }: { initialRoles
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center bg-app-surface/30 backdrop-blur-sm border border-app-border/30 rounded-[2rem]">
                     <Shield className="w-24 h-24 text-app-muted-foreground/30 mb-6 stroke-1" />
-                    <h2 className="text-xl font-black text-app-foreground">No Role Selected</h2>
+                    <h2>No Role Selected</h2>
                     <p className="text-app-muted-foreground mt-2 text-sm text-center max-w-sm">
                         Select a role from the left sidebar to configure its permissions across all active modules.
                     </p>

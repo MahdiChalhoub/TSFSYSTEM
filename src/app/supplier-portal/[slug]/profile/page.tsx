@@ -118,7 +118,7 @@ export default function SupplierProfilePage() {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-white">Session expired</h1>
+                    <h1 className="text-white">Session expired</h1>
                     <Link href={`/supplier-portal/${slug}`} className="text-app-accent font-bold">Go to Login</Link>
                 </div>
             </div>
@@ -135,7 +135,7 @@ export default function SupplierProfilePage() {
                         className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Dashboard
                     </Link>
-                    <h1 className="text-4xl font-black text-white">Profile & Settings</h1>
+                    <h1 className="text-white">Profile & Settings</h1>
                     <p className="text-app-muted-foreground text-sm">Manage your account information and security</p>
                 </div>
 
@@ -157,7 +157,7 @@ export default function SupplierProfilePage() {
 
                 {/* Personal Information */}
                 <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-3">
+                    <h2 className="text-white flex items-center gap-3">
                         <User size={20} className="text-app-accent" /> Contact Information
                     </h2>
 
@@ -205,7 +205,7 @@ export default function SupplierProfilePage() {
 
                 {/* Change Password */}
                 <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-3">
+                    <h2 className="text-white flex items-center gap-3">
                         <Lock size={20} className="text-app-warning" /> Change Password
                     </h2>
 

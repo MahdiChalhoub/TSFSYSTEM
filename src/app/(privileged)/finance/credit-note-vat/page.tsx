@@ -93,7 +93,7 @@ function RevEditor({ item, onSave, onCancel }: { item: Rev | null; onSave: (d: R
             <RotateCcw size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit VAT Reversal' : 'New VAT Reversal'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Credit Note Adjustment</p>
@@ -234,7 +234,7 @@ export default function CreditNoteVATReversalPage() {
                   <RotateCcw size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Credit Note VAT Reversals</h1>
+                  <h1>Credit Note VAT Reversals</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">VAT Adjustment · Refunds & Credits</p>
                 </div>
               </div>

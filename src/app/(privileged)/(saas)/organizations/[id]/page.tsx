@@ -48,7 +48,7 @@ export default function OrganizationDetailPage() {
 
     if (!d.org) return (
         <div className="p-12 text-center">
-            <h2 className="text-xl font-bold text-app-foreground">Organization Not Found</h2>
+            <h2>Organization Not Found</h2>
             <Button variant="ghost" onClick={() => router.push('/organizations')} className="mt-4">← Back to Organizations</Button>
         </div>
     )
@@ -76,7 +76,7 @@ export default function OrganizationDetailPage() {
                     </Button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-black text-app-foreground tracking-tight">{d.org.name}</h1>
+                            <h1>{d.org.name}</h1>
                             <Badge className={d.org.is_active ? "bg-app-success-bg text-app-success border-app-success" : "bg-app-error-bg text-app-error border-app-error"}>
                                 {d.org.is_active ? 'Active' : 'Suspended'}
                             </Badge>
@@ -163,7 +163,7 @@ export default function OrganizationDetailPage() {
             {activeTab === 'branding' && (
                 <div className="space-y-6">
                     <div>
-                        <h3 className="text-lg font-bold text-app-foreground">Login Page Branding</h3>
+                        <h3>Login Page Branding</h3>
                         <p className="text-sm text-app-muted-foreground">Customize how {d.org.name}'s login page appears to users.</p>
                     </div>
                     <BrandingTab

@@ -177,7 +177,7 @@ export default function ProductFormWrapper(props: any) {
                                     <Zap className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[15px] font-black text-app-foreground">Quick Create</h3>
+                                    <h3>Quick Create</h3>
                                     <p className="text-[10px] text-app-muted-foreground font-medium">Create a product in 2 seconds</p>
                                 </div>
                             </div>

@@ -58,7 +58,7 @@ export class MobileErrorBoundary extends Component<Props, State> {
                     }}>
                     <AlertTriangle size={28} />
                 </div>
-                <h2 className="font-black text-app-foreground mb-1" style={{ fontSize: 'var(--tp-2xl)' }}>
+                <h2 className="mb-1" style={{ fontSize: 'var(--tp-2xl)' }}>
                     Something went wrong
                 </h2>
                 <p className="font-bold text-app-muted-foreground max-w-xs mb-1"

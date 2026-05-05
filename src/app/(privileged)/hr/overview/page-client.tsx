@@ -68,7 +68,7 @@ export default function HROverviewPage() {
  {/* Header */}
  <header className="flex flex-col md:flex-row justify-between items-center gap-6">
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
  <Users size={28} className="text-app-foreground" />
  </div>
@@ -99,7 +99,7 @@ export default function HROverviewPage() {
  </div>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Active Employees</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{employees.length}</h2>
+ <h2>{employees.length}</h2>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-primary overflow-hidden group hover:shadow-xl transition-all text-app-foreground">
@@ -111,7 +111,7 @@ export default function HROverviewPage() {
  <Badge className="bg-app-foreground/20 text-app-foreground border-0 font-black text-[10px] px-3">ACTIVE</Badge>
  </div>
  <p className="text-[11px] font-black text-app-success uppercase tracking-widest leading-none mb-1">Human Capital Yield</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{activeEmp.length} <span className="text-xs text-app-success font-medium">STAFF</span></h2>
+ <h2>{activeEmp.length} <span className="text-xs text-app-success font-medium">STAFF</span></h2>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
@@ -126,7 +126,7 @@ export default function HROverviewPage() {
  </div>
  </div>
  <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Daily Attendance</p>
- <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{presentToday}</h2>
+ <h2>{presentToday}</h2>
  </CardContent>
  </Card>
  <Card className={`rounded-[2rem] border-0 shadow-sm bg-gradient-to-br transition-all overflow-hidden group hover:shadow-md ${pending.length > 0 ? 'from-amber-50 to-white border border-app-warning/30' : 'from-slate-50 to-white'}`}>

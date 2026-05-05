@@ -94,7 +94,7 @@ export default function ClientGatePreviewClient() {
                         <Eye size={22} className="text-app-success" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-app-foreground tracking-tight">Client Gate Preview</h1>
+                        <h1>Client Gate Preview</h1>
                         <p className="text-sm text-app-muted-foreground">
                             Previewing <strong>{org?.name || 'Your Store'}</strong> as a customer sees it
                         </p>
@@ -138,7 +138,7 @@ export default function ClientGatePreviewClient() {
                                     <ShoppingBag size={18} className="text-app-success" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white">{org?.name || 'Store'}</h2>
+                                    <h2 className="text-white">{org?.name || 'Store'}</h2>
                                     <div className="flex items-center gap-2">
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clientType === 'RETAIL' ? 'bg-app-surface text-app-faint'
                                                 : clientType === 'WHOLESALE' ? 'bg-amber-900/50 text-app-warning'
@@ -205,7 +205,7 @@ export default function ClientGatePreviewClient() {
                                             )}
                                         </div>
                                         {/* Product Info */}
-                                        <h3 className="text-sm font-bold text-white truncate group-hover:text-app-success transition-colors">
+                                        <h3 className="text-white truncate group-hover:text-app-success transition-colors">
                                             {product.name}
                                         </h3>
                                         <p className="text-[10px] text-app-muted-foreground font-mono mt-0.5">{product.sku}</p>

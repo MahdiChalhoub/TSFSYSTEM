@@ -136,7 +136,7 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                <h1>
                   {budget.name}
                 </h1>
                 <Badge className="gap-1.5">

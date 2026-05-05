@@ -98,7 +98,7 @@ export default function ProfitCentersPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                <h1 className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center">
                         <Building2 size={20} className="text-white" />
                     </div>

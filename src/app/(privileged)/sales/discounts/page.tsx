@@ -194,7 +194,7 @@ export default function DiscountRulesPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                             <Percent size={20} className="text-white" />
                         </div>
@@ -397,7 +397,7 @@ export default function DiscountRulesPage() {
                                             <Icon size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-sm text-app-foreground leading-tight">{rule.name}</h3>
+                                            <h3>{rule.name}</h3>
                                             <p className="font-mono text-[10px] text-app-info font-bold uppercase">{rule.code || 'NO CODE'}</p>
                                         </div>
                                     </div>
@@ -466,7 +466,7 @@ export default function DiscountRulesPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
                     <div className="w-[500px] bg-app-surface h-full shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
+                            <h2 className="flex items-center gap-2">
                                 <History className="text-app-info" /> Redemption Logs
                             </h2>
                             <button onClick={() => setUsageRuleId(null)} className="p-2 hover:bg-app-surface-2 rounded-full"><X size={20} /></button>

@@ -3,7 +3,7 @@ import { Building, Globe, Mail } from 'lucide-react';
 export default function BusinessSettings() {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-app-border p-6">
-            <h2 className="text-xl font-semibold text-app-foreground mb-6 flex items-center gap-2">
+            <h2 className="mb-6 flex items-center gap-2">
                 <Building className="text-app-muted-foreground" size={24} />
                 Business Profile
             </h2>

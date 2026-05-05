@@ -127,7 +127,7 @@ export function BulkDialog({ mode, selectedIds, allCategories, busy, onClose, on
                             <Icon size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">{title}</h3>
+                            <h3>{title}</h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">
                                 {selectedIds.length} categor{selectedIds.length === 1 ? 'y' : 'ies'} selected
                             </p>

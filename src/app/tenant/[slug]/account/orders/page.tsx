@@ -64,7 +64,7 @@ export default function OrdersPage() {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-white">Please log in to view orders</h1>
+                    <h1 className="text-white">Please log in to view orders</h1>
                     <Link href={`/tenant/${slug}`} className="text-app-success font-bold">Go to Store</Link>
                 </div>
             </div>
@@ -81,7 +81,7 @@ export default function OrdersPage() {
                         className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> My Account
                     </Link>
-                    <h1 className="text-4xl font-black text-white">Order History</h1>
+                    <h1 className="text-white">Order History</h1>
                 </div>
 
                 {loading ? (
@@ -91,7 +91,7 @@ export default function OrdersPage() {
                 ) : orders.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <Package size={48} className="mx-auto text-app-faint" />
-                        <h2 className="text-xl font-bold text-white">No orders yet</h2>
+                        <h2 className="text-white">No orders yet</h2>
                         <p className="text-app-muted-foreground">Start shopping and your orders will appear here</p>
                         <Link href={`/tenant/${slug}`}
                             className="inline-flex items-center gap-2 px-6 py-3 bg-app-primary-dark text-white rounded-xl font-bold">

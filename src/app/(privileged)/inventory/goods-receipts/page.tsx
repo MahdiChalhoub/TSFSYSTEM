@@ -65,7 +65,7 @@ export default function GoodsReceiptsPage() {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Procurement</p>
-                    <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                    <h1>
                         Goods <span style={{ color: 'var(--app-primary)' }}>Receipts</span>
                     </h1>
                 </div>

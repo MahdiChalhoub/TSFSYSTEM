@@ -274,7 +274,7 @@ export function UniversalDataTable({
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-6 rounded-[2rem] shadow-2xl border-app-border">
                             <div className="space-y-4">
-                                <h3 className="font-black uppercase tracking-tighter text-app-foreground">Advanced Filters</h3>
+                                <h3 className="uppercase">Advanced Filters</h3>
                                 <div className="space-y-4">
                                     {meta.fields.filter(f => f.filterable).slice(0, 5).map(field => (
                                         <div key={field.name} className="space-y-1.5">

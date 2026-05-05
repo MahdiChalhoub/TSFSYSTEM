@@ -337,7 +337,7 @@ export default function OpeningBalancesManager() {
                   <BookOpen size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Opening Balances</h1>
+                  <h1>Opening Balances</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     {stats.total} Entries · {stats.totalLines} Account Lines · {stats.posted} Posted
                   </p>

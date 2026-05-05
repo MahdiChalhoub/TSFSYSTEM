@@ -87,7 +87,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                         ) : (
                             <Layers size={16} className="text-app-info" />
                         )}
-                        <h3 className="text-sm font-bold text-app-foreground">{label}</h3>
+                        <h3>{label}</h3>
                     </div>
                     <button onClick={onCancel} className="text-app-muted-foreground hover:text-app-muted-foreground p-1">
                         <X size={14} />

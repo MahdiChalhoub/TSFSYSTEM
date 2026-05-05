@@ -207,7 +207,7 @@ export default function AdjustmentOrdersPage() {
             {/* ─── Header ─────────────────────────────────────────── */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-serif font-bold tracking-tight flex items-center gap-2">
+                    <h1 className="font-serif flex items-center gap-2">
                         <ArrowDownUp className="h-6 w-6 text-app-info" /> Stock Adjustment Orders
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">Create and manage stock adjustment orders with verification pipeline</p>
@@ -288,7 +288,7 @@ export default function AdjustmentOrdersPage() {
                     {filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                             <div className="bg-muted rounded-full p-4 mb-4"><ClipboardList className="h-8 w-8 text-muted-foreground" /></div>
-                            <h3 className="font-semibold text-lg">No adjustment orders</h3>
+                            <h3>No adjustment orders</h3>
                             <p className="text-sm text-muted-foreground mt-1">Create your first stock adjustment order to get started</p>
                             <Button className="mt-4 gap-2" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> New Adjustment</Button>
                         </div>

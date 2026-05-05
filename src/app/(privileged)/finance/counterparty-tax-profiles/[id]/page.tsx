@@ -61,7 +61,7 @@ function Section({ title, icon, children, noPad }: { title: string; icon?: React
           style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
           {icon}
         </div>
-        <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">{title}</h3>
+        <h3 className="uppercase">{title}</h3>
       </div>
       {noPad ? children : (
         <div className="p-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
@@ -322,7 +322,7 @@ export default function CounterpartyTaxProfileFormPage() {
             <Users size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{isEdit ? 'Edit Tax Profile' : 'New Tax Profile'}</h1>
+            <h1>{isEdit ? 'Edit Tax Profile' : 'New Tax Profile'}</h1>
             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Counterparty Fiscal Identity · Supplier or Client</p>
           </div>
         </div>
@@ -501,7 +501,7 @@ export default function CounterpartyTaxProfileFormPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
                 <MapPin size={13} />
               </div>
-              <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">Jurisdiction Rules ({jurisRules.length})</h3>
+              <h3 className="uppercase">Jurisdiction Rules ({jurisRules.length})</h3>
               <span className="text-[10px] font-bold text-app-muted-foreground hidden sm:inline">Location-based tax rates & thresholds</span>
             </div>
             <ChevronDown size={14} className={`text-app-muted-foreground transition-transform ${showJuris ? 'rotate-180' : ''}`} />
@@ -588,7 +588,7 @@ export default function CounterpartyTaxProfileFormPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)', color: 'var(--app-warning, #f59e0b)' }}>
                 <Zap size={13} />
               </div>
-              <h3 className="text-[11px] font-black text-app-foreground uppercase tracking-widest">Custom Tax Rules ({customRules.length})</h3>
+              <h3 className="uppercase">Custom Tax Rules ({customRules.length})</h3>
               <span className="text-[10px] font-bold text-app-muted-foreground hidden sm:inline">Extra taxes beyond core engine</span>
             </div>
             <ChevronDown size={14} className={`text-app-muted-foreground transition-transform ${showCustomRules ? 'rotate-180' : ''}`} />

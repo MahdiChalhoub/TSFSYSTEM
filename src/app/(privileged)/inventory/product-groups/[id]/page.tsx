@@ -157,7 +157,7 @@ export default function ProductGroupDetailPage() {
                   style={{ color: 'var(--app-foreground)', borderColor: 'var(--app-primary)' }}
                 />
               ) : (
-                <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                <h1 style={{ color: 'var(--app-foreground)' }}>
                   {group.name}
                 </h1>
               )}
@@ -309,7 +309,7 @@ export default function ProductGroupDetailPage() {
       {/* ── Members Section ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-black" style={{ color: 'var(--app-foreground)' }}>
+          <h2 style={{ color: 'var(--app-foreground)' }}>
             Members ({variants.length})
           </h2>
           <div className="flex gap-2">
@@ -534,7 +534,7 @@ function AddMemberModal({ groupId, onClose, onAdded }: {
               <Plus size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-black" style={{ color: 'var(--app-foreground)' }}>Add Member Product</h3>
+              <h3 style={{ color: 'var(--app-foreground)' }}>Add Member Product</h3>
               <p className="text-xs" style={{ color: 'var(--app-muted-foreground)' }}>Search for products to add to this group</p>
             </div>
           </div>

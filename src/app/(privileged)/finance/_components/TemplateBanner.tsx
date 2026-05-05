@@ -84,7 +84,7 @@ export function TemplateBanner({
                         {allImported ? <CheckCircle2 size={15} className="text-white" /> : <Globe size={15} className="text-white" />}
                     </div>
                     <div>
-                        <h3 className="text-[12px] font-black text-app-foreground">
+                        <h3>
                             {templateData.country_name} {entityLabel}
                         </h3>
                         <p className="text-[10px] font-bold text-app-muted-foreground">

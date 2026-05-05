@@ -237,7 +237,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <Lock size={32} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-app-foreground">Cart Locked</h3>
+                                <h3>Cart Locked</h3>
                                 <p className="text-xs text-app-muted-foreground max-w-[200px] mt-1">Exit Payment Mode to modify items or quantities.</p>
                             </div>
                             <button
@@ -820,7 +820,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         <div className="px-3 py-1.5 border-b border-app-border/80 bg-app-surface flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-app-success animate-pulse" />
-                                <h2 className="text-xs font-bold text-app-foreground">Order</h2>
+                                <h2>Order</h2>
                                 <span className="text-[10px] text-app-muted-foreground font-medium">{uniqueItems} lines · {totalPieces} pcs</span>
                             </div>
                             {cart.length > 0 && (

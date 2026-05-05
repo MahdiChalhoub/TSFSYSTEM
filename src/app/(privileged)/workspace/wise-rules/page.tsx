@@ -37,7 +37,7 @@ export default async function WiseRulesPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Engine Management</p>
-                        <h1 className="text-4xl font-black tracking-tighter italic">
+                        <h1 className="italic">
                             WISE <span className="text-app-primary">Scoring Rules</span>
                         </h1>
                         <p className="text-sm opacity-40 mt-0.5 font-medium">
@@ -107,7 +107,7 @@ export default async function WiseRulesPage() {
                 <div className="lg:col-span-3 space-y-4">
                     <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
                         <div className="p-8 border-b border-app-border bg-app-surface/5 flex items-center justify-between">
-                            <h2 className="text-xl font-black italic flex items-center gap-3">
+                            <h2 className="italic flex items-center gap-3">
                                 <Layers size={20} className="text-app-primary" /> Active Rule Registry
                             </h2>
                         </div>

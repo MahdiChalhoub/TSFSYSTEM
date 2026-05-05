@@ -303,7 +303,7 @@ export default function EInvoiceStandardsPage() {
             <Zap size={16} className="text-white" />
           </div>
           <div>
-            <h1 className="text-[16px] font-black text-app-foreground tracking-tight">E-Invoice Standards</h1>
+            <h1>E-Invoice Standards</h1>
             <p className="text-[10px] font-bold text-app-muted-foreground">Manage e-invoicing standards. Tenants inherit these from their country template.</p>
           </div>
         </div>

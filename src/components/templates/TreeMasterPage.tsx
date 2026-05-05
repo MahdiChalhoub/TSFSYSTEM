@@ -383,7 +383,7 @@ export function TreeMasterPage({ config, children, detailPanel, modals, aboveTre
                                     <span className="text-white [&>svg]:w-[20px] [&>svg]:h-[20px]">{config.icon}</span>
                                 </div>
                                 <div data-tour="page-title">
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{config.title}</h1>
+                                    <h1>{config.title}</h1>
                                     <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-widest">
                                         {resolvedSubtitle}
                                     </p>

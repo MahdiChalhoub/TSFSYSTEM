@@ -25,7 +25,7 @@ export default async function BrandingSettingsPage() {
                         <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Settings / Appearance
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Login Page Branding
                         </h1>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>

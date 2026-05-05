@@ -55,8 +55,7 @@ export function ReportHeader({
                     <span className="text-white [&>svg]:w-[20px] [&>svg]:h-[20px]">{icon}</span>
                 </div>
                 <div>
-                    <h1 className="text-lg md:text-xl font-bold tracking-tight"
-                        style={{ color: 'var(--app-foreground)' }}>
+                    <h1 style={{ color: 'var(--app-foreground)' }}>
                         {title}
                     </h1>
                     <p className="text-tp-xs md:text-tp-sm font-bold uppercase tracking-wide"
@@ -90,7 +89,7 @@ export function StatementHeader({
                     {organizationName}
                 </p>
             )}
-            <h2 className="report-statement-title text-xl md:text-2xl print:text-3xl font-bold tracking-tight mt-1"
+            <h2 className="report-statement-title print: mt-1"
                 style={{ color: 'var(--app-foreground)' }}>
                 {reportName}
             </h2>
@@ -375,7 +374,7 @@ export function ReportPanel({
                             {icon}
                         </div>
                     )}
-                    <h2 className="text-tp-md font-bold uppercase tracking-wide">{title}</h2>
+                    <h2 className="text-tp-md uppercase">{title}</h2>
                 </div>
             )}
             <div>{children}</div>

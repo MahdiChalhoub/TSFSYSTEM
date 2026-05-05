@@ -69,7 +69,7 @@ export default function DailySummaryPage() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
-            <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            <h1 className="italic">
               Sales <span className="theme-primary">Summary</span>
             </h1>
           </div>

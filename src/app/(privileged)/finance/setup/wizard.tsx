@@ -139,7 +139,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                     style={{ background: 'var(--app-primary)15', border: '1px solid var(--app-primary)30' }}>
                     <Sparkles size={30} style={{ color: 'var(--app-primary)' }} />
                 </div>
-                <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                <h1 style={{ color: 'var(--app-foreground)' }}>
                     Chart of Accounts Setup
                 </h1>
                 <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -188,7 +188,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                 {currentStep === 0 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-xl font-bold" style={{ color: 'var(--app-foreground)' }}>Choose Your Chart of Accounts Template</h2>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>Choose Your Chart of Accounts Template</h2>
                             <p className="text-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Select the accounting standard that matches your country and regulations.</p>
                         </div>
                         <div className="grid gap-3">
@@ -233,7 +233,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                 {currentStep === 1 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-xl font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>
                                 Import: {TEMPLATES.find(t => t.key === selectedTemplate)?.name}
                             </h2>
                             <p className="text-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -300,7 +300,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                             </div>
                         ) : (
                             <div className="p-5 rounded-xl space-y-3" style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
-                                <h3 className="font-semibold" style={{ color: 'var(--app-foreground)' }}>What will happen:</h3>
+                                <h3 style={{ color: 'var(--app-foreground)' }}>What will happen:</h3>
                                 <ul className="space-y-2 text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                                     <li className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: 'var(--app-success)' }} /> Template accounts will be imported into your COA</li>
                                     <li className="flex items-center gap-2"><CheckCircle2 size={14} style={{ color: 'var(--app-success)' }} /> Smart posting rules will be auto-detected and mapped</li>
@@ -341,7 +341,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                 {currentStep === 2 && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-xl font-bold" style={{ color: 'var(--app-foreground)' }}>Review & Configure Posting Rules</h2>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>Review & Configure Posting Rules</h2>
                             <p className="text-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Posting rules have been auto-mapped. Review them and make any adjustments.</p>
                         </div>
                         {state.importedAt && (
@@ -354,7 +354,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                             </div>
                         )}
                         <div className="p-5 rounded-xl space-y-3" style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
-                            <h3 className="font-semibold" style={{ color: 'var(--app-foreground)' }}>Required actions:</h3>
+                            <h3 style={{ color: 'var(--app-foreground)' }}>Required actions:</h3>
                             <ul className="space-y-2 text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                                 <li className="flex items-center gap-2"><ListChecks size={14} style={{ color: 'var(--app-info)' }} /> Review auto-mapped posting rules</li>
                                 <li className="flex items-center gap-2"><ListChecks size={14} style={{ color: 'var(--app-info)' }} /> Fill in any unmapped rules (shown as &quot;Not Mapped&quot;)</li>
@@ -393,7 +393,7 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                                         style={{ background: 'var(--app-success)15', border: '2px solid var(--app-success)40' }}>
                                         <CheckCircle2 size={40} style={{ color: 'var(--app-success)' }} />
                                     </div>
-                                    <h2 className="text-2xl font-black" style={{ color: 'var(--app-foreground)' }}>Setup Complete! 🎉</h2>
+                                    <h2 style={{ color: 'var(--app-foreground)' }}>Setup Complete! 🎉</h2>
                                     <p className="text-sm max-w-md mx-auto" style={{ color: 'var(--app-muted-foreground)' }}>Your Chart of Accounts is fully configured. All finance operations are now enabled.</p>
                                     {state.completedAt && <p className="text-xs" style={{ color: 'var(--app-muted-foreground)' }}>Completed: {new Date(state.completedAt).toLocaleString()}</p>}
                                 </div>
@@ -418,11 +418,11 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                         ) : (
                             <>
                                 <div>
-                                    <h2 className="text-xl font-bold" style={{ color: 'var(--app-foreground)' }}>Finalize Setup</h2>
+                                    <h2 style={{ color: 'var(--app-foreground)' }}>Finalize Setup</h2>
                                     <p className="text-sm mt-1" style={{ color: 'var(--app-muted-foreground)' }}>Confirm that your COA and posting rules are correctly configured to activate the finance module.</p>
                                 </div>
                                 <div className="p-5 rounded-xl space-y-3" style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
-                                    <h3 className="font-semibold" style={{ color: 'var(--app-foreground)' }}>Setup Summary:</h3>
+                                    <h3 style={{ color: 'var(--app-foreground)' }}>Setup Summary:</h3>
                                     <div className="grid grid-cols-2 gap-3 text-sm">
                                         <div className="flex items-center gap-2" style={{ color: state.selectedTemplate ? 'var(--app-success)' : 'var(--app-destructive)' }}>
                                             {state.selectedTemplate ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}

@@ -114,7 +114,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                 {/* Printer list */}
                 <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-app-border/50 bg-app-background flex items-center justify-between">
-                        <h3 className="text-[13px] font-black text-app-foreground flex items-center gap-2"><Printer size={16} style={{ color: v('--app-primary') }} /> Printers ({printers.length})</h3>
+                        <h3 className="flex items-center gap-2"><Printer size={16} style={{ color: v('--app-primary') }} /> Printers ({printers.length})</h3>
                         <button onClick={newPrinter} className="flex items-center gap-1 px-3 h-7 rounded-lg text-white text-[10px] font-bold" style={grad('--app-primary')}><Plus size={12} /> Add Printer</button>
                     </div>
                     <div className="p-3 space-y-2">
@@ -209,7 +209,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                 {/* Active queue */}
                 <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-app-border/50 bg-app-background">
-                        <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><Zap size={14} style={{ color: v('--app-warning') }} /> Active Queue ({activeSessions.length})</h3>
+                        <h3 className="flex items-center gap-2"><Zap size={14} style={{ color: v('--app-warning') }} /> Active Queue ({activeSessions.length})</h3>
                     </div>
                     <div className="p-3 space-y-1.5">
                         {activeSessions.length === 0 ? (
@@ -232,7 +232,7 @@ export default function OutputTab({ initialPrinters, sessions }: Props) {
                 {/* Recent outputs */}
                 <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-app-border/50 bg-app-background">
-                        <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><FileText size={14} style={{ color: v('--app-success') }} /> Recent Outputs</h3>
+                        <h3 className="flex items-center gap-2"><FileText size={14} style={{ color: v('--app-success') }} /> Recent Outputs</h3>
                     </div>
                     <div className="p-3 space-y-1.5">
                         {recentCompleted.length === 0 ? (

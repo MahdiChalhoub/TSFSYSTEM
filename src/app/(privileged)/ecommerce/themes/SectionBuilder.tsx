@@ -91,7 +91,7 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  <div style={cardStyle} className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
  <div className="flex items-center justify-between mb-8">
  <div>
- <h2 className="text-2xl font-black text-app-foreground tracking-tight flex items-center gap-3">
+ <h2 className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-app-primary/5 text-app-primary flex items-center justify-center">
  <Layers size={20} />
  </div>
@@ -169,7 +169,7 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  </div>
 
  <div className="mt-12">
- <h3 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] mb-4">Add New Section</h3>
+ <h3 className="text-app-muted-foreground uppercase tracking-[0.2em] mb-4">Add New Section</h3>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  {AVAILABLE_SECTIONS.map(item => (
  <button

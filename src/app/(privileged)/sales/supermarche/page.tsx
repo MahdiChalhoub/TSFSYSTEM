@@ -32,7 +32,7 @@ function SupermarcheSkeleton() {
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Management</p>
-        <h1 className="text-3xl font-black tracking-tight text-app-foreground">Supermarché</h1>
+        <h1>Supermarché</h1>
         <p className="text-sm text-app-muted-foreground mt-0.5">Advanced POS interface</p>
       </div>
     </div>

@@ -95,7 +95,7 @@ export function TaxExplanationDrawer({ open, onClose, taxResult, context }: TaxE
                 <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                     <div className="flex items-center gap-2">
                         <Eye size={16} style={{ color: 'var(--app-accent)' }} />
-                        <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
+                        <h2 className="uppercase" style={{ color: 'var(--app-foreground)' }}>
                             Tax Explanation
                         </h2>
                     </div>
@@ -108,7 +108,7 @@ export function TaxExplanationDrawer({ open, onClose, taxResult, context }: TaxE
                     {/* Resolution Path */}
                     {context && (
                         <div className="space-y-0 divide-y divide-white/5">
-                            <h3 className="text-[10px] font-bold uppercase tracking-wider pb-2" style={{ color: 'var(--app-accent)' }}>
+                            <h3 className="uppercase pb-2" style={{ color: 'var(--app-accent)' }}>
                                 Resolution Path
                             </h3>
                             <Step
@@ -174,7 +174,7 @@ export function TaxExplanationDrawer({ open, onClose, taxResult, context }: TaxE
                     {/* Calculation Steps */}
                     {taxResult?.tax_lines && taxResult.tax_lines.length > 0 && (
                         <div className="space-y-2">
-                            <h3 className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-accent)' }}>
+                            <h3 className="uppercase" style={{ color: 'var(--app-accent)' }}>
                                 <Calculator size={12} className="inline mr-1" />
                                 Calculation Steps
                             </h3>

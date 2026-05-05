@@ -79,7 +79,7 @@ export default function OrderDetailPage() {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-white">Please log in</h1>
+                    <h1 className="text-white">Please log in</h1>
                     <Link href={`/tenant/${slug}`} className="text-app-success font-bold">Go to Store</Link>
                 </div>
             </div>
@@ -99,7 +99,7 @@ export default function OrderDetailPage() {
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <Package size={48} className="mx-auto text-app-faint" />
-                    <h1 className="text-2xl font-bold text-white">Order not found</h1>
+                    <h1 className="text-white">Order not found</h1>
                     <Link href={`/tenant/${slug}/account/orders`}
                         className="inline-flex items-center gap-2 text-app-success font-medium">
                         <ArrowLeft size={16} /> Back to Orders
@@ -126,7 +126,7 @@ export default function OrderDetailPage() {
                     </Link>
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
-                            <h1 className="text-3xl lg:text-4xl font-black text-white flex items-center gap-3">
+                            <h1 className="text-white flex items-center gap-3">
                                 <Hash size={28} className="text-app-faint" />{order.order_number}
                             </h1>
                             <p className="text-app-muted-foreground text-sm mt-1">
@@ -185,7 +185,7 @@ export default function OrderDetailPage() {
                 {/* ─── Order Tracking Timeline ───────────────────────────── */}
                 {order.status !== 'CART' && order.status !== 'CANCELLED' && (
                     <div className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl">
-                        <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-6">Order Tracking</h3>
+                        <h3 className="text-app-muted-foreground uppercase mb-6">Order Tracking</h3>
                         <div className="flex items-start justify-between relative">
                             {/* Connector line */}
                             <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-app-surface-2" />
@@ -231,7 +231,7 @@ export default function OrderDetailPage() {
 
                 {/* Order Lines */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <h2 className="text-white flex items-center gap-2">
                         <FileText size={18} className="text-app-faint" /> Items ({order.lines?.length || 0})
                     </h2>
 

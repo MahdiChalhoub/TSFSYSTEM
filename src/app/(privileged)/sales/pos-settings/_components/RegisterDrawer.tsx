@@ -171,7 +171,7 @@ export function RegisterDrawer({ reg, accounts, warehouses, users, onRefresh, on
                                 <Monitor size={18} />
                             </div>
                             <div>
-                                <h2 className="text-sm font-black text-app-foreground tracking-tight">{form.name}</h2>
+                                <h2>{form.name}</h2>
                                 <p className="text-[10px] text-app-muted-foreground">{reg.siteName} · #{reg.id}</p>
                             </div>
                         </div>

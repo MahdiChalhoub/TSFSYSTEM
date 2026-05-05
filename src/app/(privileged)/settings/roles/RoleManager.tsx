@@ -114,7 +114,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
             <div className="lg:col-span-4 flex flex-col gap-4">
                 <div className="bg-app-surface rounded-[2rem] border border-app-border shadow-sm p-4 h-full flex flex-col">
                     <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-xs font-black uppercase text-app-muted-foreground tracking-widest">Roles List</h2>
+                        <h2 className="uppercase text-app-muted-foreground">Roles List</h2>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -189,7 +189,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 <Badge variant="outline" className="mb-2 rounded-lg text-[10px] font-black uppercase text-app-success border-app-success bg-app-success-bg/50">
                                     Editing Permissions
                                 </Badge>
-                                <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tighter">{selectedRole.name}</h1>
+                                <h1 className="uppercase">{selectedRole.name}</h1>
                                 <p className="text-xs text-app-muted-foreground font-medium italic mt-0.5">{selectedRole.description || 'No description provided'}</p>
                             </div>
                             <div className="text-right flex flex-col items-end gap-1">
@@ -205,7 +205,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 {Object.entries(groupedPermissions).map(([module, perms]) => (
                                     <div key={module} className="space-y-4">
                                         <div className="flex items-center gap-4">
-                                            <h3 className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest bg-app-surface-2 px-3 py-1 rounded-full">{module}</h3>
+                                            <h3 className="uppercase text-app-muted-foreground bg-app-surface-2 px-3 py-1 rounded-full">{module}</h3>
                                             <div className="h-px bg-app-surface-2 flex-1"></div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -250,7 +250,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                         <div className="w-20 h-20 bg-app-surface rounded-full flex items-center justify-center mb-6">
                             <ShieldAlert className="text-app-faint" size={40} />
                         </div>
-                        <h2 className="text-xl font-black text-app-faint uppercase tracking-tighter">No Role Selected</h2>
+                        <h2 className="text-app-faint uppercase">No Role Selected</h2>
                         <p className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mt-1">Select a role from the list to manage its permissions</p>
                     </div>
                 )}

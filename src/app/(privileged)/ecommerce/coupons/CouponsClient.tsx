@@ -170,7 +170,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
                                 <Percent size={16} color="#fff" />
                             </div>
                             <div>
-                                <h2 className="text-base font-bold text-[var(--app-foreground)]">New Coupon</h2>
+                                <h2 className="text-[var(--app-foreground)]">New Coupon</h2>
                                 <p className="text-xs text-[var(--app-muted-foreground)]">Create a discount code</p>
                             </div>
                         </div>

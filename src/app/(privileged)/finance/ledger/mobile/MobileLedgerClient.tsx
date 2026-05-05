@@ -541,7 +541,7 @@ function LedgerEntryDetail({ entry, fmt, onEdit, onOpen, onClose }: LedgerEntryD
                     <SIcon size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-mono font-bold text-app-foreground truncate leading-tight"
+                    <h3 className="font-mono truncate"
                         style={{ fontSize: 'var(--tp-xl)' }}>
                         {entry.reference || `#${entry.id}`}
                     </h3>

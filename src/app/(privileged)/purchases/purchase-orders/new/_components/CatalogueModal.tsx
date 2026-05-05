@@ -510,7 +510,7 @@ export function CatalogueModal({ open, onClose, onAddProduct, existingProductIds
                         <ShoppingCart size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-[15px] font-black text-app-foreground tracking-tight">Product Catalogue</h2>
+                        <h2>Product Catalogue</h2>
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Browse & add products to your order</p>
                     </div>
                     <button type="button" onClick={onClose}

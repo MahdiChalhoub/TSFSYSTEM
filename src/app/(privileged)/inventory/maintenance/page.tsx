@@ -116,8 +116,7 @@ export default async function MaintenancePage(props: {
                             <Wrench size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black tracking-tight"
-                                style={{ color: 'var(--app-foreground)' }}>
+                            <h1 style={{ color: 'var(--app-foreground)' }}>
                                 Inventory Maintenance
                             </h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold uppercase tracking-widest"
@@ -197,7 +196,7 @@ export default async function MaintenancePage(props: {
                                         <ActiveIcon size={14} />
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-sm font-bold tracking-tight truncate"
+                                        <h2 className="truncate"
                                             style={{ color: 'var(--app-foreground)' }}>
                                             {currentEntityName}
                                         </h2>

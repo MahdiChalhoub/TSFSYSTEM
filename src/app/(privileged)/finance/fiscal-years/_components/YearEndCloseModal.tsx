@@ -92,7 +92,7 @@ export function YearEndCloseModal({
                             <ShieldCheck size={18} style={{ color: 'var(--app-error, #ef4444)' }} />
                         </div>
                         <div>
-                            <h2 className="text-[14px] font-bold" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>
                                 {closeStep === 'preview' ? (isPartial ? 'Partial Year-End Close' : 'Year-End Close') : 'Close Complete'}
                             </h2>
                             <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>

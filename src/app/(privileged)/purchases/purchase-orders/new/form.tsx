@@ -648,7 +648,7 @@ export default function PurchaseForm({
                             <ShoppingCart size={20} className="text-white" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h1 className="font-black text-app-foreground tracking-tight leading-none truncate"
+                            <h1 className="truncate"
                                 style={{ fontSize: 'var(--tp-lg)' }}
                                 title={isEdit
                                     ? `Edit PO ${reference || `#${editId}`}`

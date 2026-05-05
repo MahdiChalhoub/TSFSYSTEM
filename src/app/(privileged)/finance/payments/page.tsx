@@ -186,7 +186,7 @@ export default function PaymentsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Payments & Collections</h1>
+                    <h1 className="font-serif">Payments & Collections</h1>
                     <p className="text-app-muted-foreground font-medium mt-1">Supplier payments, customer receipts, and aged reports</p>
                 </div>
                 <Button onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
@@ -422,7 +422,7 @@ export default function PaymentsPage() {
                 {/* ─── Aged Receivables ────────────────────────────── */}
                 {activeView === 'AGED_AR' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Aged Receivables</h3>
+                        <h3 className="mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Aged Receivables</h3>
                         {agedAR.length === 0 ? (
                             <p className="text-center text-app-muted-foreground py-12">No outstanding receivables</p>
                         ) : (
@@ -457,7 +457,7 @@ export default function PaymentsPage() {
                 {/* ─── Aged Payables ───────────────────────────────── */}
                 {activeView === 'AGED_AP' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Aged Payables</h3>
+                        <h3 className="mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Aged Payables</h3>
                         {agedAP.length === 0 ? (
                             <p className="text-center text-app-muted-foreground py-12">No outstanding payables</p>
                         ) : (
@@ -493,7 +493,7 @@ export default function PaymentsPage() {
                 {activeView === 'BALANCES' && (
                     <div className="p-6 space-y-8">
                         <div>
-                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Customer Balances (AR)</h3>
+                            <h3 className="mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-app-success" /> Customer Balances (AR)</h3>
                             {customerBalances.length === 0 ? (
                                 <p className="text-center text-app-muted-foreground py-6">No customer balances</p>
                             ) : (
@@ -520,7 +520,7 @@ export default function PaymentsPage() {
                             )}
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Supplier Balances (AP)</h3>
+                            <h3 className="mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-app-error" /> Supplier Balances (AP)</h3>
                             {supplierBalances.length === 0 ? (
                                 <p className="text-center text-app-muted-foreground py-6">No supplier balances</p>
                             ) : (

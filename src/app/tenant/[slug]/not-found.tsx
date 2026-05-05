@@ -37,7 +37,7 @@ export default function TenantNotFound() {
 
                 {/* Text */}
                 <div className="space-y-3">
-                    <h1 className="text-4xl font-black text-app-foreground tracking-tight">
+                    <h1>
                         Workspace Not Found
                     </h1>
                     <p className="text-app-muted-foreground text-lg leading-relaxed max-w-sm mx-auto">

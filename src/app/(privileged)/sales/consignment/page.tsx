@@ -17,7 +17,7 @@ export default async function ConsignmentPage() {
         <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Consignment Management</h1>
+                    <h1>Consignment Management</h1>
                     <p className="text-muted-foreground">Depot Vente: Manage supplier-owned stock and settlements.</p>
                 </div>
             </div>

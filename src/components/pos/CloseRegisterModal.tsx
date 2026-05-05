@@ -111,7 +111,7 @@ export default function CloseRegisterModal({
  {/* Header */}
  <div className="bg-gradient-to-r from-rose-600/20 to-orange-600/10 px-6 py-5 border-b border-app-foreground/5 flex items-center justify-between">
  <div>
- <h2 className="text-app-foreground font-black text-lg tracking-tight">
+ <h2>
  {step === 'form' ? 'Close Register' : 'Shift Closed ✓'}
  </h2>
  <p className="text-app-foreground/40 text-xs font-medium mt-0.5">

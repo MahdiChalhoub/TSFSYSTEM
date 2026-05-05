@@ -47,7 +47,7 @@ export default function BudgetLinesPage() {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Financial Planning</p>
-                    <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                    <h1>
                         Budget <span style={{ color: 'var(--app-primary)' }}>Lines</span>
                     </h1>
                 </div>

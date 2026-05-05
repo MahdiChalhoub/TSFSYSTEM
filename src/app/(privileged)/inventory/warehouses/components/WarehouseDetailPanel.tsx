@@ -90,7 +90,7 @@ export function WarehouseDetailPanel({
                         <Icon size={13} className="text-white" />
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-tp-md font-bold text-app-foreground truncate">{node.name}</h3>
+                        <h3 className="text-tp-md truncate">{node.name}</h3>
                         <p className="text-tp-xxs font-bold text-app-muted-foreground uppercase tracking-wider">
                             {cfg.label}{node.code ? ` · ${node.code}` : ''}
                         </p>

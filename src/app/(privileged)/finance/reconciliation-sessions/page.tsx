@@ -43,7 +43,7 @@ export default function ReconciliationSessionsPage() {
                 </div>
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Bank Reconciliation</p>
-                    <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                    <h1>
                         Reconciliation <span style={{ color: 'var(--app-primary)' }}>Sessions</span>
                     </h1>
                 </div>
@@ -57,7 +57,7 @@ export default function ReconciliationSessionsPage() {
                         <div key={s.id || i} className="rounded-xl px-5 py-4" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-bold text-app-foreground">{s.account_name || s.bank_account || `Session #${s.id}`}</h3>
+                                    <h3>{s.account_name || s.bank_account || `Session #${s.id}`}</h3>
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
                                         style={{ background: `color-mix(in srgb, ${cfg.color} 15%, transparent)`, color: cfg.color }}>
                                         <Icon size={10} /> {s.status || 'PENDING'}

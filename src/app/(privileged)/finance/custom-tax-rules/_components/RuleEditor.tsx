@@ -46,7 +46,7 @@ export function RuleEditor({ item, onSave, onCancel }: {
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}><ListChecks size={20} className="text-white" /></div>
                     <div className="min-w-0">
-                        <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">{item ? 'Edit Custom Tax Rule' : 'New Custom Tax Rule'}</h1>
+                        <h1 className="truncate">{item ? 'Edit Custom Tax Rule' : 'New Custom Tax Rule'}</h1>
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Tax Engine · Configuration</p>
                     </div>
                 </div>

@@ -207,7 +207,7 @@ export default function ApprovalCenterPage() {
             <ClipboardList size={24} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-app-foreground">Approval Center</h1>
+            <h1>Approval Center</h1>
             <p className="text-sm text-app-muted-foreground">Unified dashboard for all pending approvals</p>
           </div>
         </div>
@@ -336,7 +336,7 @@ export default function ApprovalCenterPage() {
                                 {config.label}
                               </Badge>
                             </div>
-                            <h3 className="text-base font-bold text-app-foreground mb-1">{item.title}</h3>
+                            <h3 className="mb-1">{item.title}</h3>
                             <div className="flex items-center gap-4 text-xs text-app-muted-foreground">
                               <span>👤 {item.requester}</span>
                               <span>📅 {new Date(item.date).toLocaleDateString()}</span>

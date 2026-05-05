@@ -61,7 +61,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                         <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
                             Inventory / Taxonomy
                         </p>
-                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Countries
                         </h1>
                         <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -211,7 +211,7 @@ function CountryCard({ country, onEdit }: Record<string, any>) {
                     {country.product_count || country._count?.products || 0} products
                 </span>
             </div>
-            <h3 className="text-[14px] font-bold" style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
+            <h3 style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
         </div>
     );
 }
@@ -253,7 +253,7 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
                         border: '1px solid color-mix(in srgb, var(--app-info, #6366f1) 15%, transparent)',
                     }}>{country.code}</div>
                     <div>
-                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
+                        <h3 style={{ color: 'var(--app-foreground)' }}>{country.name}</h3>
                         <span className="text-[11px] font-mono" style={{ color: 'var(--app-muted-foreground)' }}>{country.product_count || country._count?.products || 0} products</span>
                     </div>
                 </div>
@@ -343,7 +343,7 @@ function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClo
                 border: '1px solid var(--app-border)',
             }}>
                 <div className="px-6 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
-                    <h3 className="font-bold text-[16px]" style={{ color: 'var(--app-foreground)' }}>
+                    <h3 style={{ color: 'var(--app-foreground)' }}>
                         {country ? 'Edit Country' : 'Add New Country'}
                     </h3>
                     <button onClick={onClose} className="p-1 rounded-full transition-colors" style={{ color: 'var(--app-muted-foreground)' }}>

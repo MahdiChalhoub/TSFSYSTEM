@@ -140,7 +140,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  </Link>
  <div>
  <div className="flex items-center gap-3">
- <h1 className="text-2xl font-black tracking-tight font-mono">{transfer.ref_code}</h1>
+ <h1 className="font-mono">{transfer.ref_code}</h1>
  {renderStatusBadge()}
  </div>
  <p className="text-xs mt-1 font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -180,7 +180,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  {/* ── Left Column: Items ────────────────────────────── */}
  <div className="md:col-span-2 space-y-6">
  <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm">
- <h2 className="text-sm font-black uppercase tracking-widest text-app-muted-foreground mb-4 flex items-center gap-2">
+ <h2 className="uppercase text-app-muted-foreground mb-4 flex items-center gap-2">
  <Package size={16} /> Transfer Manifest
  </h2>
 
@@ -261,7 +261,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
  </div>
 
  <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm space-y-4">
- <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 border-b border-app-border pb-2">Scheduling</h3>
+ <h3 className="text-app-muted-foreground uppercase mb-2 border-b border-app-border pb-2">Scheduling</h3>
  <div className="flex items-center justify-between text-sm">
  <span className="text-app-muted-foreground flex items-center gap-2 font-medium"><Calendar size={14} /> Scheduled</span>
  <span className="font-bold">{transfer.scheduled_date || 'N/A'}</span>
@@ -278,7 +278,7 @@ export default function TransferDetailPage({ params }: { params: Promise<{ id: s
 
  {transfer.notes && (
  <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm space-y-2">
- <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Internal Notes</h3>
+ <h3 className="text-app-muted-foreground uppercase">Internal Notes</h3>
  <p className="text-xs text-app-foreground leading-relaxed font-medium">{transfer.notes}</p>
  </div>
  )}

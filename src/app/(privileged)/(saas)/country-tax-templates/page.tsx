@@ -111,7 +111,7 @@ export default function CountryTaxTemplatesPage() {
               <Globe size={16} className="text-white" />
             </div>
             <div>
-              <h1 className="text-base md:text-lg font-black text-app-foreground tracking-tight leading-tight">
+              <h1>
                 Country Tax Templates
               </h1>
               <p className="text-[9px] md:text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">

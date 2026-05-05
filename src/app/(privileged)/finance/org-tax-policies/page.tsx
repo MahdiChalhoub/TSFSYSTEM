@@ -156,7 +156,7 @@ export default function OrgTaxPoliciesListPage() {
                                     <ShieldCheck size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Organization Tax Policies</h1>
+                                    <h1>Organization Tax Policies</h1>
                                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                         {stats.total} Policies · {templateData?.country_name || 'Loading...'}
                                     </p>

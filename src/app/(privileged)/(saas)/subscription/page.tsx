@@ -58,7 +58,7 @@ export default function SubscriptionPage() {
 
     if (!org) return (
         <div className="p-12 text-center">
-            <h2 className="text-xl font-bold text-app-foreground">No Organization Found</h2>
+            <h2>No Organization Found</h2>
             <p className="text-app-muted-foreground">You do not appear to be managing any active organization instance.</p>
         </div>
     )
@@ -72,7 +72,7 @@ export default function SubscriptionPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Subscription & Billing</h2>
+                    <h2>Subscription & Billing</h2>
                     <p className="text-app-muted-foreground mt-2">Manage your plan, payment methods, and billing history.</p>
                 </div>
                 <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-app-border text-app-muted-foreground">

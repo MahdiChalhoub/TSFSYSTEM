@@ -438,7 +438,7 @@ export default function TaxGroupsPage() {
                                 <Percent size={20} className="text-white" />
                             </div>
                             <div>
-                                <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                                <h1>
                                     Tax Groups
                                 </h1>
                                 <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -640,7 +640,7 @@ export default function TaxGroupsPage() {
                     }}
                 >
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+                        <h3 className="uppercase">
                             {editing ? 'Edit Tax Group' : 'Create Tax Group'}
                         </h3>
                         <button

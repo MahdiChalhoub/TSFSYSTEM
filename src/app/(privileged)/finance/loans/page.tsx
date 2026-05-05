@@ -14,7 +14,7 @@ export default async function LoansPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight">Partner Loans</h1>
+                <h1>Partner Loans</h1>
                 <Link href="/finance/loans/new">
                     <Button>New Contract</Button>
                 </Link>

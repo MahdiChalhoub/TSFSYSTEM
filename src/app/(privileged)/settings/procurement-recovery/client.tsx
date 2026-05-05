@@ -148,7 +148,7 @@ export default function ProcurementRecoveryClient() {
                             <Clock size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-tp-lg font-black text-app-foreground tracking-tight">
+                            <h1 className="text-tp-lg">
                                 Procurement Recovery
                             </h1>
                             <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">

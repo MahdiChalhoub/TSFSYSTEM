@@ -203,7 +203,7 @@ export function POSDeliveryModal({
  <Truck size={36} className="text-app-foreground relative z-10" />
  </div>
 
- <h2 className="text-app-foreground text-2xl font-black text-center mb-2 uppercase tracking-tighter">Client Required</h2>
+ <h2 className="text-center mb-2 uppercase">Client Required</h2>
  <p className="text-app-foreground/40 text-sm text-center mb-8 font-medium max-w-[300px] mx-auto leading-relaxed">
  Delivery requires customer name, phone number, and delivery address.
  </p>
@@ -263,7 +263,7 @@ export function POSDeliveryModal({
  </div>
  <div>
  <span className="text-[10px] font-black text-app-primary uppercase tracking-[0.4em] block mb-1">Delivery Details</span>
- <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tighter">New Delivery</h1>
+ <h1 className="uppercase">New Delivery</h1>
  </div>
  </div>
  <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-app-foreground/5 hover:bg-app-foreground/10 flex items-center justify-center text-app-foreground/40 hover:text-app-foreground transition-all border border-app-foreground/5">

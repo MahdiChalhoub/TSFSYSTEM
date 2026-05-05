@@ -33,7 +33,7 @@ export default function SerialsPage() {
                                     <Barcode size={28} />
                                 </div>
                                 <div>
-                                    <h1 className="text-4xl font-black text-app-foreground uppercase tracking-tighter leading-none">
+                                    <h1 className="uppercase">
                                         Serial Tracking
                                     </h1>
                                     <p className="text-sm text-app-muted-foreground font-medium tracking-tight mt-1">

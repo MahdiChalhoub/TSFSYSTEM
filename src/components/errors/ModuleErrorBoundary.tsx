@@ -121,7 +121,7 @@ export function ModuleErrorBoundary({
             </div>
 
             {/* Title */}
-            <h2 className="text-3xl font-black text-app-foreground tracking-tight">
+            <h2>
                 {label} Module Error
             </h2>
             <p className="text-app-muted-foreground mt-3 font-medium max-w-md mx-auto leading-relaxed">

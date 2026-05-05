@@ -237,7 +237,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
             {tab === 'leaders' && (
                 <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-400">
                     <div className="p-8 border-b border-app-border bg-app-surface/5 flex justify-between items-center">
-                        <h2 className="text-xl font-black italic flex items-center gap-3">
+                        <h2 className="italic flex items-center gap-3">
                             <Trophy className="text-app-warning" /> Full Organization Leaderboard
                         </h2>
                         <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">Top {leaderboard.length}</div>
@@ -309,7 +309,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
 
                     <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
                         <div className="p-8 border-b border-app-border bg-app-surface/5 flex items-center justify-between">
-                            <h2 className="text-xl font-black italic flex items-center gap-3">
+                            <h2 className="italic flex items-center gap-3">
                                 <BookOpen className="text-app-primary" /> Active Scoring Rules
                             </h2>
                             <span className="text-[10px] font-black opacity-40">{filteredRules.length} rules</span>
@@ -362,7 +362,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                 <Brain size={24} className="text-violet-400" />
                             </div>
                             <div className="flex-1">
-                                <h2 className="text-xl font-black italic">Manual Score Adjustment</h2>
+                                <h2 className="italic">Manual Score Adjustment</h2>
                                 {adjustTarget ? (
                                     <p className="text-sm text-violet-400 font-bold mt-0.5">
                                         Adjusting: <span className="text-white">{adjustTarget.employee_name}</span>

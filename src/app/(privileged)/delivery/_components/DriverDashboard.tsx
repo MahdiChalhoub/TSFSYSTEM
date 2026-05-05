@@ -68,7 +68,7 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
                 {/* Recent Activity */}
                 <div className="lg:col-span-2 GlassCard p-6 rounded-xl border border-white/5">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <h3 className="flex items-center gap-2">
                             <Clock className="w-5 h-5 text-app-info" />
                             Recent Dispatch Activity
                         </h3>
@@ -113,7 +113,7 @@ export default function DriverDashboard({ driver, stats, deliveries }: DriverDas
 
                 {/* Current Status Tracker */}
                 <div className="GlassCard p-6 rounded-xl border border-white/5">
-                    <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                    <h3 className="mb-6 flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-app-success" />
                         Reliability Metrics
                     </h3>

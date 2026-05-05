@@ -210,7 +210,7 @@ export default function EInvoiceSettingsPage() {
               style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)' }}>
               <AlertTriangle size={28} style={{ color: 'var(--app-warning)' }} />
             </div>
-            <h2 className="text-[15px] font-black text-app-foreground mb-2">
+            <h2 className="mb-2">
               {state?.country_code ? 'No E-Invoice Standard Assigned' : 'Country Not Configured'}
             </h2>
             <p className="text-[12px] text-app-muted-foreground max-w-md mb-4">
@@ -332,7 +332,7 @@ export default function EInvoiceSettingsPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)' }}>
                 <Key size={14} />
               </div>
-              <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+              <h3 className="uppercase">
                 Credentials ({std.required_credentials.length})
               </h3>
             </div>
@@ -393,7 +393,7 @@ export default function EInvoiceSettingsPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
                 <ImageIcon size={14} />
               </div>
-              <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">
+              <h3 className="uppercase">
                 Invoice Branding ({std.branding_fields.length})
               </h3>
             </div>
@@ -440,7 +440,7 @@ export default function EInvoiceSettingsPage() {
                 style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>
                 <FileText size={14} />
               </div>
-              <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">Setup Guide</h3>
+              <h3 className="uppercase">Setup Guide</h3>
             </div>
             <div className="text-[11px] text-app-foreground whitespace-pre-wrap leading-relaxed font-medium">
               {std.setup_guide}

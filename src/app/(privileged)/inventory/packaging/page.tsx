@@ -76,7 +76,7 @@ function ProductPickerModal({ allProducts, onClose, onSelect }: {
                             <Package size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">Select Product</h3>
+                            <h3>Select Product</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">
                                 Choose a product to configure packaging
                             </p>
@@ -489,7 +489,7 @@ export default function PackagingPage() {
                                     <Package size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                                    <h1>
                                         Product Packaging
                                     </h1>
                                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">

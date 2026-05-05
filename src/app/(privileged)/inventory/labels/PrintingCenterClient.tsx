@@ -68,7 +68,7 @@ export default function PrintingCenterClient({ products, sessions: initSessions,
             {/* ── Page Header ── */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-[22px] font-black text-app-foreground tracking-tight">Printing Center</h1>
+                    <h1>Printing Center</h1>
                     <p className="text-[11px] text-app-muted-foreground mt-0.5">Label & barcode print operations</p>
                 </div>
                 {/* KPI strip */}

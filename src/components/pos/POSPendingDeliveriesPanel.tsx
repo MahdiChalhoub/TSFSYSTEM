@@ -108,7 +108,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <Truck size={16} />
  </div>
  <div>
- <h2 className="text-sm font-black tracking-tight">Pending Deliveries</h2>
+ <h2>Pending Deliveries</h2>
  <p className="text-[11px] text-amber-100">Cash-on-delivery orders awaiting return</p>
  </div>
  </div>

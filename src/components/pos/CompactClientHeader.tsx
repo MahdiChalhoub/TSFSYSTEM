@@ -49,7 +49,7 @@ export function CompactClientHeader({ client, currency = '$', uniqueItems, total
  </div>
  <div className="flex flex-col min-w-0">
  <span className="text-[10px] font-black text-app-primary/50 uppercase tracking-[0.4em] leading-none mb-2">Authenticated Partner</span>
- <h2 className="font-black text-app-foreground text-2xl uppercase tracking-tighter truncate max-w-[280px] italic leading-none">{client.name}</h2>
+ <h2 className="uppercase truncate max-w-[280px] italic">{client.name}</h2>
  <div className="flex items-center gap-3 mt-2">
  <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest border-r border-app-border pr-3">Client Database</span>
  <span className="font-black text-app-muted-foreground text-[11px] tabular-nums tracking-widest">{client.phone || 'COMMS_DISABLED'}</span>

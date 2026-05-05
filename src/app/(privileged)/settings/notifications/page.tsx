@@ -87,7 +87,7 @@ export default function NotificationPreferencesPage() {
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-4xl font-black text-app-foreground tracking-tighter">
+                <h1>
                     Notification <span className="text-violet-500">Preferences</span>
                 </h1>
                 <p className="text-sm text-app-muted-foreground mt-1">
@@ -99,7 +99,7 @@ export default function NotificationPreferencesPage() {
             <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
                 <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Channel Settings</h2>
+                        <h2 className="text-app-muted-foreground uppercase">Channel Settings</h2>
                         <div className="flex gap-6">
                             {Object.entries(CHANNEL_ICONS).map(([channel, { icon: Icon, label }]) => (
                                 <div key={channel} className="flex items-center gap-1.5 text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -122,7 +122,7 @@ export default function NotificationPreferencesPage() {
                                         <TypeIcon size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-app-foreground text-sm">{data.label || ntype}</h3>
+                                        <h3>{data.label || ntype}</h3>
                                         <p className="text-[10px] text-app-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                                             {ntype.replace(/_/g, ' ')}
                                         </p>
@@ -161,7 +161,7 @@ export default function NotificationPreferencesPage() {
             {/* Delivery Log */}
             <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
                 <div className="p-6 border-b border-app-border bg-[#F8FAFC] flex items-center justify-between">
-                    <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Recent Deliveries</h2>
+                    <h2 className="text-app-muted-foreground uppercase">Recent Deliveries</h2>
                     <button onClick={loadData} className="text-app-muted-foreground hover:text-violet-500 transition-colors">
                         <RefreshCw size={16} />
                     </button>

@@ -707,7 +707,7 @@ function AttributeDetailPanel({
                         {isGroup ? <Tags size={16} /> : <Hash size={14} />}
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold tracking-tight truncate">{node.name}</h2>
+                        <h2 className="truncate">{node.name}</h2>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             {node.code && (
                                 <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"

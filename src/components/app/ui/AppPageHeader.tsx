@@ -97,7 +97,7 @@ export function AppPageHeader({
                     <div>
                         {/* Title */}
                         <h1
-                            className="text-4xl font-black tracking-tighter leading-none flex items-center gap-3"
+                            className="flex items-center gap-3"
                             style={{ fontFamily: 'var(--app-font-display)' }}
                         >
                             {renderTitle()}

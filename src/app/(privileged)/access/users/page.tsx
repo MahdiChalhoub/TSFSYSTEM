@@ -240,7 +240,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
                             {(user.first_name?.[0] || user.username[0]).toUpperCase()}
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">{name}</h3>
+                            <h3>{name}</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">@{user.username} · ID #{user.id}</p>
                         </div>
                     </div>
@@ -393,7 +393,7 @@ function CreateModal({ roles, onClose, onCreated }: { roles: RoleItem[]; onClose
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <UserPlus size={15} className="text-white" />
                         </div>
-                        <h3 className="text-sm font-black text-app-foreground">Create User</h3>
+                        <h3>Create User</h3>
                     </div>
                     <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"><X size={16} /></button>
                 </div>
@@ -553,7 +553,7 @@ export default function AccessUsersPage() {
                                 <Users size={20} className="text-white" />
                             </div>
                             <div>
-                                <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">User Management</h1>
+                                <h1>User Management</h1>
                                 <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                     {stats.total} Users · {stats.active} Active · {stats.withPin} POS PIN
                                     {stats.pending > 0 && <> · <span style={{ color: 'var(--app-warning, #f59e0b)' }}>{stats.pending} Pending</span></>}
@@ -719,7 +719,7 @@ export default function AccessUsersPage() {
                             <div className="flex items-center gap-3 mb-1">
                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}><MessageSquare size={18} /></div>
                                 <div>
-                                    <h3 className="text-[14px] font-black text-app-foreground">Request Correction</h3>
+                                    <h3>Request Correction</h3>
                                     <p className="text-[10px] text-app-muted-foreground font-bold">Tell <strong>{correctionTarget.first_name}</strong> what to fix</p>
                                 </div>
                             </div>

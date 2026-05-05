@@ -92,7 +92,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 {/* 6-Month Profit Trend (CSS Bars) */}
                 <div className="lg:col-span-2 bg-app-surface rounded-3xl shadow-sm border border-app-border p-8">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-lg font-bold text-app-foreground font-serif lowercase italic">Profit trends (Last 6 Months)</h3>
+                        <h3 className="font-serif lowercase italic">Profit trends (Last 6 Months)</h3>
                         <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
                             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-app-success"></div> Income</div>
                             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-stone-300"></div> Expense</div>
@@ -129,7 +129,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 {/* Monthly Breakdown */}
                 <div className="bg-app-bg rounded-3xl p-8 text-white flex flex-col justify-between shadow-2xl">
                     <div>
-                        <h3 className="text-lg font-bold italic font-serif mb-6 opacity-80">Current Month P&L</h3>
+                        <h3 className="italic font-serif mb-6 opacity-80">Current Month P&L</h3>
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <span className="text-app-muted-foreground text-sm">Monthly Revenue</span>
@@ -158,7 +158,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             {/* Bottom Section: Recent Entries */}
             <div className="bg-app-surface rounded-3xl shadow-sm border border-app-border overflow-hidden">
                 <div className="p-8 border-b border-app-border flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-app-foreground font-serif">Recent Ledger Activity</h3>
+                    <h3 className="font-serif">Recent Ledger Activity</h3>
                     <Link href="/finance/ledger" className="text-xs font-bold uppercase tracking-widest text-app-success hover:text-app-success">All Transactions</Link>
                 </div>
                 <div className="overflow-x-auto">

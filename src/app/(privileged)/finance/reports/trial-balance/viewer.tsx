@@ -224,7 +224,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
                             <Scale size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Trial Balance</h1>
+                            <h1>Trial Balance</h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                                 {rootCount} accounts · {withBalance} with balance · {
                                     fyBounds
@@ -423,7 +423,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: {
 
             {/* Print-only header */}
             <div className="report-only-print px-6 py-4 text-center">
-                <h2 className="report-statement-title text-3xl font-bold">Trial Balance</h2>
+                <h2 className="report-statement-title">Trial Balance</h2>
                 <p className="text-sm mt-1">
                     {fyBounds
                         ? `${activeFy.fy?.name || `FY ${fyBounds.start.slice(0, 4)}`} — opening + movement through ${new Date(asOfDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`

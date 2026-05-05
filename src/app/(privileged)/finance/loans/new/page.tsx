@@ -61,7 +61,7 @@ export default function NewLoanPage() {
                 <Link href="/finance/loans">
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
-                <h1 className="text-2xl font-bold">New Partner Loan</h1>
+                <h1>New Partner Loan</h1>
                 <div className="ml-auto text-xs font-mono text-app-muted-foreground">
                     Draft Contract Numbering Active
                 </div>

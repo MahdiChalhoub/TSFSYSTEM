@@ -277,7 +277,7 @@ export function TypicalListView<T, D = any>(props: TypicalListViewProps<T, D>) {
               <LayoutGrid size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{title}</h1>
+              <h1>{title}</h1>
               <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                 {safeData.length} Records
               </p>

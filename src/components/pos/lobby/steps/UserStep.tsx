@@ -11,7 +11,7 @@ export const UserStep = memo(function UserStep({ register, onSelect }: { registe
                 <div className="w-20 h-20 rounded-full bg-[var(--app-info-bg)] border border-[var(--app-info)]/30 text-[var(--app-info)] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-sm shadow-[var(--app-info)]/20">
                     <User size={36} />
                 </div>
-                <h2 className="text-3xl font-black text-[var(--app-foreground)] mb-1">Who&apos;s working?</h2>
+                <h2 className="text-[var(--app-foreground)] mb-1">Who&apos;s working?</h2>
                 <p className="text-[var(--app-muted-foreground)] text-sm">{register.name} — tap your name to continue</p>
             </div>
 

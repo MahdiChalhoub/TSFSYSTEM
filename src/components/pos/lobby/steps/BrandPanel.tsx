@@ -138,7 +138,7 @@ export function BrandPanel() {
 
                 {/* Org name */}
                 {orgName && (
-                    <h1 className="text-lg font-black tracking-tight mb-8"
+                    <h1 className="mb-8"
                         style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>{orgName}</h1>
                 )}
 

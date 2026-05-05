@@ -51,7 +51,7 @@ export default function TemplatesIndexPage() {
                     <BookMarked size={20} className="text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-app-foreground tracking-tight">Template Showcase</h1>
+                    <h1>Template Showcase</h1>
                     <p className="text-tp-sm text-app-muted-foreground">
                         Interactive previews of the shared building blocks under <code className="font-mono">components/templates/</code>.
                     </p>

@@ -111,7 +111,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground tracking-tight mb-2">Product Registry</h1>
+                    <h1 className="mb-2">Product Registry</h1>
                     <p className="text-app-muted-foreground text-base">Manage your product catalog.</p>
                 </div>
                 <div className="flex gap-4">

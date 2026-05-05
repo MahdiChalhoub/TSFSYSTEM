@@ -281,7 +281,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                         <Package className="h-5 w-5 text-violet-400" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-app-foreground">Packaging Levels</h3>
+                        <h3>Packaging Levels</h3>
                         <p className="text-xs text-app-muted-foreground">{packages.length} package{packages.length !== 1 ? 's' : ''} configured</p>
                     </div>
                 </div>

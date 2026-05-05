@@ -151,7 +151,7 @@ export default function ConversationsDetailPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black text-app-foreground">
+            <h1>
               {item.title || item.name || `Conversation #${item.id}`}
             </h1>
             <p className="text-app-muted-foreground mt-1 flex items-center gap-2">

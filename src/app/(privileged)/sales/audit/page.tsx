@@ -12,7 +12,7 @@ export default function POSAuditPage() {
  <div className="app-page p-6 h-[calc(100vh-4rem)] flex flex-col gap-6 max-w-7xl mx-auto">
  <div className="flex items-center justify-between">
  <div>
- <h1 className="page-header-title tracking-tight flex items-center gap-2">
+ <h1 className="page-header-title flex items-center gap-2">
  <ShieldAlert className="text-app-error" />
  POS Forensics & Audit
  </h1>

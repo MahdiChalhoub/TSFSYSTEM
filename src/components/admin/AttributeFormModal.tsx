@@ -110,7 +110,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-lg text-app-foreground">
+                    <h3>
                         {attribute ? 'Edit Attribute' : 'Add New Attribute'}
                     </h3>
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-app-muted-foreground hover:text-app-muted-foreground transition-colors">

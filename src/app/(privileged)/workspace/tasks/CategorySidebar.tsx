@@ -100,7 +100,7 @@ export default function CategorySidebar({
             {/* Header */}
             <div className="px-4 py-3 border-b flex items-center justify-between"
                  style={{ background: 'color-mix(in srgb, var(--app-primary) 5%, var(--app-surface))', borderColor: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
-                <h3 className="text-tp-md font-bold flex items-center gap-2" style={{ color: 'var(--app-foreground)' }}>
+                <h3 className="text-tp-md flex items-center gap-2" style={{ color: 'var(--app-foreground)' }}>
                     <FolderKanban size={15} style={{ color: 'var(--app-primary)' }} />
                     Categories
                 </h3>

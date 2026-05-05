@@ -268,7 +268,7 @@ export function POSLayoutKiosk(props: POSLayoutProps) {
                     >
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} />
-                            <h2 className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>Order</h2>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>Order</h2>
                             <span className="text-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {uniqueItems} lines · {totalPieces} pcs
                             </span>

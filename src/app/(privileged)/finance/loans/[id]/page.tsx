@@ -28,7 +28,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold">Loan Contract #{loan.id}</h1>
+                    <h1>Loan Contract #{loan.id}</h1>
                     <p className="text-muted-foreground">{loan.contact.name}</p>
                 </div>
                 <div className="ml-auto flex gap-2">

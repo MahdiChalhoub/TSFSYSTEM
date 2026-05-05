@@ -91,7 +91,7 @@ export default function ReportBuilderPage() {
                         <BarChart3 size={22} className="text-app-primary-foreground" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+                        <h1 className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-indigo-200">
                                 <BarChart3 size={28} className="text-app-primary-foreground" />
                             </div>
@@ -109,7 +109,7 @@ export default function ReportBuilderPage() {
             {/* New report form */}
             {showNew && (
                 <div className="bg-[#0F1729] rounded-2xl border border-cyan-800/50 p-6 flex flex-col gap-4">
-                    <h3 className="font-semibold text-app-primary-foreground">Create Report Definition</h3>
+                    <h3 className="text-app-primary-foreground">Create Report Definition</h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="text-xs text-app-muted-foreground mb-1 block">Report Name *</label>
@@ -145,7 +145,7 @@ export default function ReportBuilderPage() {
             <div className="flex gap-6">
                 {/* Reports list + Data sources */}
                 <div className="w-1/2 flex flex-col gap-4">
-                    <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wider">My Reports</h3>
+                    <h3 className="text-app-muted-foreground uppercase">My Reports</h3>
                     <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
                         {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 bg-app-surface/50 rounded-xl animate-pulse" />) :
                             reports.length === 0 ? <div className="text-sm text-app-muted-foreground py-4 text-center">No reports yet. Create your first one!</div> :
@@ -164,7 +164,7 @@ export default function ReportBuilderPage() {
                     </div>
 
                     {/* Data sources browser */}
-                    <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wider">Available Data Sources</h3>
+                    <h3 className="text-app-muted-foreground uppercase">Available Data Sources</h3>
                     <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
                         {sources.map(s => (
                             <div key={s.name} className="bg-[#0F1729] rounded-xl border border-app-border overflow-hidden">
@@ -197,7 +197,7 @@ export default function ReportBuilderPage() {
                     ) : (
                         <>
                             <div>
-                                <h2 className="text-lg font-bold text-app-primary-foreground">{selected.name}</h2>
+                                <h2 className="text-app-primary-foreground">{selected.name}</h2>
                                 <p className="text-sm text-app-muted-foreground">{selected.data_source}</p>
                             </div>
                             <div className="flex gap-3">
@@ -216,7 +216,7 @@ export default function ReportBuilderPage() {
                             </div>
 
                             <div>
-                                <h3 className="text-xs font-semibold text-app-muted-foreground uppercase tracking-wider mb-2">Execution History</h3>
+                                <h3 className="text-app-muted-foreground uppercase mb-2">Execution History</h3>
                                 {executions.length === 0 ? (
                                     <div className="text-sm text-app-muted-foreground py-4 text-center">No executions yet</div>
                                 ) : (

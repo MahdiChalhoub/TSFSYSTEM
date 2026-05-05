@@ -232,7 +232,7 @@ export default function ProductAnalyticsPage() {
             {/* ── Header ── */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-app-primary flex items-center justify-center shadow-lg shadow-violet-500/25">
                             <Activity size={22} className="text-white" />
                         </div>
@@ -600,7 +600,7 @@ export default function ProductAnalyticsPage() {
                         className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95"
                         onClick={e => e.stopPropagation()}
                     >
-                        <h2 className="text-xl font-black text-app-foreground tracking-tight mb-2">
+                        <h2 className="mb-2">
                             Create {requestType === 'purchase_request' ? 'Purchase' : 'Transfer'} Request
                         </h2>
                         <p className="text-sm text-app-muted-foreground mb-6">

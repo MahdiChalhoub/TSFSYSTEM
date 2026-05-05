@@ -89,7 +89,7 @@ export function GalleryView({
                                         {(() => { const I = resolveIcon(t.icon); return <I size={20} /> })()}
                                     </div>
                                     <div>
-                                        <h3 className="text-[14px] font-bold text-app-foreground">{t.name}</h3>
+                                        <h3>{t.name}</h3>
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <MapPin size={10} style={{ color: accent }} />
                                             <span className="text-tp-xs font-bold uppercase tracking-wider" style={{ color: accent }}>{t.region}</span>

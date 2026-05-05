@@ -143,7 +143,7 @@ export default function ContactManager({
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="text-2xl font-black text-app-foreground group-hover:text-app-info transition-colors truncate max-w-[280px]">
+                                <h3 className="group-hover:text-app-info transition-colors truncate max-w-[280px]">
                                     {contact.name}
                                 </h3>
                             </div>

@@ -24,7 +24,7 @@ export function DiffPreviewModal({ config, originalConfig, onClose, onSave }: {
         <div className="px-4 py-3 border-b border-app-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitCompare size={14} className="text-app-primary" />
-            <h3 className="text-[13px] font-bold text-app-foreground">Unsaved Changes</h3>
+            <h3>Unsaved Changes</h3>
           </div>
           <button type="button" onClick={onClose} className="text-app-muted-foreground hover:text-app-foreground transition-colors">
             <X size={14} />

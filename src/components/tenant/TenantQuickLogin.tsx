@@ -18,7 +18,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="flex justify-between items-center relative">
                 <div className="space-y-1">
-                    <h2 className="text-xl font-bold text-white">Secure Access</h2>
+                    <h2 className="text-white">Secure Access</h2>
                     <p className="text-[10px] text-app-muted-foreground font-medium tracking-wide uppercase">{slug}{suffix}</p>
                 </div>
                 <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">

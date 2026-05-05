@@ -60,7 +60,7 @@ export default function PurchaseReturnsPage() {
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center shadow-lg shadow-blue-100">
                             <Truck size={20} className="text-white" />
                         </div>

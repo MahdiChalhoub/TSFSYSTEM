@@ -19,7 +19,7 @@ export default async function GlobalInventoryPage() {
                         </div>
                         <span className="text-[10px] font-black text-app-info uppercase tracking-[0.3em]">Corporate Intelligence</span>
                     </div>
-                    <h1 className="text-5xl lg:text-6xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Global <span className="text-app-info">Inventory</span> Ledger
                     </h1>
                     <p className="mt-4 text-app-muted-foreground font-medium max-w-xl">

@@ -58,7 +58,7 @@ export default function ModuleGate({ module, moduleName, children }: ModuleGateP
                 <div className="w-20 h-20 rounded-3xl bg-app-error-soft flex items-center justify-center mb-6">
                     <ShieldX className="w-10 h-10 text-red-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-app-foreground mb-2">
+                <h2 className="mb-2">
                     Module Not Available
                 </h2>
                 <p className="text-app-muted-foreground max-w-md mb-6">

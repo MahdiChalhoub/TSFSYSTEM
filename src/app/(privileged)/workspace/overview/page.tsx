@@ -359,7 +359,7 @@ export default function RichOverviewPage() {
                     <LayoutDashboard size={20} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                    <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">
+                    <h1>
                         {tab === 'me' ? `Hi, ${me?.first_name || me?.username || 'there'}`
                          : tab === 'team' ? 'Team Dashboard'
                          : 'Company Dashboard'}
@@ -480,7 +480,7 @@ export default function RichOverviewPage() {
                                  style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                                     <TrendingUp size={14} style={{ color: 'var(--app-primary)' }} />
-                                    <h2 className="text-tp-sm font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                    <h2 className="text-tp-sm uppercase" style={{ color: 'var(--app-foreground)' }}>
                                         Team velocity · 14 days
                                     </h2>
                                     <div className="flex items-center gap-4 ml-auto text-tp-xs" style={{ color: 'var(--app-muted-foreground)' }}>
@@ -518,7 +518,7 @@ export default function RichOverviewPage() {
                                          style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                                         <div className="flex items-center gap-2 mb-2 flex-shrink-0">
                                             <Users size={12} style={{ color: 'var(--app-primary)' }} />
-                                            <h2 className="text-tp-xs font-bold uppercase tracking-widest" style={{ color: 'var(--app-foreground)' }}>
+                                            <h2 className="text-tp-xs uppercase" style={{ color: 'var(--app-foreground)' }}>
                                                 Team load
                                             </h2>
                                         </div>

@@ -151,7 +151,7 @@ export default function AgentDashboard() {
                                                 <Icon size={16} />
                                             </div>
                                             <div className="min-w-0">
-                                                <h3 className="text-[13px] font-black text-app-foreground truncate">{agent.name}</h3>
+                                                <h3 className="truncate">{agent.name}</h3>
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">
                                                     {agent.role_display}
                                                 </span>
@@ -232,7 +232,7 @@ export default function AgentDashboard() {
                         }}>
                         <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0"
                             style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                            <h3 className="uppercase text-app-muted-foreground flex items-center gap-1.5">
                                 <Terminal size={11} className="text-app-primary" />
                                 Live Agent Intelligence
                             </h3>

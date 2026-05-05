@@ -134,7 +134,7 @@ export function DesignSystemSwitcher({
       {showLabel && (
         <div>
           <h3
-            className="text-lg font-semibold mb-1"
+            className="mb-1"
             style={{ color: "var(--color-text)" }}
           >
             Design System

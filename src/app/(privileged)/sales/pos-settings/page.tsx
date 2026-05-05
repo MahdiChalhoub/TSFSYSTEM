@@ -208,7 +208,7 @@ export default function POSSettingsPage() {
                   <Monitor size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">POS Configuration</h1>
+                  <h1>POS Configuration</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                     {stats.TOTAL} Registers · {stats.SITES} Sites
                   </p>
@@ -301,7 +301,7 @@ export default function POSSettingsPage() {
         <div className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
           style={{ background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))', borderColor: 'var(--app-border)', borderLeft: '3px solid var(--app-primary)' }}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[12px] font-black text-app-foreground uppercase tracking-wider">New Register</h3>
+            <h3 className="uppercase">New Register</h3>
             <button onClick={() => setIsAdding(false)} className="p-1 hover:bg-app-border/50 rounded-lg transition-colors">
               <X size={14} className="text-app-muted-foreground" />
             </button>

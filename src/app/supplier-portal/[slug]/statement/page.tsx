@@ -96,7 +96,7 @@ export default function SupplierStatementPage() {
                         className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                         <ArrowLeft size={16} /> Dashboard
                     </Link>
-                    <h1 className="text-4xl font-black text-white">Financial Statement</h1>
+                    <h1 className="text-white">Financial Statement</h1>
                     <p className="text-app-muted-foreground text-sm">Your payable and receivable ledger with this organization</p>
                 </div>
 
@@ -152,7 +152,7 @@ export default function SupplierStatementPage() {
                 {!loading && entries.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <Receipt size={48} className="mx-auto text-app-muted-foreground" />
-                        <h2 className="text-xl font-bold text-white">No statement entries</h2>
+                        <h2 className="text-white">No statement entries</h2>
                         <p className="text-app-muted-foreground">Financial records will appear here once transactions occur</p>
                     </div>
                 ) : !loading && (

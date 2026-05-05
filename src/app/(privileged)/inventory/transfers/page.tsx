@@ -25,10 +25,7 @@ export default function StockTransfersPage() {
  <ArrowRightLeft size={26} color="#fff" />
  </div>
  <div>
- <h1
- className="text-3xl font-black tracking-tight"
- style={{ color: 'var(--app-foreground)' }}
- >
+ <h1 style={{ color: 'var(--app-foreground)' }}>
  Stock <span style={{ color: 'var(--app-primary)' }}>Transfers</span>
  </h1>
  <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>

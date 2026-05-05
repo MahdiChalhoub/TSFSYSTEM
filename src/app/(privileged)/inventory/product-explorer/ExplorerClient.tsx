@@ -241,7 +241,7 @@ export default function ExplorerClient({ data }: { data: ExplorerData }) {
                             <Layers size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-app-foreground">Product Explorer</h1>
+                            <h1>Product Explorer</h1>
                             <p className="text-xs text-app-muted-foreground">Multi-dimensional product hierarchy</p>
                         </div>
                     </div>

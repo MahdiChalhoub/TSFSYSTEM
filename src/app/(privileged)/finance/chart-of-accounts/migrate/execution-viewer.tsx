@@ -178,7 +178,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {/* ── Header: Template Selection ── */}
             {!session && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 p-6">
-                    <h2 className="text-sm font-bold text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <h2 className="uppercase mb-4 flex items-center gap-2">
                         <Database size={16} className="text-app-primary" />
                         Create Migration Session
                     </h2>
@@ -241,7 +241,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                                 <statusStyle.icon size={18} className={statusStyle.text} />
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider">
+                                <h3 className="uppercase">
                                     Session #{session.id} — <span className={statusStyle.text}>{session.status}</span>
                                 </h3>
                                 <p className="text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
@@ -328,7 +328,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border flex items-center gap-2">
                         <AlertTriangle size={14} className="text-app-warning" />
-                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider">
+                        <h3 className="uppercase">
                             Pre-Execution Checks
                         </h3>
                         <span className={`ml-auto px-2.5 py-0.5 rounded-full text-tp-xs font-bold uppercase tracking-wide ${canProceed ? 'bg-app-success/15 text-app-success' : 'bg-app-error/15 text-app-error'
@@ -362,7 +362,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {session?.dry_run_report?.stats && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border">
-                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="uppercase flex items-center gap-2">
                             <BarChart3 size={16} className="text-app-primary" />
                             Dry-Run Summary — {session.dry_run_report.stats.total} Accounts
                         </h3>
@@ -385,7 +385,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
             {plans.length > 0 && (
                 <div className="rounded-2xl border border-app-border bg-app-surface/60 backdrop-blur-sm overflow-hidden">
                     <div className="px-5 py-3 border-b border-app-border">
-                        <h3 className="text-sm font-bold text-app-foreground uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="uppercase flex items-center gap-2">
                             <Database size={16} className="text-app-primary" />
                             Account Migration Plans — {plans.length} total
                         </h3>
@@ -489,7 +489,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border p-6 text-center"
                     style={{ borderColor: 'color-mix(in srgb, var(--app-success) 30%, transparent)', background: 'color-mix(in srgb, var(--app-success) 5%, transparent)' }}>
                     <CheckCircle2 size={36} className="text-app-success mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-app-success mb-1">Migration Completed</h3>
+                    <h3 className="text-app-success mb-1">Migration Completed</h3>
                     <p className="text-tp-lg font-bold text-app-muted-foreground">
                         All account plans have been executed. Your Chart of Accounts is now on the new template.
                     </p>
@@ -500,7 +500,7 @@ export default function MigrationExecutionViewer({ templates, currentTemplateKey
                 <div className="rounded-2xl border p-6 text-center"
                     style={{ borderColor: 'color-mix(in srgb, var(--app-error) 30%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
                     <XCircle size={36} className="text-app-error mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-app-error mb-1">Migration Failed</h3>
+                    <h3 className="text-app-error mb-1">Migration Failed</h3>
                     <p className="text-tp-lg font-bold text-app-muted-foreground">
                         Check the error report for details. The organization has been unfrozen.
                     </p>

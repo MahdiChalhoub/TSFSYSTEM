@@ -53,7 +53,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <Undo2 size={20} className="text-app-muted-foreground" />
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-app-foreground font-serif">Accounting Standards Library</h1>
+                            <h1 className="font-serif">Accounting Standards Library</h1>
                             <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wide">Compare and select your operational layout</p>
                         </div>
                     </div>
@@ -135,7 +135,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                 {selectedTemplates.length === 0 ? (
                     <div className="h-[60vh] flex flex-col items-center justify-center text-app-faint">
                         <Library size={64} className="mb-4 opacity-20" />
-                        <h2 className="text-xl font-medium">Select standards to compare</h2>
+                        <h2>Select standards to compare</h2>
                         <p className="text-sm">Choose one or more templates from the library above.</p>
                     </div>
                 ) : (
@@ -144,7 +144,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <div key={key} className="bg-app-surface rounded-3xl border border-app-border shadow-sm flex flex-col overflow-hidden">
                                 <div className="p-6 border-b border-app-border flex justify-between items-start bg-app-surface/50">
                                     <div>
-                                        <h3 className="font-bold text-app-foreground text-lg">{key.replace('_', ' ')}</h3>
+                                        <h3>{key.replace('_', ' ')}</h3>
                                         <p className="text-tp-xs font-bold text-app-muted-foreground uppercase mt-1 tracking-tight">Official Standard Structure</p>
                                     </div>
                                     <button

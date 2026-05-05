@@ -118,7 +118,7 @@ export default function ApprovalsPage() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-background to-muted/30 p-6 rounded-2xl border">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
+                    <h1 className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
                         Management Terminal
                     </h1>
                     <p className="text-muted-foreground mt-1 flex items-center gap-2 font-medium italic">
@@ -156,7 +156,7 @@ export default function ApprovalsPage() {
                             <div className="bg-muted w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                                 <UserCheck className="h-10 w-10 text-muted-foreground opacity-30" />
                             </div>
-                            <h3 className="text-xl font-semibold">Gateway is Clear</h3>
+                            <h3>Gateway is Clear</h3>
                             <p className="text-muted-foreground max-w-xs mx-auto">
                                 All identity requests have been processed. New requests will appear here in real-time.
                             </p>

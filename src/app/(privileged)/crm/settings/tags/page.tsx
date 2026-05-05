@@ -98,7 +98,7 @@ export default function ContactTagsPage() {
                             <FolderTree size={13} className="text-app-primary" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">CRM Taxonomy</span>
                         </div>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Partner <span className="bg-gradient-to-r from-app-primary to-indigo-500 bg-clip-text text-transparent">Categories</span>
                         </h1>
                         <p className="text-xs text-app-muted-foreground mt-1">

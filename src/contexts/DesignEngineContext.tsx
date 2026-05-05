@@ -190,8 +190,12 @@ export const DESIGN_PRESETS: Record<DesignPresetId, DesignPreset> = {
         border: '1px solid rgba(0, 0, 0, 0.1)',
       },
       typography: {
-        headingFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
-        bodyFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
+        // The body className already loads Outfit via next/font; using
+        // 'Outfit' here lets the JS-driven --font-heading inherit the
+        // same family instead of forcing a system-font chain that
+        // makes h1/h2 visibly thinner than the Outfit body around them.
+        headingFont: 'Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        bodyFont: 'Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         h1Size: '2rem',
         h2Size: '1.5rem',
         h3Size: '1.25rem',

@@ -67,7 +67,7 @@ export function CategoryMaintenanceSidebar({ categories, activeCategoryId }: Pro
     return (
         <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-app-border bg-app-surface flex flex-col h-full">
             <div className="p-3 md:p-4 border-b border-app-border bg-app-surface-2/50">
-                <h2 className="font-bold text-app-foreground flex items-center gap-2">
+                <h2 className="flex items-center gap-2">
                     <Database size={18} className="text-app-primary" />
                     Category Browser
                 </h2>

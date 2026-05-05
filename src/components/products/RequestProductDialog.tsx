@@ -216,7 +216,7 @@ export function RequestProductDialog({ open, onClose, requestType, products, onC
                             <Icon size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground">{meta.label}</h3>
+                            <h3>{meta.label}</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground">
                                 {products.length} product{products.length === 1 ? '' : 's'} · {meta.verb}
                             </p>

@@ -47,7 +47,7 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <span className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-2 block italic">Earnings Statement</span>
-                        <h2 className="text-3xl font-bold tracking-tight mb-1">{driverName}</h2>
+                        <h2 className="mb-1">{driverName}</h2>
                         <div className="flex items-center gap-3 text-sm text-white/40">
                             <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Lifecycle History</span>
                             <span className="w-1 h-1 rounded-full bg-white/20" />
@@ -68,7 +68,7 @@ export default function DriverStatement({ entries, balance, driverName, onLogExp
             {/* Transaction List */}
             <div className="GlassCard rounded-xl border border-white/5 overflow-hidden">
                 <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
-                    <h3 className="font-semibold flex items-center gap-2">
+                    <h3 className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-app-info" />
                         Transaction History
                     </h3>

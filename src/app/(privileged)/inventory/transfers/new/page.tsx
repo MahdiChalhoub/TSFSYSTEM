@@ -137,7 +137,7 @@ export default function NewTransferPage() {
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Management</p>
-        <h1 className="text-3xl font-black tracking-tight text-app-foreground">New Transfer</h1>
+        <h1>New Transfer</h1>
         <p className="text-sm text-app-muted-foreground mt-0.5">Create inter-warehouse transfer</p>
       </div>
     </div>
@@ -158,7 +158,7 @@ export default function NewTransferPage() {
  <form onSubmit={handleSubmit} className="space-y-6">
  {/* ── Route ─────────────────────────────────────────────────── */}
  <div className="p-6 rounded-2xl border border-app-border bg-app-surface shadow-sm space-y-6">
- <h2 className="text-sm font-black uppercase tracking-widest text-app-muted-foreground">Transfer Route</h2>
+ <h2 className="uppercase text-app-muted-foreground">Transfer Route</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-2">
  <label className="text-[10px] font-bold uppercase text-app-muted-foreground">From Warehouse *</label>
@@ -195,7 +195,7 @@ export default function NewTransferPage() {
 
  {/* ── Details ───────────────────────────────────────────────── */}
  <div className="p-6 rounded-2xl border border-app-border bg-app-surface shadow-sm space-y-6">
- <h2 className="text-sm font-black uppercase tracking-widest text-app-muted-foreground">Logistics Details</h2>
+ <h2 className="uppercase text-app-muted-foreground">Logistics Details</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-2">
  <label className="text-[10px] font-bold uppercase text-app-muted-foreground">Scheduled Date</label>
@@ -222,7 +222,7 @@ export default function NewTransferPage() {
  {/* ── Items ─────────────────────────────────────────────────── */}
  <div className="p-6 rounded-2xl border border-app-border bg-app-surface shadow-sm space-y-6">
  <div className="flex items-center justify-between">
- <h2 className="text-sm font-black uppercase tracking-widest text-app-muted-foreground">Transfer Items</h2>
+ <h2 className="uppercase text-app-muted-foreground">Transfer Items</h2>
  <Button type="button" onClick={addLine} variant="outline" size="sm" className="rounded-lg h-8 px-3 text-[10px] font-bold border-app-border bg-app-background hover:bg-app-surface-hover">
  <Plus size={14} className="mr-1.5" /> ADD LINE
  </Button>

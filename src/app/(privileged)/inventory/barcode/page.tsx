@@ -75,7 +75,7 @@ export default function BarcodeSettingsPage() {
                     <Barcode size={32} />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground">Barcode Configuration</h1>
+                    <h1>Barcode Configuration</h1>
                     <p className="text-app-muted-foreground">Manage automatic EAN-13 barcode generation rules.</p>
                 </div>
             </div>

@@ -163,7 +163,7 @@ export default function NewFinancialAccountPage() {
                     </div>
                     <div>
                         <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Finance · Accounts</p>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">New Financial Account</h1>
+                        <h1>New Financial Account</h1>
                     </div>
                 </div>
             </div>

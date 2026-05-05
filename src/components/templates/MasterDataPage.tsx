@@ -241,7 +241,7 @@ export function MasterDataPage<T = any>({
                                     <span className="text-white flex items-center justify-center [&>svg]:w-5 [&>svg]:h-5">{icon}</span>
                                 </div>
                                 <div data-tour="page-title">
-                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{title}</h1>
+                                    <h1>{title}</h1>
                                     <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{subtitle}</p>
                                 </div>
                             </div>

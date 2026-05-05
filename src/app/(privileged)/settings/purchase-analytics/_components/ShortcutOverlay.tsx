@@ -12,7 +12,7 @@ export function ShortcutOverlay({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-app-surface border border-app-border rounded-xl shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
         <div className="px-4 py-3 border-b border-app-border flex items-center justify-between">
-          <h3 className="text-[13px] font-bold text-app-foreground">⌨️ Keyboard Shortcuts</h3>
+          <h3>⌨️ Keyboard Shortcuts</h3>
           <button type="button" onClick={onClose} className="text-app-muted-foreground hover:text-app-foreground"><X size={14} /></button>
         </div>
         <div className="px-4 py-3 space-y-2">

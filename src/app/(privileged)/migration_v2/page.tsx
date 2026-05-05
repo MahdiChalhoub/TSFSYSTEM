@@ -126,7 +126,7 @@ export default function MigrationImportHub() {
                         <Monitor className="w-7 h-7 text-app-success" />
                     </div>
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">
+                        <h1>
                             Data Import
                         </h1>
                         <p className="text-sm text-app-muted-foreground font-medium mt-0.5">
@@ -165,7 +165,7 @@ export default function MigrationImportHub() {
                 {step === 'module' && (
                     <div className="space-y-4">
                         <div className="mb-6">
-                            <h2 className="text-xl font-black text-app-foreground">
+                            <h2>
                                 What do you want to import?
                             </h2>
                             <p className="text-sm text-app-muted-foreground mt-1">
@@ -192,7 +192,7 @@ export default function MigrationImportHub() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-black text-app-foreground">{mod.label}</h3>
+                                                    <h3>{mod.label}</h3>
                                                     {mod.badge && (
                                                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${mod.badgeColor}`}>
                                                             {mod.badge}
@@ -233,7 +233,7 @@ export default function MigrationImportHub() {
                                 <ArrowLeft size={16} />
                             </button>
                             <div>
-                                <h2 className="text-xl font-black text-app-foreground">
+                                <h2>
                                     Where are you importing from?
                                 </h2>
                                 <p className="text-sm text-app-muted-foreground mt-0.5">
@@ -254,7 +254,7 @@ export default function MigrationImportHub() {
                                         <div className={`w-14 h-14 rounded-xl ${source.color} flex items-center justify-center mb-4 group-hover:bg-app-success-bg dark:group-hover:bg-emerald-900/30 transition-colors`}>
                                             <Icon className={`w-7 h-7 ${source.iconColor} group-hover:text-app-success transition-colors`} />
                                         </div>
-                                        <h3 className="text-lg font-black text-app-foreground">{source.label}</h3>
+                                        <h3>{source.label}</h3>
                                         <p className="text-xs text-app-muted-foreground mt-1">{source.description}</p>
                                         <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-app-success-bg text-app-success dark:bg-emerald-900/30 dark:text-app-success uppercase">
                                             Available
@@ -268,7 +268,7 @@ export default function MigrationImportHub() {
                                         <div className={`w-14 h-14 rounded-xl ${source.color} flex items-center justify-center mb-4`}>
                                             <Icon className={`w-7 h-7 ${source.iconColor}`} />
                                         </div>
-                                        <h3 className="text-lg font-black text-app-foreground">{source.label}</h3>
+                                        <h3>{source.label}</h3>
                                         <p className="text-xs text-app-muted-foreground mt-1">{source.description}</p>
                                         <span className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px] font-black bg-app-surface text-app-muted-foreground bg-app-surface dark:text-app-muted-foreground uppercase">
                                             Coming Soon

@@ -57,7 +57,7 @@ export const PinStep = memo(function PinStep({ register, cashier, onVerified }: 
                 <div className="w-20 h-20 rounded-full bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/30 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-3 font-black text-2xl shadow-xl shadow-[var(--app-primary-glow)]">
                     {cashier.name.substring(0, 2).toUpperCase()}
                 </div>
-                <h2 className="text-2xl font-black text-[var(--app-foreground)]">{cashier.name}</h2>
+                <h2 className="text-[var(--app-foreground)]">{cashier.name}</h2>
                 <p className="text-[var(--app-muted-foreground)] text-sm mt-0.5">{register.name}</p>
             </div>
 

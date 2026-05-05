@@ -96,7 +96,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
             {/* ── Failed Sessions Recovery ── */}
             <div className={cardStyle}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background flex items-center justify-between">
-                    <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><XCircle size={14} style={{ color: v('--app-error') }} /> Failed Sessions ({failedSessions.length})</h3>
+                    <h3 className="flex items-center gap-2"><XCircle size={14} style={{ color: v('--app-error') }} /> Failed Sessions ({failedSessions.length})</h3>
                 </div>
                 <div className="p-3 space-y-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                     {failedSessions.length === 0 ? (
@@ -120,7 +120,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
             {/* ── Stuck Sessions Fixer ── */}
             <div className={cardStyle}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background flex items-center justify-between">
-                    <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><Clock size={14} style={{ color: v('--app-warning') }} /> Stuck Sessions ({stuckSessions.length})</h3>
+                    <h3 className="flex items-center gap-2"><Clock size={14} style={{ color: v('--app-warning') }} /> Stuck Sessions ({stuckSessions.length})</h3>
                 </div>
                 <div className="p-3 space-y-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                     {stuckSessions.length === 0 ? (
@@ -143,7 +143,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
             {/* ── Printer Diagnostics ── */}
             <div className={cardStyle}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background">
-                    <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><Printer size={14} style={{ color: v('--app-info') }} /> Printer Health ({printers.length})</h3>
+                    <h3 className="flex items-center gap-2"><Printer size={14} style={{ color: v('--app-info') }} /> Printer Health ({printers.length})</h3>
                 </div>
                 <div className="p-3 space-y-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                     {printers.map(p => (
@@ -168,7 +168,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
             {/* ── Template Health ── */}
             <div className={cardStyle}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background">
-                    <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><Bug size={14} style={{ color: v('--app-warning') }} /> Template Health</h3>
+                    <h3 className="flex items-center gap-2"><Bug size={14} style={{ color: v('--app-warning') }} /> Template Health</h3>
                 </div>
                 <div className="p-3 space-y-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                     {orphanTemplates.length > 0 ? (
@@ -200,7 +200,7 @@ export default function MaintenanceTab({ sessions, printers, templates, kpi, onR
             {/* ── System Summary (KPI) ── */}
             <div className={`${cardStyle} lg:col-span-2`}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background">
-                    <h3 className="text-[12px] font-black text-app-foreground flex items-center gap-2"><Activity size={14} style={{ color: v('--app-primary') }} /> System Summary</h3>
+                    <h3 className="flex items-center gap-2"><Activity size={14} style={{ color: v('--app-primary') }} /> System Summary</h3>
                 </div>
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
                     {[

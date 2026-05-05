@@ -105,7 +105,7 @@ export default function CreditNotesPage() {
         </div>
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
-          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+          <h1 className="italic">
             Credit <span className="text-app-primary">Notes</span>
           </h1>
         </div>

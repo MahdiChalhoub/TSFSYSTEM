@@ -250,7 +250,7 @@ export default function ComboManager({
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-app-surface rounded-2xl w-full max-w-lg shadow-xl">
                         <div className="p-5 border-b">
-                            <h3 className="text-lg font-bold">Add Component</h3>
+                            <h3>Add Component</h3>
                             <p className="text-sm text-app-muted-foreground">Search for a product to add to this combo</p>
                         </div>
                         <div className="p-5 space-y-4">

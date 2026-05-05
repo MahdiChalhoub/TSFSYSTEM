@@ -165,7 +165,7 @@ export default function InvoicingScreen() {
                         </button>
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">Supplier Billing</p>
-                            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-app-foreground">
+                            <h1>
                                 Record <span className="text-purple-500">Invoice</span>
                             </h1>
                             <p className="text-sm font-medium text-app-muted-foreground mt-1 flex items-center gap-2">
@@ -234,7 +234,7 @@ export default function InvoicingScreen() {
                         {/* Line Item Selection */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-black text-app-foreground uppercase tracking-tight flex items-center gap-2">
+                                <h3 className="uppercase flex items-center gap-2">
                                     <ListOrdered size={20} className="text-purple-500" />
                                     Items to Invoiced ({Object.values(selectedLines).filter(Boolean).length})
                                 </h3>

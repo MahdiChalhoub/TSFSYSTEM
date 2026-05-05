@@ -101,7 +101,7 @@ export default function PurchaseReturnsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div>
-                <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Purchase Returns</h1>
+                <h1 className="font-serif">Purchase Returns</h1>
                 <p className="text-app-muted-foreground font-medium mt-1">Manage returns to suppliers and reversing entries</p>
             </div>
 

@@ -84,7 +84,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                 <div className="relative space-y-5">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-xl font-bold text-white">Client Login</h2>
+                            <h2 className="text-white">Client Login</h2>
                             <p className="text-[10px] text-app-muted-foreground font-medium tracking-wide uppercase mt-1">Access your orders, wallet & support</p>
                         </div>
                         <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-white transition-colors">

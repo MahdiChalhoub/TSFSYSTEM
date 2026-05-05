@@ -110,7 +110,7 @@ export default function TicketsPage() {
         return (
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
-                    <h1 className="text-2xl font-bold text-white">Please log in</h1>
+                    <h1 className="text-white">Please log in</h1>
                     <Link href={`/tenant/${slug}`} className="text-app-success font-bold">Go to Store</Link>
                 </div>
             </div>
@@ -128,7 +128,7 @@ export default function TicketsPage() {
                             className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> My Account
                         </Link>
-                        <h1 className="text-4xl font-black text-white">Support Tickets</h1>
+                        <h1 className="text-white">Support Tickets</h1>
                     </div>
                     <button onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-app-accent-strong text-white rounded-xl font-bold hover:bg-app-accent transition-all">
@@ -140,7 +140,7 @@ export default function TicketsPage() {
                 {showCreate && (
                     <div className="p-8 bg-app-surface/80 border border-app-accent/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                            <h2 className="text-white flex items-center gap-3">
                                 <MessageSquare size={22} className="text-app-accent" /> New Ticket
                             </h2>
                             <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white">
@@ -177,7 +177,7 @@ export default function TicketsPage() {
                 ) : tickets.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <MessageSquare size={48} className="mx-auto text-app-faint" />
-                        <h2 className="text-xl font-bold text-white">No tickets yet</h2>
+                        <h2 className="text-white">No tickets yet</h2>
                         <p className="text-app-muted-foreground">Need help? Create a support ticket above</p>
                     </div>
                 ) : (

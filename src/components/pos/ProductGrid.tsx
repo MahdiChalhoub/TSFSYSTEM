@@ -233,7 +233,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 <div className="w-16 h-16 bg-app-error-soft rounded-full flex items-center justify-center mb-4">
                     <AlertCircle className="w-8 h-8 text-app-error" />
                 </div>
-                <h3 className="text-lg font-bold text-app-foreground mb-2">Unable to Load Products</h3>
+                <h3 className="mb-2">Unable to Load Products</h3>
                 <p className="text-app-muted-foreground mb-4 max-w-md">{error}</p>
                 <button
                     onClick={retry}
@@ -252,7 +252,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                     <PackageX className="w-8 h-8 text-app-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-bold text-app-foreground mb-2">No Products Found</h3>
+                <h3 className="mb-2">No Products Found</h3>
                 <p className="text-app-muted-foreground">
                     {searchQuery
                         ? `No results for "${searchQuery}". Try a different search term.`
@@ -287,7 +287,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                             <div className="w-8 h-8 rounded-full bg-app-info-soft text-app-info flex items-center justify-center text-sm font-bold mb-3">
                                 {product.name.substring(0, 2).toUpperCase()}
                             </div>
-                            <h3 className="font-medium text-app-foreground leading-tight line-clamp-2">{product.name}</h3>
+                            <h3 className="line-clamp-2">{product.name}</h3>
                             <p className="text-xs text-app-muted-foreground mt-1">{product.sku}</p>
                         </div>
 

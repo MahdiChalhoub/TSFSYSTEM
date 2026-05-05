@@ -43,7 +43,7 @@ export function InspectorStrip({ configScore, scoreBreakdown, isProfileMode }: P
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
                     <Activity size={12} style={{ color: 'var(--app-primary)' }} />
                 </div>
-                <h3 className="text-[12px] font-black text-app-foreground">Live Preview & Health</h3>
+                <h3>Live Preview & Health</h3>
                 <span className="text-[9px] font-bold text-app-muted-foreground">Simulated grid output</span>
                 <span className="ml-auto text-app-muted-foreground group-hover:text-app-foreground transition-colors">
                     {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}

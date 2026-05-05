@@ -329,7 +329,7 @@ export default function TaxPolicyDashboard() {
                             <Shield size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                            <h1>
                                 Universal Tax Engine
                             </h1>
                             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -395,7 +395,7 @@ export default function TaxPolicyDashboard() {
                                 <div className="w-16 h-16 rounded-[2rem] bg-app-primary flex items-center justify-center text-white mb-6 shadow-2xl">
                                     <Wand2 size={32} />
                                 </div>
-                                <h2 className="text-2xl font-black text-app-foreground tracking-tight mb-2">Automated Tax Setup</h2>
+                                <h2 className="mb-2">Automated Tax Setup</h2>
                                 <p className="text-app-muted-foreground max-w-lg">
                                     Apply an official country template to automatically configure your tax policies,
                                     counterparty profiles, and GL account links.
@@ -409,7 +409,7 @@ export default function TaxPolicyDashboard() {
                                         <div className="flex items-center gap-2 text-app-primary font-black uppercase tracking-widest text-[10px] mb-4">
                                             <Globe size={12} /> Regional Standards
                                         </div>
-                                        <h3 className="text-xl font-bold text-app-foreground mb-4">Template Application</h3>
+                                        <h3 className="mb-4">Template Application</h3>
                                         <p className="text-sm text-app-muted-foreground mb-6 leading-relaxed">
                                             This will seed standard VAT rates (18%, 9%, 0%), configure AIRSI treatments,
                                             and link mandatory tax accounts for <b>{health?.country_code || 'your country'}</b>.
@@ -453,7 +453,7 @@ export default function TaxPolicyDashboard() {
                         {health && <HealthBanner health={health} onApplyTemplate={handleApplyTemplate} applying={applying} />}
 
                         <div className="mt-6 mb-4">
-                            <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest mb-4">Policy Snapshot</h3>
+                            <h3 className="uppercase mb-4">Policy Snapshot</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
                                 {TAX_TYPES.map(tax => {
                                     const Icon = tax.icon

@@ -19,7 +19,7 @@ export function ModulesTab({ modules, toggling, onToggle, onFeatureToggle }: Mod
         <div className="space-y-8">
             {coreModules.length > 0 && (
                 <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-app-accent mb-4 flex items-center gap-2">
+                    <h3 className="uppercase text-app-accent mb-4 flex items-center gap-2">
                         <Crown size={14} /> Core Infrastructure
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -28,7 +28,7 @@ export function ModulesTab({ modules, toggling, onToggle, onFeatureToggle }: Mod
                 </div>
             )}
             <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-app-success mb-4 flex items-center gap-2">
+                <h3 className="uppercase text-app-success mb-4 flex items-center gap-2">
                     <Package size={14} /> Business Modules
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

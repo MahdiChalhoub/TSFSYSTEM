@@ -109,7 +109,7 @@ export default function PaymentMethodsPage() {
                         <CreditCard size={18} />
                     </div>
                     <div>
-                        <h1 className="text-base font-black text-app-foreground tracking-tight">Payment Methods</h1>
+                        <h1>Payment Methods</h1>
                         <p className="text-[10px] text-app-muted-foreground">Manage your organization&apos;s accepted payment methods</p>
                     </div>
                 </div>
@@ -202,7 +202,7 @@ export default function PaymentMethodsPage() {
                         style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
                         {/* Modal header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-app-border/50">
-                            <h2 className="text-sm font-black text-app-foreground">{isNew ? 'New Payment Method' : `Edit "${editing.name}"`}</h2>
+                            <h2>{isNew ? 'New Payment Method' : `Edit "${editing.name}"`}</h2>
                             <button onClick={() => { setEditing(null); setIsNew(false) }} className="p-1.5 rounded-lg hover:bg-app-surface transition-colors">
                                 <X size={14} className="text-app-muted-foreground" />
                             </button>

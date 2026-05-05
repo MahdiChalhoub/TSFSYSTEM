@@ -114,7 +114,7 @@ export default function AttachmentManager({
  return (
  <div className={`space-y-4 animate-in fade-in duration-300 ${compact ? '' : 'mt-6'}`}>
  <div className="flex items-center justify-between">
- <h3 className="text-lg font-black text-app-foreground flex items-center gap-2">
+ <h3 className="flex items-center gap-2">
  <Cloud size={20} className="text-app-info" />
  {title}
  <span className="ml-2 px-2 py-0.5 rounded-full bg-app-surface-2 text-app-muted-foreground text-[10px] font-bold">

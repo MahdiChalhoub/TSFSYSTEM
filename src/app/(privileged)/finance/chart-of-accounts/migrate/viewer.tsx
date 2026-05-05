@@ -98,7 +98,7 @@ export default function CoaMigrationTool({
                             <Layers className="text-amber-400" size={32} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold font-serif italic">Step 1: Choose Your Destination</h2>
+                            <h2 className="font-serif italic">Step 1: Choose Your Destination</h2>
                             <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-wide mt-1">Select the standard you want to migrate to</p>
                         </div>
                     </div>
@@ -145,7 +145,7 @@ export default function CoaMigrationTool({
             <div className="bg-app-warning-bg border border-amber-100 p-6 rounded-3xl flex items-start gap-4 shadow-sm border-2">
                 <AlertCircle className="text-app-warning mt-1" size={24} />
                 <div className="flex-1">
-                    <h3 className="font-bold text-amber-900">Step 2: Map Your Balances</h3>
+                    <h3 className="text-amber-900">Step 2: Map Your Balances</h3>
                     <p className="text-sm text-app-warning opacity-80 mt-1 leading-relaxed">
                         Your target standard <strong className="uppercase">{selectedTemplate.replace('_', ' ')}</strong> is now loaded.
                         Please match your old accounts with the new ones. Zero-balance accounts will be ignored.

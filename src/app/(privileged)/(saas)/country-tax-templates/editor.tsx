@@ -184,7 +184,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
             {isNew ? <Plus size={14} className="text-white" /> : <Globe size={14} className="text-white" />}
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm md:text-base font-black text-app-foreground tracking-tight truncate leading-tight">
+            <h1 className="truncate">
               {isNew ? 'New Country Template' : `${form.country_code} — ${form.country_name}`}
             </h1>
             <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -408,7 +408,7 @@ export default function TemplateEditor({ id, existing, onClose, prefetchedCountr
                 <div className="px-4 py-3 flex items-center gap-3" style={{ background: `color-mix(in srgb, ${tax.category === 'ESSENTIAL' ? 'var(--app-success)' : 'var(--app-warning)'} 5%, var(--app-surface))`, borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${tax.category === 'ESSENTIAL' ? 'var(--app-success)' : 'var(--app-warning)'} 12%, transparent)`, color: tax.category === 'ESSENTIAL' ? 'var(--app-success)' : 'var(--app-warning)' }}><Tag size={18} /></div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-[15px] font-black text-app-foreground">{tax.name || 'Untitled Tax'}</h2>
+                    <h2>{tax.name || 'Untitled Tax'}</h2>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[8px] font-black px-1.5 py-px rounded-full uppercase tracking-wider" style={{ background: `color-mix(in srgb, ${tax.category === 'ESSENTIAL' ? 'var(--app-success)' : 'var(--app-warning)'} 10%, transparent)`, color: tax.category === 'ESSENTIAL' ? 'var(--app-success)' : 'var(--app-warning)' }}>{tax.category}</span>
                       <span className="text-[8px] font-black px-1.5 py-px rounded-full uppercase tracking-wider" style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>{typeLabel}</span>

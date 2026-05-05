@@ -115,7 +115,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  status === 'VERIFYING' ? <Loader2 size={32} className="animate-spin" /> :
  <ShieldAlert size={32} />}
  </div>
- <h2 className="text-lg font-black text-app-foreground uppercase tracking-tight">
+ <h2 className="uppercase">
  {status === 'APPROVED' ? 'Authorized' : 'Manager Override Required'}
  </h2>
  <p className="text-xs text-app-muted-foreground font-bold mt-1">

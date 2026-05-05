@@ -158,7 +158,7 @@ export default function DebugOverlay() {
                     <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 p-6 text-white shrink-0">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="text-xl font-black tracking-tight">System Audit</h3>
+                                <h3>System Audit</h3>
                                 <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mt-1">Dev Mode Terminal</p>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-xl transition-colors">

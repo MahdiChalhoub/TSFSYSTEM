@@ -211,9 +211,14 @@ export function DajingoPageShell({
                   {icon}
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{title}</h1>
+                  {/* Bare <h1> — picks up canonical page-title styling
+                      (18px / 700 / tracking -0.02em / line-height 1.2)
+                      from globals.css + app-theme-engine.css. Don't add
+                      Tailwind size or weight classes; that bypasses the
+                      system. Font-family inherits Outfit from body. */}
+                  <h1 className="truncate">{title}</h1>
                   {subtitle && (
-                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest">
                       {subtitle}
                     </p>
                   )}

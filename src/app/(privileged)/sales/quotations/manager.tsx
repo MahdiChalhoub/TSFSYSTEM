@@ -238,7 +238,7 @@ export default function QuotationManager({
                             <CardContent className="py-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h2 className="text-lg font-bold">{selected.reference || `QUO-${selected.id}`}</h2>
+                                        <h2>{selected.reference || `QUO-${selected.id}`}</h2>
                                         <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
                                             {selected.contact_name && (
                                                 <span className="flex items-center gap-1"><User size={12} />{selected.contact_name}</span>
@@ -369,7 +369,7 @@ export default function QuotationManager({
             {showCreate && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setShowCreate(false)}>
                     <div className="bg-app-surface rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4">New Quotation</h3>
+                        <h3 className="mb-4">New Quotation</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-app-muted-foreground mb-1">Reference</label>
@@ -411,7 +411,7 @@ export default function QuotationManager({
             {showAddLine && selected && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setShowAddLine(false)}>
                     <div className="bg-app-surface rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4">Add Product Line</h3>
+                        <h3 className="mb-4">Add Product Line</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-app-muted-foreground mb-1">Product</label>

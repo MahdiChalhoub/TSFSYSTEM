@@ -368,7 +368,7 @@ function ProfileModal({ mode, pageContext, profile, onClose, onSaved, onDuplicat
                         {isReadOnly ? <Eye size={14} className="text-app-primary" /> :
                          isCreate ? <Plus size={14} className="text-app-success" /> :
                          <Edit3 size={14} className="text-app-primary" />}
-                        <h3 className="font-black text-[13px] text-app-foreground">{title}</h3>
+                        <h3>{title}</h3>
                         {profile?.is_system && (
                             <span className="text-[8px] px-1.5 py-0.5 rounded bg-app-warning/10 text-app-warning font-black uppercase">System</span>
                         )}

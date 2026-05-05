@@ -71,7 +71,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                 /* ── Selection Phase ─────────────────────────────────── */
                 <div className="p-8 space-y-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <h2 className="text-xl font-black italic flex items-center gap-3">
+                        <h2 className="italic flex items-center gap-3">
                             <User className="text-violet-400" /> Select Employee
                         </h2>
                         <div className="relative group">
@@ -113,7 +113,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-black uppercase tracking-widest text-violet-400">Target Employee</p>
-                            <h2 className="text-2xl font-black italic truncate">{adjustTarget.employee_name}</h2>
+                            <h2 className="italic truncate">{adjustTarget.employee_name}</h2>
                             <div className="flex gap-3 items-center mt-1">
                                 <span className="text-[10px] font-black uppercase bg-app-surface/5 px-2 py-0.5 rounded opacity-40">Current Score: {Math.round(parseFloat(adjustTarget.global_score))}</span>
                                 <span className={clsx("text-[10px] font-black uppercase tracking-widest", RISK_COLORS[adjustTarget.risk_level])}>{adjustTarget.risk_level}</span>

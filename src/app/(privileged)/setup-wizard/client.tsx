@@ -304,7 +304,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  <Sparkles size={14} className="animate-pulse" />
  <span className="text-[11px] font-black uppercase tracking-widest">Organization Setup</span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-foreground">
+ <h1 className="page-header-title">
  Let&apos;s set up <span className="text-app-primary">{data.business_name || 'your business'}</span>
  </h1>
  <p className="text-sm text-app-muted-foreground mt-2 font-medium">Complete these steps to unlock your full ERP experience</p>
@@ -337,7 +337,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  {(() => { const Icon = STEPS[step].icon; return <Icon size={24} /> })()}
  </div>
  <div>
- <h2 className="text-xl font-black tracking-tight text-app-foreground">{STEPS[step].title}</h2>
+ <h2>{STEPS[step].title}</h2>
  <p className="text-xs text-app-muted-foreground font-medium">{STEPS[step].subtitle}</p>
  </div>
  <div className="ml-auto flex items-center gap-2">
@@ -436,7 +436,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Currency */}
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <h3 className="uppercase mb-4 flex items-center gap-2">
  <Banknote size={16} className="text-app-primary" /> Base Currency <span className="text-rose-400">*</span>
  </h3>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -455,7 +455,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* COA Template */}
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <h3 className="uppercase mb-2 flex items-center gap-2">
  <BookOpen size={16} className="text-app-primary" /> Chart of Accounts <span className="text-rose-400">*</span>
  </h3>
  <p className="text-xs text-app-muted-foreground font-medium mb-4">Select the accounting standard for your country. This creates your entire account tree.</p>
@@ -477,7 +477,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Fiscal Year */}
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <h3 className="uppercase mb-2 flex items-center gap-2">
  <CalendarDays size={16} className="text-app-primary" /> Fiscal Year <span className="text-rose-400">*</span>
  </h3>
  <p className="text-xs text-app-muted-foreground font-medium mb-4">Your first accounting period. Most companies use Jan 1 — Dec 31.</p>
@@ -505,7 +505,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Pricing Mode */}
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <h3 className="uppercase mb-2 flex items-center gap-2">
  <ToggleLeft size={16} className="text-app-warning" /> Pricing Mode
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -603,7 +603,7 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
 
  <div className="flex-1 space-y-6">
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <h3 className="uppercase mb-4 flex items-center gap-2">
  <Building2 size={16} className="text-app-primary" /> Business Identity
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -631,7 +631,7 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </div>
 
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <h3 className="uppercase mb-4 flex items-center gap-2">
  <Clock size={16} className="text-app-warning" /> Timezone
  </h3>
  <select value={data.timezone} onChange={e => setData({ timezone: e.target.value })} className={INPUT_CLS}>
@@ -642,7 +642,7 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </div>
 
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2"><Mail size={16} className="text-app-primary" /> Contact</h3>
+ <h3 className="uppercase mb-4 flex items-center gap-2"><Mail size={16} className="text-app-primary" /> Contact</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
  <div><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Email</label>
  <input type="email" value={data.business_email} onChange={e => setData({ business_email: e.target.value })} placeholder="hello@acme.com" className={INPUT_CLS} /></div>
@@ -653,7 +653,7 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </div>
  </div>
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2"><MapPinned size={16} className="text-app-primary" /> Address</h3>
+ <h3 className="uppercase mb-4 flex items-center gap-2"><MapPinned size={16} className="text-app-primary" /> Address</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
  <div className="md:col-span-2"><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Street</label>
  <input type="text" value={data.address} onChange={e => setData({ address: e.target.value })} placeholder="123 Main Street" className={INPUT_CLS} /></div>
@@ -698,7 +698,7 @@ function StepLocations({ config, data, setData }: StepProps) {
  </div>
  {config.warehouses.length > 0 && (
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">Existing ({config.warehouses.length})</h3>
+ <h3 className="uppercase mb-3">Existing ({config.warehouses.length})</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {config.warehouses.map((wh: any) => (
  <div key={wh.id} className="p-4 rounded-xl border border-app-border bg-app-surface-2/50 flex items-center gap-3">
@@ -711,7 +711,7 @@ function StepLocations({ config, data, setData }: StepProps) {
  )}
  <div>
  <div className="flex items-center justify-between mb-3">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider">Add More</h3>
+ <h3 className="uppercase">Add More</h3>
  <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-primary/5 text-app-primary font-bold text-xs hover:bg-app-primary/10 transition-all"><Plus size={14} /> Add</button>
  </div>
  {data.warehouses.length === 0 && (
@@ -775,7 +775,7 @@ function StepCRMSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Pricing Tiers</h3>
+ <h3 className="uppercase mb-1">Pricing Tiers</h3>
  <p className="text-xs text-app-muted-foreground">Configure default customer categories for CRM and POS.</p>
  </div>
  <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-info-bg text-app-info font-bold text-xs hover:bg-app-info-bg transition-all"><Plus size={14} /> Add Tier</button>
@@ -818,7 +818,7 @@ function StepHRSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Departments</h3>
+ <h3 className="uppercase mb-1">Departments</h3>
  <p className="text-xs text-app-muted-foreground">Set up the organizational structure of your company.</p>
  </div>
  <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-success-soft text-app-success font-bold text-xs hover:bg-app-success-soft transition-all"><Plus size={14} /> Add Dept</button>
@@ -852,7 +852,7 @@ function StepPOSSetup({ config, data, setData }: StepProps) {
  const upd = (v: boolean) => setData({ pos_settings: { ...data.pos_settings, allow_negative_stock: v } })
  return (
  <div className="space-y-6">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">POS Configuration</h3>
+ <h3 className="uppercase mb-3">POS Configuration</h3>
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface">
  <div className="flex items-start justify-between">
  <div>
@@ -877,7 +877,7 @@ function StepECommerceSetup({ config, data, setData }: StepProps) {
  const upd = (k: string, v: string) => setData({ ecommerce_config: { ...data.ecommerce_config, [k]: v } })
  return (
  <div className="space-y-6">
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">Online Storefront</h3>
+ <h3 className="uppercase mb-3">Online Storefront</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface">
  <label className="block text-[10px] font-bold text-app-muted-foreground mb-2 uppercase">Theme Primary Color</label>
@@ -1002,7 +1002,7 @@ function StepWorkspaceSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Daily Checklists</h3>
+ <h3 className="uppercase mb-1">Daily Checklists</h3>
  <p className="text-xs text-app-muted-foreground">Define operational checklists for your team (e.g., Opening, Closing).</p>
  </div>
  <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-info-bg text-app-info font-bold text-xs hover:bg-app-info-bg transition-all"><Plus size={14} /> Add Checklist</button>
@@ -1176,7 +1176,7 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  <div className="space-y-6">
  <div className="text-center mb-8">
  <div className="w-20 h-20 rounded-[2rem] bg-app-primary flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-foreground" /></div>
- <h3 className="text-2xl font-black tracking-tight text-app-foreground">Everything looks great!</h3>
+ <h3>Everything looks great!</h3>
  <p className="text-sm text-app-muted-foreground mt-1 font-medium">Review your setup and launch</p>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1259,7 +1259,7 @@ function LaunchAnimation() {
  <div className="w-24 h-24 rounded-[2rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-foreground" /></div>
  <div className="absolute -inset-4 rounded-[3rem] bg-app-success/10/20 animate-ping" />
  </div>
- <h2 className="text-4xl font-black tracking-tighter text-app-foreground mb-2">You&apos;re all set! 🎉</h2>
+ <h2 className="mb-2">You&apos;re all set! 🎉</h2>
  <p className="text-sm text-app-muted-foreground font-medium mb-6">Redirecting to your dashboard...</p>
  <div className="flex items-center justify-center gap-2">
  <div className="w-2 h-2 rounded-full bg-app-primary animate-bounce" style={{ animationDelay: '0s' }} />

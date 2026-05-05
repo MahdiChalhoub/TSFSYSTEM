@@ -380,7 +380,7 @@ export default function OrderHistoryPageWide() {
               <Activity size={12} /> Transaction Stream
             </span>
           </div>
-          <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+          <h1 className="page-header-title flex items-center gap-4">
             <div className="w-16 h-16 rounded-[1.8rem] bg-app-bg flex items-center justify-center shadow-2xl shadow-stone-200">
               <History size={32} className="text-app-foreground" />
             </div>
@@ -505,7 +505,7 @@ export default function OrderHistoryPageWide() {
         {layoutMode === 'quad' && (
           <div className="space-y-4 sticky top-8">
             <div className="bg-app-surface rounded-2xl p-6 border border-app-border/30">
-              <h3 className="text-sm font-bold mb-4 text-app-foreground">Quick Stats</h3>
+              <h3 className="mb-4">Quick Stats</h3>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between">
                   <span className="text-app-muted-foreground">Today's Sales</span>

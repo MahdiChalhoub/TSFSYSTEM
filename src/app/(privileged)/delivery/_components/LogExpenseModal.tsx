@@ -60,7 +60,7 @@ export default function LogExpenseModal({ driverId, driverName, onClose, onSaved
                     style={{ background: 'linear-gradient(to bottom, color-mix(in srgb, var(--app-info) 10%, transparent), transparent)' }}
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-black text-white italic tracking-tight">Log Fleet <span className="text-app-info">Expense</span></h2>
+                        <h2 className="text-white italic">Log Fleet <span className="text-app-info">Expense</span></h2>
                         <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white flex items-center justify-center transition-all">
                             <X size={16} />
                         </button>

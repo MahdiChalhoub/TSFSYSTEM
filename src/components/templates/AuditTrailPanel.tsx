@@ -171,7 +171,7 @@ export function AuditTrailPanel({ config, isOpen, onClose }: Props) {
                             <ClipboardList size={18} className="text-white" />
                         </div>
                         <div>
-                            <h2 className="text-[15px] font-black" style={{ color: 'var(--app-foreground)' }}>
+                            <h2 style={{ color: 'var(--app-foreground)' }}>
                                 {config.title || 'Audit Trail'}
                             </h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>

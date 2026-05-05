@@ -183,7 +183,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                 <Monitor size={18} />
                             </div>
                             <div>
-                                <h2 className="text-sm font-black text-app-foreground tracking-tight">{reg.name}</h2>
+                                <h2>{reg.name}</h2>
                                 <p className="text-[10px] text-app-muted-foreground">{reg.siteName} · #{reg.id}</p>
                             </div>
                         </div>
@@ -623,7 +623,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
                         <Shield size={14} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-app-foreground">Global Settings</h2>
+                        <h2>Global Settings</h2>
                         <p className="text-[9px] text-app-muted-foreground">Applies to all registers</p>
                     </div>
                 </div>
@@ -783,7 +783,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                             <Key size={14} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-app-foreground">Users & PINs</h2>
+                            <h2>Users & PINs</h2>
                             <p className="text-[9px] text-app-muted-foreground">{withPin} with PIN · {withoutPin} without</p>
                         </div>
                     </div>
@@ -909,7 +909,7 @@ export function UsersPinsPanel({ users, onRefresh, onClose, onReturn }: { users:
                                         {pinModal.mode === 'self' ? <Key size={18} /> : <Shield size={18} />}
                                     </div>
                                     <div>
-                                        <h3 className="text-[14px] font-black text-app-foreground">
+                                        <h3>
                                             {pinModal.mode === 'self' ? 'Change Your PIN' : `Reset PIN`}
                                         </h3>
                                         <p className="text-[10px] text-app-muted-foreground">

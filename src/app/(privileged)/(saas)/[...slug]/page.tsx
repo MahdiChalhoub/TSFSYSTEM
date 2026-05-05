@@ -30,7 +30,7 @@ export default function CatchAllPage() {
                 </div>
 
                 {/* Title */}
-                <h1 className="text-2xl font-black text-app-foreground tracking-tight capitalize">
+                <h1 className="capitalize">
                     {moduleName}
                 </h1>
 

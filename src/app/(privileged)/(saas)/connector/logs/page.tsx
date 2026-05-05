@@ -101,7 +101,7 @@ export default function ConnectorLogsPage() {
                             <FileText size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Routing Logs</h2>
+                    <h2>Routing Logs</h2>
                     <p className="text-app-muted-foreground mt-2 font-medium">Audit trail of Connector routing decisions</p>
                 </div>
                 <Button

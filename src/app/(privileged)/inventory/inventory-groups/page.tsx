@@ -270,7 +270,7 @@ function AddMemberModal({ groupId, onClose, onAdded }: { groupId: number; onClos
                             style={{ background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 70%, black))' }}>
                             <Plus size={14} className="text-white" />
                         </div>
-                        <h3 className="text-sm font-black text-app-foreground">Add Product to Group</h3>
+                        <h3>Add Product to Group</h3>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface-hover"><X size={16} className="text-app-muted-foreground" /></button>
                 </div>
@@ -383,7 +383,7 @@ function GroupFormModal({ group, onClose, onSaved }: { group?: any; onClose: () 
                 onClick={e => e.stopPropagation()}>
 
                 <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                    <h3 className="text-sm font-black text-app-foreground">{group?.id ? 'Edit Group' : 'New Substitution Group'}</h3>
+                    <h3>{group?.id ? 'Edit Group' : 'New Substitution Group'}</h3>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-app-surface-hover"><X size={16} className="text-app-muted-foreground" /></button>
                 </div>
 
@@ -498,7 +498,7 @@ export default function InventoryGroupsPage() {
                     </div>
                     <div>
                         <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground">Product Intelligence</p>
-                        <h1 className="text-2xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Substitution <span style={{ color: 'var(--app-primary)' }}>Groups</span>
                         </h1>
                         <p className="text-[10px] text-app-muted-foreground mt-0.5">
@@ -566,7 +566,7 @@ export default function InventoryGroupsPage() {
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg">{typeCfg.icon}</span>
-                                                <h3 className="text-sm font-black text-app-foreground">{g.name}</h3>
+                                                <h3>{g.name}</h3>
                                                 {badge(typeCfg.color, typeCfg.label)}
                                                 {g.commercial_size_label && (
                                                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-app-background text-app-muted-foreground">{g.commercial_size_label}</span>

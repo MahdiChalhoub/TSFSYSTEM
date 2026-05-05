@@ -50,7 +50,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-6">
                     <Building2 size={48} className="mx-auto text-app-muted-foreground" />
-                    <h2 className="text-xl font-bold text-white">Session Expired</h2>
+                    <h2 className="text-white">Session Expired</h2>
                     <p className="text-app-muted-foreground text-sm">Please log in to access the supplier portal</p>
                     <Link href={`/supplier-portal/${slug}`}
                         className="inline-block px-8 py-4 bg-app-accent text-white rounded-2xl font-bold hover:bg-app-accent transition-all">

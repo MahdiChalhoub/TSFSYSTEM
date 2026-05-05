@@ -150,7 +150,7 @@ export default function EmployeeManager({
 
                         {/* Core Info */}
                         <div className="text-center space-y-2 mb-8">
-                            <h3 className="text-2xl font-black text-app-foreground group-hover:text-app-info transition-colors">
+                            <h3 className="group-hover:text-app-info transition-colors">
                                 {emp.firstName} {emp.lastName}
                             </h3>
                             <div className="flex flex-col items-center gap-1">

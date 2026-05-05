@@ -110,7 +110,7 @@ export default function AccountDetailPage() {
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
                             Finance · {cat?.name || item.type || 'Account'}
                         </p>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">{item.name}</h1>
+                        <h1>{item.name}</h1>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">

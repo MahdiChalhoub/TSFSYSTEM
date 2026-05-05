@@ -105,7 +105,7 @@ export default function ConsignmentManager({
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-white/80 text-sm font-medium">In-Stock Consignment</p>
-                                <h3 className="text-3xl font-bold mt-1">{totalConsignmentValue.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
+                                <h3 className="mt-1">{totalConsignmentValue.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
                             </div>
                             <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <Package size={24} />
@@ -123,7 +123,7 @@ export default function ConsignmentManager({
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-white/80 text-sm font-medium">Pending Payouts</p>
-                                <h3 className="text-3xl font-bold mt-1">{totalPendingPayout.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
+                                <h3 className="mt-1">{totalPendingPayout.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
                             </div>
                             <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <DollarSign size={24} />
@@ -141,7 +141,7 @@ export default function ConsignmentManager({
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-white/80 text-sm font-medium">Completed Settlements</p>
-                                <h3 className="text-3xl font-bold mt-1">{totalSettledCount}</h3>
+                                <h3 className="mt-1">{totalSettledCount}</h3>
                             </div>
                             <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <History size={24} />
@@ -237,7 +237,7 @@ export default function ConsignmentManager({
                                     <div className="bg-app-warning-bg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-app-warning">
                                         <CheckCircle2 size={32} />
                                     </div>
-                                    <h3 className="text-lg font-bold text-app-foreground">All Clear!</h3>
+                                    <h3>All Clear!</h3>
                                     <p className="text-app-muted-foreground mt-1 max-w-sm mx-auto">All sold items have been settled with suppliers. Check your history for details.</p>
                                 </CardContent>
                             </Card>
@@ -248,7 +248,7 @@ export default function ConsignmentManager({
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <Users size={20} className="text-amber-400" />
-                                            <h3 className="text-lg font-bold">{supplier.name}</h3>
+                                            <h3>{supplier.name}</h3>
                                         </div>
                                         <p className="text-white/60 text-sm mt-1">{supplier.items.length} items sold • {supplier.total.toLocaleString()} XOF pending</p>
                                     </div>

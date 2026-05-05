@@ -20,7 +20,7 @@ export default function MCPChatPage() {
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-app-info-bg flex items-center justify-center">
               <Bot size={40} className="text-app-info" />
             </div>
-            <h1 className="text-2xl font-black text-app-foreground mb-2">AI Assistant Chat</h1>
+            <h1 className="mb-2">AI Assistant Chat</h1>
             <p className="text-sm text-app-muted-foreground mb-8">
               Interactive AI-powered business assistant
             </p>

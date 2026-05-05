@@ -85,7 +85,7 @@ function AppearancePageInner() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>Settings</p>
-            <h1 className="text-2xl font-black tracking-tight">Appearance <span style={{ color: 'var(--app-primary)' }}>&amp; Themes</span></h1>
+            <h1>Appearance <span style={{ color: 'var(--app-primary)' }}>&amp; Themes</span></h1>
           </div>
 
           {/* Context-aware active pill — shows color theme OR design system depending on tab */}
@@ -170,7 +170,7 @@ function AppearancePageInner() {
 
             {!isLoading && Object.entries(allGrouped).map(([cat, themes]) => (
               <div key={cat}>
-                <h3 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
+                <h3 className="uppercase mb-3" style={{ color: 'var(--app-muted-foreground)' }}>
                   {CATEGORY_LABELS[cat] || cat}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -241,7 +241,7 @@ function AppearancePageInner() {
         {activeTab === 'design-system' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold mb-1">Design Language</h2>
+              <h2 className="mb-1">Design Language</h2>
               <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                 Controls <strong>component shapes, spacing and corner radius</strong> across the whole app — independent of the color theme. Click a card to apply it.
               </p>
@@ -315,7 +315,7 @@ function AppearancePageInner() {
         {activeTab === 'typography' && (
           <div className="space-y-6 max-w-lg">
             <div>
-              <h2 className="text-lg font-bold mb-1">Color Mode</h2>
+              <h2 className="mb-1">Color Mode</h2>
               <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
                 Controls light/dark rendering across all pages.
               </p>

@@ -901,7 +901,7 @@ function TemplateDetailPanel({ tpl, categories, brands, attributes, attributeVal
                         <Package size={15} />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold tracking-tight truncate">{tpl.name}</h2>
+                        <h2 className="truncate">{tpl.name}</h2>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             {tpl.code && <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
                                 style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>{tpl.code}</span>}

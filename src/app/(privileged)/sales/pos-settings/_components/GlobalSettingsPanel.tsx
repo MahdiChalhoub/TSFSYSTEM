@@ -138,7 +138,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: GlobalSettingsPanelPr
                         <Shield size={14} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-app-foreground">Global Settings</h2>
+                        <h2>Global Settings</h2>
                         <p className="text-[9px] text-app-muted-foreground">Applies to all registers</p>
                     </div>
                 </div>

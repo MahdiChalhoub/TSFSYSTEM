@@ -140,7 +140,7 @@ export function Sidebar({
                         {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-sm font-black tracking-tight leading-none truncate" style={{ color: 'var(--app-sidebar-text)' }}>
+                        <h1 className="truncate" style={{ color: 'var(--app-sidebar-text)' }}>
                             {PLATFORM_CONFIG.name}
                         </h1>
                         <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: 'var(--app-primary)' }}>

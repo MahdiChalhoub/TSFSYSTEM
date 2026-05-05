@@ -134,7 +134,7 @@ export default function ConnectorDashboardPage() {
                             Core Infrastructure
                         </Badge>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Connector Control</h2>
+                    <h2>Connector Control</h2>
                     <p className="text-app-muted-foreground mt-2 font-medium">Module communication broker & state management</p>
                 </div>
                 <div className="flex gap-3">

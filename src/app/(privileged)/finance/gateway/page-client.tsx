@@ -91,7 +91,7 @@ export default function PaymentGatewayPage() {
  <CreditCard size={22} className="text-app-foreground" />
  </div>
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-violet-200">
  <CreditCard size={28} className="text-app-foreground" />
  </div>
@@ -123,7 +123,7 @@ export default function PaymentGatewayPage() {
  {/* New gateway form */}
  {showNew && (
  <div className="bg-[#0F1729] rounded-2xl border border-app-success/30/50 p-6 flex flex-col gap-4">
- <h3 className="font-semibold text-app-foreground">Add Payment Gateway</h3>
+ <h3>Add Payment Gateway</h3>
  <div className="grid grid-cols-3 gap-4">
  <div>
  <label className="text-xs text-app-muted-foreground mb-1 block">Gateway Type</label>
@@ -151,7 +151,7 @@ export default function PaymentGatewayPage() {
 
  {/* Configured gateways */}
  <div className="flex flex-col gap-3">
- <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wider">Configured Gateways</h3>
+ <h3 className="text-app-muted-foreground uppercase">Configured Gateways</h3>
  {loading ? Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-24 bg-app-surface-2/50 rounded-xl animate-pulse" />) :
  configs.length === 0 ? (
  <div className="bg-[#0F1729] rounded-2xl border border-app-border p-8 text-center text-app-muted-foreground text-sm">No gateways configured yet.</div>

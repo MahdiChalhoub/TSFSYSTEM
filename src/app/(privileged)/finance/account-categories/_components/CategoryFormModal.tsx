@@ -137,7 +137,7 @@ export function CategoryFormModal({ form, setForm, coaList, editingId, saving, o
                             <PreviewIcon size={18} />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-app-foreground flex items-center gap-2">
+                            <h3 className="flex items-center gap-2">
                                 {editingId ? <Edit3 size={12} style={{ color: 'var(--app-primary)' }} /> : <Plus size={12} style={{ color: 'var(--app-primary)' }} />}
                                 {editingId ? 'Edit Category' : 'New Category'}
                             </h3>

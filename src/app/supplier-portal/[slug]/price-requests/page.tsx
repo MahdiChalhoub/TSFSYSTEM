@@ -121,7 +121,7 @@ export default function PriceRequestsPage() {
                             className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-white text-sm font-medium transition-colors">
                             <ArrowLeft size={16} /> Dashboard
                         </Link>
-                        <h1 className="text-4xl font-black text-white">Price Change Requests</h1>
+                        <h1 className="text-white">Price Change Requests</h1>
                         <p className="text-app-muted-foreground text-sm">Request price adjustments for your products</p>
                     </div>
                     <button onClick={() => setShowCreate(true)}
@@ -134,7 +134,7 @@ export default function PriceRequestsPage() {
                 {showCreate && (
                     <div className="p-8 bg-slate-900/80 border border-app-warning/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                            <h2 className="text-white flex items-center gap-3">
                                 <TrendingDown size={22} className="text-app-warning" /> New Price Request
                             </h2>
                             <button onClick={() => setShowCreate(false)} className="text-app-muted-foreground hover:text-white"><X size={20} /></button>
@@ -171,7 +171,7 @@ export default function PriceRequestsPage() {
                 ) : requests.length === 0 ? (
                     <div className="py-24 text-center space-y-4">
                         <TrendingDown size={48} className="mx-auto text-app-muted-foreground" />
-                        <h2 className="text-xl font-bold text-white">No price requests yet</h2>
+                        <h2 className="text-white">No price requests yet</h2>
                         <p className="text-app-muted-foreground">Submit a request to adjust pricing for your products</p>
                     </div>
                 ) : (

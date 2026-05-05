@@ -82,7 +82,7 @@ export function CatalogueLanguagesDialog({ onClose, onDone }: Props) {
                             <Languages size={15} />
                         </div>
                         <div>
-                            <h3 className="text-tp-md font-bold" style={{ color: 'var(--app-foreground)' }}>Catalogue languages</h3>
+                            <h3 className="text-tp-md" style={{ color: 'var(--app-foreground)' }}>Catalogue languages</h3>
                             <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {codes.length} enabled
                             </p>

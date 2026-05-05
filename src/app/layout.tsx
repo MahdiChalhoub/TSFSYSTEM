@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Roboto, Inter, Poppins } from 'next/font/google';
+import { Outfit, Roboto, Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import "./globals.css";
 import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider';
@@ -7,17 +7,19 @@ import { PerfOverlay } from '@/components/dev/PerfOverlay';
 import { cookies, headers } from 'next/headers';
 import { getThemes } from '@/app/actions/theme';
 
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+// Explicit weight list. Without this, next/font ships a single
+// optimised file that may render font-black (900) as the closest
+// available weight (often 700), making `text-xl font-black` titles
+// look thinner than expected. Spelling out every weight we use
+// guarantees Tailwind's font-{normal..black} classes match real
+// glyphs instead of synthetic-bold fallbacks.
+const outfit = Outfit({
+    subsets: ['latin'],
+    weight: ['400', '500', '600', '700', '800', '900'],
+    variable: '--font-outfit',
+});
 const roboto = Roboto({ subsets: ['latin'], weight: ['400', '500', '700'], variable: '--font-roboto' });
 const inter  = Inter({ subsets: ['latin'], variable: '--font-inter' });
-// Poppins powers all headings (h1–h6 + .app-page-title). Body text
-// stays on Outfit. Loading the heavy weights only since headings use
-// 600/700/800/900.
-const poppins = Poppins({
-    subsets: ['latin'],
-    weight: ['500', '600', '700', '800', '900'],
-    variable: '--font-poppins',
-});
 
 import { PLATFORM_CONFIG } from "@/lib/branding";
 
@@ -149,7 +151,7 @@ export default async function RootLayout({
                 <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
             </head>
-            <body className={`${outfit.variable} ${roboto.variable} ${inter.variable} ${poppins.variable} ${outfit.className}`}>
+            <body className={`${outfit.variable} ${roboto.variable} ${inter.variable} ${outfit.className}`}>
                 <AppThemeProvider>
                     {children}
                 </AppThemeProvider>

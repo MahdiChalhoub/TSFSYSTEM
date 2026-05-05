@@ -58,7 +58,7 @@ export function BrandDetailPanel({ brand, onEdit, onDelete, initialTab, onClose,
 
                 {/* Identity */}
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight"
+                    <h3 className="text-tp-lg truncate"
                         style={{ color: 'var(--app-foreground)' }}>
                         {brand.name}
                     </h3>

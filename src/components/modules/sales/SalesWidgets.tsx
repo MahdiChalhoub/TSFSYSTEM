@@ -11,7 +11,7 @@ export const SalesStatsWidget = ({ data }: { data: Record<string, any> }) => {
             <div className="flex justify-between items-start z-10">
                 <div>
                     <p className="text-sm font-medium text-app-muted-foreground mb-2">Total Sales</p>
-                    <h3 className="text-3xl font-bold text-app-foreground tracking-tight">${value.toLocaleString()}</h3>
+                    <h3>${value.toLocaleString()}</h3>
                 </div>
                 <div className={clsx("p-3 rounded-2xl bg-gradient-to-br transition-transform group-hover:scale-110 duration-300", "text-app-success", "from-emerald-400/20 to-emerald-600/20")}>
                     <DollarSign size={24} />
@@ -33,7 +33,7 @@ export const SalesActiveOrdersWidget = ({ data }: { data: Record<string, any> })
             <div className="flex justify-between items-start z-10">
                 <div>
                     <p className="text-sm font-medium text-app-muted-foreground mb-2">Active Orders</p>
-                    <h3 className="text-3xl font-bold text-app-foreground tracking-tight">{value.toLocaleString()}</h3>
+                    <h3>{value.toLocaleString()}</h3>
                 </div>
                 <div className={clsx("p-3 rounded-2xl bg-gradient-to-br transition-transform group-hover:scale-110 duration-300", "text-app-info", "from-blue-400/20 to-blue-600/20")}>
                     <ShoppingCart size={24} />
@@ -103,7 +103,7 @@ export const POSQuickAction = () => {
                             <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
                                 <ShoppingCart size={24} className="text-white" />
                             </div>
-                            <h3 className="text-2xl font-bold">Open POS Terminal</h3>
+                            <h3>Open POS Terminal</h3>
                         </div>
                         <p className="text-emerald-50 max-w-xl text-lg opacity-90 font-medium">
                             Start a new sales session, manage checkout, and process transactions efficiently.

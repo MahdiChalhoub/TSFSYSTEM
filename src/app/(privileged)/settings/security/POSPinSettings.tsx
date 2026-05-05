@@ -70,7 +70,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  <Hash className="text-app-primary" size={24} />
  </div>
  <div>
- <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">POS Access PINs</h2>
+ <h2 className="uppercase">POS Access PINs</h2>
  <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Manage your Point of Sale login and authorization PINs</p>
  </div>
  </div>

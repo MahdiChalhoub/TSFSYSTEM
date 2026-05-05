@@ -67,7 +67,7 @@ export default function FreshProfilesPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">PLM Governance</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Fresh <span style={{ color: 'var(--app-primary)' }}>Profiles</span>
                         </h1>
                     </div>
@@ -113,7 +113,7 @@ export default function FreshProfilesPage() {
                     <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
                     <div className="relative w-full max-w-lg mx-4 rounded-2xl shadow-2xl" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }} onClick={e => e.stopPropagation()}>
                         <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                            <h3 className="font-bold text-app-foreground">{editing.id ? 'Edit Profile' : 'New Fresh Profile'}</h3>
+                            <h3>{editing.id ? 'Edit Profile' : 'New Fresh Profile'}</h3>
                             <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg hover:bg-app-surface-hover"><X size={16} className="text-app-muted-foreground" /></button>
                         </div>
                         <div className="p-4 space-y-4">

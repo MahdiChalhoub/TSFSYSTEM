@@ -16,7 +16,7 @@ export default function PrivilegedError({
             <div className="w-16 h-16 rounded-3xl bg-app-error-soft flex items-center justify-center text-app-error mb-6 shadow-lg shadow-red-200">
                 <AlertCircle size={32} />
             </div>
-            <h2 className="text-2xl font-black text-app-foreground tracking-tight underline decoration-red-500 decoration-4 underline-offset-4">
+            <h2 className="underline decoration-red-500 decoration-4 underline-offset-4">
                 Something Went Wrong
             </h2>
             <p className="text-app-muted-foreground mt-4 font-medium max-w-sm mx-auto leading-relaxed">

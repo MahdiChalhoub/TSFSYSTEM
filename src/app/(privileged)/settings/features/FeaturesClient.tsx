@@ -185,7 +185,7 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                         style={{ background: 'color-mix(in srgb, var(--app-accent) 8%, transparent)' }}>
                         <Settings2 size={24} style={{ color: 'var(--app-accent)' }} />
                     </div>
-                    <h3 className="text-base font-black text-app-foreground">No Features Available</h3>
+                    <h3>No Features Available</h3>
                     <p className="text-sm text-app-muted-foreground max-w-md">
                         Feature flags will appear here once your platform is configured with plan-gated features.
                     </p>

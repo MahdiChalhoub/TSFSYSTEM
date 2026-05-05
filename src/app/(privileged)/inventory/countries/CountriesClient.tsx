@@ -599,7 +599,7 @@ function SourcingPicker({
                             <Globe size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold">Add Sourcing Countries</h3>
+                            <h3>Add Sourcing Countries</h3>
                             <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                 {available.length} available · {picked.size} selected
                             </p>
@@ -706,7 +706,7 @@ function NotesModal({ country, onCancel, onSave }: NotesModalProps) {
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex items-center gap-2">
                         <span className="text-base">{flagEmoji(country.country_iso2)}</span>
-                        <h3 className="text-sm font-bold">Notes · {country.country_name}</h3>
+                        <h3>Notes · {country.country_name}</h3>
                     </div>
                     <button onClick={onCancel} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-app-border/30"><X size={16} /></button>
                 </div>
@@ -752,7 +752,7 @@ function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onCl
                             <MapPin size={16} />
                         </div>
                         <div>
-                            <h2 className="text-sm font-bold truncate">{node.name}</h2>
+                            <h2 className="truncate">{node.name}</h2>
                             <p className="text-tp-xxs font-bold uppercase tracking-wide" style={{ color: 'var(--app-primary)' }}>
                                 {node.children?.length || 0} countr{node.children?.length === 1 ? 'y' : 'ies'}
                             </p>
@@ -795,7 +795,7 @@ function CountryDetailPanel({ node, onToggleEnabled, onEditNotes, onRemove, onCl
                         {flagEmoji(sc.country_iso2)}
                     </div>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold tracking-tight truncate" style={{ color }}>{sc.country_name}</h2>
+                        <h2 className="truncate" style={{ color }}>{sc.country_name}</h2>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="font-mono text-tp-xs font-bold px-1.5 py-0.5 rounded"
                                 style={{ background: `color-mix(in srgb, ${color} 10%, transparent)`, color }}>

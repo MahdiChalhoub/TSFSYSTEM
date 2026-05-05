@@ -121,7 +121,7 @@ export default function EInvoicingPage() {
  <Activity size={12} /> ZATCA Phase 2 (Clearance)
  </span>
  </div>
- <h1 className="text-5xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-indigo-900/20">
  <ShieldCheck size={32} className="text-app-foreground fill-white" />
  </div>
@@ -216,7 +216,7 @@ export default function EInvoicingPage() {
  <div className="flex items-start justify-between pb-6 border-b border-app-border/50">
  <div>
  <p className="text-[10px] font-black text-app-primary uppercase tracking-widest mb-1">Current Subject</p>
- <h2 className="text-2xl font-black text-app-foreground tracking-tighter uppercase italic">{selected.invoice_number || `INV-${selected.id}`}</h2>
+ <h2 className="uppercase italic">{selected.invoice_number || `INV-${selected.id}`}</h2>
  <p className="text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest mt-1">{selected.contact_name} · {selected.issue_date}</p>
  </div>
  <div className="text-right">

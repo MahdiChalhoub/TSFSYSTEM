@@ -48,7 +48,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                 <div className="bg-app-surface rounded-3xl border border-app-border p-8 shadow-lg shadow-gray-100">
                     <div className="flex items-center gap-3 mb-6">
                         <Star size={20} className="text-app-warning" />
-                        <h2 className="text-lg font-bold text-app-foreground">Your Performance — {latest.period_label}</h2>
+                        <h2>Your Performance — {latest.period_label}</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                         <div className="bg-app-surface rounded-2xl p-4 text-center">
@@ -99,7 +99,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
             {tab === 'leaderboard' ? (
                 <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-gray-100">
                     <div className="p-6 border-b border-app-border">
-                        <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                        <h2 className="flex items-center gap-2">
                             <Trophy size={20} className="text-app-warning" /> Top Performers
                         </h2>
                     </div>
@@ -145,7 +145,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
             ) : (
                 <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-gray-100">
                     <div className="p-6 border-b border-app-border">
-                        <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                        <h2 className="flex items-center gap-2">
                             <BarChart3 size={20} className="text-app-info" /> Performance History
                         </h2>
                     </div>
@@ -179,7 +179,7 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
             {/* KPI Weights */}
             {kpiConfig && (
                 <div className="bg-app-surface rounded-3xl border border-app-border p-6 shadow-lg shadow-gray-100">
-                    <h3 className="text-sm font-bold text-app-muted-foreground mb-4 flex items-center gap-2"><Target size={16} /> KPI Weights</h3>
+                    <h3 className="text-app-muted-foreground mb-4 flex items-center gap-2"><Target size={16} /> KPI Weights</h3>
                     <div className="grid grid-cols-4 gap-4">
                         <div className="bg-app-info-bg rounded-2xl p-4 text-center">
                             <div className="text-2xl font-black text-app-info">{kpiConfig.task_completion_weight}%</div>

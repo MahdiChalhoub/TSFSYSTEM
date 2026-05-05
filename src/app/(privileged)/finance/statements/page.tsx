@@ -83,7 +83,7 @@ export default function StatementsPage() {
                         <ArrowLeft size={16} className="mr-1" /> Back
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold text-app-foreground">{detail.contact?.name || selectedContact.name}</h1>
+                        <h1>{detail.contact?.name || selectedContact.name}</h1>
                         <p className="text-sm text-app-muted-foreground">
                             <Badge variant="outline" className="mr-2">{detail.contact?.type || selectedContact.type}</Badge>
                             {detail.contact?.email} · {detail.contact?.phone}
@@ -235,7 +235,7 @@ export default function StatementsPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center">
                             <FileText size={20} className="text-white" />
                         </div>

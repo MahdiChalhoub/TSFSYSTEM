@@ -269,7 +269,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                 // a11y warnings when focused descendants exist while the
                 // drawer animates out. inert blocks focus + screen readers
                 // in one go (TS doesn't ship the prop yet, hence the cast).
-                {...(open ? {} : { inert: '' as any })}
+                {...(open ? {} : { inert: true as unknown as undefined })}
                 className="fixed inset-0 z-[80]"
                 style={{
                     background: 'rgba(0, 0, 0, 0.5)',
@@ -288,7 +288,7 @@ export function MobileDrawer({ open, onClose, user, organizations, currentSlug }
                 onDragEnd={handleDragEnd}
                 role="dialog"
                 aria-modal="true"
-                {...(open ? {} : { inert: '' as any })}
+                {...(open ? {} : { inert: true as unknown as undefined })}
                 aria-label="Main navigation"
                 className="fixed top-0 left-0 bottom-0 z-[81] flex flex-col"
                 style={{

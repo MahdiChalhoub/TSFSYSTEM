@@ -53,7 +53,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
     return (
         <div className="max-w-xl mx-auto bg-app-surface rounded-lg shadow-sm border border-app-border overflow-hidden">
             <div className="p-6 border-b border-app-border bg-app-surface">
-                <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                <h2 className="flex items-center gap-2">
                     <FileText className="text-app-muted-foreground" size={20} />
                     Account Statement
                 </h2>

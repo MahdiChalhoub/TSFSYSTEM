@@ -124,7 +124,7 @@ export default function DeferredExpensesPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Deferred Expenses</h1>
+                    <h1 className="font-serif">Deferred Expenses</h1>
                     <p className="text-app-muted-foreground font-medium mt-1">Manage long-term expenses recognized over multiple months</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

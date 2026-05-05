@@ -128,7 +128,7 @@ export function AllocationWorkbenchClient({ initialReport }: { initialReport: Wo
             {/* Header */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                    <h1 className="text-lg md:text-xl font-bold" style={{ color: 'var(--app-foreground)' }}>
+                    <h1 style={{ color: 'var(--app-foreground)' }}>
                         Payment Allocation Workbench
                     </h1>
                     <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>

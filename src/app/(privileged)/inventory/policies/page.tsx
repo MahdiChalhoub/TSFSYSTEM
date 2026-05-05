@@ -277,7 +277,7 @@ export default function InventoryPoliciesPage() {
     function Section({ title, icon: Icon, children }: { title: string, icon: IconComponent, children: ReactNode }) {
         return (
             <div className="rounded-2xl p-6" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-app-muted-foreground mb-5 flex items-center gap-2">
+                <h3 className="uppercase tracking-[0.15em] text-app-muted-foreground mb-5 flex items-center gap-2">
                     <Icon size={13} /> {title}
                 </h3>
                 {children}
@@ -928,7 +928,7 @@ export default function InventoryPoliciesPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-app-muted-foreground">Inventory Governance</p>
-                        <h1 className="text-2xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Policies <span style={{ color: 'var(--app-primary)' }}>&amp; Rules</span>
                         </h1>
                     </div>

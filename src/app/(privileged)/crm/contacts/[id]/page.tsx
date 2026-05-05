@@ -95,7 +95,7 @@ export default function ContactDetailPage() {
                                 <User size={24} />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-app-foreground">{contact.name}</h1>
+                                <h1>{contact.name}</h1>
                                 <div className="flex items-center gap-2 mt-1">
                                     <Badge className={isCustomer ? 'bg-app-success-bg text-app-success' : 'bg-app-info-bg text-app-info'}>
                                         {contact.type}
@@ -125,7 +125,7 @@ export default function ContactDetailPage() {
                 {/* Contact Info */}
                 <Card>
                     <CardContent className="py-4 space-y-3">
-                        <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wide">Contact Info</h3>
+                        <h3 className="text-app-muted-foreground uppercase">Contact Info</h3>
                         {contact.email && (
                             <div className="flex items-center gap-2 text-sm">
                                 <Mail size={14} className="text-app-muted-foreground" />
@@ -168,7 +168,7 @@ export default function ContactDetailPage() {
                 {/* Balance */}
                 <Card className={`border-l-4 ${balance.current_balance > 0 ? 'border-l-red-500' : 'border-l-emerald-500'}`}>
                     <CardContent className="py-4">
-                        <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wide mb-2">
+                        <h3 className="text-app-muted-foreground uppercase mb-2">
                             {isCustomer ? 'Amount Owed to You' : 'Amount You Owe'}
                         </h3>
                         <p className={`text-3xl font-bold ${balance.current_balance > 0 ? 'text-app-error' : 'text-app-success'}`}>
@@ -390,7 +390,7 @@ export default function ContactDetailPage() {
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-semibold text-app-muted-foreground uppercase mb-3">Top Products</h3>
+                                <h3 className="text-app-muted-foreground uppercase mb-3">Top Products</h3>
                                 {(analytics?.top_products || []).length === 0 ? (
                                     <p className="text-app-muted-foreground text-sm">No product data available yet.</p>
                                 ) : (

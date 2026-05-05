@@ -13,7 +13,7 @@ export const RegisterStep = memo(function RegisterStep({ site, onSelect }: { sit
                     <Monitor size={12} className="text-[var(--app-primary)]" />
                     <span className="text-[11px] font-black text-[var(--app-primary)] uppercase tracking-widest">{site.name}</span>
                 </div>
-                <h2 className="text-3xl font-black text-[var(--app-foreground)] mb-1">Select Register</h2>
+                <h2 className="text-[var(--app-foreground)] mb-1">Select Register</h2>
                 <p className="text-[var(--app-muted-foreground)] text-sm">Choose your workstation</p>
             </div>
 
@@ -41,7 +41,7 @@ export const RegisterStep = memo(function RegisterStep({ site, onSelect }: { sit
                                 : <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-muted-foreground)] text-[10px] font-black"><Lock size={9} /> CLOSED</span>
                             }
                         </div>
-                        <h3 className="font-black text-[var(--app-foreground)] text-base">{reg.name}</h3>
+                        <h3 className="text-[var(--app-foreground)]">{reg.name}</h3>
                         {reg.isOpen && reg.currentSession && (
                             <div className="mt-2 space-y-0.5">
                                 <p className="text-[var(--app-success)]/80 text-xs font-bold flex items-center gap-1"><User size={10} />{reg.currentSession.cashierName}</p>

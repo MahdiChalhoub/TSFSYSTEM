@@ -64,7 +64,7 @@ export default function ConsignmentPage() {
  <Truck size={22} className="text-app-foreground" />
  </div>
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
  <Handshake size={28} className="text-app-foreground" />
  </div>
@@ -130,7 +130,7 @@ export default function ConsignmentPage() {
  <>
  <div className="flex items-start justify-between">
  <div>
- <h2 className="text-lg font-bold text-app-foreground">{selected.settlement_number || `#${selected.id}`}</h2>
+ <h2>{selected.settlement_number || `#${selected.id}`}</h2>
  <p className="text-sm text-app-muted-foreground">{selected.supplier?.name || selected.supplier_name} · {selected.settlement_date}</p>
  {selected.performed_by && (
  <p className="text-xs text-app-muted-foreground mt-0.5">By: {selected.performed_by.first_name} {selected.performed_by.last_name}</p>
@@ -141,7 +141,7 @@ export default function ConsignmentPage() {
 
  {detail?.lines && detail.lines.length > 0 && (
  <div>
- <h3 className="text-xs font-semibold text-app-muted-foreground uppercase tracking-wider mb-2">Lines</h3>
+ <h3 className="text-app-muted-foreground uppercase mb-2">Lines</h3>
  <div className="flex flex-col gap-1.5 max-h-72 overflow-y-auto">
  {detail.lines.map(line => (
  <div key={line.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#070D1B] border border-app-border">

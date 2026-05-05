@@ -133,8 +133,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
                     {/* Center: step title */}
                     <div className="text-center">
-                        <h2 className="text-[14px] font-black tracking-tight"
-                            style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>
+                        <h2 style={{ color: 'var(--app-foreground, var(--app-foreground))' }}>
                             {meta.title}
                         </h2>
                         <p className="text-[10px] font-medium"

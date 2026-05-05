@@ -73,7 +73,7 @@ function PanelShell({ title, subtitle, kindLabel, accent, icon, onClose, onPin, 
                 <div className="flex-1 min-w-0">
                     <p className="text-tp-xxs font-bold uppercase tracking-widest leading-none mb-0.5"
                         style={{ color: accent }}>{kindLabel}</p>
-                    <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight"
+                    <h3 className="text-tp-lg truncate"
                         style={{ color: 'var(--app-foreground)' }}>{title}</h3>
                     {subtitle && (
                         <p className="text-tp-xs font-medium truncate mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>

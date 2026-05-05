@@ -535,7 +535,7 @@ export default function OrderHistoryPage() {
  <Activity size={12} /> Transaction Stream
  </span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <h1 className="page-header-title flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
  <History size={32} className="text-app-foreground" />
  </div>

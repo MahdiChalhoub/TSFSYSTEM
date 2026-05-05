@@ -78,7 +78,7 @@ export default function ManagerOverrideModal({
                         </button>
                     </div>
 
-                    <h3 className="text-xl font-bold text-app-foreground">{title}</h3>
+                    <h3>{title}</h3>
                     <p className="text-sm text-app-muted-foreground mt-1 mb-6">{description}</p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">

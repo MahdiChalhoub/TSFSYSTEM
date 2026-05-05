@@ -142,7 +142,7 @@ export function TemplateFormModal({
                             <Package size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold">{tpl ? 'Edit Template' : 'New Template'}</h3>
+                            <h3>{tpl ? 'Edit Template' : 'New Template'}</h3>
                             <p className="text-tp-xs font-bold uppercase tracking-wide" style={{ color: 'var(--app-muted-foreground)' }}>
                                 Shape only — products supply their own barcode + price
                             </p>

@@ -139,7 +139,7 @@ export default function SuggestionsManager({
                         <Sparkles size={16} />
                     </div>
                     <div>
-                        <h1 className="text-[18px] md:text-[20px] font-bold tracking-tight leading-tight" style={{ color: 'var(--app-foreground)' }}>
+                        <h1 style={{ color: 'var(--app-foreground)' }}>
                             Packaging Suggestions
                         </h1>
                         <p className="text-tp-xs font-bold uppercase tracking-wide mt-0.5"
@@ -296,7 +296,7 @@ export default function SuggestionsManager({
                         border: '1px dashed var(--app-border)',
                     }}>
                     <Sparkles size={32} className="mx-auto mb-3 opacity-40" style={{ color: 'var(--app-muted-foreground)' }} />
-                    <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--app-foreground)' }}>
+                    <h3 className="mb-1" style={{ color: 'var(--app-foreground)' }}>
                         No suggestion rules yet
                     </h3>
                     <p className="text-tp-sm" style={{ color: 'var(--app-muted-foreground)' }}>

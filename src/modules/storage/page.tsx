@@ -162,7 +162,7 @@ export default function StorageSettingsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-white flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/30">
                             <Cloud size={24} className="text-white" />
                         </div>
@@ -190,7 +190,7 @@ export default function StorageSettingsPage() {
             {/* Upload Panel (collapsible) */}
             {showUploader && (
                 <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 backdrop-blur-xl">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <h2 className="text-white mb-4 flex items-center gap-2">
                         <Upload size={18} className="text-emerald-400" />
                         Upload Files
                     </h2>
@@ -208,7 +208,7 @@ export default function StorageSettingsPage() {
                 <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Settings size={18} className="text-app-muted-foreground" />
-                        <h2 className="text-lg font-semibold text-white">Provider Configuration</h2>
+                        <h2 className="text-white">Provider Configuration</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         {!editMode ? (
@@ -412,7 +412,7 @@ export default function StorageSettingsPage() {
             {/* Recent Files */}
             <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl">
                 <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <h2 className="text-white flex items-center gap-2">
                         <FileText size={18} className="text-app-muted-foreground" />
                         Recent Files
                         <span className="text-sm text-app-muted-foreground font-normal">({files.length})</span>

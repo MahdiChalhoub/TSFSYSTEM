@@ -43,7 +43,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         return (
             <div className="app-page flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-app-foreground" />
-                <h1 className="page-header-title tracking-tighter">Invoice Not Found</h1>
+                <h1 className="page-header-title">Invoice Not Found</h1>
                 <p className="text-app-muted-foreground text-sm max-w-md text-center">
                     The requested invoice could not be found. It may have been deleted or belong to a different organization context.
                 </p>
@@ -66,7 +66,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                             <ArrowLeft size={14} /> Back to Invoices
                         </Link>
                         <div className="flex items-center gap-4">
-                            <h1 className="text-3xl lg:page-header-title tracking-tighter">
+                            <h1 className="lg:page-header-title">
                                 {invoice.type === 'PURCHASE' ? 'Purchase' : 'Sales'} Invoice <span className="text-app-primary">#{invoice.invoice_number || invoice.id}</span>
                             </h1>
                         </div>
@@ -86,7 +86,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 <div className="bg-app-surface p-6 md:p-8 rounded-[2rem] border border-app-border shadow-sm">
                     <div className="flex items-center gap-3 mb-6">
                         <History size={20} className="text-app-muted-foreground" />
-                        <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Document Audit Trace</h3>
+                        <h3 className="text-app-muted-foreground uppercase">Document Audit Trace</h3>
                     </div>
                     {/* Audit trail component would go here, fetching from kernel_audit_logs if needed */}
                     <div className="text-xs text-app-muted-foreground italic">

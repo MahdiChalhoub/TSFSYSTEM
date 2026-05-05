@@ -43,7 +43,7 @@ export default function BankStatementsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Bank Reconciliation</p>
-                        <h1 className="text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Bank <span style={{ color: 'var(--app-primary)' }}>Statements</span>
                         </h1>
                     </div>

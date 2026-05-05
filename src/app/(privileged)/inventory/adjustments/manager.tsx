@@ -90,7 +90,7 @@ export default function StockAdjustmentManager({
 
                 {/* 1. Warehouse Selection */}
                 <div className="bg-app-surface p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-app-border">
-                    <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h3 className="text-app-muted-foreground uppercase mb-4 flex items-center gap-2">
                         <BuildingIcon className="w-4 h-4" />
                         Target Warehouse
                     </h3>
@@ -115,7 +115,7 @@ export default function StockAdjustmentManager({
 
                 {/* 2. Product Search */}
                 <div className="bg-app-surface p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-app-border min-h-[300px]">
-                    <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h3 className="text-app-muted-foreground uppercase mb-4 flex items-center gap-2">
                         <Search className="w-4 h-4" />
                         Select Product
                     </h3>
@@ -202,7 +202,7 @@ export default function StockAdjustmentManager({
                         <ArrowRightLeft size={120} />
                     </div>
 
-                    <h2 className="text-2xl font-black text-app-foreground mb-8">Adjustment Details</h2>
+                    <h2 className="mb-8">Adjustment Details</h2>
 
                     <div className="space-y-6">
                         {/* Type & Quantity */}

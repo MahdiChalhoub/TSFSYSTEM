@@ -122,7 +122,7 @@ export default function TreeMasterDemo() {
                                     <Package size={13} className="text-white" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h3 className="text-tp-md font-bold text-app-foreground truncate">{node.name}</h3>
+                                    <h3 className="text-tp-md truncate">{node.name}</h3>
                                     <p className="text-tp-xxs font-mono text-app-muted-foreground">{node.code}</p>
                                 </div>
                             </div>

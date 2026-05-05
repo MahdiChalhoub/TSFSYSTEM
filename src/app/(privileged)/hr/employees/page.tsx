@@ -107,7 +107,7 @@ export default async function EmployeesPage() {
                         </div>
                         <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Resource Master</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         HR <span className="text-app-info">Command</span>
                     </h1>
                     <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">

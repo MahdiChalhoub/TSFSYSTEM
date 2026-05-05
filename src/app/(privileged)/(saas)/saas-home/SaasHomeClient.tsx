@@ -43,7 +43,7 @@ function SectionHeader({ title, subtitle, icon: Icon, color }: { title: string, 
                 </div>
             )}
             <div>
-                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">{title}</h3>
+                <h3 className="uppercase tracking-[0.2em] text-app-muted-foreground">{title}</h3>
                 {subtitle && <p className="text-[13px] font-bold text-app-foreground mt-0.5">{subtitle}</p>}
             </div>
         </div>
@@ -110,7 +110,7 @@ export default function SaasHomeClient({ stats }: Props) {
                                 <Monitor size={14} className="text-app-primary" /> v{PLATFORM_CONFIG.version.split('-')[0]} Stable
                             </span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-app-foreground tracking-tight">
+                        <h1>
                             SaaS <span style={{ color: 'var(--app-success)' }}>Master Hub</span>
                         </h1>
                         <p className="text-xs md:text-sm text-app-muted-foreground mt-1 font-medium">

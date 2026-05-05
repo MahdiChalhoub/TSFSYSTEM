@@ -112,7 +112,7 @@ export default function ChecklistsClient({ checklists: initial, templates, users
             {/* Assign Form */}
             {showAssign && (
                 <div className="bg-app-surface p-6 rounded-3xl shadow-xl border border-app-success space-y-4 animate-in slide-in-from-top duration-300">
-                    <h3 className="text-lg font-bold text-app-foreground">Assign Checklist</h3>
+                    <h3>Assign Checklist</h3>
                     <div className="grid grid-cols-3 gap-4">
                         <select value={assignTemplate} onChange={e => setAssignTemplate(e.target.value)}
                             className="px-4 py-3 bg-app-surface rounded-2xl border border-app-border text-sm">

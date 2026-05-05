@@ -13,7 +13,7 @@ export default function NewProductLoading() {
                         <PackagePlus size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">New Product</h1>
+                        <h1>New Product</h1>
                         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
                             Loading form...
                         </p>

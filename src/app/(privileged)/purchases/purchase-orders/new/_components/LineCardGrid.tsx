@@ -110,7 +110,7 @@ function LineCard({ line, onUpdate, onRemove }: {
 
       {/* BODY */}
       <div className="p-4">
-        <h3 className="text-[14px] font-black text-app-foreground leading-tight truncate mb-1">
+        <h3 className="truncate mb-1">
           {String(line.productName || 'Unknown Product')}
         </h3>
         <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest mb-4">

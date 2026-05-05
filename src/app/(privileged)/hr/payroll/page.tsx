@@ -108,7 +108,7 @@ export default function PayrollSummaryPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-app-primary flex items-center justify-center">
                             <Banknote size={20} className="text-white" />
                         </div>

@@ -20,7 +20,7 @@ export default async function SalesImportPage() {
                         <div className="p-3 bg-app-success rounded-2xl shadow-lg shadow-emerald-500/20">
                             <FileUp size={28} className="text-white" />
                         </div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight">Sales Import Engine</h1>
+                        <h1 className="uppercase">Sales Import Engine</h1>
                     </div>
                     <p className="text-app-muted-foreground text-sm max-w-xl font-medium leading-relaxed">
                         Batch process historical sales or external marketplace data. Map your CSV columns to the Blanc Engine core and generate stock-deducted ledger entries in seconds.
@@ -54,7 +54,7 @@ export default async function SalesImportPage() {
                     <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-6">
                             <HelpCircle className="text-app-success" size={20} />
-                            <h3 className="text-sm font-black uppercase tracking-tight text-app-foreground">Format Guide</h3>
+                            <h3 className="uppercase">Format Guide</h3>
                         </div>
                         <ul className="space-y-4">
                             {[
@@ -74,7 +74,7 @@ export default async function SalesImportPage() {
                     <div className="bg-app-success-bg p-8 rounded-[2rem] border border-emerald-100/50">
                         <div className="flex items-center gap-3 mb-4">
                             <TrendingUp className="text-app-success" size={20} />
-                            <h3 className="text-sm font-black uppercase tracking-tight text-emerald-900">Performance</h3>
+                            <h3 className="uppercase text-emerald-900">Performance</h3>
                         </div>
                         <p className="text-[11px] text-app-success font-medium leading-relaxed">
                             Engine optimized for batches up to 5,000 rows. Larger files should be split for granular auditing.

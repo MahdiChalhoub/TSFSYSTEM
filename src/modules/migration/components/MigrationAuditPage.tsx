@@ -135,7 +135,7 @@ export function MigrationAuditPage() {
                                     <Icon className="w-5 h-5 text-app-success" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg font-black text-app-foreground tracking-tight">Migration Audit: {entityLabel}</h1>
+                                    <h1>Migration Audit: {entityLabel}</h1>
                                     <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest">{totalCount.toLocaleString()} records · Job #{jobId}</p>
                                 </div>
                             </div>
@@ -164,7 +164,7 @@ export function MigrationAuditPage() {
                         <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white">
                             <div className="flex items-center gap-3 mb-3">
                                 <Shield className="w-5 h-5 text-emerald-400" />
-                                <h2 className="text-sm font-black uppercase tracking-widest text-emerald-400">Audit Strategy Panel</h2>
+                                <h2 className="uppercase text-emerald-400">Audit Strategy Panel</h2>
                             </div>
                             <p className="text-xs text-white/50 font-medium">Diagnose issues and take bulk actions on all {entityLabel}.</p>
                         </div>

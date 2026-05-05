@@ -75,7 +75,7 @@ export function WorkspacePanel({
           <div className="flex items-center gap-2">
             {icon}
             {title && (
-              <h3 className="text-sm font-bold text-app-foreground">{title}</h3>
+              <h3>{title}</h3>
             )}
           </div>
           <div className="flex items-center gap-2">

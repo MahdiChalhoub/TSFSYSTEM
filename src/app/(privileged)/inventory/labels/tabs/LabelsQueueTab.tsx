@@ -208,7 +208,7 @@ export default function LabelsQueueTab({ initialProducts, onSessionCreated }: Pr
             <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 340px)' }}>
                 <div className="px-4 py-3 border-b border-app-border/50 bg-app-background shrink-0">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-[13px] font-black text-app-foreground flex items-center gap-2">
+                        <h3 className="flex items-center gap-2">
                             <Printer size={16} style={{ color: v('--app-primary') }} /> Print Queue ({queue.length})
                         </h3>
                         <select value={labelType} onChange={e => setLabelType(e.target.value)}

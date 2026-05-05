@@ -451,7 +451,7 @@ export default function AutoTaskRulesPage() {
                         <Zap size={20} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-lg md:text-xl font-bold text-app-foreground tracking-tight">Automations</h1>
+                        <h1>Automations</h1>
                         <p className="text-tp-xs md:text-tp-sm font-bold text-app-muted-foreground uppercase tracking-wide">
                             {rules.length} Automations · Turn business events into tracked work
                         </p>
@@ -797,7 +797,7 @@ export default function AutoTaskRulesPage() {
                                     <Zap size={15} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-app-foreground">
+                                    <h3>
                                         {isNew ? 'New Automation' : 'Edit Automation'}
                                     </h3>
                                     <p className="text-tp-xs font-bold text-app-muted-foreground">
@@ -1537,7 +1537,7 @@ export default function AutoTaskRulesPage() {
                                 <Sparkles size={15} className="text-white" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>Template Library</h3>
+                                <h3 style={{ color: 'var(--app-foreground)' }}>Template Library</h3>
                                 <p className="text-tp-xs font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
                                     Pre-built automations · click to install · assign later
                                 </p>

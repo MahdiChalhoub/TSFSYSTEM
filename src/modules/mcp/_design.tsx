@@ -61,11 +61,13 @@ export function PageHeader({
                     {icon}
                 </div>
                 <div className="min-w-0">
-                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight truncate">
-                        {title}
-                    </h1>
+                    {/* Bare <h1> — picks up canonical page-title styling
+                        (18px / 700 / -0.02em / line-height 1.2) from
+                        globals.css. Don't override with Tailwind size or
+                        weight classes; that defeats the system. */}
+                    <h1 className="truncate">{title}</h1>
                     {subtitle && (
-                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
+                        <p className="text-[11px] md:text-[12px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">
                             {subtitle}
                         </p>
                     )}
@@ -155,11 +157,13 @@ export function KPIStrip({ items }: { items: KPI[] }) {
                             {s.icon}
                         </div>
                         <div className="min-w-0">
-                            <div className="text-[10px] font-bold uppercase tracking-wider truncate"
+                            {/* Label/value bumped from 10px/14px to 11px/16px
+                                so KPI tiles are readable without leaning in. */}
+                            <div className="text-[11px] font-bold uppercase tracking-wider truncate"
                                 style={{ color: 'var(--app-muted-foreground)' }}>
                                 {s.label}
                             </div>
-                            <div className="text-sm font-black text-app-foreground tabular-nums truncate">
+                            <div className="text-base font-black text-app-foreground tabular-nums truncate">
                                 {s.value}
                             </div>
                         </div>
@@ -221,7 +225,7 @@ export function SectionCard({
                 style={{ borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
                 <div className="flex items-center gap-1.5">
                     {icon && <div className="text-app-muted-foreground">{icon}</div>}
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                    <h3 className="uppercase text-app-muted-foreground">
                         {title}
                     </h3>
                 </div>

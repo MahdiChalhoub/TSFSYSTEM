@@ -248,7 +248,7 @@ export default function AccountingSetupHub({ setupStatus, currencies }: Props) {
                             style={{ color: 'var(--app-muted-foreground)' }}>
                             Finance Module
                         </p>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                        <h1>
                             Accounting Setup
                         </h1>
                         <p className="text-sm text-app-muted-foreground mt-0.5">
@@ -305,7 +305,7 @@ export default function AccountingSetupHub({ setupStatus, currencies }: Props) {
                         <Settings2 size={15} />
                     </div>
                     <div>
-                        <h2 className="text-[13px] font-bold text-app-foreground">General Settings</h2>
+                        <h2>General Settings</h2>
                         <p className="text-[10px] font-bold text-app-muted-foreground">Currency, tax rate, and payment configuration</p>
                     </div>
                 </div>
@@ -396,7 +396,7 @@ export default function AccountingSetupHub({ setupStatus, currencies }: Props) {
                         <ShieldAlert size={15} />
                     </div>
                     <div>
-                        <h2 className="text-[13px] font-bold" style={{ color: 'var(--app-error, #ef4444)' }}>Maintenance Zone</h2>
+                        <h2 style={{ color: 'var(--app-error, #ef4444)' }}>Maintenance Zone</h2>
                         <p className="text-[10px] font-bold text-app-muted-foreground">System administration and data management</p>
                     </div>
                 </div>

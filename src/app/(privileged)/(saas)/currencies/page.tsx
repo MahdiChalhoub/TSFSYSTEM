@@ -165,7 +165,7 @@ function CurrencyEditModal({ currency, allCountries = [], initialLinkedCountryId
             <DollarSign size={16} style={{ color: 'var(--app-info, #3b82f6)' }} />
           </div>
           <div className="flex-1">
-            <h3 className="text-[14px] font-black text-app-foreground">
+            <h3>
               {isNew ? 'New Currency' : `Edit ${form.code}`}
             </h3>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
@@ -637,7 +637,7 @@ function CurrencyDetailPanel({ currency, allCountries, countriesUsing, tenantsUs
           {currency.symbol || currency.code.slice(0, 2)}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight font-mono" style={{ color: 'var(--app-foreground)' }}>
+          <h3 className="text-tp-lg truncate font-mono" style={{ color: 'var(--app-foreground)' }}>
             {currency.code}
           </h3>
           <div className="flex items-center gap-2 mt-1">

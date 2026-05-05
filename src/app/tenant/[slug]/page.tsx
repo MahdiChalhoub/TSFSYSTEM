@@ -21,7 +21,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                     <div className="w-20 h-20 bg-app-error/10 border border-app-error/20 rounded-full flex items-center justify-center mx-auto text-app-error">
                         <ShieldCheck size={40} />
                     </div>
-                    <h1 className="text-3xl font-black text-white">Instance Suspended</h1>
+                    <h1 className="text-white">Instance Suspended</h1>
                     <p className="text-app-faint">The account for <span className="text-white font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
                     <Link href="/">
                         <Button variant="outline" className="border-app-border-strong text-white rounded-xl">

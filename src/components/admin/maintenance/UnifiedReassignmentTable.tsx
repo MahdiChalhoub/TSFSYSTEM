@@ -249,7 +249,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
                                     <ArrowRightLeft size={14} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                    <h3 style={{ color: 'var(--app-foreground)' }}>
                                         Reassign {selectedProductIds.length} product{selectedProductIds.length !== 1 ? 's' : ''}
                                     </h3>
                                     <p className="text-tp-xxs font-bold uppercase tracking-widest"
@@ -348,7 +348,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess, color }: {
                             style={{ background: color || 'var(--app-primary)' }}>
                             <Layers size={14} className="text-white" />
                         </div>
-                        <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                        <h3 style={{ color: 'var(--app-foreground)' }}>
                             Create product group
                         </h3>
                     </div>

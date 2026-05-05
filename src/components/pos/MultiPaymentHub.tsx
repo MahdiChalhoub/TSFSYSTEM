@@ -221,7 +221,7 @@ export function MultiPaymentDashboard({
  </button>
  <div>
  <span className="text-[10px] font-black text-app-primary uppercase tracking-[0.4em] block mb-0.5">Payment Infrastructure</span>
- <h1 className="text-2xl font-black text-app-foreground uppercase tracking-tighter flex items-center gap-3">
+ <h1 className="uppercase flex items-center gap-3">
  Multi-Method Settlement
  <div className="h-5 px-2 bg-app-primary/10 border border-app-primary/20 rounded text-[9px] text-app-primary flex items-center">v2.4.0</div>
  </h1>

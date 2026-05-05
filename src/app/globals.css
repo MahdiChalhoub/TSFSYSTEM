@@ -34,9 +34,42 @@
 
   /* Font Scaling */
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
-  /* Heading / display font — applied to every h1..h6 by the base
-     rule below. Body text stays on --font-sans (Outfit). */
-  --font-heading: 'Poppins', system-ui, sans-serif;
+
+  /* ═══════════════════════════════════════════════════════════
+   * Heading scale — DEFAULT VALUES.
+   * Density modes ([data-density="compact"|"comfortable"]) override
+   * these in app-theme-engine.css. Without defaults at :root the
+   * global `h1 { font-size: var(--font-size-h1) }` rule resolves to
+   * `unset` whenever the density attribute is absent, leaving 149+
+   * pages at the browser's 2em default.
+   *
+   * Scale rationale (matches the .app-page-title baseline + tp-* tokens):
+   *   h1 = page title       — 24px, weight 700, tight tracking
+   *   h2 = section header   — 20px, weight 700
+   *   h3 = subsection       — 16px, weight 700
+   *   h4 = inline emphasis  — 14px, weight 700
+   *   body                  — 14px, weight 400
+   *   small (caption/meta)  — 12px, weight 500
+   *
+   * Use `font-bold` (700) NOT `font-black` (900) — the next/font Outfit
+   * bundle ships 400-700 by default; 900 falls back to a system font
+   * that paradoxically renders LIGHTER than Outfit-700.
+   * ═══════════════════════════════════════════════════════════ */
+  /* Tight scale — 1-2px steps so headings feel like emphasis,
+     not a hierarchy explosion. h1 is only 3px above body. */
+  --font-size-h1:    1.125rem;   /* 18px — page title */
+  --font-size-h2:    1rem;       /* 16px — section header */
+  --font-size-h3:    0.9375rem;  /* 15px — subsection */
+  --font-size-h4:    0.9375rem;  /* 15px — inline emphasis */
+  --font-size-body:  0.9375rem;  /* 15px — readable body (matches deploy) */
+  --font-size-small: 0.8125rem;  /* 13px — caption / meta */
+
+  --font-weight-normal:    400;
+  --font-weight-medium:    500;
+  --font-weight-semibold:  600;
+  --font-weight-bold:      700;
+  --font-weight-extrabold: 800;
+  --font-weight-black:     900;
 
   /* Border Radius */
   --radius-xl: 1rem;
@@ -282,13 +315,6 @@
 
 /* Global Base Styles */
 @layer base {
-  /* Headings auto-pick up Poppins (or whatever --font-heading is set
-     to in the active theme). Falls back to body's --font-sans if
-     unset, so a theme can disable the heading font entirely by
-     omitting the variable. */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading, var(--font-sans));
-  }
   body {
     @apply bg-slate-50 text-app-foreground font-sans antialiased;
     /* Subtle background pattern */

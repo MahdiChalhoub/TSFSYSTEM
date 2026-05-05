@@ -79,7 +79,7 @@ export default function WizardStepType({ onSelect, onQuickCreate }: WizardStepTy
                     <Sparkles className="w-3.5 h-3.5 text-app-primary" />
                     <span className="text-[11px] font-bold text-app-primary uppercase tracking-widest">Smart Product Creator</span>
                 </div>
-                <h1 className="text-4xl font-black tracking-tight text-app-foreground">
+                <h1>
                     What are you <span className="bg-gradient-to-r from-app-primary to-app-info bg-clip-text text-transparent">creating</span>?
                 </h1>
                 <p className="text-app-muted-foreground text-sm mt-2 max-w-md mx-auto">
@@ -129,7 +129,7 @@ export default function WizardStepType({ onSelect, onQuickCreate }: WizardStepTy
                             </div>
 
                             {/* Label */}
-                            <h3 className="text-[15px] font-bold text-app-foreground mb-1">{type.label}</h3>
+                            <h3 className="mb-1">{type.label}</h3>
                             <p className="text-[11px] text-app-muted-foreground leading-relaxed mb-4">{type.subtitle}</p>
 
                             {/* Feature list */}

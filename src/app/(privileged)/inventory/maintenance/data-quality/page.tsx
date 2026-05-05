@@ -218,8 +218,7 @@ export default function DataQualityPage() {
                             <Wrench size={20} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg md:text-xl font-black tracking-tight"
-                                style={{ color: 'var(--app-foreground)' }}>
+                            <h1 style={{ color: 'var(--app-foreground)' }}>
                                 Product Data Quality
                             </h1>
                             <p className="text-tp-xs md:text-tp-sm font-bold uppercase tracking-widest"
@@ -537,7 +536,7 @@ export default function DataQualityPage() {
                                     style={{ background: 'var(--app-success)' }}>
                                     <ScanBarcode size={14} className="text-white" />
                                 </div>
-                                <h3 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                <h3 style={{ color: 'var(--app-foreground)' }}>
                                     Barcodes generated
                                 </h3>
                             </div>

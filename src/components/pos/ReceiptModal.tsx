@@ -54,7 +54,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                         <CheckCircle size={32} className="text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold">Checkout Success!</h2>
+                    <h2>Checkout Success!</h2>
                     <p className="opacity-80 mt-1">Order Ref: <span className="font-mono font-bold tracking-widest">{refCode || orderId}</span></p>
                 </div>
 

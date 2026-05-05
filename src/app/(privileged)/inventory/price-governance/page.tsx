@@ -145,7 +145,7 @@ export default function PriceGovernancePage() {
                         <Shield size={20} />
                     </div>
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black text-app-foreground">Price Governance</h1>
+                        <h1>Price Governance</h1>
                         <p className="text-sm text-app-muted-foreground">
                             Approval policies for automated price change governance
                         </p>
@@ -188,7 +188,7 @@ export default function PriceGovernancePage() {
                     className="rounded-xl p-5 mb-6 space-y-4"
                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}
                 >
-                    <h3 className="text-sm font-bold text-app-foreground mb-3">
+                    <h3 className="mb-3">
                         {editing ? `Edit: ${editing.name}` : 'New Approval Policy'}
                     </h3>
 

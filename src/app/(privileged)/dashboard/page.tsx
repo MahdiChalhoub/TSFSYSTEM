@@ -147,7 +147,7 @@ export default function CustomDashboard() {
     return (
         <div className="p-6 space-y-6 bg-app-bg min-h-full">
             <header>
-                <h1 className="text-2xl font-black text-app-foreground flex items-center gap-3 tracking-tight">
+                <h1 className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-app-primary flex items-center justify-center shadow-lg shadow-app-primary/20">
                         <LayoutDashboard size={20} className="text-white" />
                     </div>

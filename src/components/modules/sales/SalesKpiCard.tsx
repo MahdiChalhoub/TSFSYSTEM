@@ -72,7 +72,7 @@ export function SalesKpiCard({ icon, badge, label, value, variant = 'default' }:
  </p>
  {/* Value */}
  <h2
- className="text-3xl font-black mt-1"
+ className="mt-1"
  style={{ color: isDark ? '#fff' : 'var(--app-foreground)' }}
  >
  {value}

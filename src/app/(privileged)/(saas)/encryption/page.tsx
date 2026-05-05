@@ -165,7 +165,7 @@ export default function EncryptionPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
+                    <h2 className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-app-info flex items-center justify-center">
                             <Shield className="text-white" size={22} />
                         </div>
@@ -212,7 +212,7 @@ export default function EncryptionPage() {
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <StatusPulse active={isActive} />
-                                <h3 className="text-xl font-bold text-app-foreground">
+                                <h3>
                                     {isActive ? 'Encryption Active' : 'Encryption Inactive'}
                                 </h3>
                             </div>
@@ -247,7 +247,7 @@ export default function EncryptionPage() {
                                 {isActive ? 'Active' : 'Inactive'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-app-foreground">Algorithm</h3>
+                        <h3>Algorithm</h3>
                         <p className="text-xs text-app-muted-foreground mt-1">AES-256-GCM · Authenticated</p>
                     </CardContent>
                 </Card>
@@ -260,7 +260,7 @@ export default function EncryptionPage() {
                                 {hasKey ? 'Generated' : 'None'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-app-foreground">Encryption Key</h3>
+                        <h3>Encryption Key</h3>
                         <p className="text-xs text-app-muted-foreground mt-1">256-bit · Per-organization</p>
                     </CardContent>
                 </Card>
@@ -273,7 +273,7 @@ export default function EncryptionPage() {
                                 {status?.addon_entitled ? 'Licensed' : 'Not Licensed'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-app-foreground">Add-on License</h3>
+                        <h3>Add-on License</h3>
                         <p className="text-xs text-app-muted-foreground mt-1">{status?.plan || 'No plan'}</p>
                     </CardContent>
                 </Card>
@@ -284,7 +284,7 @@ export default function EncryptionPage() {
                             <Building2 className="text-app-info" size={22} />
                             <span className="text-xl font-black text-app-foreground tabular-nums">{orgs.length}</span>
                         </div>
-                        <h3 className="font-bold text-app-foreground">Organizations</h3>
+                        <h3>Organizations</h3>
                         <p className="text-xs text-app-muted-foreground mt-1">Total registered instances</p>
                     </CardContent>
                 </Card>

@@ -56,7 +56,7 @@ export default function KPICard({
  )}
  </div>
  <p className="label-micro text-app-muted-foreground">{label}</p>
- <h2 className="text-3xl font-black text-app-foreground tracking-tighter mt-1">{value}</h2>
+ <h2 className="mt-1">{value}</h2>
  {footnote && (
  <div className="mt-4 pt-3 border-t border-app-foreground/5 flex items-center gap-2 label-micro text-app-muted-foreground">
  {footnoteIcon} {footnote}

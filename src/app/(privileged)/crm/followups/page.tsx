@@ -114,7 +114,7 @@ export default function FollowUpBoard() {
                     </div>
                     <div>
                         <p className="text-[0.625rem] font-black uppercase tracking-[0.15em] text-app-muted-foreground/60 mb-0.5">Commercial Operations</p>
-                        <h1 className="text-2xl font-black tracking-tighter text-app-foreground italic uppercase">
+                        <h1 className="italic uppercase">
                             Follow-Up <span className="text-app-primary">Work Queue</span>
                         </h1>
                     </div>
@@ -230,7 +230,7 @@ export default function FollowUpBoard() {
                                                     Due: {new Date(act.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </span>
                                             </div>
-                                            <h3 className="font-bold text-app-foreground leading-tight group-hover:text-app-primary transition-colors truncate">
+                                            <h3 className="group-hover:text-app-primary transition-colors truncate">
                                                 {act.subject}
                                             </h3>
                                             <div className="flex items-center gap-3 mt-2">
@@ -288,7 +288,7 @@ export default function FollowUpBoard() {
                             <div className="p-2 rounded-xl bg-app-error/10 text-app-error">
                                 <AlertCircle size={18} />
                             </div>
-                            <h2 className="font-black uppercase tracking-tighter text-app-foreground italic leading-none">Relationship <span className="text-app-error">Risk</span></h2>
+                            <h2 className="uppercase italic">Relationship <span className="text-app-error">Risk</span></h2>
                         </div>
 
                         <div className="space-y-4">

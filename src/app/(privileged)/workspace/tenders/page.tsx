@@ -133,7 +133,7 @@ export default function TenderInboxPage() {
         </div>
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Workspace</p>
-          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+          <h1 className="italic">
             Tender <span className="text-app-primary">Hub</span>
           </h1>
         </div>

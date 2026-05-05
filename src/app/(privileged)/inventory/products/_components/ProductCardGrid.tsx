@@ -257,7 +257,7 @@ const ProductCard = memo(function ProductCard({
 
         {/* Product Name */}
         <h3
-          className="text-[14px] font-bold text-app-foreground leading-snug mb-1"
+          className="mb-1"
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 2,

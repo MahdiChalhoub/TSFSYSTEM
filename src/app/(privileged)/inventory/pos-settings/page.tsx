@@ -101,7 +101,7 @@ export default function POSSettingsPage() {
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Management</p>
-        <h1 className="text-3xl font-black tracking-tight text-app-foreground">POS Settings</h1>
+        <h1>POS Settings</h1>
         <p className="text-sm text-app-muted-foreground mt-0.5">Point of sale configuration</p>
       </div>
     </div>
@@ -124,7 +124,7 @@ export default function POSSettingsPage() {
  <ArrowLeft size={20} className="text-app-muted-foreground" />
  </Link>
  <div>
- <h1 className="text-xl font-black text-app-foreground">POS Configuration</h1>
+ <h1>POS Configuration</h1>
  <p className="text-xs text-app-muted-foreground mt-0.5">Registers, cashiers, payment methods & security</p>
  </div>
  </div>
@@ -262,7 +262,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  <div className="space-y-4">
  <div className="flex items-center justify-between">
  <div>
- <h2 className="text-lg font-black text-app-foreground">POS Registers</h2>
+ <h2>POS Registers</h2>
  <p className="text-xs text-app-muted-foreground">Physical terminals at each site with their own cash accounts</p>
  </div>
  <button
@@ -277,7 +277,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  {/* Create / Edit Form */}
  {(showCreate || editId) && (
  <div className="bg-app-surface rounded-2xl border border-app-primary/30 p-5 space-y-4 shadow-sm animate-in slide-in-from-top-2">
- <h3 className="font-black text-sm text-app-primary">{editId ? 'Edit Register' : 'Create New Register'}</h3>
+ <h3 className="text-app-primary">{editId ? 'Edit Register' : 'Create New Register'}</h3>
  <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest block mb-1">Register Name *</label>
@@ -515,13 +515,13 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  return (
  <div className="space-y-6">
  <div>
- <h2 className="text-lg font-black text-app-foreground">Users & PIN Codes</h2>
+ <h2>Users & PIN Codes</h2>
  <p className="text-xs text-app-muted-foreground">Manage cashier PINs (POS login) and manager override PINs (security authorizations)</p>
  </div>
 
  {/* ── Section 1: Cashier PINs ── */}
  <div>
- <h3 className="text-xs font-black text-app-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+ <h3 className="text-app-primary uppercase mb-2 flex items-center gap-2">
  <Key size={12} /> Cashier PINs — POS Login
  </h3>
  <div className="bg-app-surface rounded-2xl border border-app-border overflow-hidden shadow-sm">
@@ -592,7 +592,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
 
  {/* ── Section 2: Manager Override PINs ── */}
  <div>
- <h3 className="text-xs font-black text-app-error uppercase tracking-widest mb-2 flex items-center gap-2">
+ <h3 className="text-app-error uppercase mb-2 flex items-center gap-2">
  <Shield size={12} /> Manager Override PINs — Security Authorization
  </h3>
  <p className="text-[10px] text-app-muted-foreground mb-2">
@@ -658,7 +658,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
 
  {/* Info */}
  <div className="bg-app-info-bg border border-app-info/30 rounded-xl p-4">
- <h3 className="text-xs font-black text-app-info uppercase tracking-wider mb-2">How PINs Work</h3>
+ <h3 className="text-app-info uppercase mb-2">How PINs Work</h3>
  <ul className="text-xs text-app-info space-y-1 font-medium">
  <li>• <b>Cashier PIN</b> — Used to log into a POS register at the lobby screen</li>
  <li>• <b>Manager Override PIN</b> — Used to authorize sensitive actions (void, discount, delete, qty decrease, clear cart, refund, price override)</li>
@@ -704,7 +704,7 @@ function PaymentsTab({ methods, setMethods, accounts }: {
  <div className="space-y-4">
  <div className="flex items-center justify-between">
  <div>
- <h2 className="text-lg font-black text-app-foreground">Payment Methods</h2>
+ <h2>Payment Methods</h2>
  <p className="text-xs text-app-muted-foreground">Configure POS payment buttons and link them to financial accounts</p>
  </div>
  <button onClick={handleSave} disabled={saving}
@@ -859,7 +859,7 @@ function SecurityTab() {
  <div className="space-y-4">
  <div className="flex items-center justify-between">
  <div>
- <h2 className="text-lg font-black text-app-foreground">Security Rules</h2>
+ <h2>Security Rules</h2>
  <p className="text-xs text-app-muted-foreground">Control POS access, overrides, reconciliation, and restrictions</p>
  </div>
  <button onClick={handleSave} disabled={saving}
@@ -871,7 +871,7 @@ function SecurityTab() {
 
  {/* Authentication */}
  <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
- <h3 className="text-xs font-black text-app-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+ <h3 className="text-app-primary uppercase mb-3 flex items-center gap-2">
  <Key size={12} /> Authentication
  </h3>
  <ToggleRow label="Require PIN for POS Login" desc="Users must enter their PIN to access any register" field="requirePinForLogin" />
@@ -881,7 +881,7 @@ function SecurityTab() {
 
  {/* Manager Overrides */}
  <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
- <h3 className="text-xs font-black text-app-error uppercase tracking-widest mb-3 flex items-center gap-2">
+ <h3 className="text-app-error uppercase mb-3 flex items-center gap-2">
  <Shield size={12} /> Manager Overrides Required
  </h3>
  <ToggleRow label="Void / Cancel Order" desc="Require manager PIN to void a completed order" field="requireManagerForVoid" />
@@ -896,7 +896,7 @@ function SecurityTab() {
 
  {/* Register Close Rules */}
  <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
- <h3 className="text-xs font-black text-app-warning uppercase tracking-widest mb-3 flex items-center gap-2">
+ <h3 className="text-app-warning uppercase mb-3 flex items-center gap-2">
  <Monitor size={12} /> Register Open / Close Rules
  </h3>
  <ToggleRow label="Lock Register on Close" desc="Prevent access after closing until reopened" field="lockRegisterOnClose" />
@@ -907,7 +907,7 @@ function SecurityTab() {
 
  {/* Reconciliation Strategy */}
  <div className="bg-app-surface rounded-2xl border border-violet-100 p-5 shadow-sm">
- <h3 className="text-xs font-black text-app-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+ <h3 className="text-app-primary uppercase mb-3 flex items-center gap-2">
  <Settings2 size={12} /> Reconciliation Strategy
  </h3>
  <div className="bg-violet-50 rounded-xl p-3 mb-3 text-xs text-app-primary font-medium space-y-1">

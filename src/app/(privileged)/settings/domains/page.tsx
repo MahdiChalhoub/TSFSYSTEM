@@ -190,7 +190,7 @@ export default function CustomDomainsPage() {
             {/* Add Domain Form */}
             {showAddForm && (
                 <div className="bg-app-surface border border-app-border rounded-2xl p-6 shadow-sm">
-                    <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4">Add Custom Domain</h3>
+                    <h3 className="uppercase mb-4">Add Custom Domain</h3>
                     <div className="flex flex-col sm:flex-row gap-3">
                         <Input
                             placeholder="shop.yourdomain.com"
@@ -224,7 +224,7 @@ export default function CustomDomainsPage() {
             {/* How It Works (empty state) */}
             {domains.length === 0 && !loading && (
                 <div className="bg-app-primary-soft border border-violet-200 rounded-2xl p-8">
-                    <h3 className="text-lg font-black text-app-foreground mb-6">How Custom Domains Work</h3>
+                    <h3 className="mb-6">How Custom Domains Work</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {[
                             { step: 1, icon: <Plus size={20} />, title: 'Add Domain', desc: 'Enter the domain you want to use' },
@@ -280,7 +280,7 @@ export default function CustomDomainsPage() {
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-bold text-app-foreground font-mono">{domain.domain}</h3>
+                                                    <h3 className="font-mono">{domain.domain}</h3>
                                                     {domain.is_primary && (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-app-warning-bg text-app-warning border border-app-warning">
                                                             <Star size={10} /> Primary

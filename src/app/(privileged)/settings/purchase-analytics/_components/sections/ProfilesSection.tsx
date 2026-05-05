@@ -40,7 +40,7 @@ export function ProfilesSection({
                     <Layers size={15} style={{ color: C }} />
                 </div>
                 <div>
-                    <h2 className="text-[14px] font-black text-app-foreground tracking-tight">Page Profiles</h2>
+                    <h2>Page Profiles</h2>
                     <p className="text-[10px] font-bold text-app-muted-foreground">Each page can override global defaults with its own profile.</p>
                 </div>
             </div>

@@ -105,7 +105,7 @@ export default function SupplierGatePreviewClient() {
                     <Eye size={22} className="text-app-info" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-app-foreground tracking-tight">Supplier Gate Preview</h1>
+                    <h1>Supplier Gate Preview</h1>
                     <p className="text-sm text-app-muted-foreground">Select a supplier to see what they see when they access their portal</p>
                 </div>
             </div>
@@ -171,7 +171,7 @@ export default function SupplierGatePreviewClient() {
                                     <Briefcase size={18} className="text-app-info" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white">Supplier Portal</h2>
+                                    <h2 className="text-white">Supplier Portal</h2>
                                     <p className="text-xs text-app-muted-foreground">Welcome, <span className="text-app-info font-bold">{selectedSupplier.name}</span></p>
                                 </div>
                             </div>
@@ -203,7 +203,7 @@ export default function SupplierGatePreviewClient() {
                     {/* PO List */}
                     <div className="bg-[#0a0f1e] p-8 pt-4">
                         <div className="max-w-6xl mx-auto">
-                            <h3 className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-4">Purchase Orders</h3>
+                            <h3 className="text-app-muted-foreground uppercase mb-4">Purchase Orders</h3>
                             {loadingPOs ? (
                                 <div className="flex items-center justify-center py-16">
                                     <div className="w-6 h-6 border-2 border-gray-700 border-t-indigo-400 rounded-full animate-spin" />

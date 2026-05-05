@@ -419,7 +419,7 @@ export default function SmartProductForm({
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-gradient-to-r ${typeLabels[productType].accent} mb-0.5`}>
                         {typeLabels[productType].label}
                     </span>
-                    <h2 className="text-2xl font-black tracking-tight text-app-foreground">
+                    <h2>
                         Create <span className="text-app-primary">Product</span>
                     </h2>
                 </div>

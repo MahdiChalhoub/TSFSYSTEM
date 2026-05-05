@@ -89,7 +89,7 @@ export function CompareView({
                                         style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 8%, var(--app-surface)), var(--app-surface))`,
                                             borderBottom: '1px solid var(--app-border)' }}>
                                         <div>
-                                            <h3 className="text-tp-lg font-bold text-app-foreground">{t?.name || key}</h3>
+                                            <h3 className="text-tp-lg">{t?.name || key}</h3>
                                             <p className="text-tp-xs font-bold text-app-muted-foreground uppercase tracking-wider mt-0.5">
                                                 {t?.region} · {compareTab === 'accounts' ? `${accounts.length} accts` : `${rules.length} rules`}
                                             </p>

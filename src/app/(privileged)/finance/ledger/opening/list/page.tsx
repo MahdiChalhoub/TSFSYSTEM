@@ -12,7 +12,7 @@ export default async function OpeningBalancesListPage() {
                     <Link href="/finance/ledger" className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground transition-colors text-xs font-bold uppercase tracking-wider mb-2">
                         <ArrowLeft size={14} /> Back to Ledger
                     </Link>
-                    <h1 className="text-3xl font-bold text-app-foreground font-serif">Opening Balances</h1>
+                    <h1 className="font-serif">Opening Balances</h1>
                     <p className="text-sm text-app-muted-foreground">View and manage initial account balances</p>
                 </div>
                 <Link
@@ -36,7 +36,7 @@ export default async function OpeningBalancesListPage() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-app-foreground">Opening Balance #{entry.id}</h3>
+                                            <h3>Opening Balance #{entry.id}</h3>
                                             <span className="bg-app-success-bg text-app-success text-tp-xs px-2 py-0.5 rounded font-bold uppercase">Locked</span>
                                         </div>
                                         <p className="text-xs text-app-muted-foreground flex items-center gap-1 mt-0.5">
@@ -70,7 +70,7 @@ export default async function OpeningBalancesListPage() {
                         <div className="w-16 h-16 bg-app-surface rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <Table size={32} className="text-app-faint" />
                         </div>
-                        <h3 className="text-app-foreground font-bold text-lg mb-2">No Opening Balances Found</h3>
+                        <h3 className="mb-2">No Opening Balances Found</h3>
                         <p className="text-app-muted-foreground max-w-xs mx-auto mb-6">You haven't recorded any opening balances yet. These are typically done at the start of a fiscal year.</p>
                         <Link
                             href="/finance/ledger/opening"

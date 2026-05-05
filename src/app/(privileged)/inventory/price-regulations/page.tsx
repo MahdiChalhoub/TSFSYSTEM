@@ -491,7 +491,7 @@ export default function PriceRegulationsPage() {
                         <Scale size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Price Regulations</h1>
+                        <h1>Price Regulations</h1>
                         <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                             Government Compliance · {regulations.length} Regulations
                         </p>
@@ -549,7 +549,7 @@ export default function PriceRegulationsPage() {
             {showForm && (
                 <form onSubmit={handleSubmit} className="rounded-xl p-5 mb-5 space-y-4"
                     style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
-                    <h3 className="text-sm font-bold text-app-foreground mb-3">
+                    <h3 className="mb-3">
                         {editing ? `Edit: ${editing.name}` : 'New Price Regulation'}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">

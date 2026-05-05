@@ -109,7 +109,7 @@ export default function SessionsTab({ initialSessions, onRefresh }: Props) {
         <div className="bg-app-surface rounded-2xl border border-app-border/50 overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 300px)' }}>
             {/* Header */}
             <div className="px-4 py-3 border-b border-app-border/50 bg-app-background shrink-0 flex items-center justify-between gap-3">
-                <h3 className="text-[13px] font-black text-app-foreground">Print Sessions</h3>
+                <h3>Print Sessions</h3>
                 <div className="flex items-center gap-2">
                     {/* Status chips */}
                     <div className="flex items-center gap-1">

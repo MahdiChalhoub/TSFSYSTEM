@@ -19,7 +19,7 @@ export default function GlobalNotFound() {
 
                 {/* Title */}
                 <div>
-                    <h1 className="text-3xl font-black text-app-foreground tracking-tight">
+                    <h1>
                         Page Not Found
                     </h1>
                     <p className="mt-2 text-app-muted-foreground text-sm">

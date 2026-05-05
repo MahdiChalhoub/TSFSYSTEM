@@ -102,7 +102,7 @@ export default function VatReturnListPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}><FileText size={20} className="text-white" /></div>
-                            <div><h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">VAT Return Filings</h1><p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{stats.total} Filings · TVA Collectée · Récupérable</p></div>
+                            <div><h1>VAT Return Filings</h1><p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">{stats.total} Filings · TVA Collectée · Récupérable</p></div>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
                             <button onClick={() => setFocusMode(true)} className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all"><Maximize2 size={13} /></button>

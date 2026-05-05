@@ -277,7 +277,7 @@ export default function WarehouseModal({
                             <typeCfg.icon size={15} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-app-foreground">
+                            <h3>
                                 {isEditing ? 'Edit Location' : 'New Location'}
                             </h3>
                             <p className="text-tp-xs font-bold text-app-muted-foreground">

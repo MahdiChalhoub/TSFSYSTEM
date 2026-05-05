@@ -107,7 +107,7 @@ export function ExpiryAlertDialog({ open, onClose, productId, productName, produ
                             <BellRing size={15} className="text-white" />
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-sm font-black text-app-foreground">New Expiry Alert</h3>
+                            <h3>New Expiry Alert</h3>
                             <p className="text-[10px] font-bold text-app-muted-foreground truncate">
                                 {productName}{productSku && ` · ${productSku}`}
                             </p>

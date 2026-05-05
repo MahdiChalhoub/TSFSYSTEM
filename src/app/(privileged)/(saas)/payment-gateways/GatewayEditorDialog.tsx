@@ -149,7 +149,7 @@ export function GatewayEditorDialog({ open, onClose, onSaved, initial }: Props) 
                         {form.logo_emoji || '💳'}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-[14px] font-black text-app-foreground">
+                        <h2>
                             {isEdit ? 'Edit Payment Gateway' : 'Add Payment Gateway'}
                         </h2>
                         <p className="text-[10px] text-app-muted-foreground">

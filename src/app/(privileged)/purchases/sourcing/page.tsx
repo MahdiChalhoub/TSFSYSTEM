@@ -31,7 +31,7 @@ export default async function SourcingDashboardPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl lg:text-6xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Sourcing <span className="text-app-success">Intelligence</span>
                     </h1>
                     <p className="text-app-muted-foreground font-bold mt-2">Evaluate vendor performance and optimization opportunities.</p>
@@ -61,7 +61,7 @@ export default async function SourcingDashboardPage() {
             <div className="bg-app-surface rounded-[3rem] shadow-xl border border-app-border overflow-hidden">
                 <div className="p-8 border-b border-app-border flex justify-between items-center bg-app-surface/50">
                     <div>
-                        <h3 className="text-xl font-black text-app-foreground tracking-tight">Market Benchmarking</h3>
+                        <h3>Market Benchmarking</h3>
                         <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest mt-1">Cross-vendor cost analysis</p>
                     </div>
                 </div>

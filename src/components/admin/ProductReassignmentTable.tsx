@@ -161,7 +161,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                         <div className="px-6 py-4 border-b border-app-border bg-gray-50/50">
-                            <h3 className="font-bold text-lg text-app-foreground">Move {selectedProductIds.length} Products</h3>
+                            <h3>Move {selectedProductIds.length} Products</h3>
                             <p className="text-xs text-app-muted-foreground">Select the destination category.</p>
                         </div>
 

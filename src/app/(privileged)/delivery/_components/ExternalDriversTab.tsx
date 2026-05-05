@@ -216,7 +216,7 @@ function ExternalDriverEditor({
                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}>
                 <div className="px-5 py-3 flex items-center justify-between"
                     style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}>
-                    <h3 className="text-tp-md font-bold text-app-foreground">{initial ? 'Edit external driver' : 'New external driver'}</h3>
+                    <h3 className="text-tp-md">{initial ? 'Edit external driver' : 'New external driver'}</h3>
                     <button onClick={onClose} disabled={pending}
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/40 transition-all disabled:opacity-50">
                         <X size={14} />

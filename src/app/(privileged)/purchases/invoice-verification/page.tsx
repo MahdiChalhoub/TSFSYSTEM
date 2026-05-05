@@ -407,7 +407,7 @@ export default function PurchaseInvoiceVerificationPage() {
                   <FileCheck size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-app-foreground">
+                  <h1>
                     Purchase Invoice Verification
                   </h1>
                   <p className="text-xs text-app-muted-foreground">

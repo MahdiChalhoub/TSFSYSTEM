@@ -100,7 +100,7 @@ export default function ProfilePage() {
             <div className="min-h-screen bg-app-bg flex items-center justify-center p-6">
                 <div className="text-center space-y-4">
                     <Shield size={48} className="mx-auto text-app-faint" />
-                    <h1 className="text-2xl font-bold text-white">Please log in</h1>
+                    <h1 className="text-white">Please log in</h1>
                 </div>
             </div>
         )
@@ -111,13 +111,13 @@ export default function ProfilePage() {
             <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-accent-cyan/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-2xl mx-auto relative z-10 space-y-6">
-                <h1 className="text-3xl font-black text-white flex items-center gap-3">
+                <h1 className="text-white flex items-center gap-3">
                     <User size={28} className="text-app-muted-foreground" /> Profile & Settings
                 </h1>
 
                 {/* Profile Info */}
                 <div className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl space-y-5">
-                    <h2 className="text-white font-bold text-sm flex items-center gap-2">
+                    <h2 className="text-white flex items-center gap-2">
                         <User size={16} className="text-app-primary" /> Personal Information
                     </h2>
 
@@ -162,7 +162,7 @@ export default function ProfilePage() {
                 {/* Change Password */}
                 <div className="p-6 bg-app-surface/60 border border-white/5 rounded-2xl space-y-5">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-white font-bold text-sm flex items-center gap-2">
+                        <h2 className="text-white flex items-center gap-2">
                             <Lock size={16} className="text-app-warning" /> Change Password
                         </h2>
                         <button onClick={() => setShowPasswords(!showPasswords)}
@@ -212,7 +212,7 @@ export default function ProfilePage() {
 
                 {/* Account Info */}
                 <div className="p-5 bg-app-surface/40 border border-white/5 rounded-2xl space-y-3">
-                    <h3 className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Account Info</h3>
+                    <h3 className="text-app-muted-foreground uppercase">Account Info</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <p className="text-app-faint text-[10px] uppercase tracking-widest">Tier</p>

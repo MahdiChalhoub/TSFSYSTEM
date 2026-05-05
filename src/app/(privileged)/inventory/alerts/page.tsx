@@ -62,7 +62,7 @@ export default async function StockAlertsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-app-foreground tracking-tighter">
+                    <h1>
                         Stock <span className="text-app-error">Alerts</span>
                     </h1>
                     <p className="text-sm text-app-muted-foreground mt-1">Real-time inventory health monitoring and reorder alerts</p>
@@ -120,7 +120,7 @@ export default async function StockAlertsPage() {
             {/* Alert List */}
             <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
                 <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
-                    <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Alert Feed</h2>
+                    <h2 className="text-app-muted-foreground uppercase">Alert Feed</h2>
                 </div>
                 <div className="divide-y divide-app-border">
                     {(!alerts || alerts.length === 0) ? (
@@ -153,7 +153,7 @@ export default async function StockAlertsPage() {
                                                 {statusBadge.label}
                                             </span>
                                         </div>
-                                        <h3 className="font-bold text-app-foreground text-sm">
+                                        <h3>
                                             {alert.product_display || alert.product_name || `Product #${alert.product}`}
                                         </h3>
                                         <p className="text-xs text-app-muted-foreground mt-0.5">{alert.message || 'Stock level requires attention'}</p>

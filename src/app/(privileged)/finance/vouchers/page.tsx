@@ -228,7 +228,7 @@ export default function VouchersPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Vouchers</h1>
+                    <h1 className="font-serif">Vouchers</h1>
                     <p className="text-app-muted-foreground font-medium mt-1">Manage transfers, receipts, and payment vouchers</p>
                 </div>
                 <Button onClick={openCreate} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">

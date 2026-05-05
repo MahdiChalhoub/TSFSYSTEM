@@ -41,7 +41,7 @@ export function CompareModal({ profiles, config, onClose }: {
         <div className="flex items-center justify-between px-4 py-3 border-b border-app-border">
           <div className="flex items-center gap-2">
             <GitCompare size={16} className="text-app-primary" />
-            <h3 className="text-[14px] font-bold text-app-foreground">Profile Comparison</h3>
+            <h3>Profile Comparison</h3>
           </div>
           <button onClick={onClose} className="text-app-muted-foreground hover:text-app-foreground"><X size={16} /></button>
         </div>

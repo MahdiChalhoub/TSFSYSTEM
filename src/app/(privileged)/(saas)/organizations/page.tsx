@@ -198,7 +198,7 @@ export default function OrganizationsPage() {
                     <div className="flex items-center gap-2 text-app-success font-bold text-xs uppercase tracking-[0.2em] mb-2">
                         <Building size={14} /> Tenant Registry
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Organizations</h2>
+                    <h2>Organizations</h2>
                     <p className="text-app-muted-foreground mt-1 md:mt-2 font-medium text-sm md:text-base">Provision and manage multi-tenant business instances</p>
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>

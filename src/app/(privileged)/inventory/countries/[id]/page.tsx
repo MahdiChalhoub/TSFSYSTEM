@@ -29,7 +29,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                     <ChevronLeft size={24} />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold text-app-foreground flex items-center gap-3">
+                    <h1 className="flex items-center gap-3">
                         <span className="w-10 h-10 rounded-lg bg-app-info-bg border border-indigo-100 flex items-center justify-center text-lg font-bold text-app-info">{country.code}</span>
                         {country.name}
                     </h1>

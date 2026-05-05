@@ -12,7 +12,7 @@ export default async function FinanceDashboardPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center mb-10">
                 <div>
-                    <h1 className="text-4xl font-bold text-app-foreground font-serif">Finance Overview</h1>
+                    <h1 className="font-serif">Finance Overview</h1>
                     <p className="text-app-muted-foreground font-medium">Real-time performance & liquidity tracking</p>
                 </div>
                 <div className="bg-app-surface border border-app-border px-4 py-2 rounded-xl text-xs font-bold text-app-muted-foreground uppercase tracking-widest">

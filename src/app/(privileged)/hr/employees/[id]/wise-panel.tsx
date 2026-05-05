@@ -138,7 +138,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
         <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
             {/* Panel header */}
             <div className="p-6 border-b border-app-border bg-app-surface/[0.02] flex items-center justify-between">
-                <h3 className="font-black italic flex items-center gap-2 text-lg">
+                <h3 className="italic flex items-center gap-2">
                     <TrendingUp size={20} style={{ color: 'var(--app-primary)' }} />
                     WISE Intelligence
                 </h3>

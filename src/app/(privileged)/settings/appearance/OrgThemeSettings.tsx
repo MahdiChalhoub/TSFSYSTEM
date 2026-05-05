@@ -216,7 +216,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
 
           return (
             <div key={category}>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 text-app-muted-foreground">
+              <h3 className="uppercase mb-2 text-app-muted-foreground">
                 {category}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">

@@ -110,7 +110,7 @@ function GiftEditor({ item, onSave, onCancel }: { item: Rec | null; onSave: (d: 
             <Gift size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-black text-app-foreground tracking-tight truncate">
+            <h1 className="truncate">
               {item ? 'Edit Gift/Sample' : 'New Gift/Sample'}
             </h1>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Threshold-Based VAT</p>
@@ -264,7 +264,7 @@ export default function GiftSampleVATPage() {
                   <Gift size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Gift & Sample Events</h1>
+                  <h1>Gift & Sample Events</h1>
                   <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">Inventory · Business Gifts · Promotional Items</p>
                 </div>
               </div>

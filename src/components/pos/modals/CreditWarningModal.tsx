@@ -23,7 +23,7 @@ export function CreditWarningModal({ isOpen, onClose, onConfirm, amount, currenc
  <span className="text-2xl">⚠️</span>
  </div>
  <div className="text-app-foreground">
- <h2 className="text-xl font-black">Credit Sale Warning</h2>
+ <h2>Credit Sale Warning</h2>
  <p className="text-amber-100 text-sm">No cash collected — client will owe this amount</p>
  </div>
  </div>

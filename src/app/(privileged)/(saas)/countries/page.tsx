@@ -180,7 +180,7 @@ function CurrencyEditModal({ currency, onClose, onSaved }: {
             <DollarSign size={16} style={{ color: 'var(--app-info, #3b82f6)' }} />
           </div>
           <div className="flex-1">
-            <h3 className="text-[14px] font-black text-app-foreground">
+            <h3>
               {isNew ? 'New Currency' : `Edit ${form.code}`}
             </h3>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
@@ -373,7 +373,7 @@ function CountryEditModal({ country, currencies, taxTemplates, eInvoiceStandards
               : <Plus size={16} style={{ color: 'var(--app-primary)' }} />}
           </div>
           <div className="flex-1">
-            <h3 className="text-[14px] font-black text-app-foreground">{isNew ? 'New Country' : `Edit ${form.name}`}</h3>
+            <h3>{isNew ? 'New Country' : `Edit ${form.name}`}</h3>
             <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">
               {isNew ? 'Add to global reference' : `${form.iso2} · ${form.iso3}`}
             </p>
@@ -940,7 +940,7 @@ function CountryDetailPanel({ country, hasTaxTemplate, currencies, taxTemplates,
           {getFlagEmoji(country.iso2)}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-tp-lg font-bold tracking-tight truncate leading-tight" style={{ color: 'var(--app-foreground)' }}>
+          <h3 className="text-tp-lg truncate" style={{ color: 'var(--app-foreground)' }}>
             {country.name}
           </h3>
           <div className="flex items-center gap-2 mt-1">

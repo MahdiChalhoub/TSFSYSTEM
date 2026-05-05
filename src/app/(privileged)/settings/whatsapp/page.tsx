@@ -70,7 +70,7 @@ export default function WhatsappSettingsPage() {
  <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
  <div className="flex items-center justify-between">
  <div>
- <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Master Control</h2>
+ <h2 className="text-app-muted-foreground uppercase">Master Control</h2>
  <p className="text-xs text-app-muted-foreground mt-1 font-medium">
  Enable or disable out-bound WhatsApp alerts entirely
  </p>
@@ -120,7 +120,7 @@ export default function WhatsappSettingsPage() {
  {config.is_active && config.provider && (
  <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
  <div className="p-6 border-b border-app-border bg-[#F8FAFC] flex items-center justify-between">
- <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">
+ <h2 className="text-app-muted-foreground uppercase">
  {config.provider} Credentials
  </h2>
  </div>

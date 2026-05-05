@@ -69,7 +69,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                         {enabled ? <ShieldCheck size={28} /> : <ShieldAlert size={28} />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Two-Factor Authentication</h2>
+                        <h2 className="uppercase">Two-Factor Authentication</h2>
                         <p className="text-xs text-app-muted-foreground font-medium tracking-tight mt-0.5">
                             {enabled
                                 ? "Your account is prioritized with an additional security layer."
@@ -107,7 +107,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">1</div>
-                                    <h3 className="text-md font-black text-app-foreground uppercase tracking-tighter">Scan QR Code</h3>
+                                    <h3 className="text-md uppercase">Scan QR Code</h3>
                                 </div>
                                 <p className="text-[11px] text-app-muted-foreground leading-relaxed font-medium pl-11">
                                     Open your authenticator app (e.g., Google Authenticator, Authy, or Microsoft Authenticator) and scan this QR code.
@@ -132,7 +132,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">2</div>
-                                    <h3 className="text-md font-black text-app-foreground uppercase tracking-tighter">Verification</h3>
+                                    <h3 className="text-md uppercase">Verification</h3>
                                 </div>
                                 <p className="text-[11px] text-app-muted-foreground leading-relaxed font-medium pl-11">
                                     Enter the 6-digit verification code showing in your authenticator app to finalize the link.
