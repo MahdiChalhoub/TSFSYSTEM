@@ -12,6 +12,7 @@ export async function meAction() {
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { PLATFORM_CONFIG } from '@/lib/saas_config'
 import { ErpApiError } from '@/lib/erp-api'
@@ -300,18 +301,33 @@ export async function logoutAction() {
         cookieStore.set('scope_access', '', { domain: cookieDomain, path: '/', maxAge: 0 })
     }
 
+    // Bust cached identity + chrome data so the next request can't serve
+    // anything keyed on the now-revoked token.
+    revalidateTag('auth:me')
+    revalidateTag('sites')
+    revalidateTag('organizations')
+    revalidateTag('sidebar')
+    revalidateTag('themes')
+    revalidateTag('global-financial')
+
     redirect('/')
 }
 
 /**
  * React.cache() deduplicates calls within a single server render.
  * Multiple layouts calling getUser() in the same request → only 1 API call.
+ *
+ * Cross-render: 60s HTTP fetch cache, keyed per-token via Authorization
+ * header. Safe because a logout/login changes the token → different cache
+ * entry. Tag `auth:me` lets explicit invalidation (token rotation, role
+ * change, etc.) bust it instantly.
  */
 export const getUser = cache(async function getUser() {
     const { erpFetch } = await import("@/lib/erp-api")
     try {
-        // Always fetch fresh — never use stale cache for auth checks
-        const user = await erpFetch('auth/me/', { cache: 'no-store' })
+        const user = await erpFetch('auth/me/', {
+            next: { revalidate: 60, tags: ['auth:me'] },
+        } as any)
         return user
     } catch (error: unknown) {
         // Robust check for session expiry / invalid credentials
