@@ -162,7 +162,7 @@ export default function RelationshipDashboard() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                        <h4 className="font-bold text-app-foreground truncate">{task.title || task.subject}</div>
+                                                        <h4 className="font-bold text-app-foreground truncate">{task.title || task.subject}</h4>
                                                         <Badge variant="outline" className="bg-app-surface-2 border-none text-[8px] font-bold uppercase tracking-widest text-app-muted-foreground px-2 h-4">
                                                             {task.action_type_display || task.action_type}
                                                         </Badge>
@@ -254,7 +254,7 @@ export default function RelationshipDashboard() {
                         <TrendingUp className="absolute -right-4 -bottom-4 w-24 h-24 text-app-success opacity-[0.05] group-hover:scale-110 transition-transform duration-700" />
                         <div className="text-[10px] font-black uppercase text-app-success tracking-widest mb-4 flex items-center gap-2">
                             <BarChart3 size={14} /> Pipeline Stats
-                        </h4>
+                        </div>
                         <div className="space-y-6">
                             {[
                                 { label: 'Resolution Rate', val: '88%', color: 'var(--app-primary)' },

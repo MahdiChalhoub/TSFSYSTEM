@@ -99,7 +99,7 @@ const DEFAULT_COMPONENTS: ComponentConfig = {
     inputs: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 0.875rem', fontSize: '0.875rem', border: '1px solid var(--app-border)' },
     /* Canonical typography defaults — synced with globals.css.
        Sizes: h1=18 h2=16 h3=15 body=15 small=13 (px). Outfit body. */
-    typography: { headingFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", bodyFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", h1Size: '1.125rem', h2Size: '1rem', h3Size: '0.9375rem', bodySize: '0.9375rem', smallSize: '0.8125rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
+    typography: { headingFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", bodyFont: "'Outfit', ui-sans-serif, system-ui, sans-serif", h1Size: '1.875rem', h2Size: '1rem', h3Size: '0.9375rem', bodySize: '0.9375rem', smallSize: '0.8125rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
     tables: { rowHeight: '3rem', headerStyle: 'bold', borderStyle: 'rows', striped: false, hoverEffect: true, density: 'comfortable' },
     modals: { maxWidth: '600px', borderRadius: '0.75rem', padding: '1.5rem', backdrop: 'blur', animation: 'scale', shadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
     forms: { labelPosition: 'top', labelStyle: 'bold', fieldSpacing: '1rem', groupSpacing: '1.5rem', validationStyle: 'inline' },
@@ -140,6 +140,12 @@ function applyFullThemeToDOM(
     r.setProperty('--app-foreground', colors.text);
     r.setProperty('--app-muted-foreground', colors.textMuted);
     r.setProperty('--app-muted-foreground', colors.textMuted);
+    // High-contrast heading color — pure white/black so page titles
+    // never read as gray, regardless of theme. Resolved against
+    // effectiveMode (not raw colorMode, which can be 'auto').
+    // Mirrors the SSR --app-heading set in buildRootThemeCSS.
+    const headingMode = colorMode === 'auto' ? getSystemColorMode() : colorMode;
+    r.setProperty('--app-heading', headingMode === 'light' ? '#000000' : '#FFFFFF');
     r.setProperty('--app-border', colors.border);
     r.setProperty('--app-border-strong', colors.border);
     // Sidebar
@@ -208,7 +214,7 @@ function applyFullThemeToDOM(
     const CANONICAL_FONT = "'Outfit', ui-sans-serif, system-ui, sans-serif";
     r.setProperty('--font-heading',     CANONICAL_FONT);
     r.setProperty('--font-body',        CANONICAL_FONT);
-    r.setProperty('--font-size-h1',     '1.125rem');     /* 18px */
+    r.setProperty('--font-size-h1',     '1.875rem');     /* 30px — page title baseline (text-3xl) */
     r.setProperty('--font-size-h2',     '1rem');         /* 16px */
     r.setProperty('--font-size-h3',     '0.9375rem');    /* 15px */
     r.setProperty('--font-size-body',   '0.9375rem');    /* 15px */
@@ -359,18 +365,13 @@ export function AppThemeProvider({
     }, [colorMode]);
 
     // ── Load themes from backend on mount ──
-    // PERF: skip the backend fetch when SSR already injected a usable
-    // theme + we have a localStorage cache. The SSR <style id="ssr-theme">
-    // already painted the right colors and `getInitial()` populated the
-    // active theme from cache. The only reason to fetch here is to
-    // populate the FULL list of available themes (system + custom) for
-    // the theme switcher UI — defer until the switcher actually mounts.
-    //
-    // Without this gate every navigation triggers a duplicate
-    // /api/proxy/ui-themes/ round-trip even though the SSR fetch
-    // already had the data.
+    // Always fetch the full theme catalog from the backend so that pages
+    // like /settings/appearance have the complete list of system + custom
+    // themes to render. The cached theme (from localStorage / SSR) still
+    // provides zero-flicker first paint — this fetch runs in the
+    // background and only updates state when the resolved theme differs
+    // from the cache.
     useEffect(() => {
-        if (initial.theme) return;       // SSR/cache already gave us a theme
         loadFromBackend();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

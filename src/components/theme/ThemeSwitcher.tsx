@@ -199,7 +199,7 @@ export function ThemeSwitcher({
                       <div className="text-left">
                         <h4 className="font-semibold mb-1" style={{ color: 'var(--app-foreground)' }}>
                           {theme.name}
-                        </div>
+                        </h4>
                         <p className="text-xs line-clamp-2" style={{ color: 'var(--app-muted-foreground)' }}>
                           {theme.description}
                         </p>
@@ -282,7 +282,7 @@ export function ThemeSwitcher({
                     <div className="text-xs font-semibold uppercase tracking-wider px-2 mb-2"
                       style={{ color: 'var(--app-muted-foreground)' }}>
                       {category.name}
-                    </h4>
+                    </div>
                     <div className="space-y-1">
                       {category.themes.map((theme) => {
                         const isActive = currentTheme?.slug === theme.slug

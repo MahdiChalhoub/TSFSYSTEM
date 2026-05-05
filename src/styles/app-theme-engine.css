@@ -969,7 +969,11 @@ h1, h2, h3, h4, h5, h6 {
   /* Fall back to --font-sans (Outfit) when --font-heading isn't set. */
   font-family: var(--font-heading, var(--font-sans));
   font-weight: var(--font-weight-bold, 700);
-  color: var(--app-foreground);
+  /* --app-heading is pure black/white (mode-aware, defined in
+     buildRootThemeCSS). Falls back to --app-foreground for any
+     pre-SSR-fix render path. Pure contrast keeps titles from
+     reading as "gris" against the theme's slightly-muted body text. */
+  color: var(--app-heading, var(--app-foreground));
   /* Reset browser default margins — Tailwind preflight already does
      this but stating it here makes the canonical scale explicit. */
   margin: 0;

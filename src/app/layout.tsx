@@ -85,11 +85,18 @@ function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode:
     const tables  = c.tables  || {};
     const modals  = c.modals  || {};
     const forms   = c.forms   || {};
+    // High-contrast heading color — independent of the theme's foreground.
+    // Themes like to render body text in slightly-muted near-white/near-black
+    // (#F1F5F9, #0F172A) for reading comfort — but applied to bold page
+    // titles that reads as "gray". --app-heading is pure white/black so
+    // titles always pop, regardless of theme.
+    const hd = isLight ? '#000000' : '#FFFFFF';
     return `:root{` +
         // Colors
         `--app-primary:${p};--app-primary-dark:${pd};--app-primary-light:${p}1f;--app-primary-glow:${p}59;` +
         `--app-bg:${bg};--app-surface:${sf};--app-surface-2:${sh};--app-surface-hover:${sh};` +
         `--app-foreground:${tx};--app-muted-foreground:${mt};` +
+        `--app-heading:${hd};` +
         `--app-border:${bd};--app-border-strong:${bd};` +
         // Sidebar
         `--app-sidebar-bg:${bg};--app-sidebar-surface:color-mix(in srgb,${p} 5%,${sf});` +
@@ -141,7 +148,7 @@ function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode:
         `--font-body:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
         `--app-font:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
         `--app-font-display:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
-        `--font-size-h1:1.125rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
+        `--font-size-h1:1.875rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
         `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
         `--font-weight-normal:400;--font-line-height:1.5;` +
         `}` +
@@ -156,8 +163,12 @@ function buildRootThemeCSS(colors: any, layout: any, components: any, colorMode:
         // tailwind <link> right after this <style> block). With
         // !important, the canonical scale wins from the very first
         // paint regardless of stylesheet load order.
-        `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;color:${tx}!important;margin:0;}` +
-        `h1{font-size:1.125rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+        // Reference --app-heading (set above in :root) instead of inlining
+        // the literal color. Otherwise !important would lock the value at
+        // SSR-time and ignore AppThemeProvider's runtime updates when the
+        // user switches color mode or theme.
+        `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;color:var(--app-heading)!important;margin:0;}` +
+        `h1{font-size:1.875rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
         `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
         `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
         `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +
@@ -244,13 +255,13 @@ export default async function RootLayout({
                         `--font-body:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
                         `--app-font:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
                         `--app-font-display:'Outfit',ui-sans-serif,system-ui,sans-serif;` +
-                        `--font-size-h1:1.125rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
+                        `--font-size-h1:1.875rem;--font-size-h2:1rem;--font-size-h3:0.9375rem;` +
                         `--font-size-h4:0.9375rem;` +
                         `--font-size-body:0.9375rem;--font-size-small:0.8125rem;` +
                         `--font-weight-normal:400;--font-line-height:1.5;` +
                         `}` +
                         `h1,h2,h3,h4,h5,h6{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important;margin:0;}` +
-                        `h1{font-size:1.125rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
+                        `h1{font-size:1.875rem!important;letter-spacing:-0.02em;line-height:1.2;}` +
                         `h2{font-size:1rem!important;letter-spacing:-0.015em;line-height:1.25;}` +
                         `h3{font-size:0.9375rem!important;letter-spacing:-0.01em;line-height:1.3;}` +
                         `h4,h5,h6{font-size:0.9375rem!important;line-height:1.4;}` +
