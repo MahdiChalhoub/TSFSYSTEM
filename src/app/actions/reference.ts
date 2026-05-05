@@ -11,7 +11,16 @@
  */
 
 import { erpFetch, handleAuthError } from "@/lib/erp-api"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
+
+/** Bust the relevant tag(s) for every reference mutation so the cached
+ *  SSR fetches in regional/page.tsx see fresh data after a toggle. We
+ *  always bust both org tags because country/currency rows can affect
+ *  each other (e.g. enabling a country surfaces its default currency). */
+function _bustReferenceTags() {
+    revalidateTag('org-countries')
+    revalidateTag('org-currencies')
+}
 import type {
     RefCountry,
     RefCurrency,
@@ -42,7 +51,11 @@ export async function getRefCountries(params?: {
 
         const qs = query.toString()
         const url = qs ? `reference/countries/?${qs}` : 'reference/countries/'
-        const result = await erpFetch(url)
+        // Global reference data — changes rarely (SaaS-managed). 1h cache,
+        // tag-bust if the SaaS admin edits the master list.
+        const result = await erpFetch(url, {
+            next: { revalidate: 3600, tags: ['ref-countries'] },
+        } as any)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
         handleAuthError(error)
@@ -65,7 +78,9 @@ export async function getRefCurrencies(params?: {
 
         const qs = query.toString()
         const url = qs ? `reference/currencies/?${qs}` : 'reference/currencies/'
-        const result = await erpFetch(url)
+        const result = await erpFetch(url, {
+            next: { revalidate: 3600, tags: ['ref-currencies'] },
+        } as any)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
         handleAuthError(error)
@@ -120,7 +135,11 @@ export async function getCountryCurrencyMap(params?: {
  */
 export async function getOrgCountries(): Promise<OrgCountry[]> {
     try {
-        const result = await erpFetch('reference/org-countries/')
+        // 5min cache — org admins toggle countries occasionally. Tag-bust
+        // from every mutation action below via revalidateTag('org-countries').
+        const result = await erpFetch('reference/org-countries/', {
+            next: { revalidate: 300, tags: ['org-countries'] },
+        } as any)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
         handleAuthError(error)
@@ -147,6 +166,7 @@ export async function enableOrgCountry(countryId: number, isDefault = false): Pr
             }),
         }) as { id: number; country: number; is_default?: boolean }
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true, data: created }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to enable country' }
@@ -164,6 +184,7 @@ export async function bulkEnableOrgCountries(countryIds: number[]): Promise<Acti
             body: JSON.stringify({ country_ids: countryIds }),
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true, result }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to bulk-enable countries' }
@@ -181,6 +202,7 @@ export async function setDefaultOrgCountry(countryId: number): Promise<ActionRes
             body: JSON.stringify({ country_id: countryId }),
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to set default country' }
@@ -196,6 +218,7 @@ export async function disableOrgCountry(orgCountryId: number): Promise<ActionRes
             method: 'DELETE',
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         revalidatePath('/inventory/countries')
         return { success: true }
     } catch (error: unknown) {
@@ -208,7 +231,9 @@ export async function disableOrgCountry(orgCountryId: number): Promise<ActionRes
  */
 export async function getOrgCurrencies(): Promise<OrgCurrency[]> {
     try {
-        const result = await erpFetch('reference/org-currencies/')
+        const result = await erpFetch('reference/org-currencies/', {
+            next: { revalidate: 300, tags: ['org-currencies'] },
+        } as any)
         return Array.isArray(result) ? result : result?.results || []
     } catch (error) {
         handleAuthError(error)
@@ -239,6 +264,7 @@ export async function enableOrgCurrency(
             }),
         }) as { id: number; currency: number; is_default?: boolean }
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true, data: created }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to enable currency' }
@@ -256,6 +282,7 @@ export async function bulkEnableOrgCurrencies(currencyIds: number[]): Promise<Ac
             body: JSON.stringify({ currency_ids: currencyIds }),
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true, result }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to bulk-enable currencies' }
@@ -273,6 +300,7 @@ export async function setDefaultOrgCurrency(currencyId: number): Promise<ActionR
             body: JSON.stringify({ currency_id: currencyId }),
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to set default currency' }
@@ -288,6 +316,7 @@ export async function disableOrgCurrency(orgCurrencyId: number): Promise<ActionR
             method: 'DELETE',
         })
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to disable currency' }
@@ -314,6 +343,7 @@ export async function setOrgCurrencyCountries(
             body: JSON.stringify({ country_ids: countryIds }),
         }) as { id: number; enabled_in_country_ids: number[] }
         revalidatePath('/settings')
+        _bustReferenceTags()
         return { success: true, data: res }
     } catch (error: unknown) {
         return { success: false, error: error instanceof Error ? error.message : 'Failed to update country activation' }

@@ -1,7 +1,11 @@
 import { getRefCountries, getRefCurrencies, getOrgCountries, getOrgCurrencies } from "@/app/actions/reference";
 import RegionalSettingsClient from "./client";
 
-export const dynamic = 'force-dynamic';
+// `force-dynamic` removed: the page is *naturally* dynamic (it reads
+// auth cookies via erpFetch), but forcing it skipped the App Router's
+// segment cache and re-rendered the entire tree every visit. The four
+// SSR fetches now use `next: { revalidate, tags }` so they're cached
+// per-user (auth header in the cache key) and tag-revalidate on writes.
 
 export const metadata = {
     title: 'Regional Settings — TSFSYSTEM',
