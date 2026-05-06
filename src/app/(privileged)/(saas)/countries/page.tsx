@@ -680,6 +680,28 @@ function LinkedLeaf({ node, isLast, languageActions }: {
                   <Crown size={9} /> Default
                 </span>
               )}
+              {isLanguage && langData?.language_code && (() => {
+                /* Compact UI-translation badge — single character so it
+                   doesn't crowd the row alongside the Default crown. */
+                const lvl = getLocaleCoverageLabel(langData.language_code)
+                const map: Record<typeof lvl, { ch: string; color: string; bg: string; title: string }> = {
+                  full:    { ch: 'T', color: 'var(--app-success)',          bg: 'var(--app-success-bg)',    title: 'UI fully translated' },
+                  partial: { ch: '~', color: 'var(--app-warning)',          bg: 'var(--app-warning-bg)',    title: 'UI partially translated — missing keys fall back to English' },
+                  empty:   { ch: '—', color: 'var(--app-muted-foreground)', bg: 'var(--app-surface-2)',     title: 'UI not translated — every label renders in English' },
+                }
+                const m = map[lvl]
+                return (
+                  <span title={m.title}
+                    className="font-black tabular-nums inline-flex items-center justify-center flex-shrink-0 rounded"
+                    style={{
+                      width: 16, height: 16, fontSize: 9, lineHeight: 1,
+                      background: m.bg, color: m.color,
+                      border: `1px solid color-mix(in srgb, ${m.color} 35%, transparent)`,
+                    }}>
+                    {m.ch}
+                  </span>
+                )
+              })()}
             </div>
             {node.subtitle && (
               <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>

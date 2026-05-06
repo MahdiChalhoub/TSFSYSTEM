@@ -1613,10 +1613,12 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
  *  a language as System UI that would render half-English. */
 function CoverageBadge({ code }: { code: string }) {
     const label = getLocaleCoverageLabel(code);
+    // Compact labels so the badge doesn't crowd long language names in
+    // narrow rows (e.g. "النص العربية"). Hover title carries the full meaning.
     const map: Record<typeof label, { text: string; color: string; bg: string; title: string }> = {
-        full:    { text: 'TRANSLATED', color: 'var(--app-success)', bg: 'var(--app-success-bg)', title: 'UI fully translated for this language' },
-        partial: { text: 'PARTIAL',    color: 'var(--app-warning)', bg: 'var(--app-warning-bg)', title: 'UI partially translated — missing keys fall back to English' },
-        empty:   { text: 'NOT TRANSLATED', color: 'var(--app-muted-foreground)', bg: 'var(--app-surface-2)', title: 'No UI translations — every label will render in English' },
+        full:    { text: 'OK',   color: 'var(--app-success)',           bg: 'var(--app-success-bg)', title: 'UI fully translated for this language' },
+        partial: { text: 'PART', color: 'var(--app-warning)',           bg: 'var(--app-warning-bg)', title: 'UI partially translated — missing keys fall back to English' },
+        empty:   { text: 'EN',   color: 'var(--app-muted-foreground)',  bg: 'var(--app-surface-2)',  title: 'No UI translations — every label will render in English' },
     };
     const m = map[label];
     return (
