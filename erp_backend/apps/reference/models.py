@@ -148,6 +148,62 @@ class CountryCurrencyMap(models.Model):
         return f"{self.country.iso2} → {self.currency.code}{primary}"
 
 
+class CountryLanguageMap(models.Model):
+    """
+    Global SaaS-level mapping between countries and the languages that are
+    customarily used in them. Mirrors `CountryCurrencyMap` for currencies.
+
+    Used by:
+      - The SaaS-admin /countries page to declare "this is the default
+        language for Belgium" so tenant onboarding can pre-populate org
+        language settings sensibly.
+      - Future tenant-onboarding wizards that ask "which countries are
+        you operating in?" and seed OrgLanguage rows accordingly.
+
+    `language_code` is a free-form string (ISO 639-1 recommended) so this
+    model isn't gated by a global Language master table. The catalogue
+    of well-known codes lives in `src/translations/dictionaries.ts`
+    (LOCALES) on the frontend.
+
+    Tenant Isolation: N/A (global reference data)
+    Audit Logging: N/A (platform-managed, low-churn reference)
+    """
+    country = models.ForeignKey(
+        Country, on_delete=models.CASCADE,
+        related_name='language_mappings'
+    )
+    language_code = models.CharField(
+        max_length=10, db_index=True,
+        help_text='ISO 639-1 language code, e.g. "en", "fr", "ar"'
+    )
+    is_default = models.BooleanField(
+        default=False,
+        help_text='Default/primary language for this country'
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'ref_country_language_map'
+        unique_together = ('country', 'language_code')
+        ordering = ['country__name', '-is_default', 'language_code']
+        indexes = [
+            models.Index(fields=['country', 'is_default']),
+        ]
+
+    def __str__(self):
+        d = ' [DEFAULT]' if self.is_default else ''
+        return f"{self.country.iso2} → {self.language_code}{d}"
+
+    def save(self, *args, **kwargs):
+        # Single-default rule: setting this row default clears any other
+        # row for the same country.
+        if self.is_default:
+            CountryLanguageMap.objects.filter(
+                country=self.country, is_default=True,
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
 # =============================================================================
 # ORGANIZATION-SCOPED ACTIVATION TABLES
 # =============================================================================

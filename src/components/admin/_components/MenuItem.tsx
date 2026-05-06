@@ -1,10 +1,37 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 import { ChevronRight, Star } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
 import { SidebarDynamicItem } from "@/types/erp";
+import { useTranslations } from 'next-intl';
+
+/**
+ * Converts a human-readable English title to a camelCase translation key.
+ * Examples:
+ *   "Products"              → "products"
+ *   "Purchase Orders"       → "purchaseOrders"
+ *   "Alerts & Intelligence" → "alertsAndIntelligence"
+ *   "E-Invoicing"           → "eInvoicing"
+ *   "Gift & Sample VAT"     → "giftSampleVat"
+ *   "POS Settings"          → "posSettings"
+ */
+function titleToKey(title: string): string {
+    return title
+        .replace(/&/g, 'And')           // & → And
+        .replace(/['']/g, '')           // Remove apostrophes
+        .replace(/[^\w\s-]/g, '')       // Remove special chars except hyphens
+        .replace(/-/g, ' ')            // Hyphens → spaces
+        .trim()
+        .split(/\s+/)
+        .map((word, i) =>
+            i === 0
+                ? word.toLowerCase()
+                : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join('');
+}
 
 export function MenuItem({
     item,
@@ -20,6 +47,24 @@ export function MenuItem({
     level?: number
 }) {
     const { toggleFavorite, isFavorite } = useFavorites();
+    const t = useTranslations('Sidebar');
+
+    // ── Resolve translated title ──
+    // Auto-convert title → camelCase key → lookup in Sidebar namespace.
+    // Falls back to raw English title if no translation exists.
+    const displayTitle = useMemo(() => {
+        try {
+            const key = titleToKey(item.title);
+            const translated = t(key as any);
+            // next-intl returns the key path if missing — detect that
+            if (translated && translated !== `Sidebar.${key}`) {
+                return translated;
+            }
+        } catch {
+            // Key doesn't exist in messages — use fallback
+        }
+        return item.title;
+    }, [item.title, t]);
 
     // 1. Module & Visibility Filter (null = not loaded yet, show everything)
     if (installedModules !== null && item.module && item.module !== 'core' && !installedModules.has(item.module)) {
@@ -51,7 +96,7 @@ export function MenuItem({
         if (hasChildren) {
             setExpanded(!expanded);
         } else if (item.path) {
-            openTab(item.title, item.path);
+            openTab(displayTitle, item.path);
         }
     };
 
@@ -98,7 +143,7 @@ export function MenuItem({
                     "flex-1 truncate",
                     level === 0 ? "text-[13px] font-medium" : "text-[12px] font-normal"
                 )}>
-                    {item.title}
+                    {displayTitle}
                 </span>
 
                 {/* Favorite Toggle (Leaf nodes only) */}
@@ -106,7 +151,7 @@ export function MenuItem({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            toggleFavorite(item.title, item.path);
+                            toggleFavorite(displayTitle, item.path);
                         }}
                         className={clsx(
                             "opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-[var(--app-sidebar-muted)]/10 rounded-md",
@@ -151,3 +196,4 @@ export function MenuItem({
         </div>
     );
 }
+

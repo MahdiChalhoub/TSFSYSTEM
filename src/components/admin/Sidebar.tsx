@@ -1,6 +1,7 @@
 'use client';
 
 import { useAdmin } from '@/context/AdminContext';
+import { useTranslations } from 'next-intl';
 import {
     ChevronRight,
     Layers,
@@ -39,6 +40,8 @@ export function Sidebar({
     initialDynamicItems?: SidebarDynamicItem[];
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout, setNavLayout, tabLayout, setTabLayout } = useAdmin();
+    const t = useTranslations('Layout');
+    const tAuth = useTranslations('Auth');
 
     // ── All hooks MUST be declared before any conditional returns (React rules-of-hooks) ──
     const { installedModules, dynamicItems } = useSidebar({ initialModuleCodes, initialDynamicItems });
@@ -144,7 +147,7 @@ export function Sidebar({
                             {PLATFORM_CONFIG.name}
                         </h1>
                         <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: 'var(--app-primary)' }}>
-                            {isSaas ? 'Platform Admin' : 'Workspace'}
+                            {isSaas ? t('platformAdmin') : t('workspace')}
                         </p>
                     </div>
                 </div>
@@ -166,7 +169,7 @@ export function Sidebar({
                                     boxShadow: '0 2px 6px var(--app-primary-glow, rgba(0,0,0,0.2))',
                                 } : { color: 'var(--app-sidebar-muted)' }}
                             >
-                                <Layers size={12} /> Official
+                                <Layers size={12} /> {t('official')}
                             </button>
                             <button
                                 onClick={() => setViewScope('INTERNAL')}
@@ -184,7 +187,7 @@ export function Sidebar({
                                     boxShadow: '0 2px 6px var(--app-info-bg, rgba(0,0,0,0.2))',
                                 } : { color: 'var(--app-sidebar-muted)' }}
                             >
-                                <BarChart3 size={12} /> Internal
+                                <BarChart3 size={12} /> {t('internal')}
                             </button>
                         </div>
                     </div>
@@ -197,7 +200,7 @@ export function Sidebar({
                         <>
                             <div className="mb-2 mx-2 flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} />
-                                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.85 }}>Production</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.85 }}>{t('production')}</span>
                                 <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }} />
                                 <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.6 }}>{productionItems.length}</span>
                             </div>
@@ -206,7 +209,7 @@ export function Sidebar({
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
-                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>{t('platform')}</span>
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
                                         </div>
                                     )}
@@ -224,7 +227,7 @@ export function Sidebar({
                             >
                                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--app-info, #3b82f6)' }} />
                                 <span className="text-[9px] font-black uppercase tracking-widest transition-colors" style={{ color: 'var(--app-info, #3b82f6)', opacity: 0.85 }}>
-                                    In Progress ({inProgressItems.length})
+                                    {t('inProgress')} ({inProgressItems.length})
                                 </span>
                                 <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-info, #3b82f6) 30%, transparent)' }} />
                                 <ChevronRight
@@ -238,7 +241,7 @@ export function Sidebar({
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
-                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>{t('platform')}</span>
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
                                         </div>
                                     )}
@@ -256,7 +259,7 @@ export function Sidebar({
                             >
                                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-warning, #f59e0b)' }} />
                                 <span className="text-[9px] font-black uppercase tracking-widest transition-colors" style={{ color: 'var(--app-warning, #f59e0b)', opacity: 0.85 }}>
-                                    Development ({developmentItems.length})
+                                    {t('development')} ({developmentItems.length})
                                 </span>
                                 <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }} />
                                 <ChevronRight
@@ -270,7 +273,7 @@ export function Sidebar({
                                     {idx > 0 && item.visibility === 'saas' && (
                                         <div className="my-2 mx-2 flex items-center gap-2">
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
-                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>{t('platform')}</span>
                                             <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
                                         </div>
                                     )}
@@ -322,7 +325,7 @@ export function Sidebar({
                         }}
                     >
                         <LogOut size={16} />
-                        <span className="text-xs font-bold">Sign Out</span>
+                        <span className="text-xs font-bold">{tAuth('signOut')}</span>
                     </button>
                 </div>
             </aside>

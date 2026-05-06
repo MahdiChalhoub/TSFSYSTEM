@@ -16,13 +16,14 @@ from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 
 from .models import (
-    Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency,
+    Country, Currency, CountryCurrencyMap, CountryLanguageMap,
+    OrgCountry, OrgCurrency,
     SourcingCountry, City, PaymentGateway, OrgPaymentGateway,
 )
 from .serializers import (
     CountrySerializer, CountryListSerializer,
     CurrencySerializer, CurrencyListSerializer,
-    CountryCurrencyMapSerializer,
+    CountryCurrencyMapSerializer, CountryLanguageMapSerializer,
     OrgCountrySerializer, OrgCountryWriteSerializer,
     OrgCurrencySerializer, OrgCurrencyWriteSerializer,
     SourcingCountrySerializer, SourcingCountryWriteSerializer,
@@ -246,6 +247,80 @@ class RefCountryCurrencyMapViewSet(viewsets.ModelViewSet):
         if not (request.user.is_staff or request.user.is_superuser):
             return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
+
+
+class RefCountryLanguageMapViewSet(viewsets.ModelViewSet):
+    """
+    Country-language mapping (SaaS-level master data). Read-only for
+    regular users; staff/superusers can CRUD. Used by the SaaS /countries
+    page to declare default + alternative languages per country.
+
+    Endpoints:
+      - GET    /api/reference/country-language-map/?country_id=X
+      - POST   /api/reference/country-language-map/         { country, language_code, is_default? }
+      - PATCH  /api/reference/country-language-map/{id}/    (toggle is_default / is_active)
+      - DELETE /api/reference/country-language-map/{id}/
+      - POST   /api/reference/country-language-map/{id}/set-default/
+    """
+    queryset = CountryLanguageMap.objects.select_related('country').all()
+    serializer_class = CountryLanguageMapSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        country_id = self.request.query_params.get('country_id')
+        if country_id:
+            qs = qs.filter(country_id=country_id)
+        code = self.request.query_params.get('language_code')
+        if code:
+            qs = qs.filter(language_code=code.lower())
+        return qs
+
+    def _staff_only(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        return None
+
+    def create(self, request, *args, **kwargs):
+        gate = self._staff_only(request)
+        if gate: return gate
+        # Normalise language_code to lowercase before persisting so the
+        # uniqueness constraint matches `LOCALES` codes consistently.
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        if 'language_code' in data:
+            data['language_code'] = str(data['language_code']).strip().lower()
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        gate = self._staff_only(request)
+        if gate: return gate
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        gate = self._staff_only(request)
+        if gate: return gate
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        gate = self._staff_only(request)
+        if gate: return gate
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'], url_path='set-default')
+    def set_default(self, request, pk=None):
+        """Promote this row to default; the model's save() clears any other
+        default for the same country."""
+        gate = self._staff_only(request)
+        if gate: return gate
+        row = self.get_object()
+        row.is_default = True
+        row.is_active = True
+        row.save()
+        return Response(self.get_serializer(row).data)
 
 
 # =============================================================================

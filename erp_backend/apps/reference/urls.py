@@ -15,6 +15,7 @@ Mounted at:
 from rest_framework.routers import DefaultRouter
 from .views import (
     RefCountryViewSet, RefCurrencyViewSet, RefCountryCurrencyMapViewSet,
+    RefCountryLanguageMapViewSet,
     OrgCountryViewSet, OrgCurrencyViewSet, SourcingCountryViewSet,
     RefCityViewSet, RefPaymentGatewayViewSet, OrgPaymentGatewayViewSet,
 )
@@ -23,6 +24,7 @@ router = DefaultRouter()
 router.register(r'countries', RefCountryViewSet, basename='ref-countries')
 router.register(r'currencies', RefCurrencyViewSet, basename='ref-currencies')
 router.register(r'country-currency-map', RefCountryCurrencyMapViewSet, basename='ref-ccmap')
+router.register(r'country-language-map', RefCountryLanguageMapViewSet, basename='ref-clmap')
 router.register(r'org-countries', OrgCountryViewSet, basename='org-countries')
 router.register(r'org-currencies', OrgCurrencyViewSet, basename='org-currencies')
 router.register(r'sourcing-countries', SourcingCountryViewSet, basename='sourcing-countries')

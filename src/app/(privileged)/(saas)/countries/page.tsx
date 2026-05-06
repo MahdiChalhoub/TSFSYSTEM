@@ -5,13 +5,22 @@ import {
   Globe, Loader2, Plus, Pencil, Trash2, Check, X,
   MapPin, DollarSign, Phone, Shield, Save, Hash,
   CreditCard, FileText, Power, PowerOff, Pin,
-  Link2, Unlink, AlertTriangle,
+  Link2, Unlink, AlertTriangle, Languages, Crown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { erpFetch } from '@/lib/erp-api'
 import { TreeMasterPage } from '@/components/templates/TreeMasterPage'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useAdmin } from '@/context/AdminContext'
+import { LOCALES, getLocaleCoverageLabel } from '@/translations/dictionaries'
+
+type CountryLanguageMap = {
+  id: number
+  country: number
+  language_code: string
+  is_default: boolean
+  is_active: boolean
+}
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -70,7 +79,7 @@ type TreeNode = {
   id: number | string
   parent?: number | null
   /** Discriminator for the row renderer. */
-  kind: 'country' | 'currency' | 'gateway' | 'einvoice' | 'tax' | 'tenant'
+  kind: 'country' | 'currency' | 'gateway' | 'einvoice' | 'tax' | 'tenant' | 'language'
   /** Unified search/display field. */
   name: string
   /** Optional secondary line. */
@@ -546,13 +555,14 @@ function CountryEditModal({ country, currencies, taxTemplates, eInvoiceStandards
 
 const LINKED_KIND_META: Record<Exclude<TreeNode['kind'], 'country'>, { color: string; href: string; icon: React.ReactNode; label: string; group: string }> = {
   currency:  { color: 'var(--app-info, #3b82f6)',    href: '/currencies',             icon: <DollarSign size={11} />, label: 'Currency',        group: 'Currency' },
+  language:  { color: 'var(--app-primary)',          href: '/settings/regional',      icon: <Languages size={11} />,  label: 'Language',        group: 'Languages' },
   tax:       { color: 'var(--app-success, #22c55e)', href: '/country-tax-templates',  icon: <Shield size={11} />,     label: 'Tax Template',    group: 'Tax Templates' },
   gateway:   { color: 'var(--app-accent)',           href: '/payment-gateways',       icon: <CreditCard size={11} />, label: 'Payment Gateway', group: 'Payment Gateways' },
   einvoice:  { color: 'var(--app-warning, #f59e0b)', href: '/e-invoice-standards',    icon: <FileText size={11} />,   label: 'E-invoice',       group: 'E-Invoice Standards' },
   tenant:    { color: 'var(--app-primary)',          href: '/organizations',          icon: <Globe size={11} />,      label: 'Tenant',          group: 'Tenants Using' },
 }
 
-const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'tax', 'gateway', 'einvoice', 'tenant']
+const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'language', 'tax', 'gateway', 'einvoice', 'tenant']
 
 /**
  * Level-3 leaf row. Uses the same row template as the parent country row
@@ -565,43 +575,141 @@ const KIND_ORDER: Array<Exclude<TreeNode['kind'], 'country'>> = ['currency', 'ta
  * The kind-specific color survives only in the icon + tag, so type is
  * still scannable.
  */
-function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
+/** Inline picker rendered at the bottom of the Languages group. Lets the
+ *  SaaS admin attach a new ISO 639-1 language to the current country
+ *  without leaving the row. Filters out codes already attached so the
+ *  list stays clean. */
+function AddLanguagePicker({ countryId, existingCodes, hasDefault, onAdd }: {
+  countryId: number
+  existingCodes: Set<string>
+  hasDefault: boolean
+  onAdd: (countryId: number, code: string, makeDefault?: boolean) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [code, setCode] = useState('')
+  const available = LOCALES.filter(l => !existingCodes.has(l.id))
+  if (available.length === 0 && !open) return null
+  return (
+    <div className="ml-6 mt-1 mb-1">
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-tp-xs font-bold inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed transition-colors"
+          style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 35%, transparent)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+          <Plus size={11} /> Add language
+        </button>
+      ) : (
+        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-app-border/50 bg-app-surface/40">
+          <select
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            className="text-tp-sm px-2 py-1 rounded-md bg-app-surface border border-app-border/50 outline-none">
+            <option value="">Select language…</option>
+            {available.map(l => <option key={l.id} value={l.id}>{l.flag} {l.name}</option>)}
+          </select>
+          <button
+            type="button"
+            disabled={!code}
+            onClick={() => { if (code) { onAdd(countryId, code, !hasDefault); setCode(''); setOpen(false) } }}
+            className="text-tp-xs font-bold px-2 py-1 rounded-md text-white disabled:opacity-50"
+            style={{ background: 'var(--app-primary)' }}
+            title={hasDefault ? 'Add as additional language' : 'Add as default language for this country'}>
+            {hasDefault ? 'Add' : 'Add as default'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setCode(''); setOpen(false) }}
+            className="p-1 rounded-md text-app-muted-foreground hover:bg-app-border/30">
+            <X size={11} />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function LinkedLeaf({ node, isLast, languageActions }: {
+  node: TreeNode
+  isLast: boolean
+  /** Per-language inline handlers — only language leaves render these.
+   *  Passed down from the page so other kinds stay read-only here. */
+  languageActions?: {
+    onSetDefault: (mapId: number) => void
+    onDelete: (mapId: number) => void
+  }
+}) {
   const meta = LINKED_KIND_META[node.kind as Exclude<TreeNode['kind'], 'country'>]
   // Use the in-app tab navigator (categories pattern) instead of <a href>
   // so clicking opens (or focuses) a tab in the navigator without a full
   // page reload. Falls back to a normal link if no admin context exists.
   const { openTab } = useAdmin()
+  const isLanguage = node.kind === 'language'
+  const langData = isLanguage ? (node.data as CountryLanguageMap | undefined) : undefined
   return (
-    <div className="relative" style={{ paddingLeft: '24px' }}>
+    <div className="relative group/leaf" style={{ paddingLeft: '24px' }}>
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: 0, bottom: isLast ? '50%' : 0, width: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
       <div className="absolute pointer-events-none"
         style={{ left: '4px', top: '50%', width: '14px', height: '1px', background: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }} />
-      <button
-        type="button"
-        onClick={() => openTab(meta.group, meta.href)}
-        className="group w-full text-left flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg cursor-pointer"
-        style={{ padding: '6px 10px', color: 'inherit', background: 'transparent' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-      >
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: `color-mix(in srgb, ${meta.color} 7%, transparent)`, color: meta.color, opacity: 0.85 }}>
-          {meta.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-tp-sm font-semibold text-app-muted-foreground truncate">{node.name}</span>
-            <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
-              style={{ background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color }}>
-              {meta.label}
-            </span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => openTab(meta.group, meta.href)}
+          className="group w-full text-left flex items-center gap-2 md:gap-3 transition-all duration-150 rounded-lg cursor-pointer"
+          style={{ padding: '6px 10px', color: 'inherit', background: 'transparent' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-surface) 40%, transparent)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+        >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: `color-mix(in srgb, ${meta.color} 7%, transparent)`, color: meta.color, opacity: 0.85 }}>
+            {meta.icon}
           </div>
-          {node.subtitle && (
-            <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
-          )}
-        </div>
-      </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-tp-sm font-semibold text-app-muted-foreground truncate">{node.name}</span>
+              <span className="text-tp-xxs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0"
+                style={{ background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color }}>
+                {meta.label}
+              </span>
+              {isLanguage && langData?.is_default && (
+                <span className="text-tp-xxs font-black uppercase tracking-widest px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
+                  style={{ background: 'color-mix(in srgb, var(--app-primary) 14%, transparent)', color: 'var(--app-primary)' }}>
+                  <Crown size={9} /> Default
+                </span>
+              )}
+            </div>
+            {node.subtitle && (
+              <p className="text-tp-xxs font-medium text-app-muted-foreground truncate" style={{ opacity: 0.75 }}>{node.subtitle}</p>
+            )}
+          </div>
+        </button>
+        {/* Inline language actions — set-default + delete. Hidden until
+            row hover so the read mode stays clean. */}
+        {isLanguage && langData && languageActions && (
+          <div className="flex items-center gap-0.5 flex-shrink-0 mr-1 opacity-0 group-hover/leaf:opacity-100 transition-opacity">
+            {!langData.is_default && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); languageActions.onSetDefault(langData.id) }}
+                title="Set as default language for this country"
+                className="p-1.5 rounded-lg hover:bg-app-border/50 transition-colors text-app-muted-foreground hover:text-app-primary">
+                <Crown size={12} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); languageActions.onDelete(langData.id) }}
+              title="Remove this language"
+              className="p-1.5 rounded-lg hover:bg-app-border/50 transition-colors"
+              style={{ color: 'var(--app-error, #ef4444)' }}>
+              <Trash2 size={12} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -613,7 +721,17 @@ function LinkedLeaf({ node, isLast }: { node: TreeNode; isLast: boolean }) {
  * consistent typography across all three levels — only depth indentation
  * and the tree connector mark the level. Each group is collapsible.
  */
-function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
+function LinkedTree({ children: nodes, countryId, languageActions, onAddLanguage }: {
+  children: TreeNode[]
+  /** Country FK id this tree expansion belongs to — needed for the
+   *  add-language action which has to know which country to attach to. */
+  countryId?: number
+  languageActions?: {
+    onSetDefault: (mapId: number) => void
+    onDelete: (mapId: number) => void
+  }
+  onAddLanguage?: (countryId: number, code: string, makeDefault?: boolean) => void
+}) {
   // Bucket once by kind, preserving the fixed visual order.
   const buckets: Record<string, TreeNode[]> = {}
   for (const n of nodes) {
@@ -702,8 +820,17 @@ function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
                     None configured for this country yet.
                   </div>
                 ) : items.map((n, idx) => (
-                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1} />
+                  <LinkedLeaf key={String(n.id)} node={n} isLast={idx === items.length - 1}
+                    languageActions={n.kind === 'language' ? languageActions : undefined} />
                 ))}
+                {kind === 'language' && countryId != null && onAddLanguage && (
+                  <AddLanguagePicker
+                    countryId={countryId}
+                    existingCodes={new Set(items.map(n => (n.data as CountryLanguageMap | undefined)?.language_code).filter(Boolean) as string[])}
+                    hasDefault={items.some(n => (n.data as CountryLanguageMap | undefined)?.is_default)}
+                    onAdd={onAddLanguage}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -717,9 +844,11 @@ function LinkedTree({ children: nodes }: { children: TreeNode[] }) {
    Country Row — TreeMasterPage-compatible flat row
    ═══════════════════════════════════════════════════════ */
 
-function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDelete, compact, selectable, isCheckedFn, onToggleCheck, children, forceExpanded }: {
+function CountryRow({ item, hasTaxTemplate, defaultLanguageCode, isSelected, onSelect, onEdit, onDelete, compact, selectable, isCheckedFn, onToggleCheck, children, forceExpanded, languageActions, onAddLanguage }: {
   item: Country
   hasTaxTemplate: boolean
+  /** ISO 639-1 code of the default-flagged language for this country, or null. */
+  defaultLanguageCode?: string | null
   isSelected: boolean
   onSelect: () => void
   onEdit: () => void
@@ -732,6 +861,9 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
   children?: TreeNode[]
   /** When set, overrides the per-row expand state (from "Expand all"). */
   forceExpanded?: boolean
+  /** Inline language CRUD passed through to the LinkedTree. */
+  languageActions?: { onSetDefault: (mapId: number) => void; onDelete: (mapId: number) => void }
+  onAddLanguage?: (countryId: number, code: string, makeDefault?: boolean) => void
 }) {
   const regionColor = REGION_COLORS[item.region] || 'var(--app-muted-foreground)'
   const checked = isCheckedFn ? isCheckedFn(item.id) : false
@@ -829,6 +961,14 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
             </span>
           </div>
 
+          {/* Default Language */}
+          <div className="hidden md:flex items-center gap-1 w-20 flex-shrink-0" title="Default language for this country">
+            <Languages size={10} style={{ color: 'var(--app-primary)' }} />
+            <span className="font-mono text-[11px] font-bold uppercase" style={{ color: 'var(--app-primary)' }}>
+              {defaultLanguageCode || '—'}
+            </span>
+          </div>
+
           {/* Region */}
           <div className="hidden lg:flex w-24 flex-shrink-0">
             <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded truncate"
@@ -856,7 +996,12 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
     {/* Linked entities — grouped by kind with tree connectors so the
         relationship hierarchy reads naturally instead of as a flat list. */}
     {hasChildren && isOpen && (
-      <LinkedTree>{children!}</LinkedTree>
+      <LinkedTree
+        countryId={item.id}
+        languageActions={languageActions}
+        onAddLanguage={onAddLanguage}>
+        {children!}
+      </LinkedTree>
     )}
     </div>
   )
@@ -1282,6 +1427,9 @@ export default function SaaSCountriesPage() {
   const [paymentGateways, setPaymentGateways] = useState<PaymentGateway[]>([])
   const [eInvoiceStandards, setEInvoiceStandards] = useState<EInvoiceStandard[]>([])
   const [taxTemplates, setTaxTemplates] = useState<TaxTemplate[]>([])
+  /** All country↔language associations for every country in the master list.
+   *  Populated by `fetchAll`; mutated by add/remove/set-default below. */
+  const [countryLanguageMaps, setCountryLanguageMaps] = useState<CountryLanguageMap[]>([])
   /** Map of country_id → tenants that have this country enabled. Populated
    *  via the SU-only `reference/countries/tenants/` endpoint. Empty {} when
    *  the call fails (older backend) — UI falls back to no Tenants group. */
@@ -1312,6 +1460,62 @@ export default function SaaSCountriesPage() {
     clearSelection: () => {},
   })
 
+  /** Add a language to a country (catalogue-level, SaaS-managed). */
+  const addCountryLanguage = useCallback(async (countryId: number, code: string, makeDefault = false) => {
+    try {
+      const created = await erpFetch('reference/country-language-map/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country: countryId, language_code: code.toLowerCase(), is_default: makeDefault }),
+      }) as CountryLanguageMap
+      setCountryLanguageMaps(prev => {
+        // If new row is default, clear is_default on every other row for the same country.
+        const next = makeDefault
+          ? prev.map(m => m.country === countryId ? { ...m, is_default: false } : m)
+          : [...prev]
+        return [...next.filter(m => m.id !== created.id), created]
+      })
+      toast.success('Language added')
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to add language')
+    }
+  }, [])
+
+  /** Remove a language from a country. */
+  const removeCountryLanguage = useCallback(async (mapId: number) => {
+    try {
+      await erpFetch(`reference/country-language-map/${mapId}/`, { method: 'DELETE' })
+      setCountryLanguageMaps(prev => prev.filter(m => m.id !== mapId))
+      toast.success('Language removed')
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove language')
+    }
+  }, [])
+
+  /** Promote a country↔language row to be the default for its country. */
+  const setDefaultCountryLanguage = useCallback(async (mapId: number) => {
+    try {
+      const updated = await erpFetch(`reference/country-language-map/${mapId}/set-default/`, {
+        method: 'POST',
+      }) as CountryLanguageMap
+      setCountryLanguageMaps(prev => prev.map(m =>
+        m.country === updated.country ? { ...m, is_default: m.id === updated.id } : m
+      ))
+      toast.success('Default language updated')
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to set default')
+    }
+  }, [])
+
+  /** Map of country id → default language entry, for the table column. */
+  const defaultLanguageByCountry = useMemo(() => {
+    const m = new Map<number, CountryLanguageMap>()
+    for (const row of countryLanguageMaps) {
+      if (row.is_default) m.set(row.country, row)
+    }
+    return m
+  }, [countryLanguageMaps])
+
   const fetchCurrencies = useCallback(async () => {
     try {
       const data = await erpFetch('reference/currencies/?limit=300')
@@ -1323,7 +1527,7 @@ export default function SaaSCountriesPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [countriesData, _curr, templatesData, gatewaysData, eiData, tenantsData] = await Promise.all([
+      const [countriesData, _curr, templatesData, gatewaysData, eiData, tenantsData, languageMapData] = await Promise.all([
         erpFetch('reference/countries/?limit=300'),
         fetchCurrencies(),
         erpFetch('finance/country-tax-templates/').catch(() => []),
@@ -1331,16 +1535,19 @@ export default function SaaSCountriesPage() {
         erpFetch('finance/einvoice-standards/?limit=200').catch(() => []),
         // SU-only tenants endpoint — returns {} on older backends.
         erpFetch('reference/countries/tenants/').catch(() => ({})),
+        erpFetch('reference/country-language-map/').catch(() => []),
       ])
       const cList = Array.isArray(countriesData) ? countriesData : countriesData?.results || []
       const tList = Array.isArray(templatesData) ? templatesData : templatesData?.results || []
       const gList = Array.isArray(gatewaysData) ? gatewaysData : gatewaysData?.results || []
       const eList = Array.isArray(eiData) ? eiData : eiData?.results || []
+      const lList = Array.isArray(languageMapData) ? languageMapData : languageMapData?.results || []
       setCountries(cList)
       setTaxTemplates(tList)
       setPaymentGateways(gList)
       setEInvoiceStandards(eList)
       setTenantsByCountry(typeof tenantsData === 'object' && tenantsData !== null && !Array.isArray(tenantsData) ? tenantsData : {})
+      setCountryLanguageMaps(lList)
     } catch {
       toast.error('Failed to load data')
     }
@@ -1715,7 +1922,28 @@ export default function SaaSCountriesPage() {
       // Silence the unused-var lint since we kept tplsForCountry for clarity.
       void tplsForCountry
 
-      // 5) Tenants that have enabled this country (cross-tenant view)
+      // 5) Languages — every CountryLanguageMap row pinned to this country.
+      //    Default-language row is sorted first by the backend ordering.
+      const langs = countryLanguageMaps.filter(m => m.country === c.id)
+      for (const lm of langs) {
+        const meta = LOCALES.find(l => l.id === lm.language_code)
+        const display = meta ? `${meta.flag} ${meta.name}` : lm.language_code.toUpperCase()
+        out.push({
+          id: `c${c.id}-lang-${lm.id}`,
+          parent: c.id,
+          kind: 'language',
+          name: display,
+          subtitle: [
+            lm.language_code.toUpperCase(),
+            lm.is_default ? 'Default' : null,
+            !lm.is_active ? 'Inactive' : null,
+          ].filter(Boolean).join(' · '),
+          data: lm,
+          searchBlob: `${countryBlob} ${display} ${lm.language_code} ${meta?.native ?? ''}`.toLowerCase(),
+        })
+      }
+
+      // 6) Tenants that have enabled this country (cross-tenant view)
       const tenants = tenantsByCountry[c.id] || []
       for (const t of tenants) {
         out.push({
@@ -1730,7 +1958,7 @@ export default function SaaSCountriesPage() {
       }
     }
     return out
-  }, [countries, currencies, paymentGateways, eInvoiceStandards, taxTemplates, tenantsByCountry])
+  }, [countries, currencies, paymentGateways, eInvoiceStandards, taxTemplates, tenantsByCountry, countryLanguageMaps])
 
   // Loading splash — TreeMasterPage handles empty-state but not initial spinner.
   if (loading && countries.length === 0) {
@@ -1896,6 +2124,7 @@ export default function SaaSCountriesPage() {
                   key={String(n.id)}
                   item={country}
                   hasTaxTemplate={hasTaxTemplateFor(country)}
+                  defaultLanguageCode={defaultLanguageByCountry.get(country.id)?.language_code ?? null}
                   isSelected={isSelected(n)}
                   onSelect={() => openNode(n, 'overview')}
                   onEdit={() => setEditingCountry(country)}
@@ -1908,6 +2137,8 @@ export default function SaaSCountriesPage() {
                   // `children` is populated by buildTree on the wrapper node;
                   // pass it through so CountryRow can render linked rows.
                   children={(n.children as TreeNode[]) || []}
+                  languageActions={{ onSetDefault: setDefaultCountryLanguage, onDelete: removeCountryLanguage }}
+                  onAddLanguage={addCountryLanguage}
                 />
               )
             })

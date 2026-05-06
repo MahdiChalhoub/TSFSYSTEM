@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import clsx from 'clsx';
 import { ChevronRight, Star } from 'lucide-react';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useTranslations } from 'next-intl';
 
 export function FavoritesPanel({ openTab }: { openTab: (title: string, path: string) => void }) {
     const { favorites, removeFavorite } = useFavorites();
     const [favOpen, setFavOpen] = useState(true);
+    const t = useTranslations('Layout');
 
     if (favorites.length === 0) return null;
 
@@ -19,7 +21,7 @@ export function FavoritesPanel({ openTab }: { openTab: (title: string, path: str
             >
                 <Star size={10} fill="currentColor" style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
                 <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.85 }}>
-                    Favorites
+                    {t('favorites')}
                 </span>
                 <span className="text-[8px] font-bold px-1 rounded ml-0.5" style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
                     {favorites.length}

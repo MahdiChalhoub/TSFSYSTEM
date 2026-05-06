@@ -64,16 +64,14 @@ export default function ProductFormWrapper({
     };
 
     return (
-        <div className="flex flex-col px-4 md:px-6 pt-4 md:pt-6 pb-6 md:pb-8 animate-in fade-in duration-200">
-            {/* No forced max-height: if the form fits the viewport, no scroll
-                appears; if it doesn't, the page scrolls naturally and the
-                sticky footer inside <SmartProductForm> keeps the Create
-                button visible. Bottom padding pb-6/pb-8 ensures the form
-                never touches the page edge. */}
-            {/* Compact page header — only on the type-picker step. The form
-                step has its own back-button + header that owns the chrome. */}
+        <div className="flex flex-col items-stretch justify-start px-4 md:px-6 pt-3 pb-4 md:pb-6 animate-in fade-in duration-200">
+            {/* Tightened: pt-3 / pb-4 keeps content snug against the page-
+                top so the wizard doesn't visually float in the middle.
+                items-start + justify-start ensures no flex parent can
+                vertically centre us. Page header has no bottom-margin —
+                the wizard's own gap-3 handles separation. */}
             {step === 'type' && (
-                <header className="flex items-center gap-3 mb-3 flex-shrink-0">
+                <header className="flex items-center gap-3 mb-2 flex-shrink-0">
                     <div className="page-header-icon bg-app-primary"
                          style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                         <Package size={18} className="text-white" />

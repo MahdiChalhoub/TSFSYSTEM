@@ -5,7 +5,8 @@ Read/write serializers for global reference data and org activation tables.
 """
 from rest_framework import serializers
 from .models import (
-    Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency,
+    Country, Currency, CountryCurrencyMap, CountryLanguageMap,
+    OrgCountry, OrgCurrency,
     SourcingCountry, City, PaymentGateway, OrgPaymentGateway,
 )
 
@@ -76,6 +77,23 @@ class CountryCurrencyMapSerializer(serializers.ModelSerializer):
             'currency_code', 'currency_name',
             'is_primary', 'is_active',
         ]
+
+
+class CountryLanguageMapSerializer(serializers.ModelSerializer):
+    """Read+write serializer for the country↔language association.
+    `language_code` is a free-form ISO 639-1 string — no FK to a Language
+    master table since the catalogue lives on the frontend (LOCALES)."""
+    country_iso2 = serializers.CharField(source='country.iso2', read_only=True)
+    country_name = serializers.CharField(source='country.name', read_only=True)
+
+    class Meta:
+        model = CountryLanguageMap
+        fields = [
+            'id', 'country', 'language_code',
+            'country_iso2', 'country_name',
+            'is_default', 'is_active',
+        ]
+        read_only_fields = ['id']
 
 
 # =============================================================================

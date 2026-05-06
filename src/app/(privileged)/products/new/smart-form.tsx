@@ -596,39 +596,99 @@ export default function SmartProductForm({
                         </div>
                     </div>
 
-                    {/* ────── CARD: Classification ────── */}
+                    {/* ────── CARD: Classification ──────
+                     *  Re-architected for the new compact layout:
+                     *   • Adaptive auto-fit grids (no hardcoded grid-cols-N).
+                     *   • Filter hints inline with labels — not separate rows.
+                     *   • Single semantic group per row (taxonomy → identity →
+                     *     unit) so the eye walks top-to-bottom logically.
+                     *   • All design-language tokens (text-tp-*, var(--app-*),
+                     *     color-mix tints, no raw hex).
+                     *   • Heavy reuse of the existing CategorySelector and
+                     *     AttrGroupSelector components — same data flow,
+                     *     same backend wiring, just cleaner chrome.
+                     */}
                     <div className={card}>
                         <div className={cardHead('border-l-purple-500')}>
                             <h3 className={cardTitle}>Classification</h3>
-                            {loadingFilters && <span className="text-[9px] text-app-info font-bold animate-pulse">Filtering...</span>}
+                            <div className="flex items-center gap-2">
+                                {selectedCategoryId && (
+                                    <span className="text-tp-xxs font-bold uppercase tracking-widest"
+                                          style={{ color: 'var(--app-muted-foreground)' }}>
+                                        Filtered ·{' '}
+                                        <span style={{ color: 'var(--app-primary)' }}>
+                                            {filteredBrands.length}b
+                                        </span>{' '}/{' '}
+                                        <span style={{ color: 'var(--app-primary)' }}>
+                                            {filteredUnits.length}u
+                                        </span>
+                                    </span>
+                                )}
+                                {loadingFilters && (
+                                    <span className="text-tp-xxs font-bold animate-pulse"
+                                          style={{ color: 'var(--app-info)' }}>
+                                        Filtering…
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="p-3 space-y-3">
 
-                            {/* ── Category (tree — takes full width, dynamic rows) ── */}
-                            <div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
-                                    <CategorySelector categories={categories as unknown as Parameters<typeof CategorySelector>[0]['categories']} onChange={(id) => setSelectedCategoryId(id)} />
-                                </div>
-                            </div>
+                            {/* ── Row 1 — Category tree (full width, drives every other field below) ── */}
+                            <CategorySelector
+                                categories={categories as unknown as Parameters<typeof CategorySelector>[0]['categories']}
+                                onChange={(id) => setSelectedCategoryId(id)}
+                            />
 
-                            {/* ── ROW: Brand | Base Name ── */}
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* ── Row 2 — Identity bundle: Brand · Country · Base name (adaptive) ── */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                                {/* Brand */}
                                 <div>
-                                    <label className={fieldLabel}>Brand</label>
+                                    <label className={fieldLabel + ' flex items-center justify-between'}>
+                                        <span>Brand</span>
+                                        {selectedCategoryId && filteredBrands.length > 0 && filteredBrands.length !== brands.length && (
+                                            <span className="normal-case tracking-normal text-tp-xxs font-bold flex items-center gap-1"
+                                                  style={{ color: 'var(--app-success)' }}
+                                                  title={`${filteredBrands.length} brands linked to this category`}>
+                                                <span className="w-1 h-1 rounded-full" style={{ background: 'var(--app-success)' }} />
+                                                {filteredBrands.length} for category
+                                            </span>
+                                        )}
+                                    </label>
                                     <select
                                         className={fieldSelect}
                                         value={selectedBrandId}
                                         onChange={(e) => setSelectedBrandId(e.target.value)}
                                     >
-                                        <option value="">Select brand...</option>
+                                        <option value="">Select brand…</option>
                                         {filteredBrands.map(b => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
                                     </select>
-                                    {selectedCategoryId && filteredBrands.length > 0 && filteredBrands.length !== brands.length && (
-                                        <p className="text-[9px] text-app-primary mt-1 font-medium">✓ {filteredBrands.length} brand(s) for this category</p>
-                                    )}
                                 </div>
+
+                                {/* Origin country */}
                                 <div>
-                                    <label className={fieldLabel}>Base Product Name <span className="text-app-error">*</span></label>
+                                    <label className={fieldLabel}>Origin country</label>
+                                    <select name="countryId" className={fieldSelect}
+                                        value={selectedCountryId ?? ''}
+                                        onChange={(e) => setSelectedCountryId(e.target.value ? Number(e.target.value) : null)}>
+                                        <option value="">Select country…</option>
+                                        {countries.map(c => <option key={String(c.id)} value={String(c.id)}>{c.name} ({c.code})</option>)}
+                                    </select>
+                                </div>
+
+                                {/* Base product name — full-width on narrow viewports (spans both cols
+                                    when only 2 fit), single col on wide. The flex-basis trick lets
+                                    auto-fit treat it as a "preferred wide" field. */}
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                    <label className={fieldLabel + ' flex items-center justify-between'}>
+                                        <span>
+                                            Base product name <span style={{ color: 'var(--app-error)' }}>*</span>
+                                        </span>
+                                        <span className="normal-case tracking-normal text-tp-xxs font-medium"
+                                              style={{ color: 'var(--app-muted-foreground)', opacity: 0.8 }}>
+                                            Core identity — no brand/attributes
+                                        </span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={baseName}
@@ -636,27 +696,105 @@ export default function SmartProductForm({
                                         className={fieldInput}
                                         placeholder="e.g. Orange Juice, Eau de Parfum, Premium Rice"
                                     />
-                                    <p className="text-[9px] text-app-muted-foreground mt-1 font-medium">Core identity — without brand or attributes</p>
                                 </div>
                             </div>
 
-                            {/* ── V3: Dynamic Attribute Tree ── */}
+                            {/* ── Row 3 — Unit & Packing (only for stock-tracked products) ── */}
+                            {!isService && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px' }}>
+                                    {/* Stock unit (compound: type filter → unit) */}
+                                    <div>
+                                        <label className={fieldLabel + ' flex items-center justify-between'}>
+                                            <span>
+                                                Stock unit <span style={{ color: 'var(--app-error)' }}>*</span>
+                                            </span>
+                                            {unitType && (
+                                                <span className="normal-case tracking-normal text-tp-xxs font-bold"
+                                                      style={{ color: 'var(--app-info, #3b82f6)' }}>
+                                                    {filteredUnits.length} {unitType}
+                                                </span>
+                                            )}
+                                        </label>
+                                        <div className="flex gap-1.5">
+                                            <select
+                                                value={unitType}
+                                                onChange={(e) => setUnitType(e.target.value)}
+                                                className={fieldSelect}
+                                                style={{ flex: '0 0 38%' }}
+                                                title="Filter units by type">
+                                                <option value="">Any type</option>
+                                                {unitTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                            </select>
+                                            <select name="unitId" className={fieldSelect + ' flex-1'} required>
+                                                <option value="">Select unit…</option>
+                                                {filteredUnits.map(u => <option key={String(u.id)} value={String(u.id)}>{u.name}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Packing — value + unit (e.g. 330 ml, 1 kg) */}
+                                    <div>
+                                        <label className={fieldLabel}>Packing (emballage)</label>
+                                        <div className="flex gap-1.5">
+                                            <input
+                                                name="size"
+                                                type="number"
+                                                step="0.01"
+                                                value={emballageVal}
+                                                onChange={(e) => setEmballageVal(e.target.value)}
+                                                className={fieldInput}
+                                                style={{ flex: '0 0 50%' }}
+                                                placeholder="e.g. 330"
+                                            />
+                                            <select
+                                                name="sizeUnitId"
+                                                value={emballageUnitId}
+                                                onChange={(e) => setEmballageUnitId(e.target.value)}
+                                                className={fieldSelect + ' flex-1'}
+                                            >
+                                                <option value="">Unit</option>
+                                                {units.map(u => <option key={String(u.id)} value={String(u.id)}>{u.shortName || u.name}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── Row 4 — Attributes (dynamic, only when category has them) ── */}
                             {attributeTree.length > 0 && (
-                                <div className="mt-1 pt-3 border-t border-app-border/40">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <Tags className="w-3.5 h-3.5 text-app-warning" />
-                                            <span className="text-[10px] font-bold text-app-warning uppercase tracking-widest">Product Attributes</span>
+                                <div className="pt-3"
+                                     style={{ borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)' }}>
+                                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                            <Tags className="w-3.5 h-3.5" style={{ color: 'var(--app-warning)' }} />
+                                            <span className="text-tp-xxs font-black uppercase tracking-widest"
+                                                  style={{ color: 'var(--app-warning)' }}>
+                                                Attributes
+                                            </span>
                                             {attrCount > 0 && (
-                                                <span className="text-[9px] font-bold bg-app-warning/10 text-app-warning px-1.5 py-0.5 rounded-full">
+                                                <span className="text-tp-xxs font-bold px-1.5 py-0.5 rounded-full"
+                                                      style={{
+                                                          background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)',
+                                                          color: 'var(--app-warning)',
+                                                      }}>
                                                     {attrCount} selected
                                                 </span>
                                             )}
                                         </div>
-                                        {loadingFilters && <span className="text-[9px] text-app-info font-bold animate-pulse">Filtering...</span>}
+                                        {hiddenAttrGroups.length > 0 && (
+                                            <button type="button"
+                                                    onClick={() => setShowHiddenAttrs(!showHiddenAttrs)}
+                                                    className="flex items-center gap-1.5 text-tp-xxs font-bold transition-colors"
+                                                    style={{ color: 'var(--app-muted-foreground)' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-foreground)' }}
+                                                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-muted-foreground)' }}>
+                                                {showHiddenAttrs ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                                {showHiddenAttrs ? 'Hide' : 'Show'} {hiddenAttrGroups.length} more
+                                            </button>
+                                        )}
                                     </div>
 
-                                    <div className="space-y-2.5">
+                                    <div className="space-y-2">
                                         {relevantAttrGroups.map(group => (
                                             <AttrGroupSelector
                                                 key={group.id}
@@ -668,89 +806,18 @@ export default function SmartProductForm({
                                         ))}
                                     </div>
 
-                                    {/* Hidden attribute groups */}
-                                    {hiddenAttrGroups.length > 0 && (
-                                        <div className="mt-2">
-                                            <button type="button"
-                                                onClick={() => setShowHiddenAttrs(!showHiddenAttrs)}
-                                                className="flex items-center gap-1.5 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground transition-colors mb-2">
-                                                {showHiddenAttrs ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                                {showHiddenAttrs ? 'Hide' : 'Show'} {hiddenAttrGroups.length} more attribute{hiddenAttrGroups.length !== 1 ? 's' : ''}
-                                            </button>
-                                            {showHiddenAttrs && (
-                                                <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                    {hiddenAttrGroups.map(group => (
-                                                        <AttrGroupSelector
-                                                            key={group.id}
-                                                            group={group}
-                                                            selectedId={selectedAttrValues[group.id] || null}
-                                                            onSelect={(childId) => setSelectedAttrValues(prev => ({ ...prev, [group.id]: childId }))}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            )}
+                                    {hiddenAttrGroups.length > 0 && showHiddenAttrs && (
+                                        <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            {hiddenAttrGroups.map(group => (
+                                                <AttrGroupSelector
+                                                    key={group.id}
+                                                    group={group}
+                                                    selectedId={selectedAttrValues[group.id] || null}
+                                                    onSelect={(childId) => setSelectedAttrValues(prev => ({ ...prev, [group.id]: childId }))}
+                                                />
+                                            ))}
                                         </div>
                                     )}
-                                </div>
-                            )}
-
-                            {/* ── ROW: Origin Country ── */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={fieldLabel}>Origin Country</label>
-                                    <select name="countryId" className={fieldSelect}
-                                        value={selectedCountryId ?? ''}
-                                        onChange={(e) => setSelectedCountryId(e.target.value ? Number(e.target.value) : null)}>
-                                        <option value="">Select country...</option>
-                                        {countries.map(c => <option key={String(c.id)} value={String(c.id)}>{c.name} ({c.code})</option>)}
-                                    </select>
-                                </div>
-                                <div>{/* spacer */}</div>
-                            </div>
-
-                            {/* ── ROW: Packing (value+unit) | Stock Unit (type+unit) ── */}
-                            {!isService && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={fieldLabel}>Packing (Emballage)</label>
-                                        <div className="flex gap-1.5">
-                                            <input
-                                                name="size"
-                                                type="number"
-                                                step="0.01"
-                                                value={emballageVal}
-                                                onChange={(e) => setEmballageVal(e.target.value)}
-                                                className={fieldInput + ' w-[55%]'}
-                                                placeholder="Value"
-                                            />
-                                            <select
-                                                name="sizeUnitId"
-                                                value={emballageUnitId}
-                                                onChange={(e) => setEmballageUnitId(e.target.value)}
-                                                className={fieldSelect + ' w-[45%] text-[11px]'}
-                                            >
-                                                <option value="">Unit</option>
-                                                {units.map(u => <option key={String(u.id)} value={String(u.id)}>{u.shortName || u.name}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className={fieldLabel}>Stock Unit <span className="text-app-error">*</span></label>
-                                        <div className="flex gap-1.5">
-                                            <select
-                                                value={unitType}
-                                                onChange={(e) => setUnitType(e.target.value)}
-                                                className={fieldSelect + ' w-[40%] text-[11px]'}
-                                            >
-                                                <option value="">Type</option>
-                                                {unitTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                                            </select>
-                                            <select name="unitId" className={fieldSelect + ' w-[60%]'} required>
-                                                <option value="">Select unit...</option>
-                                                {filteredUnits.map(u => <option key={String(u.id)} value={String(u.id)}>{u.name}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
                             )}
                         </div>
