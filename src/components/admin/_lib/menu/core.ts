@@ -13,6 +13,7 @@ import {
     Wrench,
     GitBranch,
     ClipboardList,
+    Globe,
 } from 'lucide-react';
 import type { MenuItem } from './types';
 
@@ -62,6 +63,7 @@ export const systemSettings: MenuItem = {
         { title: 'Notifications', path: '/settings/notifications', icon: Bell },
         { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         { title: 'Appearance', path: '/settings/appearance' },
+        { title: 'Languages', path: '/settings/languages', icon: Globe },
         { title: 'Domains', path: '/settings/domains' },
         { title: 'E-Invoicing Monitor', path: '/settings/e-invoicing' },
         { title: 'E-Invoicing Live Monitor', path: '/settings/e-invoicing/monitor' },

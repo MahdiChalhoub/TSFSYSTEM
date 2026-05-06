@@ -72,23 +72,26 @@ export default function WizardStepType({ onSelect, onQuickCreate }: WizardStepTy
     const [selectedId, setSelectedId] = useState<ProductTypeChoice | null>(null);
 
     return (
-        <div className="max-w-5xl mx-auto py-8 px-4 fade-in-up">
-            {/* Header */}
-            <div className="text-center mb-10">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-app-primary/10 to-app-info/10 border border-app-primary/20 rounded-full px-4 py-1.5 mb-4">
-                    <Sparkles className="w-3.5 h-3.5 text-app-primary" />
-                    <span className="text-[11px] font-bold text-app-primary uppercase tracking-widest">Smart Product Creator</span>
-                </div>
-                <h1>
-                    What are you <span className="bg-gradient-to-r from-app-primary to-app-info bg-clip-text text-transparent">creating</span>?
+        <div className="max-w-5xl mx-auto fade-in-up flex flex-col gap-3">
+            {/* Header — compact, single line, no decorative pill (the page
+                wrapper already shows "Create Product · Smart product wizard"
+                so the title was redundant). */}
+            <div className="text-center">
+                <h1 className="text-lg md:text-xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                    What are you <span style={{
+                        background: 'linear-gradient(90deg, var(--app-primary), var(--app-info, #3b82f6))',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                    }}>creating</span>?
                 </h1>
-                <p className="text-app-muted-foreground text-sm mt-2 max-w-md mx-auto">
-                    Select a product type to get a tailored creation experience. Fields and options will adapt automatically.
+                <p className="text-tp-xs mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
+                    Pick a type — fields and options adapt to your choice.
                 </p>
             </div>
 
-            {/* Product Type Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Product Type Cards — always 4 in a row at any width. */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px' }}>
                 {PRODUCT_TYPES.map((type, idx) => {
                     const Icon = type.icon;
                     const isSelected = selectedId === type.id;
@@ -102,87 +105,89 @@ export default function WizardStepType({ onSelect, onQuickCreate }: WizardStepTy
                             onMouseEnter={() => setHoveredId(type.id)}
                             onMouseLeave={() => setHoveredId(null)}
                             className={`
-                relative group text-left p-5 rounded-2xl border-2 transition-all duration-300 ease-out
+                relative group text-left p-3 rounded-xl border-2 transition-all duration-200 ease-out
                 ${isSelected
-                                    ? 'border-app-primary shadow-lg shadow-app-primary/10 scale-[1.02]'
-                                    : 'border-app-border/60 hover:border-app-primary/40 hover:shadow-md'
+                                    ? 'border-app-primary shadow-md shadow-app-primary/10 scale-[1.01]'
+                                    : 'border-app-border/60 hover:border-app-primary/40'
                                 }
               `}
-                            style={{ animationDelay: `${idx * 80}ms`, ...type.gradientStyle }}
+                            style={{ animationDelay: `${idx * 60}ms`, ...type.gradientStyle }}
                         >
                             {/* Selection indicator */}
                             {isSelected && (
-                                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-app-primary flex items-center justify-center shadow-md">
-                                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-app-primary flex items-center justify-center shadow-sm">
+                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                             )}
 
-                            {/* Icon */}
+                            {/* Icon — smaller, less mb */}
                             <div className={`
-                w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300
-                bg-gradient-to-br ${type.accent} shadow-lg
-                ${isHovered || isSelected ? 'scale-110 rotate-[-3deg]' : ''}
+                w-9 h-9 rounded-lg flex items-center justify-center mb-2 transition-transform duration-200
+                bg-gradient-to-br ${type.accent} shadow-md
+                ${isHovered || isSelected ? 'scale-105' : ''}
               `}>
-                                <Icon className="w-6 h-6 text-white" />
+                                <Icon className="w-4 h-4 text-white" />
                             </div>
 
                             {/* Label */}
-                            <h3 className="mb-1">{type.label}</h3>
-                            <p className="text-[11px] text-app-muted-foreground leading-relaxed mb-4">{type.subtitle}</p>
+                            <h3 className="text-tp-sm font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>{type.label}</h3>
+                            <p className="text-tp-xxs leading-snug mb-2" style={{ color: 'var(--app-muted-foreground)' }}>{type.subtitle}</p>
 
-                            {/* Feature list */}
-                            <ul className="space-y-1.5">
-                                {type.features.map((f, i) => (
-                                    <li key={i} className="flex items-center gap-2 text-[11px] text-app-muted-foreground">
-                                        <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${type.accent} shrink-0`} />
+                            {/* Feature list — top 3 only, compact spacing */}
+                            <ul className="space-y-0.5">
+                                {type.features.slice(0, 3).map((f, i) => (
+                                    <li key={i} className="flex items-center gap-1.5 text-tp-xxs" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        <div className={`w-1 h-1 rounded-full bg-gradient-to-r ${type.accent} shrink-0`} />
                                         {f}
                                     </li>
                                 ))}
+                                {type.features.length > 3 && (
+                                    <li className="text-tp-xxs italic" style={{ color: 'var(--app-muted-foreground)', opacity: 0.7 }}>
+                                        + {type.features.length - 3} more
+                                    </li>
+                                )}
                             </ul>
-
-                            {/* Hidden fields indicator */}
-                            {type.hiddenFields.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-app-border/50">
-                                    <span className="text-[10px] font-medium text-app-muted-foreground/70">
-                                        {type.hiddenFields.length} section{type.hiddenFields.length > 1 ? 's' : ''} hidden for simplicity
-                                    </span>
-                                </div>
-                            )}
                         </button>
                     );
                 })}
             </div>
 
-            {/* Action Bar */}
-            <div className="flex items-center justify-between">
-                {/* Quick Create shortcut */}
+            {/* Action Bar — compact */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
                 <button
                     type="button"
                     onClick={onQuickCreate}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-semibold text-app-muted-foreground hover:text-app-foreground bg-app-surface border border-app-border hover:border-app-primary/30 transition-all group"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-tp-xs font-bold transition-all"
+                    style={{
+                        color: 'var(--app-muted-foreground)',
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--app-primary) 30%, transparent)'; e.currentTarget.style.color = 'var(--app-foreground)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.color = 'var(--app-muted-foreground)' }}
                 >
-                    <Zap className="w-4 h-4 text-app-warning group-hover:text-app-primary transition-colors" />
+                    <Zap className="w-3.5 h-3.5" style={{ color: 'var(--app-warning)' }} />
                     Quick Create
-                    <span className="text-[10px] text-app-muted-foreground/60 font-medium ml-1">2 sec</span>
+                    <span className="text-tp-xxs ml-0.5" style={{ color: 'var(--app-muted-foreground)', opacity: 0.6 }}>2 sec</span>
                 </button>
 
-                {/* Continue button */}
                 <button
                     type="button"
                     onClick={() => selectedId && onSelect(selectedId)}
                     disabled={!selectedId}
-                    className={`
-            flex items-center gap-2.5 px-8 py-3 rounded-xl text-[13px] font-bold transition-all duration-300
-            ${selectedId
-                            ? 'bg-gradient-to-r from-app-primary to-app-info text-white shadow-lg shadow-app-primary/20 hover:shadow-xl hover:shadow-app-primary/30 hover:scale-[1.02]'
-                            : 'bg-app-surface-hover text-app-muted-foreground cursor-not-allowed'
-                        }
-          `}
+                    className="flex items-center gap-2 px-5 py-1.5 rounded-xl text-tp-sm font-bold transition-all hover:brightness-110 disabled:cursor-not-allowed"
+                    style={{
+                        background: selectedId
+                            ? 'linear-gradient(90deg, var(--app-primary), var(--app-info, #3b82f6))'
+                            : 'color-mix(in srgb, var(--app-foreground) 5%, transparent)',
+                        color: selectedId ? '#fff' : 'var(--app-muted-foreground)',
+                        boxShadow: selectedId ? '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' : 'none',
+                    }}
                 >
                     Continue
-                    <ArrowRight className={`w-4 h-4 transition-transform duration-300 ${selectedId ? 'translate-x-0' : '-translate-x-1 opacity-50'}`} />
+                    <ArrowRight className="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>

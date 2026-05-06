@@ -790,7 +790,10 @@ function CountryRow({ item, hasTaxTemplate, isSelected, onSelect, onEdit, onDele
           {/* Note: per-row activate intentionally removed — see comment in
               parent component. Activation is a tenant-level concern. */}
           {hasTaxTemplate && (
-            <span className="font-black uppercase tracking-wider px-1 py-0.5 rounded flex-shrink-0"
+            // Explicit text-[9px] matches the other status badges on this row
+            // (codes, currency chips). Without it the span inherited a much
+            // larger size and visually outweighed the country name itself.
+            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)', color: 'var(--app-success, #22c55e)' }}>
               Tax
             </span>

@@ -41,10 +41,12 @@ import {
 import { toast } from 'sonner';
 import {
     getCatalogueLanguageEntries, setCatalogueLanguageEntries,
+    getCachedCatalogueLanguageEntries,
     getLangRole, setLangRoleOn,
     labelFor, isRTL,
     type CatalogueLanguageEntry,
 } from '@/lib/catalogue-languages';
+import { getLocaleCoverageLabel } from '@/translations/dictionaries';
 import { FxRedesigned as FxManagementSection } from './_components/FxRedesigned';
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
@@ -98,24 +100,71 @@ type OrgItem = OrgCountry | OrgCurrency | OrgLanguageItem;
 /* ═══════════════════════════════════════════════════════════════════
  *  COMPONENT
  * ═══════════════════════════════════════════════════════════════════ */
+// Persist the page's UI state across navigations / remounts. Without this,
+// switching to another tab and coming back resets the active section,
+// search input, region filter, etc. — re-mount triggers fresh useState.
+// Stored under a single key so we read once on mount and write the whole
+// snapshot on each change (cheap — these mutations are user-initiated).
+const REGIONAL_STATE_KEY = 'tsf_regional_settings_state_v1';
+type PersistedState = {
+    tab?: Tab;
+    currencySubTab?: CurrencySubTab;
+    search?: string;
+    regionFilter?: string;
+    langSearch?: string;
+    /** `${kind}-${id}` → true. Persists which country/currency/language
+     *  rows the user had expanded so reopening the page restores the
+     *  same view, not a fully-collapsed tree. */
+    expandedRows?: Record<string, boolean>;
+};
+
+/** Toggle expanded flag for one row by stable key, write back. Called
+ *  from ActiveRow each time the user clicks the chevron. */
+function toggleExpandedRow(key: string) {
+    const cur = readPersisted();
+    const map = cur.expandedRows || {};
+    if (map[key]) delete map[key];
+    else map[key] = true;
+    writePersisted({ ...cur, expandedRows: map });
+}
+function isRowExpanded(key: string): boolean {
+    return !!readPersisted().expandedRows?.[key];
+}
+function readPersisted(): PersistedState {
+    if (typeof window === 'undefined') return {};
+    try {
+        const raw = window.localStorage.getItem(REGIONAL_STATE_KEY);
+        return raw ? (JSON.parse(raw) as PersistedState) : {};
+    } catch { return {}; }
+}
+function writePersisted(s: PersistedState) {
+    if (typeof window === 'undefined') return;
+    try { window.localStorage.setItem(REGIONAL_STATE_KEY, JSON.stringify(s)); } catch { /* noop */ }
+}
+
 export default function RegionalSettingsClient({ allCountries, allCurrencies, initialOrgCountries, initialOrgCurrencies }: Props) {
     /* ─── State ─────────────────────────────────────────────────── */
     const searchParams = useSearchParams();
     const initialTab = (searchParams?.get('tab') as Tab | null) ?? 'countries';
     const validTab: Tab = (['countries', 'currencies', 'languages'] as const).includes(initialTab as Tab) ? initialTab : 'countries';
-    const [tab, setTab] = useState<Tab>(validTab);
+    // Persisted state takes precedence over the default; URL ?tab= overrides
+    // the persisted value (so explicit links still land where intended).
+    const persisted = readPersisted();
+    const [tab, setTab] = useState<Tab>(searchParams?.has('tab') ? validTab : (persisted.tab ?? validTab));
     // Sub-tab state for the Currencies top-tab. Backwards-compat:
     // ?tab=fx redirects here onto the Rate History sub-tab so old links keep working.
     const initialSub = (searchParams?.get('sub') as CurrencySubTab | null);
     const fxLegacy = searchParams?.get('tab') === 'fx';
     const [currencySubTab, setCurrencySubTab] = useState<CurrencySubTab>(
-        fxLegacy ? 'history' : (['select', 'rules', 'history', 'revaluations'] as const).includes(initialSub as CurrencySubTab) ? (initialSub as CurrencySubTab) : 'select'
+        fxLegacy ? 'history'
+        : (['select', 'rules', 'history', 'revaluations'] as const).includes(initialSub as CurrencySubTab) ? (initialSub as CurrencySubTab)
+        : (persisted.currencySubTab ?? 'select')
     );
     useEffect(() => {
         if (fxLegacy) setTab('currencies');
     }, [fxLegacy]);
-    const [search, setSearch] = useState('');
-    const [regionFilter, setRegionFilter] = useState('');
+    const [search, setSearch] = useState(persisted.search ?? '');
+    const [regionFilter, setRegionFilter] = useState(persisted.regionFilter ?? '');
     const [orgCountries, setOrgCountries] = useState<OrgCountry[]>(initialOrgCountries);
     const [orgCurrencies, setOrgCurrencies] = useState<OrgCurrency[]>(initialOrgCurrencies);
     const [isPending, startTransition] = useTransition();
@@ -123,10 +172,24 @@ export default function RegionalSettingsClient({ allCountries, allCurrencies, in
 
     // Catalogue languages — rich shape (code + per-country activation list).
     // Empty country_ids = "active in every enabled country".
-    const [langEntries, setLangEntries] = useState<CatalogueLanguageEntry[]>([]);
+    // Seed from the module-level cache when available — eliminates the
+    // [] → [...] flicker on remount (e.g. tab-back to Regional Settings).
+    const [langEntries, setLangEntries] = useState<CatalogueLanguageEntry[]>(
+        () => getCachedCatalogueLanguageEntries() ?? []
+    );
     const [langCustom, setLangCustom] = useState('');
-    const [langSearch, setLangSearch] = useState('');
+    const [langSearch, setLangSearch] = useState(persisted.langSearch ?? '');
     const [langLoading, setLangLoading] = useState(false);
+
+    // Write a snapshot whenever any persist-worthy state changes. MUST
+    // merge with existing localStorage — otherwise we wipe out
+    // `expandedRows` (which is written from a different code path:
+    // toggleExpandedRow). Without the merge, every search keystroke
+    // erased the expanded-row map.
+    useEffect(() => {
+        const cur = readPersisted();
+        writePersisted({ ...cur, tab, currencySubTab, search, regionFilter, langSearch });
+    }, [tab, currencySubTab, search, regionFilter, langSearch]);
     const langCodes = useMemo(() => langEntries.map(e => e.code), [langEntries]);
     // Loaded eagerly (not gated by `tab === 'languages'`) so the Country tab's
     // tree expansion can show per-country language activation without first
@@ -997,7 +1060,18 @@ function TwoPanePicker({
 // typeof checks at the leaves. Keeping `any` here is the pragmatic call.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisable, orgCountries, allCountries, orgCurrencies, allCurrencies, orgLanguages, langEntries, onToggleCurrencyCountry, onToggleLangCountry, onToggleLangCountryRole }: any) {
-    const [expanded, setExpanded] = useState(false);
+    // Stable key per row — id for country/currency, code for language.
+    const rowKey = `${kind}-${oc.id ?? oc.code}`;
+    const [expanded, setExpandedState] = useState<boolean>(() => isRowExpanded(rowKey));
+    const setExpanded = (next: boolean | ((b: boolean) => boolean)) => {
+        setExpandedState(prev => {
+            const v = typeof next === 'function' ? (next as (b: boolean) => boolean)(prev) : next;
+            // Only write when the value actually flips so we don't churn
+            // localStorage on initial render.
+            if (v !== prev) toggleExpandedRow(rowKey);
+            return v;
+        });
+    };
     // Country expansion has TWO sub-sections (Currencies + Languages) that can
     // be collapsed independently. Both default-open.
     const [ccyExpanded, setCcyExpanded] = useState(true);
@@ -1058,14 +1132,30 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                                 color: 'var(--app-foreground)',
                                 borderColor: 'color-mix(in srgb, var(--app-border) 60%, transparent)',
                             }}>
-                        {isLanguage
-                            ? <span className="font-black uppercase" style={{ fontSize: 11 }}>{code.slice(0, 2)}</span>
-                            : <span className="font-black" style={{ fontSize: 14 }}>{(ref as RefCurrency | undefined)?.symbol || oc.currency_symbol || code?.charAt(0) || '$'}</span>}
+                        {isLanguage ? (
+                            <span className="font-black uppercase" style={{ fontSize: 11 }}>{code.slice(0, 2)}</span>
+                        ) : (() => {
+                            // Currency symbol can be 1 char ($, €) or 4+ chars (FCFA,
+                            // CHF). At fontSize 14 in a 32px box, multi-char symbols
+                            // overflow visually. Scale the font down with the symbol
+                            // length so 1-char glyphs stay big and FCFA still fits.
+                            const sym = (ref as RefCurrency | undefined)?.symbol || oc.currency_symbol || code?.charAt(0) || '$';
+                            const len = String(sym).length;
+                            const fontSize = len <= 1 ? 14 : len === 2 ? 12 : len === 3 ? 10 : 9;
+                            return (
+                                <span className="font-black leading-none truncate" style={{ fontSize, maxWidth: '100%' }} title={String(sym)}>
+                                    {sym}
+                                </span>
+                            );
+                        })()}
                     </div>
                 )}
                 <div className="flex-1 min-w-0">
-                    <div className="font-bold text-app-foreground truncate" style={{ fontSize: 12, lineHeight: 1.3 }}
-                        dir={isLanguage && isRTL(code) ? 'rtl' : undefined}>{name}</div>
+                    <div className="font-bold text-app-foreground truncate flex items-center gap-1.5" style={{ fontSize: 12, lineHeight: 1.3 }}
+                        dir={isLanguage && isRTL(code) ? 'rtl' : undefined}>
+                        <span className="truncate">{name}</span>
+                        {isLanguage && <CoverageBadge code={code} />}
+                    </div>
                     <div className="font-mono uppercase text-app-muted-foreground" style={{ fontSize: 9 }}>{code}</div>
                 </div>
                 {isDefault ? (
@@ -1112,7 +1202,10 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                                     )}
                                 </>
                             )}
-                            {Array.isArray(orgLanguages) && orgLanguages.length > 0 && (
+                            {/* Always render the Languages section so an admin viewing
+                                a country with no enabled languages still sees the slot
+                                and gets pointed to the Languages tab to add some. */}
+                            {Array.isArray(orgLanguages) && (
                                 <>
                                     <button type="button" onClick={() => setLangExpanded(v => !v)}
                                         className="w-full text-left text-[9px] font-black uppercase tracking-widest text-app-muted-foreground hover:text-app-foreground px-2 pt-2 pb-1 flex items-center gap-1 transition-colors rounded-md">
@@ -1123,15 +1216,21 @@ function ActiveRow({ kind, oc, accent, allItems, isPending, onSetDefault, onDisa
                                         </span>
                                     </button>
                                     {langExpanded && (
-                                        <LanguagesForCountry
-                                            countryOc={oc}
-                                            orgLanguages={orgLanguages}
-                                            langEntries={langEntries}
-                                            onToggleLangCountry={onToggleLangCountry}
-                                            onToggleLangCountryRole={onToggleLangCountryRole}
-                                            accent={accent}
-                                            isPending={isPending}
-                                        />
+                                        orgLanguages.length > 0 ? (
+                                            <LanguagesForCountry
+                                                countryOc={oc}
+                                                orgLanguages={orgLanguages}
+                                                langEntries={langEntries}
+                                                onToggleLangCountry={onToggleLangCountry}
+                                                onToggleLangCountryRole={onToggleLangCountryRole}
+                                                accent={accent}
+                                                isPending={isPending}
+                                            />
+                                        ) : (
+                                            <div className="px-2 py-2 ml-5 text-app-muted-foreground italic" style={{ fontSize: 11 }}>
+                                                No languages enabled yet — open the Languages tab to add one.
+                                            </div>
+                                        )
                                     )}
                                 </>
                             )}
@@ -1391,6 +1490,7 @@ function LanguagesForCountry({ countryOc, orgLanguages, langEntries, onToggleLan
                                 <span className="font-bold truncate" style={{ fontSize: 11, color: isActiveHere ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}
                                     dir={isRTL(code) ? 'rtl' : undefined}>{lang.native_name}</span>
                                 <span className="font-mono uppercase shrink-0" style={{ fontSize: 9, color: 'var(--app-muted-foreground)' }}>{code}</span>
+                                <CoverageBadge code={code} />
                                 {lang.is_default && (
                                     <span className="font-black uppercase tracking-widest rounded inline-flex items-center"
                                         style={{
@@ -1508,6 +1608,30 @@ function CountriesForCurrency({ currencyOc, orgCountries, allCountries, onToggle
  *  Rendered under any (language, country) row that's active, in either tab.
  *  Same component used by CountriesForLanguage and LanguagesForCountry so
  *  the visual treatment stays identical regardless of pivot. */
+/** Translation-status badge — derived purely from the static dictionaries
+ *  module. Surfaced wherever a language appears so an admin doesn't enable
+ *  a language as System UI that would render half-English. */
+function CoverageBadge({ code }: { code: string }) {
+    const label = getLocaleCoverageLabel(code);
+    const map: Record<typeof label, { text: string; color: string; bg: string; title: string }> = {
+        full:    { text: 'TRANSLATED', color: 'var(--app-success)', bg: 'var(--app-success-bg)', title: 'UI fully translated for this language' },
+        partial: { text: 'PARTIAL',    color: 'var(--app-warning)', bg: 'var(--app-warning-bg)', title: 'UI partially translated — missing keys fall back to English' },
+        empty:   { text: 'NOT TRANSLATED', color: 'var(--app-muted-foreground)', bg: 'var(--app-surface-2)', title: 'No UI translations — every label will render in English' },
+    };
+    const m = map[label];
+    return (
+        <span className="font-black uppercase tracking-widest rounded inline-flex items-center shrink-0"
+            style={{
+                background: m.bg, color: m.color,
+                fontSize: 8, padding: '1px 5px', lineHeight: 1.2,
+                border: `1px solid color-mix(in srgb, ${m.color} 35%, transparent)`,
+            }}
+            title={m.title}>
+            {m.text}
+        </span>
+    );
+}
+
 function RoleChildren({ isPending, isSystem, isCatalogue, onToggle }: {
     accent: string;  // accepted but unused — children deliberately use --app-info to differentiate from parent
     isPending: boolean;

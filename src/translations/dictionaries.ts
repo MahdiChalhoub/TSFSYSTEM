@@ -1537,3 +1537,51 @@ export const LOCALES: { id: Locale; name: string; flag: string; dir: 'ltr' | 'rt
 
     { id: "de", name: "Deutsch", flag: "🇩🇪", dir: "ltr" },
 ];
+
+/** Recursive count of leaf string entries in a dictionary node. Lets the
+ *  Regional Settings UI show "this locale is X% translated" so an admin
+ *  doesn't enable a language that would render half-English. English is
+ *  the canonical baseline — every key counted there is a key the locale
+ *  *should* have. */
+function countLeaves(node: unknown): number {
+    if (typeof node === 'string') return 1;
+    if (node && typeof node === 'object') {
+        let n = 0;
+        for (const k of Object.keys(node as Record<string, unknown>)) {
+            n += countLeaves((node as Record<string, unknown>)[k]);
+        }
+        return n;
+    }
+    return 0;
+}
+const _enLeafCount = countLeaves(dictionaries.en);
+const _coverageCache = new Map<string, number>();
+
+/** Number of translated keys for a locale relative to English (0..1).
+ *  English is always 1.0; an empty dictionary is 0.0. Result is cached
+ *  because the dictionary is a static module — the count never changes
+ *  at runtime. Unknown locales return 0. */
+export function getLocaleCoverage(code: string): number {
+    if (_coverageCache.has(code)) return _coverageCache.get(code)!;
+    const dict = (dictionaries as Record<string, unknown>)[code];
+    if (!dict) {
+        _coverageCache.set(code, 0);
+        return 0;
+    }
+    if (_enLeafCount === 0) {
+        _coverageCache.set(code, 1);
+        return 1;
+    }
+    const n = countLeaves(dict);
+    const ratio = Math.min(1, n / _enLeafCount);
+    _coverageCache.set(code, ratio);
+    return ratio;
+}
+
+/** Coarse 3-bucket label used by the UI badge. */
+export function getLocaleCoverageLabel(code: string): 'full' | 'partial' | 'empty' {
+    const r = getLocaleCoverage(code);
+    if (r >= 0.95) return 'full';
+    if (r > 0) return 'partial';
+    return 'empty';
+}

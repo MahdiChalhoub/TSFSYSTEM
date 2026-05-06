@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useState, useEffect, useMemo } from 'react';
+import { useActionState, useState, useEffect, useMemo, useRef } from 'react';
+import { useProductDraft } from './use-product-draft';
 import { createProduct } from '../actions';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
@@ -30,13 +31,18 @@ type AttrGroup = {
     linked_categories: { id: number; name: string }[];
 }
 
-/* ─────────────────────────── Styles ─────────────────────────── */
-const card = "bg-app-surface rounded-2xl border border-app-border/70 overflow-hidden shadow-sm";
-const cardHead = (accent: string) => `px-5 py-3.5 border-l-[3px] ${accent} flex items-center justify-between bg-gradient-to-r from-app-surface to-app-background/30`;
-const cardTitle = "text-[14px] font-bold text-app-foreground tracking-[-0.01em]";
-const fieldLabel = "block text-[10px] font-semibold text-app-muted-foreground mb-1.5 uppercase tracking-widest";
-const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[10px] text-[13px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
-const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[10px] text-[13px] focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground appearance-none";
+/* ─────────────────────────── Styles ───────────────────────────
+ * Compact spacing per design-language §1 — match COA's rhythm so
+ * the form fits in the viewport without forced scrolling. Tighter
+ * card padding (px-3 py-2 head, p-3 body), space-y-2/3 between
+ * sections instead of space-y-5.
+ */
+const card = "bg-app-surface rounded-xl border border-app-border/70 overflow-hidden shadow-sm";
+const cardHead = (accent: string) => `px-3 py-2 border-l-[3px] ${accent} flex items-center justify-between bg-gradient-to-r from-app-surface to-app-background/30`;
+const cardTitle = "text-tp-sm font-bold text-app-foreground tracking-tight";
+const fieldLabel = "block text-tp-xxs font-bold text-app-muted-foreground mb-1 uppercase tracking-widest";
+const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-2.5 py-1.5 text-tp-xs focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
+const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-2.5 py-1.5 text-tp-xs focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 outline-none transition-all text-app-foreground appearance-none";
 
 interface CategoryOption {
     id: number | string;
@@ -127,15 +133,42 @@ interface SmartProductFormProps {
     initialData?: SmartInitialData;
     worksInTTC?: boolean;
     onBack: () => void;
+    /** Hard-cancel — leaves the create flow entirely (parent decides where to go).
+     *  Distinct from onBack which just rewinds to the type-picker step. */
+    onCancel?: () => void;
 }
 
 export default function SmartProductForm({
     productType,
     categories, units, brands, countries, namingRule,
-    attributeTree = [], initialData, onBack
+    attributeTree = [], initialData, onBack, onCancel
 }: SmartProductFormProps) {
     const initialState: { message: string; errors: Record<string, string[]> } = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createProduct, initialState);
+
+    // Draft autosave — debounced localStorage persistence + offer-to-restore
+    // banner. The hook was already implemented but never wired up.
+    const formRef = useRef<HTMLFormElement | null>(null);
+    const { hasDraft, draftAge, saveDraft, restoreDraft, clearDraft } = useProductDraft();
+    const [draftDismissed, setDraftDismissed] = useState(false);
+    // Clear the saved draft on successful submit (state.message + no errors).
+    useEffect(() => {
+        if (state.message && (!state.errors || Object.keys(state.errors).length === 0)) {
+            clearDraft();
+        }
+    }, [state.message, state.errors, clearDraft]);
+    // Warn the user before they accidentally close the tab with unsaved work.
+    useEffect(() => {
+        const handler = (e: BeforeUnloadEvent) => {
+            const form = formRef.current;
+            if (!form) return;
+            const fd = new FormData(form);
+            const name = String(fd.get('name') || '').trim();
+            if (name) { e.preventDefault(); e.returnValue = ''; }
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, []);
 
     const numOrZero = (v: unknown, fallback = 0): number => {
         if (typeof v === 'number') return v;
@@ -384,7 +417,38 @@ export default function SmartProductForm({
     };
 
     return (
-        <form action={formAction} className="max-w-[1440px] mx-auto pb-28 fade-in-up">
+        <form ref={formRef}
+              action={formAction}
+              onChange={() => saveDraft(formRef.current)}
+              className="max-w-[1440px] mx-auto w-full fade-in-up">
+            {/* Resume-draft banner — shown once, dismissible */}
+            {hasDraft && !draftDismissed && (
+                <div className="mb-3 rounded-xl px-4 py-3 flex items-center gap-3"
+                     style={{
+                         background: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+                         border: '1px solid color-mix(in srgb, var(--app-info, #3b82f6) 24%, transparent)',
+                     }}>
+                    <span className="text-tp-xs font-bold" style={{ color: 'var(--app-info, #3b82f6)' }}>
+                        Unfinished draft from {draftAge}
+                    </span>
+                    <span className="text-tp-xs flex-1 truncate" style={{ color: 'var(--app-muted-foreground)' }}>
+                        Pick up where you left off?
+                    </span>
+                    <button type="button"
+                            onClick={() => { restoreDraft(formRef.current); setDraftDismissed(true) }}
+                            className="text-tp-xs font-bold px-3 py-1 rounded-lg transition-all hover:brightness-110"
+                            style={{ background: 'var(--app-info, #3b82f6)', color: '#fff' }}>
+                        Resume
+                    </button>
+                    <button type="button"
+                            onClick={() => { clearDraft(); setDraftDismissed(true) }}
+                            className="text-tp-xs font-bold px-3 py-1 rounded-lg transition-colors"
+                            style={{ color: 'var(--app-muted-foreground)' }}>
+                        Discard
+                    </button>
+                </div>
+            )}
+
             {/* Hidden fields */}
             <input type="hidden" name="productType" value={productType} />
             <input type="hidden" name="brandId" value={selectedBrandId} />
@@ -398,7 +462,7 @@ export default function SmartProductForm({
 
             {/* Errors */}
             {state.message && (
-                <div className={`mb-5 px-4 py-3 rounded-xl border text-[13px] font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-success-bg text-app-success border-app-success'}`}>
+                <div className={`mb-3 px-3 py-2 rounded-xl border text-tp-xs font-medium ${state.errors && Object.keys(state.errors).length > 0 ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-success-bg text-app-success border-app-success'}`}>
                     <p className="font-bold">{state.message}</p>
                     {state.errors && Object.keys(state.errors).length > 0 && (
                         <ul className="list-disc pl-5 mt-1 space-y-0.5 text-[12px]">
@@ -410,32 +474,30 @@ export default function SmartProductForm({
                 </div>
             )}
 
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-                <button type="button" onClick={onBack} className="w-10 h-10 rounded-xl bg-app-surface border border-app-border flex items-center justify-center hover:bg-app-background transition-all group">
+            {/* Header — compact, single row */}
+            <div className="flex items-center gap-3 mb-3">
+                <button type="button" onClick={onBack} className="w-9 h-9 rounded-xl bg-app-surface border border-app-border flex items-center justify-center hover:bg-app-background transition-all group flex-shrink-0">
                     <ArrowLeft className="w-4 h-4 text-app-muted-foreground group-hover:text-app-foreground transition-colors" />
                 </button>
-                <div>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-gradient-to-r ${typeLabels[productType].accent} mb-0.5`}>
-                        {typeLabels[productType].label}
-                    </span>
-                    <h2>
-                        Create <span className="text-app-primary">Product</span>
-                    </h2>
-                </div>
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-tp-xxs font-black uppercase tracking-wider text-white bg-gradient-to-r ${typeLabels[productType].accent} flex-shrink-0`}>
+                    {typeLabels[productType].label}
+                </span>
+                <h2 className="text-lg md:text-xl font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
+                    Create <span style={{ color: 'var(--app-primary)' }}>Product</span>
+                </h2>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-5 items-start">
+            <div className="flex flex-col md:flex-row gap-3 items-start">
 
                 {/* ═══════ ZONE A — Product Core (Left 60%) ═══════ */}
-                <div className="w-full lg:w-[60%] space-y-5">
+                <div className="w-full md:w-[58%] space-y-3">
 
                     {/* ────── CARD: Product Identity ────── */}
                     <div className={card}>
                         <div className={cardHead('border-l-blue-500')}>
                             <h3 className={cardTitle}>Product Identity</h3>
                         </div>
-                        <div className="p-5 space-y-5">
+                        <div className="p-3 space-y-3">
 
                             {/* ── ROW 1: Auto-Generated Name + Short Name ── */}
                             <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/30 border border-app-info/40 p-4 rounded-xl">
@@ -503,7 +565,7 @@ export default function SmartProductForm({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className={fieldLabel}>Product Image</label>
-                                    <label className="block w-full h-40 rounded-xl border-2 border-dashed border-app-border hover:border-app-primary/40 bg-app-background flex items-center justify-center cursor-pointer transition-all group overflow-hidden relative">
+                                    <label className="block w-full h-28 rounded-xl border-2 border-dashed border-app-border hover:border-app-primary/40 bg-app-background flex items-center justify-center cursor-pointer transition-all group overflow-hidden relative">
                                         {imagePreview ? (
                                             <>
                                                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -525,8 +587,8 @@ export default function SmartProductForm({
                                     <label className={fieldLabel}>Description</label>
                                     <textarea
                                         name="description"
-                                        className={fieldInput + ' min-h-[170px] resize-none text-[12px]'}
-                                        placeholder="Optional product notes or description..."
+                                        className={fieldInput + ' min-h-[110px] resize-none text-tp-xs'}
+                                        placeholder="Optional product notes or description…"
                                         defaultValue={initialData?.description}
                                     />
                                 </div>
@@ -540,7 +602,7 @@ export default function SmartProductForm({
                             <h3 className={cardTitle}>Classification</h3>
                             {loadingFilters && <span className="text-[9px] text-app-info font-bold animate-pulse">Filtering...</span>}
                         </div>
-                        <div className="p-5 space-y-4">
+                        <div className="p-3 space-y-3">
 
                             {/* ── Category (tree — takes full width, dynamic rows) ── */}
                             <div>
@@ -699,8 +761,8 @@ export default function SmartProductForm({
                         <div className={cardHead('border-l-amber-400')}>
                             <h3 className={cardTitle}>Traceability & Rules</h3>
                         </div>
-                        <div className="p-5">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="p-3">
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                                 {[
                                     { label: 'Track Expiry', name: 'isExpiryTracked', default: false, desc: 'Enforce dates', visible: showInventory },
                                     { label: 'Available in POS', name: 'isForSale', default: true, desc: 'Sell via terminal', visible: true },
@@ -721,7 +783,7 @@ export default function SmartProductForm({
                 </div>
 
                 {/* ═══════ ZONE B — Business Config (Right 40%) ═══════ */}
-                <div className="w-full lg:w-[40%]">
+                <div className="w-full md:w-[42%]">
                     <div className={card + ' sticky top-4'}>
                         <div className="px-5 py-3.5 border-b border-app-border bg-gradient-to-r from-app-surface to-app-background/30">
                             <div className="flex items-center gap-2">
@@ -748,11 +810,11 @@ export default function SmartProductForm({
                             })}
                         </div>
 
-                        <div className="p-5">
+                        <div className="p-3">
 
                             {/* ── Pricing Tab ── */}
                             {activeTab === 'pricing' && (
-                                <div className="space-y-5">
+                                <div className="space-y-3">
                                     <PricingEngine
                                         costPrice={costPrice}
                                         sellPrice={sellPrice}
@@ -766,7 +828,7 @@ export default function SmartProductForm({
 
                                     {/* ── All Pricing Levels Summary ── */}
                                     {(sellPrice > 0 || packagingLevels.length > 0) && (
-                                        <div className="p-4 rounded-xl bg-gradient-to-b from-app-surface to-app-background border border-app-border">
+                                        <div className="p-3 rounded-xl bg-gradient-to-b from-app-surface to-app-background border border-app-border">
                                             <div className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                                 <DollarSign className="w-3.5 h-3.5 text-app-primary" />
                                                 All Pricing Levels
@@ -838,7 +900,7 @@ export default function SmartProductForm({
                                     )}
 
                                     {/* ── Product Groups (Combo) ── */}
-                                    <div className="p-4 rounded-xl bg-app-surface border border-app-border">
+                                    <div className="p-3 rounded-xl bg-app-surface border border-app-border">
                                         <div className="text-[10px] font-bold text-app-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                             <Package className="w-3.5 h-3.5 text-app-accent" />
                                             Product Groups / Combos
@@ -870,7 +932,7 @@ export default function SmartProductForm({
 
                             {/* ── Inventory Tab ── */}
                             {activeTab === 'inventory' && (
-                                <div className="space-y-5">
+                                <div className="space-y-3">
 
                                     {/* ═══ 1. Cost Valuation Method ═══ */}
                                     <div>
@@ -931,7 +993,7 @@ export default function SmartProductForm({
                                     </div>
 
                                     {/* ═══ 3. Expiry & Shelf Life ═══ */}
-                                    <div className="p-4 rounded-xl bg-gradient-to-b from-amber-50/30 to-orange-50/20 border border-app-warning/40">
+                                    <div className="p-3 rounded-xl bg-gradient-to-b from-amber-50/30 to-orange-50/20 border border-app-warning/40">
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                                 <span className="text-[14px]">🕐</span>
@@ -1061,7 +1123,7 @@ export default function SmartProductForm({
                                     </div>
 
                                     {/* ═══ 5. Replenishment Rules ═══ */}
-                                    <div className="p-4 bg-app-background rounded-xl border border-app-border space-y-3">
+                                    <div className="p-3 bg-app-background rounded-xl border border-app-border space-y-3">
                                         <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                             <Warehouse className="w-3.5 h-3.5 text-app-warning" />
                                             Replenishment Rules
@@ -1105,7 +1167,7 @@ export default function SmartProductForm({
                             {/* ── Supplier Tab ── */}
                             {activeTab === 'supplier' && (
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-app-surface rounded-xl border border-app-border space-y-3">
+                                    <div className="p-3 bg-app-surface rounded-xl border border-app-border space-y-3">
                                         <h4 className="font-bold text-app-foreground flex items-center gap-1.5">
                                             <Truck className="w-3.5 h-3.5 text-app-info" />
                                             Primary Supplier
@@ -1136,18 +1198,34 @@ export default function SmartProductForm({
                 </div>
             </div>
 
-            {/* ═══════ Fixed Footer ═══════ */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-app-surface/95 backdrop-blur-sm border-t border-app-border px-6 py-3.5 flex items-center justify-between">
-                <button type="button" onClick={onBack} className="px-5 py-2.5 bg-app-background border border-app-border rounded-xl text-[12px] font-bold text-app-muted-foreground hover:bg-app-surface-hover transition-all">
+            {/* Sticky footer — pins to the bottom of the viewport while the
+                page scrolls so the Create button is always reachable, but
+                disappears below the form's last row when content fits. */}
+            <div className="sticky bottom-0 mt-3 pt-3 pb-2 px-1 flex items-center justify-between gap-2 flex-wrap"
+                 style={{
+                     borderTop: '1px solid color-mix(in srgb, var(--app-foreground) 8%, transparent)',
+                     background: 'color-mix(in srgb, var(--app-bg) 92%, transparent)',
+                     backdropFilter: 'blur(6px)',
+                     WebkitBackdropFilter: 'blur(6px)',
+                 }}>
+                <button type="button" onClick={onBack}
+                        className="px-3 py-1.5 bg-app-background border border-app-border rounded-xl text-tp-xs font-bold text-app-muted-foreground hover:bg-app-surface-hover transition-all">
                     ← Back to Type
                 </button>
-                <div className="flex items-center gap-3">
-                    <button type="button" className="px-5 py-2.5 bg-app-surface border border-app-border rounded-xl text-[12px] font-bold text-app-muted-foreground hover:bg-app-background transition-all">Cancel</button>
+                <div className="flex items-center gap-2">
+                    <button type="button"
+                            onClick={onCancel || onBack}
+                            className="px-3 py-1.5 bg-app-surface border border-app-border rounded-xl text-tp-xs font-bold text-app-muted-foreground hover:bg-app-background transition-all">
+                        Cancel
+                    </button>
                     <button type="submit" disabled={isPending}
-                        className="px-7 py-2.5 bg-gradient-to-r from-app-primary to-app-info text-white rounded-xl text-[13px] font-bold shadow-lg shadow-app-primary/20 hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
-                    >
+                            className="px-4 py-1.5 rounded-xl text-tp-sm font-bold text-white transition-all disabled:opacity-50 flex items-center gap-2 hover:brightness-110"
+                            style={{
+                                background: 'linear-gradient(90deg, var(--app-primary), var(--app-info, #3b82f6))',
+                                boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                            }}>
                         {isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                        {isPending ? 'Creating...' : 'Create Product'}
+                        {isPending ? 'Creating…' : 'Create Product'}
                     </button>
                 </div>
             </div>

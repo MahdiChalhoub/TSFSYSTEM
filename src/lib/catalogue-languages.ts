@@ -44,7 +44,9 @@ export function isRTL(code: LocaleCode): boolean {
 // admin changes the list.
 const DEFAULT_LANGUAGES: LocaleCode[] = ['fr', 'ar'];
 let _cachedLanguages: LocaleCode[] | null = null;
+let _cachedEntries: CatalogueLanguageEntry[] | null = null;
 let _inflight: Promise<LocaleCode[]> | null = null;
+let _inflightEntries: Promise<CatalogueLanguageEntry[]> | null = null;
 
 /** Sync read of the cache. Returns `null` if no fetch has resolved yet.
  *  Use this to seed `useState` so a freshly-mounted form renders with the
@@ -53,22 +55,39 @@ export function getCachedCatalogueLanguages(): LocaleCode[] | null {
     return _cachedLanguages;
 }
 
-/** Filter entries down to codes whose `is_catalogue` role is on for at
- *  least one country. Legacy entries (no `roles` map) stay catalogue-active
- *  so pre-roles storage keeps working. */
+/** Sync read of the entries cache. Lets a freshly-mounted Regional
+ *  Settings page render the language list instantly without waiting for
+ *  the network round-trip — same flicker-prevention pattern as the
+ *  codes cache above. */
+export function getCachedCatalogueLanguageEntries(): CatalogueLanguageEntry[] | null {
+    return _cachedEntries;
+}
+
+/** Filter entries down to codes that should appear in catalogue forms.
+ *
+ * Rule:
+ *   - Legacy entry (no `roles` map): catalogue-active (pre-roles compat).
+ *   - Has roles map: catalogue-active iff at least one entry has
+ *     is_catalogue=true AND no entry explicitly negates it. Concretely,
+ *     if EVERY role entry has is_catalogue=false, the language is
+ *     catalogue-disabled — even if there are countries without an entry
+ *     (those would default to true, but we honour the admin's explicit
+ *     all-off intent rather than the implicit default).
+ */
 function entriesToCatalogueCodes(entries: CatalogueLanguageEntry[]): LocaleCode[] {
     const out: LocaleCode[] = [];
     for (const e of entries) {
-        if (!e.roles || Object.keys(e.roles).length === 0) {
+        const roleKeys = Object.keys(e.roles || {});
+        if (roleKeys.length === 0) {
+            // Legacy: no roles map at all.
             out.push(e.code);
             continue;
         }
-        for (const k in e.roles) {
-            if (e.roles[k]?.is_catalogue) {
-                out.push(e.code);
-                break;
-            }
-        }
+        // If admin has touched ANY role and EVERY touched role has
+        // is_catalogue=false, treat the language as catalogue-disabled.
+        const allCatalogueOff = roleKeys.every(k => e.roles![k]?.is_catalogue === false);
+        if (allCatalogueOff) continue;
+        out.push(e.code);
     }
     return out;
 }
@@ -170,20 +189,36 @@ export function setLangRoleOn(entry: CatalogueLanguageEntry, countryFkId: number
 }
 
 export async function getCatalogueLanguageEntries(): Promise<CatalogueLanguageEntry[]> {
+    // Reuse the in-flight fetch + the resolved cache so multiple consumers
+    // mounting in the same render share one network round-trip — and a
+    // freshly-mounted Regional Settings page sees the same data the
+    // previous mount left behind.
+    if (_cachedEntries) return _cachedEntries;
+    if (_inflightEntries) return _inflightEntries;
+    _inflightEntries = (async () => {
+        try {
+            const res = await erpFetch('inventory/categories/catalogue-languages/') as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
+            if (Array.isArray(res?.entries)) {
+                _cachedLanguages = res.entries.map((e: CatalogueLanguageEntry) => e.code);
+                _cachedEntries = res.entries;
+                return res.entries;
+            }
+            if (Array.isArray(res?.languages)) {
+                _cachedLanguages = res.languages;
+                const fallback = res.languages.map((c: string) => ({ code: c, country_ids: [] as number[] }));
+                _cachedEntries = fallback;
+                return fallback;
+            }
+        } catch { /* fall through */ }
+        const def: CatalogueLanguageEntry[] = [{ code: 'fr', country_ids: [] }, { code: 'ar', country_ids: [] }];
+        _cachedEntries = def;
+        return def;
+    })();
     try {
-        const res = await erpFetch('inventory/categories/catalogue-languages/') as { languages?: string[]; entries?: CatalogueLanguageEntry[] } | null;
-        if (Array.isArray(res?.entries)) {
-            // Side-effect: seed the simple-language cache so future
-            // `getCatalogueLanguages()` calls are instant.
-            _cachedLanguages = res.entries.map((e: CatalogueLanguageEntry) => e.code);
-            return res.entries;
-        }
-        if (Array.isArray(res?.languages)) {
-            _cachedLanguages = res.languages;
-            return res.languages.map((c: string) => ({ code: c, country_ids: [] as number[] }));
-        }
-    } catch { /* fall through */ }
-    return [{ code: 'fr', country_ids: [] }, { code: 'ar', country_ids: [] }];
+        return await _inflightEntries;
+    } finally {
+        _inflightEntries = null;
+    }
 }
 
 export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntry[]): Promise<CatalogueLanguageEntry[]> {
@@ -197,5 +232,6 @@ export async function setCatalogueLanguageEntries(entries: CatalogueLanguageEntr
     // same data the API would return after a refresh.
     const filtered = entriesToCatalogueCodes(final);
     _cachedLanguages = filtered.length > 0 ? filtered : final.map(e => e.code);
+    _cachedEntries = final;
     return final;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import {
     X, Save, Loader2, FolderTree, AlertCircle, Hash, Tag, ChevronRight,
     Layers, Check, Lightbulb, Barcode, Award, ListTree,
@@ -687,7 +687,11 @@ export function CategoryFormModal({
                             {/* Name + Short Name (per active language) */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                                 {activeLang === '__default__' ? (
-                                    <>
+                                    // Keys on each branch force remount when activeLang flips —
+                                    // otherwise the second `<input>` slot reuses the same DOM node
+                                    // and React warns about uncontrolled (defaultValue) → controlled
+                                    // (value=...) prop drift.
+                                    <React.Fragment key="lang-default">
                                         <div>
                                             <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                                 <Tag size={9} className="inline mr-1" />Category Name
@@ -713,9 +717,9 @@ export function CategoryFormModal({
                                                 style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
                                             />
                                         </div>
-                                    </>
+                                    </React.Fragment>
                                 ) : (
-                                    <>
+                                    <React.Fragment key={`lang-${activeLang}`}>
                                         <div>
                                             <label className="text-tp-xxs font-bold uppercase tracking-widest text-app-muted-foreground mb-1 block">
                                                 {labelFor(activeLang)}
@@ -744,7 +748,7 @@ export function CategoryFormModal({
                                         </div>
                                         <input type="hidden" name="name" value={nameDraft} />
                                         <input type="hidden" name="shortName" value={category?.short_name || ''} />
-                                    </>
+                                    </React.Fragment>
                                 )}
                                 <input type="hidden" name="translationsJson" value={JSON.stringify(translations)} />
                             </div>

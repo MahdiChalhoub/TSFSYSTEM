@@ -6,6 +6,8 @@ import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider
 import { PerfOverlay } from '@/components/dev/PerfOverlay';
 import { cookies, headers } from 'next/headers';
 import { getThemes } from '@/app/actions/theme';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 
 // Explicit weight list. Without this, next/font ships a single
 // optimised file that may render font-black (900) as the closest
@@ -234,8 +236,13 @@ export default async function RootLayout({
         // Non-fatal — ThemeScript falls back to localStorage, AppThemeProvider fetches client-side
     }
 
+    // ── Resolve i18n locale ──
+    const locale = await getLocale();
+    const messages = await getMessages();
+    const dir = locale === 'ar' ? 'rtl' : 'ltr';
+
     return (
-        <html lang="en" className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
+        <html lang={locale} dir={dir} className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
             <head>
                 {/* SSR theme: correct colors on byte 1, before any JS runs.
                     ALWAYS render both tags (even if empty) so the DOM tree shape
@@ -278,9 +285,11 @@ export default async function RootLayout({
                 <link rel="manifest" href="/manifest.json" />
             </head>
             <body className={`${outfit.variable} ${roboto.variable} ${inter.variable} ${outfit.className}`}>
+                <NextIntlClientProvider messages={messages}>
                 <AppThemeProvider>
                     {children}
                 </AppThemeProvider>
+                </NextIntlClientProvider>
                 <Toaster position="top-center" richColors />
                 <PerfOverlay />
                 <script dangerouslySetInnerHTML={{
